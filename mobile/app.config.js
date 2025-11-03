@@ -63,17 +63,6 @@ export default {
       "expo-router",
       "expo-font",
       [
-        "expo-location",
-        {
-          locationAlwaysAndWhenInUsePermission: "Este app precisa da sua localização para compartilhar com sua família.",
-          locationAlwaysPermission: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
-          locationWhenInUsePermission: "Este app precisa da sua localização quando estiver em uso.",
-          isAndroidBackgroundLocationEnabled: true,
-          isAndroidForegroundServiceEnabled: true,
-          isAndroidBackgroundLocationPermissionEnabled: true
-        }
-      ],
-      [
         "expo-notifications",
         {
           icon: "./assets/logo.png",

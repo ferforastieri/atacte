@@ -25,6 +25,8 @@ interface AuthResponse {
     };
   };
   message?: string;
+  isAuthError?: boolean;
+  isNetworkError?: boolean;
 }
 
 class AuthService {
@@ -36,7 +38,10 @@ class AuthService {
       });
       return response.data;
     } catch (error: any) {
-      return error.response?.data || { success: false, message: 'Erro de conexão' };
+      if (error.response?.status === 401) {
+        return { success: false, message: 'Não autorizado', isAuthError: true };
+      }
+      return error.response?.data || { success: false, message: 'Erro de conexão', isNetworkError: true };
     }
   }
 

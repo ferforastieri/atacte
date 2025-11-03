@@ -14,7 +14,7 @@ interface ZoneManagerProps {
   onCancelCreatingZone: () => void;
   isCreatingZone: boolean;
   isSavingZone: boolean;
-  onMapPress?: (latitude: number, longitude: number) => void;
+  onRequestMapForZone?: (callback: (lat: number, lng: number) => void) => void;
 }
 
 export default function ZoneManager({
@@ -26,7 +26,7 @@ export default function ZoneManager({
   onCancelCreatingZone,
   isCreatingZone,
   isSavingZone,
-  onMapPress
+  onRequestMapForZone
 }: ZoneManagerProps) {
   const { isDark } = useTheme();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -272,8 +272,11 @@ export default function ZoneManager({
                 <Button
                   title="Definir Posição no Mapa"
                   onPress={() => {
-                    setShowCreateModal(false);
-                    onMapPress?.(0, 0); // Vai ativar o modo de criação no mapa
+                    if (onRequestMapForZone) {
+                      onRequestMapForZone((lat: number, lng: number) => {
+                        setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+                      });
+                    }
                   }}
                   variant="secondary"
                   style={styles.positionButtonStyle}
@@ -290,8 +293,12 @@ export default function ZoneManager({
                 <Button
                   title="Alterar Posição"
                   onPress={() => {
-                    setShowCreateModal(false);
-                    onMapPress?.(0, 0); // Vai ativar o modo de criação no mapa
+                    if (onRequestMapForZone) {
+                      setFormData(prev => ({ ...prev, latitude: 0, longitude: 0 }));
+                      onRequestMapForZone((lat: number, lng: number) => {
+                        setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+                      });
+                    }
                   }}
                   variant="secondary"
                   style={styles.changePositionButton}

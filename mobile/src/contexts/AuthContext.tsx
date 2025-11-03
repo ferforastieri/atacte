@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from '../services/auth/authService';
 
 interface User {
@@ -38,14 +39,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const token = await authService.getStoredToken();
       if (token) {
-        const response = await authService.getMe();
-        if (response.success && response.data) {
-          setUser(response.data.user);
+        const cachedUser = await authService.getStoredUser();
+        if (cachedUser) {
+          setUser(cachedUser);
           setIsAuthenticated(true);
-        } else {
-          await authService.logout();
-          setUser(null);
-          setIsAuthenticated(false);
+        }
+
+        try {
+          const response = await authService.getMe();
+          if (response.success && response.data) {
+            setUser(response.data.user);
+            setIsAuthenticated(true);
+            if (response.data.user) {
+              await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+            }
+          } else {
+            if (response.isAuthError) {
+              await authService.logout();
+              setUser(null);
+              setIsAuthenticated(false);
+            } else if (response.isNetworkError || !cachedUser) {
+              if (!cachedUser) {
+                await authService.logout();
+                setUser(null);
+                setIsAuthenticated(false);
+              }
+            }
+          }
+        } catch (error: any) {
+          console.error('Erro ao verificar autenticação no servidor:', error);
+          if (!cachedUser) {
+            await authService.logout();
+            setUser(null);
+            setIsAuthenticated(false);
+          }
         }
       } else {
         setUser(null);

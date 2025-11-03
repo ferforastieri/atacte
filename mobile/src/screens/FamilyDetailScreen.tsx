@@ -31,6 +31,7 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
   const [isCreatingZone, setIsCreatingZone] = useState(false);
   const [isSavingZone, setIsSavingZone] = useState(false);
   const [focusOnMember, setFocusOnMember] = useState<{ latitude: number; longitude: number } | undefined>();
+  const [zoneCoordinatesCallback, setZoneCoordinatesCallback] = useState<((lat: number, lng: number) => void) | null>(null);
 
   const { showSuccess, showError } = useToast();
   const { isDark } = useTheme();
@@ -131,12 +132,18 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
   };
 
   const handleMapPress = (latitude: number, longitude: number) => {
-    // Se estiver no modo de criação de zona, definir as coordenadas
-    if (isCreatingZone) {
-      // Aqui você pode atualizar o estado com as coordenadas
-      // e mostrar o modal de criação de zona
+    if (isCreatingZone && zoneCoordinatesCallback) {
+      zoneCoordinatesCallback(latitude, longitude);
+      setZoneCoordinatesCallback(null);
       setIsCreatingZone(false);
+      setActiveTab('zones');
     }
+  };
+
+  const handleRequestMapForZone = (callback: (lat: number, lng: number) => void) => {
+    setZoneCoordinatesCallback(() => callback);
+    setIsCreatingZone(true);
+    setActiveTab('map');
   };
 
   const handleZoneClick = (zone: GeofenceZone) => {
@@ -303,7 +310,7 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
             onCancelCreatingZone={handleCancelCreatingZone}
             isCreatingZone={isCreatingZone}
             isSavingZone={isSavingZone}
-            onMapPress={handleMapPress}
+            onRequestMapForZone={handleRequestMapForZone}
           />
         )}
       </View>

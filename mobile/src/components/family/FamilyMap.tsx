@@ -37,6 +37,29 @@ export default function FamilyMap({
     }
   }, [focusOnMember]);
 
+  // Atualizar modo de criação de zona quando a prop mudar
+  useEffect(() => {
+    if (webViewRef.current) {
+      if (isCreatingZone) {
+        const script = `
+          if (window.startCreatingZone) {
+            window.startCreatingZone();
+          }
+        `;
+        setTimeout(() => {
+          webViewRef.current?.injectJavaScript(script);
+        }, 500);
+      } else {
+        const script = `
+          if (window.cancelZoneCreation) {
+            window.cancelZoneCreation();
+          }
+        `;
+        webViewRef.current.injectJavaScript(script);
+      }
+    }
+  }, [isCreatingZone]);
+
   // HTML do Leaflet com funcionalidades completas
   const leafletHTML = `
     <!DOCTYPE html>
