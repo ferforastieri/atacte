@@ -78,8 +78,6 @@ class ForegroundLocationService {
         return false;
       }
 
-      // Iniciar atualização de localização em background
-      // O foregroundService garante que o rastreamento continue mesmo em background (Android)
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.Highest, // Precisão máxima
         timeInterval: 30000, // 30 segundos (obrigatório)

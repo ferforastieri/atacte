@@ -122,11 +122,11 @@ class NotificationService {
           enableVibrate: true,
         });
 
-        // Canal para notificação de localização persistente
+
         await Notifications.setNotificationChannelAsync('location', {
           name: 'Localização',
           description: 'Rastreamento de localização em andamento',
-          importance: Notifications.AndroidImportance.LOW, // LOW para não ser intrusivo
+          importance: Notifications.AndroidImportance.MAX,
           lightColor: '#16a34a',
           sound: null, // Sem som
           showBadge: false,
