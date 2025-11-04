@@ -71,6 +71,16 @@ export default {
         }
       ],
       [
+        "expo-location",
+        {
+          locationAlwaysAndWhenInUsePermission: "Este app precisa da sua localização para compartilhar com sua família.",
+          locationAlwaysPermission: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
+          locationWhenInUsePermission: "Este app precisa da sua localização para compartilhar com sua família.",
+          isIosBackgroundLocationEnabled: true,
+          isAndroidBackgroundLocationEnabled: true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           android: {

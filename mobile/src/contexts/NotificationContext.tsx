@@ -51,7 +51,19 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     }
   };
 
-  const handleNotificationReceived = (notification: Notifications.Notification) => {
+  const handleNotificationReceived = async (notification: Notifications.Notification) => {
+    const data = notification.request.content.data as any;
+    
+    // Se for solicitação de atualização de localização, atualizar automaticamente
+    if (data?.type === 'location_update_request') {
+      try {
+        // Importar locationService dinamicamente para evitar circular dependency
+        const { locationService } = await import('../services/location/locationService');
+        await locationService.sendCurrentLocation();
+      } catch (error) {
+        console.error('Erro ao atualizar localização automaticamente:', error);
+      }
+    }
     
     // Atualizar lista de notificações
     refreshNotifications();
@@ -67,6 +79,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       // Navegar para o mapa da família
     } else if (data?.type === 'family_invite') {
       // Navegar para a tela de famílias
+    } else if (data?.type === 'location_update_request') {
+      // Já foi atualizado automaticamente no handleNotificationReceived
+      // Mas pode navegar para a tela de família se necessário
     }
   };
 

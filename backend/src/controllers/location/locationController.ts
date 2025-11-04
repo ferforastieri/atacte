@@ -251,5 +251,46 @@ router.delete('/cleanup', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
+// Solicitar atualização de localização para toda a família
+router.post(
+  '/request-update/:familyId',
+  updateLocationValidation,
+  async (req: Request<{ familyId: string }, {}, UpdateLocationRequest>, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Dados inválidos',
+          errors: errors.array(),
+        });
+        return;
+      }
+
+      const authReq = req as AuthenticatedRequest;
+      const { familyId } = req.params;
+
+      const location = await locationService.requestFamilyLocationUpdate(
+        authReq.user.id,
+        familyId,
+        req.body,
+        authReq
+      );
+
+      res.status(201).json({
+        success: true,
+        message: 'Localização atualizada e família notificada',
+        data: location,
+      });
+    } catch (error: any) {
+      console.error('Erro ao solicitar atualização de localização:', error);
+      res.status(error.message.includes('permissão') ? 403 : 500).json({
+        success: false,
+        message: error.message || 'Erro interno do servidor',
+      });
+    }
+  }
+);
+
 export default router;
 

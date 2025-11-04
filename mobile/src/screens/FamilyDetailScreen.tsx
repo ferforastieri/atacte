@@ -35,7 +35,7 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
 
   const { showSuccess, showError } = useToast();
   const { isDark } = useTheme();
-  const { currentLocation } = useLocation();
+  const { currentLocation, sendCurrentLocation } = useLocation();
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -79,8 +79,27 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await loadData();
-    setIsRefreshing(false);
+    try {
+      // Atualizar própria localização primeiro
+      await sendCurrentLocation();
+      
+      // Solicitar atualização forçada para a família (notifica outros membros)
+      const result = await locationService.requestFamilyLocationUpdate(familyId);
+      
+      if (result.success) {
+        showSuccess('Família notificada para atualizar localização');
+      }
+      
+      // Recarregar dados após um pequeno delay para dar tempo dos outros atualizarem
+      setTimeout(async () => {
+        await loadData();
+        setIsRefreshing(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Erro ao atualizar:', error);
+      await loadData();
+      setIsRefreshing(false);
+    }
   };
 
   const handleCreateZone = async (data: CreateGeofenceZoneData) => {

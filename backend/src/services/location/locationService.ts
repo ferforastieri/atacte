@@ -187,6 +187,59 @@ export class LocationService {
     };
   }
 
+  async requestFamilyLocationUpdate(
+    userId: string,
+    familyId: string,
+    locationData: CreateLocationData,
+    req?: Request
+  ): Promise<LocationDto> {
+    // Verificar se o usuário é membro da família
+    const isMember = await this.familyRepository.isUserMemberOfFamily(
+      userId,
+      familyId
+    );
+    
+    if (!isMember) {
+      throw new Error('Você não tem permissão para acessar esta família');
+    }
+
+    // Atualizar localização do usuário que solicitou
+    const location = await this.updateLocation(userId, locationData, req);
+
+    // Buscar todos os membros da família (exceto o próprio usuário)
+    const members = await this.familyRepository.getFamilyMembers(familyId);
+    
+    // Buscar informações do usuário que solicitou
+    const { UserRepository } = await import('../../repositories/users/userRepository');
+    const userRepository = new UserRepository();
+    const requestingUser = await userRepository.findById(userId);
+
+    // Criar notificações para os outros membros
+    const notifications = members
+      .filter((member) => member.userId !== userId)
+      .map((member) => ({
+        senderId: userId,
+        receiverId: member.userId,
+        type: 'location_update_request',
+        title: 'Atualização de Localização Solicitada',
+        body: `${requestingUser?.name || 'Um membro'} solicitou uma atualização de localização`,
+        data: {
+          familyId,
+          requestingUserId: userId,
+          requestingUserName: requestingUser?.name || 'Um membro',
+        },
+      }));
+
+    if (notifications.length > 0) {
+      // Usar createNotification que já envia push automaticamente
+      for (const notificationData of notifications) {
+        await this.notificationService.createNotification(notificationData);
+      }
+    }
+
+    return location;
+  }
+
   private mapLocationToDto(location: Location): LocationDto {
     return {
       id: location.id,
