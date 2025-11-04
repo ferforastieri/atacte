@@ -255,7 +255,7 @@ router.delete('/cleanup', async (req: AuthenticatedRequest, res: Response) => {
 router.post(
   '/request-update/:familyId',
   updateLocationValidation,
-  async (req: Request<{ familyId: string }, {}, UpdateLocationRequest>, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -267,14 +267,14 @@ router.post(
         return;
       }
 
-      const authReq = req as AuthenticatedRequest;
       const { familyId } = req.params;
+      const body = req.body;
 
       const location = await locationService.requestFamilyLocationUpdate(
-        authReq.user.id,
+        req.user.id,
         familyId,
-        req.body,
-        authReq
+        body,
+        req
       );
 
       res.status(201).json({
@@ -282,11 +282,13 @@ router.post(
         message: 'Localização atualizada e família notificada',
         data: location,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao solicitar atualização de localização:', error);
-      res.status(error.message.includes('permissão') ? 403 : 500).json({
+      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const statusCode = message.includes('permissão') ? 403 : 500;
+      res.status(statusCode).json({
         success: false,
-        message: error.message || 'Erro interno do servidor',
+        message,
       });
     }
   }
