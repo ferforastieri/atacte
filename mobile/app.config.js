@@ -33,6 +33,7 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: "atacte.seguranca",
+      googleServicesFile: "./google-services.json",
       permissions: [
         "INTERNET",
         "ACCESS_FINE_LOCATION",

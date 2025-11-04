@@ -85,9 +85,9 @@ class ForegroundLocationService {
         timeInterval: 30000, // 30 segundos (obrigatório)
         distanceInterval: 0, // 0 = não usar filtro de distância, apenas tempo (garante atualização a cada 30s)
         foregroundService: {
-          notificationTitle: 'Rastreamento de Localização',
-          notificationBody: 'O app está rastreando sua localização para compartilhar com sua família.',
-          notificationColor: '#4F46E5',
+          notificationTitle: 'Atacte',
+          notificationBody: 'Rastreando localização',
+          notificationColor: '#16a34a', // Verde
         },
         pausesUpdatesAutomatically: false, // Não pausar automaticamente
         showsBackgroundLocationIndicator: true, // Mostrar indicador no iOS

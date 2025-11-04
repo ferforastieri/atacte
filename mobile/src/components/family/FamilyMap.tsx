@@ -42,18 +42,37 @@ export default function FamilyMap({
     if (webViewRef.current) {
       if (isCreatingZone) {
         const script = `
-          if (window.startCreatingZone) {
-            window.startCreatingZone();
-          }
+          (function() {
+            window.isCreatingZone = true;
+            // Verificar se o mapa já foi inicializado
+            if (window.getMap && window.getMap()) {
+              if (window.startCreatingZone) {
+                window.startCreatingZone();
+              }
+            } else {
+              // Se o mapa ainda não foi inicializado, aguardar um pouco
+              setTimeout(function() {
+                window.isCreatingZone = true;
+                if (window.startCreatingZone) {
+                  window.startCreatingZone();
+                }
+              }, 1500);
+            }
+          })();
+          true; // Sempre retornar true para evitar warning
         `;
         setTimeout(() => {
           webViewRef.current?.injectJavaScript(script);
         }, 500);
       } else {
         const script = `
-          if (window.cancelZoneCreation) {
-            window.cancelZoneCreation();
-          }
+          (function() {
+            window.isCreatingZone = false;
+            if (window.cancelZoneCreation) {
+              window.cancelZoneCreation();
+            }
+          })();
+          true; // Sempre retornar true para evitar warning
         `;
         webViewRef.current.injectJavaScript(script);
       }
@@ -161,6 +180,7 @@ export default function FamilyMap({
         let zoneCircles = [];
         let tempCircle = null;
         let isCreatingZone = ${isCreatingZone};
+        window.isCreatingZone = ${isCreatingZone};
         
         function initMap() {
           map = L.map('map').setView([-23.5505, -46.6333], 12);
@@ -181,14 +201,20 @@ export default function FamilyMap({
         }
         
         function onMapClick(e) {
-          if (isCreatingZone) {
+          // Verificar sempre a variável isCreatingZone, não apenas no início
+          if (window.isCreatingZone) {
             const { lat, lng } = e.latlng;
             // Enviar coordenadas para React Native
-            window.ReactNativeWebView?.postMessage(JSON.stringify({
-              type: 'mapClick',
-              latitude: lat,
-              longitude: lng
-            }));
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'mapClick',
+                latitude: lat,
+                longitude: lng
+              }));
+              // Desabilitar modo de criação após o clique
+              window.isCreatingZone = false;
+              cancelZoneCreation();
+            }
           }
         }
         
@@ -282,24 +308,30 @@ export default function FamilyMap({
         }
         
         function startCreatingZone() {
+          window.isCreatingZone = true;
           isCreatingZone = true;
           document.body.classList.add('creating-zone');
           
           // Mostrar popup de instrução
-          map.openPopup(L.popup()
-            .setLatLng(map.getCenter())
-            .setContent('<div style="text-align: center; padding: 12px;"><h3 style="margin: 0 0 8px 0;">Criar Nova Zona</h3><p style="margin: 0; font-size: 14px; color: #6b7280;">Clique no mapa para definir o centro da zona</p></div>')
-            .openOn(map));
+          if (map) {
+            map.openPopup(L.popup()
+              .setLatLng(map.getCenter())
+              .setContent('<div style="text-align: center; padding: 12px;"><h3 style="margin: 0 0 8px 0;">Criar Nova Zona</h3><p style="margin: 0; font-size: 14px; color: #6b7280;">Clique no mapa para definir o centro da zona</p></div>')
+              .openOn(map));
+          }
         }
         
         function cancelZoneCreation() {
+          window.isCreatingZone = false;
           isCreatingZone = false;
           document.body.classList.remove('creating-zone');
-          if (tempCircle) {
+          if (tempCircle && map) {
             map.removeLayer(tempCircle);
             tempCircle = null;
           }
-          map.closePopup();
+          if (map) {
+            map.closePopup();
+          }
         }
         
         function editZone(zoneId) {
@@ -356,8 +388,23 @@ export default function FamilyMap({
           updateZones(zones);
         };
         
+        // Expor map globalmente para verificação
+        window.getMap = function() {
+          return map;
+        };
+        
         // Inicializar mapa quando a página carregar
-        document.addEventListener('DOMContentLoaded', initMap);
+        document.addEventListener('DOMContentLoaded', function() {
+          initMap();
+          // Após inicializar, verificar se precisa entrar em modo de criação
+          if (window.isCreatingZone) {
+            setTimeout(function() {
+              if (window.startCreatingZone) {
+                window.startCreatingZone();
+              }
+            }, 500);
+          }
+        });
       </script>
     </body>
     </html>
@@ -413,7 +460,7 @@ export default function FamilyMap({
           break;
       }
     } catch (error) {
-      console.error('Erro ao processar mensagem do WebView:', error);
+      // Erro silencioso
     }
   };
 
