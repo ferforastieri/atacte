@@ -3,6 +3,7 @@ import { AuditUtil } from '../../utils/auditUtil';
 import { LocationRepository, FamilyMemberLocation } from '../../repositories/location/locationRepository';
 import { FamilyRepository } from '../../repositories/family/familyRepository';
 import { NotificationService } from '../notification/notificationService';
+import { GeofenceService } from '../geofence/geofenceService';
 import { Location } from '../../../node_modules/.prisma/client';
 
 export interface LocationDto {
@@ -57,11 +58,13 @@ export class LocationService {
   private locationRepository: LocationRepository;
   private familyRepository: FamilyRepository;
   private notificationService: NotificationService;
+  private geofenceService: GeofenceService;
 
   constructor() {
     this.locationRepository = new LocationRepository();
     this.familyRepository = new FamilyRepository();
     this.notificationService = new NotificationService();
+    this.geofenceService = new GeofenceService();
   }
 
   async updateLocation(
@@ -69,6 +72,8 @@ export class LocationService {
     data: CreateLocationData,
     req?: Request
   ): Promise<LocationDto> {
+    const previousLocation = await this.locationRepository.findLatestByUserId(userId);
+
     const location = await this.locationRepository.create({
       userId,
       ...data,
@@ -78,6 +83,8 @@ export class LocationService {
     if (data.batteryLevel && data.batteryLevel < 0.15) {
       await this.notificationService.sendLowBatteryAlert(userId, data.batteryLevel);
     }
+
+    await this.processGeofenceEvents(userId, data, previousLocation);
 
     // Log de auditoria (apenas para debug, não para todas as localizações)
     if (process.env.LOG_LOCATIONS === 'true') {
@@ -92,6 +99,55 @@ export class LocationService {
     }
 
     return this.mapLocationToDto(location);
+  }
+
+  private async processGeofenceEvents(
+    userId: string,
+    data: CreateLocationData,
+    previousLocation: Location | null
+  ): Promise<void> {
+    try {
+      const currentZones = await this.geofenceService.checkLocationInZones(
+        userId,
+        data.latitude,
+        data.longitude
+      );
+
+      const previousZones = previousLocation
+        ? await this.geofenceService.checkLocationInZones(
+            userId,
+            Number(previousLocation.latitude),
+            Number(previousLocation.longitude)
+          )
+        : [];
+
+      if (currentZones.length === 0 && previousZones.length === 0) {
+        return;
+      }
+
+      const currentZoneIds = new Set(currentZones.map(({ zone }) => zone.id));
+      const previousZoneIds = new Set(previousZones.map(({ zone }) => zone.id));
+
+      for (const { zone } of currentZones) {
+        if (!previousZoneIds.has(zone.id)) {
+          await this.geofenceService.handleZoneEvent(userId, zone.id, 'enter', {
+            latitude: data.latitude,
+            longitude: data.longitude,
+          });
+        }
+      }
+
+      for (const { zone } of previousZones) {
+        if (!currentZoneIds.has(zone.id)) {
+          await this.geofenceService.handleZoneEvent(userId, zone.id, 'exit', {
+            latitude: data.latitude,
+            longitude: data.longitude,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao processar eventos de geofence:', error);
+    }
   }
 
   async getLatestLocation(userId: string): Promise<LocationDto | null> {

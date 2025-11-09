@@ -217,5 +217,20 @@ export class NotificationRepository {
       },
     });
   }
+
+  async findLatestBySenderAndType(
+    senderId: string,
+    type: string
+  ): Promise<Notification | null> {
+    return await prisma.notification.findFirst({
+      where: {
+        senderId,
+        type,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 }
 

@@ -164,12 +164,40 @@ export class NotificationService {
   }
 
   async sendLowBatteryAlert(userId: string, batteryLevel: number): Promise<void> {
+    const cooldownMinutes = parseInt(
+      process.env.BATTERY_ALERT_COOLDOWN_MINUTES || '30',
+      10
+    );
+
+    if (cooldownMinutes > 0) {
+      const lastAlert = await this.notificationRepository.findLatestBySenderAndType(
+        userId,
+        'battery_low'
+      );
+
+      if (lastAlert) {
+        const minutesSinceLastAlert =
+          (Date.now() - new Date(lastAlert.createdAt).getTime()) / (1000 * 60);
+
+        if (minutesSinceLastAlert < cooldownMinutes) {
+          return;
+        }
+      }
+    }
+
     // Enviar alerta para todos os membros das famílias do usuário
     const families = await this.familyRepository.findByUserId(userId);
     
     const notifications: CreateNotificationData[] = [];
 
     for (const family of families) {
+      const senderMember = family.members.find((member) => member.userId === userId);
+      const senderName =
+        senderMember?.nickname ||
+        senderMember?.user?.name ||
+        senderMember?.user?.email ||
+        'um membro da família';
+
       for (const member of family.members) {
         if (member.userId !== userId) {
           notifications.push({
@@ -177,13 +205,14 @@ export class NotificationService {
             receiverId: member.userId,
             type: 'battery_low',
             title: 'Bateria Baixa',
-            body: `A bateria de ${member.user.name || 'um membro'} está em ${Math.round(
+            body: `A bateria de ${senderName} está em ${Math.round(
               batteryLevel * 100
             )}%`,
             data: {
               userId,
               batteryLevel,
               familyId: family.id,
+              userName: senderName,
             },
           });
         }
