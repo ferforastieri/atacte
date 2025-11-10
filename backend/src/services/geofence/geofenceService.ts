@@ -6,6 +6,7 @@ import {
   UpdateGeofenceZoneData,
 } from '../../repositories/geofence/geofenceRepository';
 import { NotificationService } from '../notification/notificationService';
+import { FamilyRepository } from '../../repositories/family/familyRepository';
 import { AuditUtil } from '../../utils/auditUtil';
 
 export interface GeofenceZoneDto {
@@ -26,10 +27,12 @@ export interface GeofenceZoneDto {
 export class GeofenceService {
   private geofenceRepository: GeofenceRepository;
   private notificationService: NotificationService;
+  private familyRepository: FamilyRepository;
 
   constructor() {
     this.geofenceRepository = new GeofenceRepository();
     this.notificationService = new NotificationService();
+    this.familyRepository = new FamilyRepository();
   }
 
   async createZone(
@@ -76,7 +79,25 @@ export class GeofenceService {
   }
 
   async getActiveUserZones(userId: string): Promise<GeofenceZoneDto[]> {
-    const zones = await this.geofenceRepository.findActiveByUserId(userId);
+    const userIdsToCheck = new Set<string>([userId]);
+
+    try {
+      const families = await this.familyRepository.findByUserId(userId);
+
+      for (const family of families) {
+        for (const member of family.members) {
+          if (member.isActive) {
+            userIdsToCheck.add(member.userId);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar membros da família para geofence:', error);
+    }
+
+    const zones = await this.geofenceRepository.findActiveByUserIds(
+      Array.from(userIdsToCheck)
+    );
     return zones.map((zone) => this.mapZoneToDto(zone));
   }
 

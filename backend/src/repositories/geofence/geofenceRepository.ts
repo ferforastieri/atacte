@@ -63,6 +63,22 @@ export class GeofenceRepository {
     });
   }
 
+  async findActiveByUserIds(userIds: string[]): Promise<GeofenceZone[]> {
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    return prisma.geofenceZone.findMany({
+      where: {
+        userId: {
+          in: userIds,
+        },
+        isActive: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async update(id: string, data: UpdateGeofenceZoneData): Promise<GeofenceZone> {
     return prisma.geofenceZone.update({
       where: { id },
