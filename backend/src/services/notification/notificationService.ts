@@ -279,12 +279,16 @@ export class NotificationService {
 
     for (const family of families) {
       // Buscar o membro que entrou na zona para obter o nickname/apelido dele na família
-      const senderMember = family.members.find(member => member.userId === userId);
-      const senderName = senderMember?.nickname || senderMember?.user?.name || 'Membro da família';
-      
+      const senderMember = family.members.find((member) => member.userId === userId);
+      const senderName =
+        senderMember?.nickname ||
+        senderMember?.user?.name ||
+        senderMember?.user?.email ||
+        'um membro da família';
+
       // Buscar todos os membros da família (exceto o próprio usuário) para notificar
-      const members = family.members.filter(member => member.userId !== userId);
-      
+      const members = family.members.filter((member) => member.userId !== userId);
+
       for (const member of members) {
         const title = eventType === 'enter' 
           ? `📍 ${senderName} chegou em ${zoneName}` 
@@ -301,10 +305,11 @@ export class NotificationService {
           title,
           body,
           data: {
+            userId,
+            userName: senderName,
             zoneId,
             zoneName,
             eventType,
-            memberName: senderName,
             familyId: family.id,
             familyName: family.name,
           },
@@ -356,12 +361,20 @@ export class NotificationService {
         return;
       }
 
+      const payloadData: Record<string, any> = {
+        ...(typeof notification.data === 'object' && notification.data !== null
+          ? (notification.data as Record<string, any>)
+          : {}),
+        type: notification.type,
+        notificationId: notification.id,
+      };
+
       const message: ExpoPushMessage = {
         to: pushToken,
         sound: 'default',
         title: notification.title,
         body: notification.body,
-        data: notification.data as Record<string, any> || {},
+        data: payloadData,
         _contentAvailable: true,
       };
 
