@@ -234,10 +234,10 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f9fafb',
   },
   containerDark: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#111827',
   },
   scrollView: {
     flex: 1,
@@ -249,15 +249,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#111827',
     marginBottom: 12,
     marginLeft: 4,
   },
   sectionTitleDark: {
-    color: '#fff',
+    color: '#f9fafb',
   },
   sectionContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionContentDark: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1f2937',
   },
   settingItem: {
     flexDirection: 'row',
@@ -278,46 +278,46 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#e5e7eb',
   },
   settingItemDark: {
-    borderBottomColor: '#3a3a3a',
+    borderBottomColor: '#374151',
   },
   settingLabel: {
     fontSize: 16,
-    color: '#333',
+    color: '#111827',
     flex: 1,
     marginRight: 12,
   },
   settingLabelDark: {
-    color: '#fff',
+    color: '#f9fafb',
   },
   settingValue: {
     fontSize: 16,
-    color: '#666',
+    color: '#6b7280',
   },
   settingValueDark: {
-    color: '#999',
+    color: '#9ca3af',
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
+    color: '#111827',
+    backgroundColor: '#f9fafb',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#e5e5e5',
+    borderColor: '#e5e7eb',
   },
   inputDark: {
-    color: '#fff',
+    color: '#f9fafb',
     backgroundColor: '#374151',
     borderColor: '#4b5563',
   },
   inputDisabled: {
-    backgroundColor: '#f5f5f5',
-    color: '#999',
+    backgroundColor: '#f9fafb',
+    color: '#9ca3af',
   },
   button: {
     backgroundColor: '#22c55e',

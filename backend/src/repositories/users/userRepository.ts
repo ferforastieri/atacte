@@ -94,8 +94,8 @@ export class UserRepository {
     
     const lastActivity = user.passwordEntries
       .map(p => p.lastUsed)
-      .filter(date => date)
-      .sort((a, b) => b!.getTime() - a!.getTime())[0];
+      .filter((date): date is Date => date !== null)
+      .sort((a, b) => b.getTime() - a.getTime())[0];
 
     const accountAge = Math.floor(
       (Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24)

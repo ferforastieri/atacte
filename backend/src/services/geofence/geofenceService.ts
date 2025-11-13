@@ -11,7 +11,7 @@ import { AuditUtil } from '../../utils/auditUtil';
 
 export interface GeofenceZoneDto {
   id: string;
-  userId: string;
+  familyId: string;
   name: string;
   description: string | null;
   latitude: number;
@@ -37,11 +37,18 @@ export class GeofenceService {
 
   async createZone(
     userId: string,
-    data: Omit<CreateGeofenceZoneData, 'userId'>,
+    familyId: string,
+    data: Omit<CreateGeofenceZoneData, 'familyId'>,
     req?: Request
   ): Promise<GeofenceZoneDto> {
+    // Verificar se o usuário é membro da família
+    const isMember = await this.familyRepository.isUserMemberOfFamily(userId, familyId);
+    if (!isMember) {
+      throw new Error('Você não tem permissão para criar zonas nesta família');
+    }
+
     const zone = await this.geofenceRepository.create({
-      userId,
+      familyId,
       ...data,
     });
 
@@ -51,53 +58,45 @@ export class GeofenceService {
       'GEOFENCE_ZONE_CREATED',
       'GEOFENCE_ZONE',
       zone.id,
-      { name: data.name },
+      { name: data.name, familyId },
       req
     );
 
     return this.mapZoneToDto(zone);
   }
 
-  async getZoneById(userId: string, zoneId: string): Promise<GeofenceZoneDto | null> {
-    const zone = await this.geofenceRepository.findById(zoneId);
-
-    if (!zone) {
-      return null;
+  async getFamilyZones(userId: string, familyId: string): Promise<GeofenceZoneDto[]> {
+    // Verificar se o usuário é membro da família
+    const isMember = await this.familyRepository.isUserMemberOfFamily(userId, familyId);
+    if (!isMember) {
+      throw new Error('Você não tem permissão para acessar zonas desta família');
     }
 
-    // Verificar se o usuário é o dono
-    if (zone.userId !== userId) {
-      throw new Error('Você não tem permissão para acessar esta zona');
-    }
-
-    return this.mapZoneToDto(zone);
+    const zones = await this.geofenceRepository.findByFamilyId(familyId);
+    return zones.map((zone) => this.mapZoneToDto(zone));
   }
 
-  async getUserZones(userId: string): Promise<GeofenceZoneDto[]> {
-    const zones = await this.geofenceRepository.findByUserId(userId);
+  async getActiveFamilyZones(userId: string, familyId: string): Promise<GeofenceZoneDto[]> {
+    // Verificar se o usuário é membro da família
+    const isMember = await this.familyRepository.isUserMemberOfFamily(userId, familyId);
+    if (!isMember) {
+      throw new Error('Você não tem permissão para acessar zonas desta família');
+    }
+
+    const zones = await this.geofenceRepository.findActiveByFamilyId(familyId);
     return zones.map((zone) => this.mapZoneToDto(zone));
   }
 
   async getActiveUserZones(userId: string): Promise<GeofenceZoneDto[]> {
-    const userIdsToCheck = new Set<string>([userId]);
+    // Buscar todas as famílias do usuário e retornar todas as zonas ativas
+    const families = await this.familyRepository.findByUserId(userId);
+    const familyIds = families.map(f => f.id);
 
-    try {
-      const families = await this.familyRepository.findByUserId(userId);
-
-      for (const family of families) {
-        for (const member of family.members) {
-          if (member.isActive) {
-            userIdsToCheck.add(member.userId);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao buscar membros da família para geofence:', error);
+    if (familyIds.length === 0) {
+      return [];
     }
 
-    const zones = await this.geofenceRepository.findActiveByUserIds(
-      Array.from(userIdsToCheck)
-    );
+    const zones = await this.geofenceRepository.findActiveByFamilyIds(familyIds);
     return zones.map((zone) => this.mapZoneToDto(zone));
   }
 
@@ -107,31 +106,41 @@ export class GeofenceService {
     data: UpdateGeofenceZoneData,
     req?: Request
   ): Promise<GeofenceZoneDto> {
-    // Verificar propriedade
-    const isOwner = await this.geofenceRepository.checkUserOwnership(zoneId, userId);
-    if (!isOwner) {
+    // Verificar se a zona existe e se o usuário é membro da família
+    const zone = await this.geofenceRepository.findById(zoneId);
+    if (!zone) {
+      throw new Error('Zona não encontrada');
+    }
+
+    const isMember = await this.familyRepository.isUserMemberOfFamily(userId, zone.familyId);
+    if (!isMember) {
       throw new Error('Você não tem permissão para editar esta zona');
     }
 
-    const zone = await this.geofenceRepository.update(zoneId, data);
+    const updatedZone = await this.geofenceRepository.update(zoneId, data);
 
     // Log de auditoria
     await AuditUtil.log(
       userId,
       'GEOFENCE_ZONE_UPDATED',
       'GEOFENCE_ZONE',
-      zone.id,
+      updatedZone.id,
       data,
       req
     );
 
-    return this.mapZoneToDto(zone);
+    return this.mapZoneToDto(updatedZone);
   }
 
   async deleteZone(userId: string, zoneId: string, req?: Request): Promise<void> {
-    // Verificar propriedade
-    const isOwner = await this.geofenceRepository.checkUserOwnership(zoneId, userId);
-    if (!isOwner) {
+    // Verificar se a zona existe e se o usuário é membro da família
+    const zone = await this.geofenceRepository.findById(zoneId);
+    if (!zone) {
+      throw new Error('Zona não encontrada');
+    }
+
+    const isMember = await this.familyRepository.isUserMemberOfFamily(userId, zone.familyId);
+    if (!isMember) {
       throw new Error('Você não tem permissão para deletar esta zona');
     }
 
@@ -154,7 +163,8 @@ export class GeofenceService {
     latitude: number,
     longitude: number
   ): Promise<{ zone: GeofenceZoneDto; distance: number }[]> {
-    const zones = await this.geofenceRepository.findActiveByUserId(userId);
+    // Buscar todas as zonas ativas das famílias do usuário
+    const zones = await this.getActiveUserZones(userId);
     const zonesInRange: { zone: GeofenceZoneDto; distance: number }[] = [];
 
     for (const zone of zones) {
@@ -167,7 +177,7 @@ export class GeofenceService {
 
       if (distance <= zone.radius) {
         zonesInRange.push({
-          zone: this.mapZoneToDto(zone),
+          zone,
           distance,
         });
       }
@@ -181,7 +191,7 @@ export class GeofenceService {
     userId: string,
     zoneId: string,
     eventType: 'enter' | 'exit',
-    currentLocation: { latitude: number; longitude: number }
+    _currentLocation: { latitude: number; longitude: number }
   ): Promise<void> {
     const zone = await this.geofenceRepository.findById(zoneId);
 
@@ -231,7 +241,7 @@ export class GeofenceService {
   private mapZoneToDto(zone: GeofenceZone): GeofenceZoneDto {
     return {
       id: zone.id,
-      userId: zone.userId,
+      familyId: zone.familyId,
       name: zone.name,
       description: zone.description,
       latitude: zone.latitude,

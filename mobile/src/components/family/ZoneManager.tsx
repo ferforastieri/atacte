@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Modal, Input } from '../shared';
 import { GeofenceZone, CreateGeofenceZoneData, UpdateGeofenceZoneData } from '../../services/geofence/geofenceService';
 import { useTheme } from '../../contexts/ThemeContext';
+import LocationPickerMap from './LocationPickerMap';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 interface ZoneManagerProps {
   zones: GeofenceZone[];
@@ -31,6 +34,7 @@ export default function ZoneManager({
   const { isDark } = useTheme();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
   const [editingZone, setEditingZone] = useState<GeofenceZone | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -272,17 +276,13 @@ export default function ZoneManager({
                 <Button
                   title="Definir Posição no Mapa"
                   onPress={() => {
-                    if (onRequestMapForZone) {
-                      onRequestMapForZone((lat: number, lng: number) => {
-                        setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
-                      });
-                    }
+                    setShowMapModal(true);
                   }}
                   variant="secondary"
                   style={styles.positionButtonStyle}
                 />
                 <Text style={[styles.positionHint, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-                  Clique no mapa para definir a posição
+                  Abra o mapa para escolher a localização
                 </Text>
               </View>
             ) : (
@@ -293,12 +293,7 @@ export default function ZoneManager({
                 <Button
                   title="Alterar Posição"
                   onPress={() => {
-                    if (onRequestMapForZone) {
-                      setFormData(prev => ({ ...prev, latitude: 0, longitude: 0 }));
-                      onRequestMapForZone((lat: number, lng: number) => {
-                        setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
-                      });
-                    }
+                    setShowMapModal(true);
                   }}
                   variant="secondary"
                   style={styles.changePositionButton}
@@ -364,6 +359,28 @@ export default function ZoneManager({
               style={styles.modalButton}
             />
           </View>
+        </View>
+      </Modal>
+
+      {/* Modal do mapa para seleção de localização */}
+      <Modal
+        visible={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        title="Selecionar Localização"
+        size="lg"
+      >
+        <View style={styles.mapModalContent}>
+          <LocationPickerMap
+            initialLocation={
+              formData.latitude !== 0 && formData.longitude !== 0
+                ? { latitude: formData.latitude, longitude: formData.longitude }
+                : undefined
+            }
+            onLocationSelect={(lat, lng) => {
+              setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+              setShowMapModal(false);
+            }}
+          />
         </View>
       </Modal>
     </View>
@@ -530,5 +547,11 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+  },
+  mapModalContent: {
+    height: screenHeight * 0.65,
+    width: '100%',
+    marginHorizontal: -20,
+    marginVertical: -20,
   },
 });

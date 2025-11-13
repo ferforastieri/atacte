@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { body, param, validationResult } from 'express-validator';
-import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { body, validationResult } from 'express-validator';
+import { authenticateToken } from '../../middleware/auth';
 import { FamilyService } from '../../services/family/familyService';
+import { asAuthenticatedHandler, AuthenticatedRequest } from '../../types/express';
 
 const router = Router();
 const familyService = new FamilyService();
@@ -64,7 +65,7 @@ const updateMemberRoleValidation = [
 router.use(authenticateToken);
 
 // Listar todas as famílias do usuário
-router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', asAuthenticatedHandler(async (req, res) => {
   try {
     const families = await familyService.getUserFamilies(req.user.id);
 
@@ -79,12 +80,19 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor',
     });
   }
-});
+}));
 
 // Buscar família específica
-router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID da família é obrigatório',
+      });
+      return;
+    }
     const family = await familyService.getFamilyById(req.user.id, id);
 
     if (!family) {
@@ -99,14 +107,15 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
       success: true,
       data: family,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao buscar família:', error);
-    res.status(error.message.includes('permissão') ? 403 : 500).json({
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+    res.status(errorMessage.includes('permissão') ? 403 : 500).json({
       success: false,
-      message: error.message || 'Erro interno do servidor',
+      message: errorMessage,
     });
   }
-});
+}));
 
 // Criar nova família
 router.post(
@@ -150,7 +159,7 @@ router.post(
 router.put(
   '/:id',
   createFamilyValidation,
-  async (req: AuthenticatedRequest, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -163,6 +172,13 @@ router.put(
       }
 
       const { id } = req.params;
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          message: 'ID da família é obrigatório',
+        });
+        return;
+      }
       const updateData = req.body as UpdateFamilyRequest;
 
       const family = await familyService.updateFamily(
@@ -185,34 +201,43 @@ router.put(
         message: 'Família atualizada com sucesso',
         data: family,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao atualizar família:', error);
-      res.status(error.message.includes('admin') ? 403 : 500).json({
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      res.status(errorMessage.includes('admin') ? 403 : 500).json({
         success: false,
-        message: error.message || 'Erro interno do servidor',
+        message: errorMessage,
       });
     }
-  }
+  })
 );
 
 // Deletar família
-router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID da família é obrigatório',
+      });
+      return;
+    }
     await familyService.deleteFamily(req.user.id, id, req);
 
     res.json({
       success: true,
       message: 'Família excluída com sucesso',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao deletar família:', error);
-    res.status(error.message.includes('admin') ? 403 : 500).json({
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+    res.status(errorMessage.includes('admin') ? 403 : 500).json({
       success: false,
-      message: error.message || 'Erro interno do servidor',
+      message: errorMessage,
     });
   }
-});
+}));
 
 // Entrar em família via código de convite
 router.post(
@@ -243,62 +268,79 @@ router.post(
         message: 'Você entrou na família com sucesso',
         data: family,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao entrar na família:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao entrar na família';
       res.status(400).json({
         success: false,
-        message: error.message || 'Erro ao entrar na família',
+        message: errorMessage,
       });
     }
   }
 );
 
 // Sair da família
-router.post('/:id/leave', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/leave', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID da família é obrigatório',
+      });
+      return;
+    }
     await familyService.leaveFamily(req.user.id, id, req);
 
     res.json({
       success: true,
       message: 'Você saiu da família',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao sair da família:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao sair da família';
     res.status(400).json({
       success: false,
-      message: error.message || 'Erro ao sair da família',
+      message: errorMessage,
     });
   }
-});
+}));
 
 // Remover membro
 router.delete(
   '/:id/members/:userId',
-  async (req: AuthenticatedRequest, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const { id, userId } = req.params;
+      if (!id || !userId) {
+        res.status(400).json({
+          success: false,
+          message: 'ID da família e ID do usuário são obrigatórios',
+        });
+        return;
+      }
       await familyService.removeMember(req.user.id, id, userId, req);
 
       res.json({
         success: true,
         message: 'Membro removido com sucesso',
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao remover membro:', error);
-      res.status(error.message.includes('admin') ? 403 : 400).json({
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao remover membro';
+      res.status(errorMessage.includes('admin') ? 403 : 400).json({
         success: false,
-        message: error.message || 'Erro ao remover membro',
+        message: errorMessage,
       });
     }
-  }
+  })
 );
 
 // Atualizar função de membro
 router.patch(
   '/:id/members/:userId/role',
   updateMemberRoleValidation,
-  async (req: AuthenticatedRequest, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -311,6 +353,13 @@ router.patch(
       }
 
       const { id, userId } = req.params;
+      if (!id || !userId) {
+        res.status(400).json({
+          success: false,
+          message: 'ID da família e ID do usuário são obrigatórios',
+        });
+        return;
+      }
       const body = req.body as UpdateMemberRoleRequest;
       const { role } = body;
 
@@ -327,22 +376,30 @@ router.patch(
         message: 'Função do membro atualizada',
         data: member,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao atualizar função:', error);
-      res.status(error.message.includes('admin') ? 403 : 400).json({
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar função';
+      res.status(errorMessage.includes('admin') ? 403 : 400).json({
         success: false,
-        message: error.message || 'Erro ao atualizar função',
+        message: errorMessage,
       });
     }
-  }
+  })
 );
 
 // Atualizar configurações do membro (próprio usuário)
 router.patch(
   '/:id/settings',
-  async (req: AuthenticatedRequest, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const { id } = req.params;
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          message: 'ID da família é obrigatório',
+        });
+        return;
+      }
       const settingsData = req.body as UpdateMemberSettingsRequest;
 
       const member = await familyService.updateMemberSettings(
@@ -357,14 +414,15 @@ router.patch(
         message: 'Configurações atualizadas',
         data: member,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao atualizar configurações:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar configurações';
       res.status(400).json({
         success: false,
-        message: error.message || 'Erro ao atualizar configurações',
+        message: errorMessage,
       });
     }
-  }
+  })
 );
 
 export default router;

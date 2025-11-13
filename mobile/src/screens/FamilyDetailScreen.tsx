@@ -69,7 +69,7 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
 
   const loadZones = async () => {
     try {
-      const zonesData = await geofenceService.getUserZones();
+      const zonesData = await geofenceService.getUserZones(false, familyId);
       setZones(zonesData.data || []);
     } catch (error) {
       console.error('Erro ao carregar zonas:', error);
@@ -105,7 +105,10 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
   const handleCreateZone = async (data: CreateGeofenceZoneData) => {
     try {
       setIsSavingZone(true);
-      await geofenceService.createZone(data);
+      await geofenceService.createZone({
+        ...data,
+        familyId,
+      });
       await loadZones();
       showSuccess('Zona criada com sucesso!');
       setIsCreatingZone(false);

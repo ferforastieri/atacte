@@ -145,6 +145,7 @@ model Family {
   
   // Relacionamentos
   members      FamilyMember[]
+  geofenceZones GeofenceZone[]
   
   @@map("families")
 }
@@ -216,7 +217,7 @@ model Notification {
 
 model GeofenceZone {
   id           String   @id @default(cuid())
-  userId       String   @map("user_id")
+  familyId    String   @map("family_id")
   name         String
   description  String?
   latitude     Float
@@ -228,5 +229,9 @@ model GeofenceZone {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   
+  // Relacionamentos
+  family       Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  
+  @@index([familyId])
   @@map("geofence_zones")
 }

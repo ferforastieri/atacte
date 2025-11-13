@@ -2,7 +2,7 @@ import apiClient from '../../lib/axios';
 
 export interface GeofenceZone {
   id: string;
-  userId: string;
+  familyId: string;
   name: string;
   description: string | null;
   latitude: number;
@@ -16,6 +16,7 @@ export interface GeofenceZone {
 }
 
 export interface CreateGeofenceZoneData {
+  familyId: string;
   name: string;
   description?: string;
   latitude: number;
@@ -57,16 +58,14 @@ class GeofenceService {
     });
   }
 
-  // Listar zonas do usuário
-  async getUserZones(activeOnly: boolean = false): Promise<{ success: boolean; data?: GeofenceZone[]; message?: string }> {
-    return this.makeRequest(`/geofence/zones${activeOnly ? '?active=true' : ''}`, {
-      method: 'GET',
-    });
-  }
-
-  // Buscar zona por ID
-  async getZoneById(id: string): Promise<{ success: boolean; data?: GeofenceZone; message?: string }> {
-    return this.makeRequest(`/geofence/zones/${id}`, {
+  // Listar zonas do usuário (todas as famílias) ou de uma família específica
+  async getUserZones(activeOnly: boolean = false, familyId?: string): Promise<{ success: boolean; data?: GeofenceZone[]; message?: string }> {
+    const params = new URLSearchParams();
+    if (activeOnly) params.append('active', 'true');
+    if (familyId) params.append('familyId', familyId);
+    
+    const queryString = params.toString();
+    return this.makeRequest(`/geofence/zones${queryString ? `?${queryString}` : ''}`, {
       method: 'GET',
     });
   }

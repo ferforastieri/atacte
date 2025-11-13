@@ -1,7 +1,8 @@
-import { Router, Request, Response } from 'express'
+import { Router } from 'express'
 import importExportService from '../../services/importExport/importExportService'
 import { ImportExportRepository } from '../../repositories/importExport/importExportRepository'
-import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth'
+import { authenticateToken } from '../../middleware/auth'
+import { asAuthenticatedHandler } from '../../types/express'
 
 const router = Router()
 const importExportRepository = new ImportExportRepository()
@@ -11,19 +12,20 @@ router.use(authenticateToken)
 
 
 
-router.post('/import', async (req: Request, res: Response) => {
+router.post('/import', asAuthenticatedHandler(async (req, res) => {
   try {
-    const userId = (req as AuthenticatedRequest).user.id
+    const userId = req.user.id
     const importData = req.body
 
     
     const validation = importExportService.validateImportData(importData)
     if (!validation.valid) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Dados de importação inválidos',
         errors: validation.errors
       })
+      return
     }
 
     
@@ -38,27 +40,28 @@ router.post('/import', async (req: Request, res: Response) => {
       userAgent: req.get('User-Agent') || 'unknown'
     })
 
-    return res.json({
+    res.json({
       success: true,
       data: result,
       message: `Importação concluída: ${result.imported} senhas importadas, ${result.duplicates} duplicatas ignoradas`
     })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro na importação:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor durante a importação'
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor durante a importação',
-      error: error.message
+      error: errorMessage
     })
   }
-})
+}))
 
 
 
-router.get('/export/bitwarden', async (req: Request, res: Response) => {
+router.get('/export/bitwarden', asAuthenticatedHandler(async (req, res) => {
   try {
-    const userId = (req as AuthenticatedRequest).user.id
+    const userId = req.user.id
 
     
     const result = await importExportService.exportToBitwarden(userId)
@@ -83,20 +86,21 @@ router.get('/export/bitwarden', async (req: Request, res: Response) => {
       message: `Exportação concluída: ${result.total} senhas exportadas`
     })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro na exportação:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor durante a exportação'
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor durante a exportação',
-      error: error.message
+      error: errorMessage
     })
   }
-})
+}))
 
 
-router.get('/export/csv', async (req: Request, res: Response) => {
+router.get('/export/csv', asAuthenticatedHandler(async (req, res) => {
   try {
-    const userId = (req as AuthenticatedRequest).user.id
+    const userId = req.user.id
 
     
     const result = await importExportService.exportToCSV(userId)
@@ -117,14 +121,15 @@ router.get('/export/csv', async (req: Request, res: Response) => {
 
     res.send(result.data)
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro na exportação CSV:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor durante a exportação CSV'
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor durante a exportação CSV',
-      error: error.message
+      error: errorMessage
     })
   }
-})
+}))
 
 export default router

@@ -1,21 +1,23 @@
-import { Router, Request, Response } from 'express';
-import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { Router } from 'express';
+import { authenticateToken } from '../../middleware/auth';
 import { GeofenceService } from '../../services/geofence/geofenceService';
+import { UpdateGeofenceZoneData } from '../../repositories/geofence/geofenceRepository';
+import { asAuthenticatedHandler } from '../../types/express';
 
 const router = Router();
 const geofenceService = new GeofenceService();
 
 // POST /api/geofence/zones
-router.post('/zones', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.post('/zones', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const { name, description, latitude, longitude, radius, notifyOnEnter, notifyOnExit } = req.body;
+    const userId = req.user.id;
+    const { familyId, name, description, latitude, longitude, radius, notifyOnEnter, notifyOnExit } = req.body;
 
     // Validações
-    if (!name || !latitude || !longitude || !radius) {
+    if (!familyId || !name || !latitude || !longitude || !radius) {
       res.status(400).json({
         success: false,
-        message: 'Nome, latitude, longitude e raio são obrigatórios',
+        message: 'FamilyId, nome, latitude, longitude e raio são obrigatórios',
       });
       return;
     }
@@ -30,6 +32,7 @@ router.post('/zones', authenticateToken, async (req: AuthenticatedRequest, res: 
 
     const zone = await geofenceService.createZone(
       userId,
+      familyId,
       {
         name,
         description,
@@ -46,75 +49,57 @@ router.post('/zones', authenticateToken, async (req: AuthenticatedRequest, res: 
       success: true,
       data: zone,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao criar zona:', error);
-    res.status(500).json({
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao criar zona';
+    const statusCode = errorMessage.includes('permissão') ? 403 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: error.message || 'Erro ao criar zona',
+      message: errorMessage,
     });
   }
-});
+}));
 
 // GET /api/geofence/zones
-router.get('/zones', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/zones', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const { active } = req.query;
+    const userId = req.user.id;
+    const { familyId, active } = req.query;
 
-    const zones = active === 'true'
-      ? await geofenceService.getActiveUserZones(userId)
-      : await geofenceService.getUserZones(userId);
+    let zones;
+    if (familyId) {
+      // Buscar zonas de uma família específica
+      zones = active === 'true'
+        ? await geofenceService.getActiveFamilyZones(userId, familyId as string)
+        : await geofenceService.getFamilyZones(userId, familyId as string);
+    } else {
+      // Buscar todas as zonas ativas das famílias do usuário
+      zones = await geofenceService.getActiveUserZones(userId);
+    }
 
     res.json({
       success: true,
       data: zones,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao buscar zonas:', error);
-    res.status(500).json({
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar zonas';
+    const statusCode = errorMessage.includes('permissão') ? 403 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: error.message || 'Erro ao buscar zonas',
+      message: errorMessage,
     });
   }
-});
-
-// GET /api/geofence/zones/:id
-router.get('/zones/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const userId = req.user!.id;
-    const { id } = req.params;
-
-    const zone = await geofenceService.getZoneById(userId, id);
-
-    if (!zone) {
-      res.status(404).json({
-        success: false,
-        message: 'Zona não encontrada',
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: zone,
-    });
-  } catch (error: any) {
-    console.error('Erro ao buscar zona:', error);
-    res.status(error.message.includes('permissão') ? 403 : 500).json({
-      success: false,
-      message: error.message || 'Erro ao buscar zona',
-    });
-  }
-});
+}));
 
 // PATCH /api/geofence/zones/:id
-router.patch('/zones/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.patch('/zones/:id', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user.id;
     const { id } = req.params;
     const { name, description, latitude, longitude, radius, isActive, notifyOnEnter, notifyOnExit } = req.body;
 
-    const updateData: any = {};
+    const updateData: Partial<UpdateGeofenceZoneData> = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (latitude !== undefined) updateData.latitude = parseFloat(latitude);
@@ -134,26 +119,42 @@ router.patch('/zones/:id', authenticateToken, async (req: AuthenticatedRequest, 
     if (notifyOnEnter !== undefined) updateData.notifyOnEnter = notifyOnEnter;
     if (notifyOnExit !== undefined) updateData.notifyOnExit = notifyOnExit;
 
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID da zona é obrigatório',
+      });
+      return;
+    }
     const zone = await geofenceService.updateZone(userId, id, updateData, req);
 
     res.json({
       success: true,
       data: zone,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao atualizar zona:', error);
-    res.status(error.message.includes('permissão') ? 403 : 500).json({
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar zona';
+    res.status(errorMessage.includes('permissão') ? 403 : 500).json({
       success: false,
-      message: error.message || 'Erro ao atualizar zona',
+      message: errorMessage,
     });
   }
-});
+}));
 
 // DELETE /api/geofence/zones/:id
-router.delete('/zones/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.delete('/zones/:id', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user.id;
     const { id } = req.params;
+
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID da zona é obrigatório',
+      });
+      return;
+    }
 
     await geofenceService.deleteZone(userId, id, req);
 
@@ -161,19 +162,20 @@ router.delete('/zones/:id', authenticateToken, async (req: AuthenticatedRequest,
       success: true,
       message: 'Zona deletada com sucesso',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao deletar zona:', error);
-    res.status(error.message.includes('permissão') ? 403 : 500).json({
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao deletar zona';
+    res.status(errorMessage.includes('permissão') ? 403 : 500).json({
       success: false,
-      message: error.message || 'Erro ao deletar zona',
+      message: errorMessage,
     });
   }
-});
+}));
 
 // POST /api/geofence/check
-router.post('/check', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.post('/check', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user.id;
     const { latitude, longitude } = req.body;
 
     if (!latitude || !longitude) {
@@ -197,13 +199,14 @@ router.post('/check', authenticateToken, async (req: AuthenticatedRequest, res: 
         zones: zonesInRange,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao verificar localização:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar localização';
     res.status(500).json({
       success: false,
-      message: error.message || 'Erro ao verificar localização',
+      message: errorMessage,
     });
   }
-});
+}));
 
 export default router;

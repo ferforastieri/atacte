@@ -1,26 +1,18 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { authenticateToken } from '../../middleware/auth';
+import { asAuthenticatedHandler } from '../../types/express';
 import { UserService } from '../../services/users/userService';
 
 const router = Router();
 const userService = new UserService();
 
-interface UpdateProfileRequest {
-  name?: string;
-  phoneNumber?: string;
-  profilePicture?: string;
-}
-
-interface UpdatePushTokenRequest {
-  pushToken: string;
-}
 
 
 router.use(authenticateToken);
 
 
-router.get('/profile', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/profile', asAuthenticatedHandler(async (req, res) => {
   try {
     const userProfile = await userService.getUserProfile(req.user.id);
 
@@ -35,10 +27,10 @@ router.get('/profile', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.get('/stats', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/stats', asAuthenticatedHandler(async (req, res) => {
   try {
     const stats = await userService.getUserStats(req.user.id);
 
@@ -53,10 +45,10 @@ router.get('/stats', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.get('/folders', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/folders', asAuthenticatedHandler(async (req, res) => {
   try {
     const folders = await userService.getUserFolders(req.user.id);
 
@@ -71,13 +63,14 @@ router.get('/folders', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.get('/audit-logs', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 50;
-    const offset = parseInt(req.query.offset as string) || 0;
+    const queryParams = req.query;
+    const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
+    const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
     
     const auditLogs = await userService.getUserAuditLogs(req.user.id, { limit, offset });
 
@@ -97,10 +90,10 @@ router.get('/audit-logs', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.post('/export', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/export', asAuthenticatedHandler(async (req, res) => {
   try {
     const exportData = await userService.exportUserData(req.user.id, req);
 
@@ -116,10 +109,10 @@ router.post('/export', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.delete('/account', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/account', asAuthenticatedHandler(async (req, res) => {
   try {
     await userService.deleteUserAccount(req.user.id, req);
 
@@ -134,7 +127,7 @@ router.delete('/account', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 // Atualizar perfil
 router.patch(
@@ -144,7 +137,7 @@ router.patch(
     body('phoneNumber').optional().trim().isMobilePhone('any').withMessage('Número de telefone inválido'),
     body('profilePicture').optional().isURL().withMessage('URL da foto inválida'),
   ],
-  async (req: Request<{}, {}, UpdateProfileRequest>, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -156,8 +149,7 @@ router.patch(
         return;
       }
 
-      const authReq = req as AuthenticatedRequest;
-      const updatedProfile = await userService.updateUserProfile(authReq.user.id, req.body, authReq);
+      const updatedProfile = await userService.updateUserProfile(req.user.id, req.body, req);
 
       res.json({
         success: true,
@@ -171,7 +163,7 @@ router.patch(
         message: 'Erro interno do servidor'
       });
     }
-  }
+  })
 );
 
 // Atualizar push token
@@ -180,7 +172,7 @@ router.patch(
   [
     body('pushToken').notEmpty().withMessage('Push token é obrigatório'),
   ],
-  async (req: Request<{}, {}, UpdatePushTokenRequest>, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -192,8 +184,7 @@ router.patch(
         return;
       }
 
-      const authReq = req as AuthenticatedRequest;
-      await userService.updatePushToken(authReq.user.id, req.body.pushToken);
+      await userService.updatePushToken(req.user.id, req.body.pushToken);
 
       res.json({
         success: true,
@@ -206,7 +197,7 @@ router.patch(
         message: 'Erro interno do servidor'
       });
     }
-  }
+  })
 );
 
 export default router;

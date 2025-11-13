@@ -1,38 +1,65 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    /* Language and Environment */
+    "target": "ES2022",
+    "lib": ["ES2022"],
     "module": "commonjs",
-    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    
+    /* Emit */
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": false,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
+    "sourceMap": true,
     "declaration": false,
     "declarationMap": false,
-    "sourceMap": true,
-    "removeComments": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": false,
-    "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false,
+    "removeComments": true,
+    "noEmitOnError": true,
+    
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    
+    /* Type Checking - Strict Mode */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    /* Additional Checks */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    
+    /* Advanced Options */
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    
+    /* Path Mapping (opcional, descomente se necessário) */
+    // "baseUrl": ".",
+    // "paths": {
+    //   "@/*": ["src/*"]
+    // }
   },
   "include": [
-    "src/**/*",
-    "src/types/**/*",
-    "prisma/schema.prisma"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "**/__tests__/**",
+    "**/__mocks__/**"
   ]
 }

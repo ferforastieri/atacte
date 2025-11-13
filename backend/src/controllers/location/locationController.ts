@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { body, query, validationResult } from 'express-validator';
-import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { authenticateToken } from '../../middleware/auth';
 import { LocationService } from '../../services/location/locationService';
+import { asAuthenticatedHandler, AuthenticatedRequest } from '../../types/express';
 
 const router = Router();
 const locationService = new LocationService();
@@ -16,16 +17,6 @@ interface UpdateLocationRequest {
   address?: string;
   batteryLevel?: number;
   isMoving?: boolean;
-}
-
-interface LocationHistoryQuery {
-  startDate: string;
-  endDate: string;
-  limit?: string;
-}
-
-interface FamilyLocationQuery {
-  familyId: string;
 }
 
 // Validações
@@ -117,7 +108,7 @@ router.post(
 );
 
 // Obter última localização
-router.get('/latest', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/latest', asAuthenticatedHandler(async (req, res) => {
   try {
     const location = await locationService.getLatestLocation(req.user.id);
 
@@ -140,13 +131,13 @@ router.get('/latest', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor',
     });
   }
-});
+}));
 
 // Obter histórico de localização
 router.get(
   '/history',
   historyValidation,
-  async (req: AuthenticatedRequest, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -157,10 +148,10 @@ router.get(
         });
         return;
       }
-      const query = req.query as any;
-      const startDate = new Date(query.startDate);
-      const endDate = new Date(query.endDate);
-      const limit = query.limit ? parseInt(query.limit) : undefined;
+      const queryParams = req.query;
+      const startDate = new Date(queryParams['startDate'] as string);
+      const endDate = new Date(queryParams['endDate'] as string);
+      const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : undefined;
 
       const locations = await locationService.getLocationHistory(
         req.user.id,
@@ -181,15 +172,22 @@ router.get(
         message: 'Erro interno do servidor',
       });
     }
-  }
+  })
 );
 
 // Obter localizações da família
 router.get(
   '/family/:familyId',
-  async (req: AuthenticatedRequest, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const { familyId } = req.params;
+      if (!familyId) {
+        res.status(400).json({
+          success: false,
+          message: 'ID da família é obrigatório',
+        });
+        return;
+      }
 
       const familyData = await locationService.getFamilyLocations(
         req.user.id,
@@ -200,18 +198,19 @@ router.get(
         success: true,
         data: familyData,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao buscar localizações da família:', error);
-      res.status(error.message.includes('permissão') ? 403 : 500).json({
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      res.status(errorMessage.includes('permissão') ? 403 : 500).json({
         success: false,
-        message: error.message || 'Erro interno do servidor',
+        message: errorMessage,
       });
     }
-  }
+  })
 );
 
 // Obter estatísticas de localização
-router.get('/stats', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/stats', asAuthenticatedHandler(async (req, res) => {
   try {
     const stats = await locationService.getLocationStats(req.user.id);
 
@@ -226,12 +225,12 @@ router.get('/stats', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor',
     });
   }
-});
+}));
 
 // Limpar localizações antigas
-router.delete('/cleanup', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/cleanup', asAuthenticatedHandler(async (req, res) => {
   try {
-    const daysToKeep = req.query.days ? parseInt(req.query.days as string) : 30;
+    const daysToKeep = req.query['days'] ? parseInt(req.query['days'] as string) : 30;
     const deletedCount = await locationService.cleanupOldLocations(
       req.user.id,
       daysToKeep
@@ -249,13 +248,13 @@ router.delete('/cleanup', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor',
     });
   }
-});
+}));
 
 // Solicitar atualização de localização para toda a família
 router.post(
   '/request-update/:familyId',
   updateLocationValidation,
-  async (req: AuthenticatedRequest, res: Response) => {
+  asAuthenticatedHandler(async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -268,6 +267,13 @@ router.post(
       }
 
       const { familyId } = req.params;
+      if (!familyId) {
+        res.status(400).json({
+          success: false,
+          message: 'ID da família é obrigatório',
+        });
+        return;
+      }
       const body = req.body;
 
       const location = await locationService.requestFamilyLocationUpdate(
@@ -291,7 +297,7 @@ router.post(
         message,
       });
     }
-  }
+  })
 );
 
 export default router;

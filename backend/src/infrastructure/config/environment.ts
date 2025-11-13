@@ -85,13 +85,6 @@ class Environment {
     return parsed
   }
 
-  private getBoolean(key: string, defaultValue: boolean): boolean {
-    const value = process.env[key]
-    if (value === undefined) return defaultValue
-    
-    return value.toLowerCase() === 'true'
-  }
-
   private validateConfig(): void {
     const requiredFields: (keyof EnvironmentConfig)[] = [
       'DATABASE_URL',

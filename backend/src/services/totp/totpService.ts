@@ -195,9 +195,11 @@ export class TOTPService {
       const urlPart = cleanUrl.substring(15); 
       
       
-      const [pathname, queryString] = urlPart.split('?');
+      const parts = urlPart.split('?');
+      const pathname = parts[0];
+      const queryString = parts[1];
       
-      if (!queryString) {
+      if (!queryString || !pathname) {
         return null;
       }
       
@@ -212,7 +214,7 @@ export class TOTPService {
       
       const pathParts = pathname.split(':');
       const serviceName = decodeURIComponent(pathParts[0] || '');
-      const accountName = pathParts.length > 1 ? decodeURIComponent(pathParts[1]) : '';
+      const accountName = pathParts.length > 1 ? decodeURIComponent(pathParts[1] || '') : '';
 
       const result = {
         secret: secret.trim(),

@@ -1,36 +1,38 @@
 import express from 'express';
 import { PreferencesService } from '../../services/preferences/preferencesService';
 import { authenticateToken } from '../../middleware/auth';
+import { asAuthenticatedHandler } from '../../types/express';
 
 const router = express.Router();
 const preferencesService = new PreferencesService();
 
 
-router.get('/', authenticateToken, async (req: any, res) => {
+router.get('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     const preferences = await preferencesService.getUserPreferences(req.user.id);
     
     if (!preferences) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: 'Preferências não encontradas'
       });
+      return;
     }
 
     res.json({
       success: true,
       data: preferences
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Erro ao buscar preferências'
     });
   }
-});
+}));
 
 
-router.post('/', authenticateToken, async (req: any, res) => {
+router.post('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     const { theme, language, autoLock } = req.body;
     
@@ -46,17 +48,18 @@ router.post('/', authenticateToken, async (req: any, res) => {
       data: preferences,
       message: 'Preferências criadas com sucesso'
     });
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao criar preferências';
     res.status(400).json({
       success: false,
       message: 'Erro ao criar preferências',
-      error: error.message
+      error: errorMessage
     });
   }
-});
+}));
 
 
-router.put('/', authenticateToken, async (req: any, res) => {
+router.put('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     
     const { theme, language, autoLock } = req.body;
@@ -70,10 +73,11 @@ router.put('/', authenticateToken, async (req: any, res) => {
 
 
     if (!preferences) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: 'Preferências não encontradas'
       });
+      return;
     }
 
     res.json({
@@ -81,18 +85,19 @@ router.put('/', authenticateToken, async (req: any, res) => {
       data: preferences,
       message: 'Preferências atualizadas com sucesso'
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao atualizar preferências:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar preferências';
     res.status(400).json({
       success: false,
       message: 'Erro ao atualizar preferências',
-      error: error.message
+      error: errorMessage
     });
   }
-});
+}));
 
 
-router.patch('/', authenticateToken, async (req: any, res) => {
+router.patch('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     
     const { theme, language, autoLock } = req.body;
@@ -111,38 +116,40 @@ router.patch('/', authenticateToken, async (req: any, res) => {
       data: preferences,
       message: 'Preferências salvas com sucesso'
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao fazer upsert das preferências:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar preferências';
     res.status(400).json({
       success: false,
       message: 'Erro ao salvar preferências',
-      error: error.message
+      error: errorMessage
     });
   }
-});
+}));
 
 
-router.delete('/', authenticateToken, async (req: any, res) => {
+router.delete('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     const deleted = await preferencesService.deleteUserPreferences(req.user.id);
     
     if (!deleted) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: 'Preferências não encontradas'
       });
+      return;
     }
 
     res.json({
       success: true,
       message: 'Preferências deletadas com sucesso'
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Erro ao deletar preferências'
     });
   }
-});
+}));
 
 export default router;

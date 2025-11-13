@@ -28,7 +28,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
@@ -60,7 +60,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/geofence', geofenceRoutes);
 
 
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Erro:', err);
   res.status(500).json({
     success: false,
@@ -69,7 +69,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 
-app.use('*', (req, res) => {
+app.use('*', (_req, res) => {
   res.status(404).json({
     success: false,
     message: 'Rota não encontrada'

@@ -2,13 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto-js';
 import rateLimit from 'express-rate-limit';
-import { prisma, User } from '../infrastructure/prisma';
-
-
-export interface AuthenticatedRequest extends Request {
-  user: User;
-  sessionId: string;
-}
+import { prisma } from '../infrastructure/prisma';
+import { AuthenticatedRequest } from '../types/express';
 
 
 export const authLimiter = rateLimit({
@@ -41,7 +36,7 @@ export const authenticateToken = async (
     }
 
     
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
+    const decoded = jwt.verify(token, process.env['JWT_SECRET']!) as { 
       userId: string; 
       email: string; 
     };
@@ -120,7 +115,7 @@ export const authenticateToken = async (
 
 export const optionalAuth = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -132,7 +127,7 @@ export const optionalAuth = async (
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
+    const decoded = jwt.verify(token, process.env['JWT_SECRET']!) as { 
       userId: string; 
       email: string; 
     };

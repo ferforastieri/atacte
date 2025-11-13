@@ -2,7 +2,7 @@ import { prisma } from '../../infrastructure/prisma';
 import { GeofenceZone } from '@prisma/client';
 
 export interface CreateGeofenceZoneData {
-  userId: string;
+  familyId: string;
   name: string;
   description?: string;
   latitude: number;
@@ -27,7 +27,7 @@ export class GeofenceRepository {
   async create(data: CreateGeofenceZoneData): Promise<GeofenceZone> {
     return prisma.geofenceZone.create({
       data: {
-        userId: data.userId,
+        familyId: data.familyId,
         name: data.name,
         description: data.description,
         latitude: data.latitude,
@@ -46,32 +46,32 @@ export class GeofenceRepository {
     });
   }
 
-  async findByUserId(userId: string): Promise<GeofenceZone[]> {
+  async findByFamilyId(familyId: string): Promise<GeofenceZone[]> {
     return prisma.geofenceZone.findMany({
-      where: { userId },
+      where: { familyId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findActiveByUserId(userId: string): Promise<GeofenceZone[]> {
+  async findActiveByFamilyId(familyId: string): Promise<GeofenceZone[]> {
     return prisma.geofenceZone.findMany({
       where: {
-        userId,
+        familyId,
         isActive: true,
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findActiveByUserIds(userIds: string[]): Promise<GeofenceZone[]> {
-    if (userIds.length === 0) {
+  async findActiveByFamilyIds(familyIds: string[]): Promise<GeofenceZone[]> {
+    if (familyIds.length === 0) {
       return [];
     }
 
     return prisma.geofenceZone.findMany({
       where: {
-        userId: {
-          in: userIds,
+        familyId: {
+          in: familyIds,
         },
         isActive: true,
       },
@@ -90,15 +90,6 @@ export class GeofenceRepository {
     await prisma.geofenceZone.delete({
       where: { id },
     });
-  }
-
-  async checkUserOwnership(id: string, userId: string): Promise<boolean> {
-    const zone = await prisma.geofenceZone.findUnique({
-      where: { id },
-      select: { userId: true },
-    });
-
-    return zone?.userId === userId;
   }
 }
 

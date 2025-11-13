@@ -1,6 +1,7 @@
-import { Router, Response } from 'express';
+import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { authenticateToken } from '../../middleware/auth';
+import { asAuthenticatedHandler } from '../../types/express';
 import { TOTPService } from '../../services/totp/totpService';
 
 const router = Router();
@@ -17,7 +18,7 @@ router.post('/generate', [
   body('accountName')
     .notEmpty()
     .withMessage('Nome da conta é obrigatório')
-], async (req: AuthenticatedRequest, res: Response) => {
+], asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -47,7 +48,7 @@ router.post('/generate', [
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
 router.post('/qrcode', [
@@ -56,7 +57,7 @@ router.post('/qrcode', [
     .withMessage('URL otpauth é obrigatória')
     .matches(/^otpauth:\/\/totp\/.*$/)
     .withMessage('URL otpauth inválida')
-], async (req: AuthenticatedRequest, res: Response) => {
+], asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -84,7 +85,7 @@ router.post('/qrcode', [
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
 router.post('/validate', [
@@ -96,7 +97,7 @@ router.post('/validate', [
     .isLength({ min: 6, max: 6 })
     .isNumeric()
     .withMessage('Código deve ter 6 dígitos numéricos')
-], async (req: AuthenticatedRequest, res: Response) => {
+], asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -135,14 +136,14 @@ router.post('/validate', [
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
 router.post('/parse', [
   body('otpauthUrl')
     .notEmpty()
     .withMessage('URL otpauth é obrigatória')
-], async (req: AuthenticatedRequest, res: Response) => {
+], asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -176,17 +177,17 @@ router.post('/parse', [
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
 router.post('/test', [
   body('secret')
     .notEmpty()
     .withMessage('Secret TOTP é obrigatório')
-], async (req: AuthenticatedRequest, res: Response) => {
+], asAuthenticatedHandler(async (req, res) => {
   try {
     
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env['NODE_ENV'] === 'production') {
       res.status(403).json({
         success: false,
         message: 'Endpoint não disponível em produção'
@@ -232,12 +233,19 @@ router.post('/test', [
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.get('/passwords/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/passwords/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID é obrigatório',
+      });
+      return;
+    }
     const totpCode = await totpService.getTotpCodeForEntry(req.user.id, id, req);
 
     if (!totpCode) {
@@ -252,19 +260,27 @@ router.get('/passwords/:id', async (req: AuthenticatedRequest, res: Response) =>
       success: true,
       data: totpCode
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao buscar código TOTP:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(500).json({
       success: false,
-      message: error.message || 'Erro interno do servidor'
+      message: errorMessage
     });
   }
-});
+}));
 
 
-router.get('/passwords/:id/secret', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/passwords/:id/secret', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID é obrigatório',
+      });
+      return;
+    }
     const totpSecret = await totpService.getTotpSecretForEntry(req.user.id, id, req);
 
     if (!totpSecret) {
@@ -279,21 +295,22 @@ router.get('/passwords/:id/secret', async (req: AuthenticatedRequest, res: Respo
       success: true,
       data: totpSecret
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao buscar secret TOTP:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(500).json({
       success: false,
-      message: error.message || 'Erro interno do servidor'
+      message: errorMessage
     });
   }
-});
+}));
 
 
 router.post('/passwords/:id', [
   body('totpInput')
     .notEmpty()
     .withMessage('Chave TOTP ou URL otpauth é obrigatória')
-], async (req: any, res: Response) => {
+], asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -305,15 +322,21 @@ router.post('/passwords/:id', [
       return;
     }
 
-    const authReq = req as AuthenticatedRequest;
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID é obrigatório',
+      });
+      return;
+    }
     const { totpInput } = req.body;
 
     const result = await totpService.addTotpToEntry(
-      authReq.user.id, 
+      req.user.id, 
       id, 
       totpInput, 
-      authReq
+      req
     );
 
     res.json({
@@ -321,28 +344,36 @@ router.post('/passwords/:id', [
       message: 'TOTP adicionado com sucesso',
       data: result
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao adicionar TOTP:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     
-    if (error.message === 'Secret TOTP inválido') {
+    if (errorMessage === 'Secret TOTP inválido') {
       res.status(400).json({
         success: false,
-        message: error.message
+        message: errorMessage
       });
       return;
     }
 
     res.status(500).json({
       success: false,
-      message: error.message || 'Erro interno do servidor'
+      message: errorMessage
     });
   }
-});
+}));
 
 
-router.delete('/passwords/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/passwords/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID é obrigatório',
+      });
+      return;
+    }
     const result = await totpService.removeTotpFromEntry(req.user.id, id, req);
 
     res.json({
@@ -350,13 +381,14 @@ router.delete('/passwords/:id', async (req: AuthenticatedRequest, res: Response)
       message: 'TOTP removido com sucesso',
       data: result
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao remover TOTP:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(500).json({
       success: false,
-      message: error.message || 'Erro interno do servidor'
+      message: errorMessage
     });
   }
-});
+}));
 
 export default router;

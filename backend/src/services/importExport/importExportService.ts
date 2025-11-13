@@ -113,12 +113,12 @@ class ImportExportService {
         await this.importExportRepository.createPasswordEntry({
           userId,
           name,
-          website,
-          username,
+          website: website ?? undefined,
+          username: username ?? undefined,
           encryptedPassword,
-          notes,
+          notes: notes ?? undefined,
           isFavorite,
-          totpSecret: encryptedTotpSecret,
+          totpSecret: encryptedTotpSecret ?? undefined,
           totpEnabled: !!totpSecret
         })
 
@@ -144,7 +144,7 @@ class ImportExportService {
     const passwords = await this.importExportRepository.findUserPasswords(userId)
 
     
-    const items = passwords.map((password, index) => ({
+    const items = passwords.map((password) => ({
       passwordHistory: [], 
       revisionDate: password.updatedAt.toISOString(),
       creationDate: password.createdAt.toISOString(),

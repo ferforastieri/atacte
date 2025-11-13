@@ -1,7 +1,5 @@
 import { Request } from 'express';
 import { AuditUtil } from '../../utils/auditUtil';
-import { CryptoUtil } from '../../utils/cryptoUtil';
-import { PasswordUtil } from '../../utils/passwordUtil';
 import { UserRepository } from '../../repositories/users/userRepository';
 
 export interface UserProfileDto {

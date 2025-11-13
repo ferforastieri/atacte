@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { AuditUtil } from '../../utils/auditUtil';
-import { LocationRepository, FamilyMemberLocation } from '../../repositories/location/locationRepository';
+import { LocationRepository } from '../../repositories/location/locationRepository';
 import { FamilyRepository } from '../../repositories/family/familyRepository';
 import { NotificationService } from '../notification/notificationService';
 import { GeofenceService } from '../geofence/geofenceService';
@@ -87,7 +87,7 @@ export class LocationService {
     await this.processGeofenceEvents(userId, data, previousLocation);
 
     // Log de auditoria (apenas para debug, não para todas as localizações)
-    if (process.env.LOG_LOCATIONS === 'true') {
+    if (process.env['LOG_LOCATIONS'] === 'true') {
       await AuditUtil.log(
         userId,
         'LOCATION_UPDATED',

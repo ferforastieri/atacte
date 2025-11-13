@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, Header, Modal, Input } from '../components/shared';
 import { geofenceService, GeofenceZone } from '../services/geofence/geofenceService';
+import { familyService } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -133,7 +134,16 @@ export default function GeofenceScreen({ navigation }: any) {
           showError(response.message || 'Erro ao atualizar zona');
         }
       } else {
+        // Buscar a primeira família do usuário para criar a zona
+        const familiesResponse = await familyService.getFamilies();
+        if (!familiesResponse.success || !familiesResponse.data || familiesResponse.data.length === 0) {
+          showError('Você precisa estar em uma família para criar zonas');
+          return;
+        }
+
+        const firstFamily = familiesResponse.data[0];
         const response = await geofenceService.createZone({
+          familyId: firstFamily.id,
           name: formData.name,
           description: formData.description || undefined,
           latitude,

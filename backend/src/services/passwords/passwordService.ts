@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { PasswordEntry, CustomField } from '../../infrastructure/prisma';
+import { PasswordEntry } from '../../infrastructure/prisma';
 import { CryptoUtil } from '../../utils/cryptoUtil';
 import { AuditUtil } from '../../utils/auditUtil';
 import { PasswordUtil, PasswordGeneratorOptions } from '../../utils/passwordUtil';
@@ -75,7 +75,7 @@ export class PasswordService {
   }
 
   
-  async searchPasswords(userId: string, filters: SearchFilters, req?: Request): Promise<SearchResult> {
+  async searchPasswords(userId: string, filters: SearchFilters, _req?: Request): Promise<SearchResult> {
     const {
       query,
       folder,
@@ -121,7 +121,8 @@ export class PasswordService {
         const decryptedPassword = await this.decryptPasswordEntry(password, user.encryptionKeyHash);
         decryptedPasswords.push(decryptedPassword);
       } catch (error) {
-        console.error('🔐 PasswordService: ERRO ao descriptografar senha, pulando:', password.name, error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        console.error('🔐 PasswordService: ERRO ao descriptografar senha, pulando:', password.name, errorMessage);
         
         continue;
       }
@@ -259,7 +260,7 @@ export class PasswordService {
     }
 
     
-    const updatedPassword = await this.passwordRepository.update(passwordId, updateData);
+    await this.passwordRepository.update(passwordId, updateData);
 
     
     if (data.customFields) {

@@ -1,4 +1,3 @@
-import { Request } from 'express';
 import { NotificationRepository } from '../../repositories/notification/notificationRepository';
 import { FamilyRepository } from '../../repositories/family/familyRepository';
 import { Notification } from '../../../node_modules/.prisma/client';
@@ -165,7 +164,7 @@ export class NotificationService {
 
   async sendLowBatteryAlert(userId: string, batteryLevel: number): Promise<void> {
     const cooldownMinutes = parseInt(
-      process.env.BATTERY_ALERT_COOLDOWN_MINUTES || '30',
+      process.env['BATTERY_ALERT_COOLDOWN_MINUTES'] || '30',
       10
     );
 

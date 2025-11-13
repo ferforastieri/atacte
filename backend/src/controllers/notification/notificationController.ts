@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { body, query, validationResult } from 'express-validator';
-import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { body, validationResult } from 'express-validator';
+import { authenticateToken } from '../../middleware/auth';
+import { AuthenticatedRequest, asAuthenticatedHandler } from '../../types/express';
 import { NotificationService } from '../../services/notification/notificationService';
 
 const router = Router();
@@ -107,7 +108,7 @@ router.get(
 );
 
 // Obter contagem de não lidas
-router.get('/unread-count', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/unread-count', asAuthenticatedHandler(async (req, res) => {
   try {
     const count = await notificationService.getUnreadCount(req.user.id);
 
@@ -122,7 +123,7 @@ router.get('/unread-count', async (req: AuthenticatedRequest, res: Response) => 
       message: 'Erro interno do servidor',
     });
   }
-});
+}));
 
 // Criar notificação (admin)
 router.post(
@@ -162,9 +163,16 @@ router.post(
 );
 
 // Marcar como lida
-router.patch('/:id/read', async (req: AuthenticatedRequest, res: Response) => {
+router.patch('/:id/read', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID da notificação é obrigatório',
+      });
+      return;
+    }
     const notification = await notificationService.markAsRead(req.user.id, id);
 
     res.json({
@@ -172,17 +180,18 @@ router.patch('/:id/read', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Notificação marcada como lida',
       data: notification,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao marcar notificação:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao marcar notificação';
     res.status(400).json({
       success: false,
-      message: error.message || 'Erro ao marcar notificação',
+      message: errorMessage,
     });
   }
-});
+}));
 
 // Marcar todas como lidas
-router.patch('/read-all', async (req: AuthenticatedRequest, res: Response) => {
+router.patch('/read-all', asAuthenticatedHandler(async (req, res) => {
   try {
     const count = await notificationService.markAllAsRead(req.user.id);
 
@@ -198,12 +207,19 @@ router.patch('/read-all', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor',
     });
   }
-});
+}));
 
 // Deletar notificação
-router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID da notificação é obrigatório',
+      });
+      return;
+    }
     await notificationService.deleteNotification(req.user.id, id);
 
     res.json({
@@ -212,12 +228,13 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
     });
   } catch (error: any) {
     console.error('Erro ao deletar notificação:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao deletar notificação';
     res.status(400).json({
       success: false,
-      message: error.message || 'Erro ao deletar notificação',
+      message: errorMessage,
     });
   }
-});
+}));
 
 // Enviar SOS
 router.post(

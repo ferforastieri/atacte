@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { FamilyMemberLocation } from '../../services/location/locationService';
@@ -78,6 +78,29 @@ export default function FamilyMap({
       }
     }
   }, [isCreatingZone]);
+
+  // Função para enviar dados para o mapa
+  const updateMapData = useCallback(() => {
+    const script = `
+      window.updateMapData(
+        ${JSON.stringify(locations)},
+        ${currentLocation ? JSON.stringify(currentLocation) : 'null'},
+        ${JSON.stringify(zones)}
+      );
+    `;
+    return script;
+  }, [locations, currentLocation, zones]);
+
+  // Atualizar mapa quando zonas, localizações ou localização atual mudarem
+  useEffect(() => {
+    if (webViewRef.current) {
+      // Aguardar um pouco para garantir que o mapa foi inicializado
+      const timeoutId = setTimeout(() => {
+        webViewRef.current?.injectJavaScript(updateMapData());
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [updateMapData]);
 
   // HTML do Leaflet com funcionalidades completas
   const leafletHTML = `
@@ -410,17 +433,6 @@ export default function FamilyMap({
     </html>
   `;
 
-  // Função para enviar dados para o mapa
-  const updateMapData = () => {
-    const script = `
-      window.updateMapData(
-        ${JSON.stringify(locations)},
-        ${currentLocation ? JSON.stringify(currentLocation) : 'null'},
-        ${JSON.stringify(zones)}
-      );
-    `;
-    return script;
-  };
 
   // Função para iniciar criação de zona
   const startCreatingZone = () => {

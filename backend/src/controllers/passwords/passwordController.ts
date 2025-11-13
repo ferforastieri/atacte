@@ -1,42 +1,12 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { body, query, validationResult } from 'express-validator';
-import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { authenticateToken } from '../../middleware/auth';
+import { asAuthenticatedHandler } from '../../types/express';
 import { PasswordService } from '../../services/passwords/passwordService';
 
 const router = Router();
 const passwordService = new PasswordService();
 
-
-interface CreatePasswordRequest {
-  name: string;
-  website?: string;
-  username?: string;
-  password: string;
-  notes?: string;
-  folder?: string;
-  isFavorite?: boolean;
-  customFields?: Array<{
-    fieldName: string;
-    value: string;
-    fieldType: 'text' | 'password' | 'email' | 'url' | 'number';
-  }>;
-  
-  totpSecret?: string;
-  totpEnabled?: boolean;
-}
-
-interface UpdatePasswordRequest extends Partial<CreatePasswordRequest> {}
-
-interface SearchQuery {
-  query?: string;
-  folder?: string;
-  isFavorite?: string;
-  totpEnabled?: string;
-  limit?: string;
-  offset?: string;
-  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'lastUsed';
-  sortOrder?: 'asc' | 'desc';
-}
 
 
 const createPasswordValidation = [
@@ -87,7 +57,7 @@ const createPasswordValidation = [
         try {
           const speakeasy = require('speakeasy');
           const cleanSecret = value.replace(/\s/g, '').toUpperCase();
-          const testCode = speakeasy.totp({
+          speakeasy.totp({
             secret: cleanSecret,
             encoding: 'base32',
             step: 30
@@ -123,7 +93,7 @@ const searchValidation = [
 router.use(authenticateToken);
 
 
-router.get('/', searchValidation, async (req: Request<{}, {}, {}, SearchQuery>, res: Response) => {
+router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -135,19 +105,21 @@ router.get('/', searchValidation, async (req: Request<{}, {}, {}, SearchQuery>, 
       return;
     }
 
-    const authReq = req as AuthenticatedRequest;
+    const queryParams = req.query;
+    const sortByValue = queryParams['sortBy'] as string | undefined;
+    const sortOrderValue = queryParams['sortOrder'] as string | undefined;
     const filters = {
-      query: req.query.query,
-      folder: req.query.folder,
-      isFavorite: req.query.isFavorite ? req.query.isFavorite === 'true' : undefined,
-      totpEnabled: req.query.totpEnabled ? req.query.totpEnabled === 'true' : undefined,
-      limit: parseInt(req.query.limit || '50'),
-      offset: parseInt(req.query.offset || '0'),
-      sortBy: req.query.sortBy || 'name',
-      sortOrder: req.query.sortOrder || 'asc'
+      query: queryParams['query'] as string | undefined,
+      folder: queryParams['folder'] as string | undefined,
+      isFavorite: queryParams['isFavorite'] ? queryParams['isFavorite'] === 'true' : undefined,
+      totpEnabled: queryParams['totpEnabled'] ? queryParams['totpEnabled'] === 'true' : undefined,
+      limit: queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50,
+      offset: queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0,
+      sortBy: (sortByValue === 'name' || sortByValue === 'createdAt' || sortByValue === 'updatedAt' || sortByValue === 'lastUsed') ? (sortByValue as 'name' | 'createdAt' | 'updatedAt' | 'lastUsed') : ('name' as const),
+      sortOrder: (sortOrderValue === 'asc' || sortOrderValue === 'desc') ? (sortOrderValue as 'asc' | 'desc') : ('asc' as const)
     };
 
-    const result = await passwordService.searchPasswords(authReq.user.id, filters, authReq);
+    const result = await passwordService.searchPasswords(req.user.id, filters, req);
 
     res.json({
       success: true,
@@ -165,12 +137,19 @@ router.get('/', searchValidation, async (req: Request<{}, {}, {}, SearchQuery>, 
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID é obrigatório',
+      });
+      return;
+    }
     const password = await passwordService.getPasswordById(req.user.id, id, req);
 
     if (!password) {
@@ -192,10 +171,10 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.post('/', createPasswordValidation, async (req: Request<{}, {}, CreatePasswordRequest>, res: Response) => {
+router.post('/', createPasswordValidation, asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -207,10 +186,9 @@ router.post('/', createPasswordValidation, async (req: Request<{}, {}, CreatePas
       return;
     }
 
-    const authReq = req as AuthenticatedRequest;
     const passwordData = req.body;
     
-    const newPassword = await passwordService.createPassword(authReq.user.id, passwordData, authReq);
+    const newPassword = await passwordService.createPassword(req.user.id, passwordData, req);
 
     res.status(201).json({
       success: true,
@@ -224,10 +202,10 @@ router.post('/', createPasswordValidation, async (req: Request<{}, {}, CreatePas
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.put('/:id', async (req: Request<{id: string}, {}, UpdatePasswordRequest>, res: Response) => {
+router.put('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -239,11 +217,17 @@ router.put('/:id', async (req: Request<{id: string}, {}, UpdatePasswordRequest>,
       return;
     }
 
-    const authReq = req as any;
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID é obrigatório',
+      });
+      return;
+    }
     const updateData = req.body;
 
-    const updatedPassword = await passwordService.updatePassword(authReq.user.id, id, updateData, authReq);
+    const updatedPassword = await passwordService.updatePassword(req.user.id, id, updateData, req);
 
     if (!updatedPassword) {
       res.status(404).json({
@@ -265,12 +249,19 @@ router.put('/:id', async (req: Request<{id: string}, {}, UpdatePasswordRequest>,
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        message: 'ID é obrigatório',
+      });
+      return;
+    }
     const deleted = await passwordService.deletePassword(req.user.id, id, req);
 
     if (!deleted) {
@@ -292,17 +283,18 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
-router.get('/generate', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/generate', asAuthenticatedHandler(async (req, res) => {
   try {
+    const queryParams = req.query;
     const options = {
-      length: parseInt(req.query.length as string) || 16,
-      includeUppercase: req.query.includeUppercase !== 'false',
-      includeLowercase: req.query.includeLowercase !== 'false',
-      includeNumbers: req.query.includeNumbers !== 'false',
-      includeSymbols: req.query.includeSymbols !== 'false',
+      length: queryParams['length'] ? parseInt(queryParams['length'] as string) : 16,
+      includeUppercase: queryParams['includeUppercase'] !== 'false',
+      includeLowercase: queryParams['includeLowercase'] !== 'false',
+      includeNumbers: queryParams['includeNumbers'] !== 'false',
+      includeSymbols: queryParams['includeSymbols'] !== 'false',
     };
 
     const generatedPassword = await passwordService.generateSecurePassword(options);
@@ -321,7 +313,7 @@ router.get('/generate', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Erro interno do servidor'
     });
   }
-});
+}));
 
 
 export default router;
