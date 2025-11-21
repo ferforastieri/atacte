@@ -6,6 +6,7 @@ export type {
   CustomField,
   UserSession,
   AuditLog,
+  SecureNote,
   Prisma
 } from '@prisma/client';
 

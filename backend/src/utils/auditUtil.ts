@@ -28,7 +28,11 @@ export type AuditAction =
   | 'LOCATION_UPDATED'
   | 'GEOFENCE_ZONE_CREATED'
   | 'GEOFENCE_ZONE_UPDATED'
-  | 'GEOFENCE_ZONE_DELETED';
+  | 'GEOFENCE_ZONE_DELETED'
+  | 'NOTE_VIEWED'
+  | 'NOTE_CREATED'
+  | 'NOTE_UPDATED'
+  | 'NOTE_DELETED';
 
 export type ResourceType = 
   | 'USER'
@@ -38,7 +42,8 @@ export type ResourceType =
   | 'FAMILY'
   | 'FAMILY_MEMBER'
   | 'LOCATION'
-  | 'GEOFENCE_ZONE';
+  | 'GEOFENCE_ZONE'
+  | 'SECURE_NOTE';
 
 export class AuditUtil {
   
