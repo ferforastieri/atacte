@@ -1,22 +1,22 @@
 <template>
   <BaseModal :show="show" @close="$emit('close')" size="lg">
     <template #header>
-      <h3 class="text-lg font-semibold text-gray-900">Importar Senhas</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Importar Senhas</h3>
     </template>
 
     <div class="space-y-6">
       <!-- Upload de arquivo -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Selecione o arquivo JSON do Bitwarden
         </label>
-        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
           <div class="space-y-1 text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+            <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" stroke="currentColor" fill="none" viewBox="0 0 48 48">
               <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            <div class="flex text-sm text-gray-600">
-              <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+            <div class="flex text-sm text-gray-600 dark:text-gray-400">
+              <label for="file-upload" class="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                 <span>Carregar arquivo</span>
                 <input 
                   id="file-upload" 
@@ -30,7 +30,7 @@
               </label>
               <p class="pl-1">ou arraste e solte</p>
             </div>
-            <p class="text-xs text-gray-500">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
               JSON do Bitwarden (até 10MB)
             </p>
           </div>
@@ -38,32 +38,32 @@
       </div>
 
       <!-- Arquivo selecionado -->
-      <div v-if="selectedFile" class="bg-gray-50 rounded-lg p-4">
+      <div v-if="selectedFile" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
         <div class="flex items-center">
-          <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="h-5 w-5 text-green-500 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
-          <span class="text-sm font-medium text-gray-900">{{ selectedFile.name }}</span>
-          <span class="ml-2 text-xs text-gray-500">({{ formatFileSize(selectedFile.size) }})</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ selectedFile.name }}</span>
+          <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">({{ formatFileSize(selectedFile.size) }})</span>
         </div>
       </div>
 
       <!-- Resultado da importação -->
-      <div v-if="importResult" class="rounded-lg p-4" :class="importResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+      <div v-if="importResult" class="rounded-lg p-4" :class="importResult.success ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'">
         <div class="flex">
           <div class="flex-shrink-0">
-            <svg v-if="importResult.success" class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg v-if="importResult.success" class="h-5 w-5 text-green-400 dark:text-green-300" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
-            <svg v-else class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg v-else class="h-5 w-5 text-red-400 dark:text-red-300" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
             </svg>
           </div>
           <div class="ml-3">
-            <h3 class="text-sm font-medium" :class="importResult.success ? 'text-green-800' : 'text-red-800'">
+            <h3 class="text-sm font-medium" :class="importResult.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'">
               {{ importResult.success ? 'Importação concluída!' : 'Erro na importação' }}
             </h3>
-            <div class="mt-2 text-sm" :class="importResult.success ? 'text-green-700' : 'text-red-700'">
+            <div class="mt-2 text-sm" :class="importResult.success ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'">
               <p v-if="importResult.success">
                 {{ importResult.imported }} senhas importadas com sucesso
                 <span v-if="importResult.duplicates > 0">, {{ importResult.duplicates }} duplicatas ignoradas</span>

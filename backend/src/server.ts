@@ -47,6 +47,7 @@ import familyRoutes from './controllers/family/familyController';
 import locationRoutes from './controllers/location/locationController';
 import notificationRoutes from './controllers/notification/notificationController';
 import geofenceRoutes from './controllers/geofence/geofenceController';
+import secureNoteRoutes from './controllers/secureNotes/secureNoteController';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/passwords', passwordRoutes);
@@ -58,6 +59,7 @@ app.use('/api/family', familyRoutes);
 app.use('/api/location', locationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/geofence', geofenceRoutes);
+app.use('/api/secure-notes', secureNoteRoutes);
 
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

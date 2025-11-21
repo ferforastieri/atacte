@@ -10,7 +10,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
-import TotpScreen from '../screens/TotpScreen';
+import SecureNotesScreen from '../screens/SecureNotesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PasswordDetailScreen from '../screens/PasswordDetailScreen';
 import FamilyScreen from '../screens/FamilyScreen';
@@ -34,7 +34,7 @@ export type MainTabParamList = {
   Dashboard: undefined;
   Family: undefined;
   FamilyDetail: { familyId: string; familyName: string };
-  Totp: undefined;
+  SecureNotes: undefined;
   Profile: undefined;
   Settings: undefined;
 };
@@ -64,8 +64,8 @@ function MainTabNavigator() {
             iconName = focused ? 'key' : 'key-outline';
           } else if (route.name === 'Family') {
             iconName = focused ? 'people' : 'people-outline';
-          } else if (route.name === 'Totp') {
-            iconName = focused ? 'time' : 'time-outline';
+          } else if (route.name === 'SecureNotes') {
+            iconName = focused ? 'document-text' : 'document-text-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
@@ -103,9 +103,9 @@ function MainTabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Totp" 
-        component={TotpScreen}
-        options={{ title: 'TOTP' }}
+        name="SecureNotes" 
+        component={SecureNotesScreen}
+        options={{ title: 'Notas Seguras' }}
       />
       <Tab.Screen 
         name="Profile" 

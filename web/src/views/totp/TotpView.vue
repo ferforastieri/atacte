@@ -1,41 +1,12 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center py-6">
-          <div class="flex items-center">
-            <button
-              @click="$router.push('/dashboard')"
-              class="mr-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <ArrowLeftIcon class="h-6 w-6 text-gray-600 dark:text-gray-400" />
-            </button>
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Códigos TOTP
-              </h1>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                Códigos de autenticação de dois fatores
-              </p>
-            </div>
-          </div>
-          
-          <div class="flex items-center space-x-4">
-            <button
-              @click="refreshTotpCodes"
-              :disabled="isRefreshing"
-              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-            >
-              <ArrowPathIcon 
-                :class="{ 'animate-spin': isRefreshing }" 
-                class="h-5 w-5 text-gray-600 dark:text-gray-400" 
-              />
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
+    <AppHeader
+      :show-logo="true"
+      :show-back-button="true"
+      :show-navigation="true"
+      title="Códigos TOTP"
+    />
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -162,13 +133,11 @@ import { TOTPClient } from '@/utils/totpClient'
 import type { PasswordEntry } from '@/api/passwords'
 
 
-import BaseCard from '@/components/ui/BaseCard.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import { AppHeader, BaseCard, BaseButton } from '@/components/ui'
 import PasswordDetailModal from '@/components/passwords/PasswordDetailModal.vue'
 
 
 import {
-  ArrowLeftIcon,
   ArrowPathIcon,
   KeyIcon,
   ClipboardIcon,

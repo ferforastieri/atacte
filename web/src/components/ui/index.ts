@@ -11,4 +11,5 @@ export { default as SearchInput } from './SearchInput.vue'
 export { default as ThemeToggle } from './ThemeToggle.vue'
 export { default as Logo } from './Logo.vue'
 export { default as CustomToast } from './CustomToast.vue'
+export { default as AppHeader } from '../layout/AppHeader.vue'
 

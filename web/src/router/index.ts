@@ -104,6 +104,15 @@ const router = createRouter({
       }
     },
     {
+      path: '/secure-notes',
+      name: 'SecureNotes',
+      component: () => import('@/views/secureNotes/SecureNotesView.vue'),
+      meta: { 
+        requiresAuth: true,
+        title: 'Notas Seguras - Atacte'
+      }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('@/views/NotFoundView.vue'),

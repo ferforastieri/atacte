@@ -1,18 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center">
-            <router-link to="/dashboard" class="flex items-center">
-              <ArrowLeftIcon class="h-5 w-5 text-gray-400 mr-2" />
-              <span class="text-lg font-semibold text-gray-900">Logs de Auditoria</span>
-            </router-link>
-          </div>
-        </div>
-      </div>
-    </header>
+    <AppHeader
+      :show-logo="true"
+      :show-back-button="true"
+      :show-navigation="true"
+      title="Logs de Auditoria"
+    />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Filters -->
@@ -123,7 +117,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeftIcon, MagnifyingGlassIcon, DocumentTextIcon } from '@heroicons/vue/24/outline'
-import { BaseButton, BaseInput, BaseCard } from '@/components/ui'
+import { AppHeader, BaseButton, BaseInput, BaseCard } from '@/components/ui'
 
 interface AuditLog {
   id: string

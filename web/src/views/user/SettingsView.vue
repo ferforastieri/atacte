@@ -1,19 +1,12 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center">
-            <router-link to="/dashboard" class="flex items-center">
-              <ArrowLeftIcon class="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2" />
-              <span class="text-lg font-semibold text-gray-900 dark:text-white">Configurações</span>
-            </router-link>
-          </div>
-          <ThemeToggle />
-        </div>
-      </div>
-    </header>
+    <AppHeader
+      :show-logo="true"
+      :show-back-button="true"
+      :show-navigation="true"
+      title="Configurações"
+    />
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div class="space-y-4 sm:space-y-6">
@@ -185,7 +178,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
-import { BaseButton, BaseCard, ThemeToggle } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
 import { useThemeStore } from '@/stores/theme'
 import { usePasswordsStore } from '@/stores/passwords'
 import { useAuthStore } from '@/stores/auth'

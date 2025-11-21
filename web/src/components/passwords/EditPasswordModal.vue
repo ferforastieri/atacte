@@ -1,7 +1,7 @@
 <template>
   <BaseModal :show="show" @close="$emit('close')" size="lg">
     <template #header>
-      <h3 class="text-lg font-semibold text-gray-900">Editar Senha</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Editar Senha</h3>
     </template>
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
@@ -61,7 +61,7 @@
             Gerar Senha
           </BaseButton>
           
-          <div class="text-sm text-gray-500">
+          <div class="text-sm text-gray-500 dark:text-gray-400">
             <PasswordStrength v-if="form.password" :password="form.password" />
           </div>
         </div>
@@ -82,9 +82,9 @@
             id="isFavorite"
             v-model="form.isFavorite"
             type="checkbox"
-            class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
           />
-          <label for="isFavorite" class="text-sm font-medium text-gray-700">
+          <label for="isFavorite" class="text-sm font-medium text-gray-700 dark:text-gray-300">
             Marcar como favorita
           </label>
         </div>
@@ -97,9 +97,9 @@
             id="totpEnabled"
             v-model="form.totpEnabled"
             type="checkbox"
-            class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
           />
-          <label for="totpEnabled" class="text-sm font-medium text-gray-700">
+          <label for="totpEnabled" class="text-sm font-medium text-gray-700 dark:text-gray-300">
             Habilitar TOTP (2FA)
           </label>
         </div>
@@ -114,7 +114,7 @@
               placeholder="Digite a chave secreta do app autenticador"
               :error="errors.totpSecret"
             />
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
             </p>
           </div>
@@ -123,14 +123,14 @@
 
       <!-- Notas -->
       <div>
-        <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Notas
         </label>
         <textarea
           id="notes"
           v-model="form.notes"
           rows="3"
-          class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          class="block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500"
           placeholder="Notas adicionais (opcional)"
         ></textarea>
       </div>

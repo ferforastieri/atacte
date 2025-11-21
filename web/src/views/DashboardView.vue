@@ -1,97 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <!-- Logo -->
-          <Logo :size="32" text-size="text-lg sm:text-xl" />
-
-          <!-- User Menu -->
-          <div class="flex items-center space-x-2 sm:space-x-3">
-            <ThemeToggle />
-            
-            <BaseButton
-              variant="ghost"
-              size="sm"
-              @click="refreshPasswords"
-              :loading="isRefreshing"
-              class="hidden sm:flex"
-            >
-              <ArrowPathIcon class="w-4 h-4 mr-1" />
-              <span class="hidden sm:inline">Atualizar</span>
-            </BaseButton>
-
-            <!-- Location button -->
-            <BaseButton
-              variant="ghost"
-              size="sm"
-              @click="goToLocation"
-              class="hidden sm:flex"
-            >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span class="hidden sm:inline">Localização</span>
-            </BaseButton>
-
-            <!-- Mobile refresh button -->
-            <BaseButton
-              variant="ghost"
-              size="sm"
-              @click="refreshPasswords"
-              :loading="isRefreshing"
-              class="sm:hidden"
-            >
-              <ArrowPathIcon class="w-4 h-4" />
-            </BaseButton>
-
-            <div class="relative">
-              <button
-                @click="showUserMenu = !showUserMenu"
-                class="flex items-center space-x-1 sm:space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                  <UserIcon class="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                </div>
-                <span class="text-gray-700 dark:text-gray-300 hidden sm:inline">{{ authStore.userEmail }}</span>
-                <ChevronDownIcon class="h-4 w-4 text-gray-400 dark:text-gray-500" />
-              </button>
-
-              <!-- Dropdown Menu -->
-              <Transition name="fade">
-                <div
-                  v-if="showUserMenu"
-                  class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700"
-                >
-                  <router-link
-                    to="/profile"
-                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    @click="showUserMenu = false"
-                  >
-                    Perfil
-                  </router-link>
-                  <router-link
-                    to="/settings"
-                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    @click="showUserMenu = false"
-                  >
-                    Configurações
-                  </router-link>
-                  <button
-                    @click="handleLogout"
-                    class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    Sair
-                  </button>
-                </div>
-              </Transition>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
+    <AppHeader
+      :show-logo="true"
+      :show-navigation="true"
+    />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Stats Cards -->
@@ -352,8 +265,6 @@ import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
 import {
   LockClosedIcon,
-  UserIcon,
-  ChevronDownIcon,
   ArrowPathIcon,
   PlusIcon,
   ArrowUpTrayIcon,
@@ -362,11 +273,12 @@ import {
   HeartIcon,
   FolderIcon,
   KeyIcon,
-  ClipboardIcon
+  ClipboardIcon,
+  DocumentTextIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
-import { BaseButton, BaseCard, SearchInput, ThemeToggle, Logo } from '@/components/ui'
+import { BaseButton, BaseCard, SearchInput, AppHeader } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { copyToClipboard } from '@/utils/clipboard'
 
@@ -381,7 +293,6 @@ const authStore = useAuthStore()
 const passwordsStore = usePasswordsStore()
 
 
-const showUserMenu = ref(false)
 const showCreateModal = ref(false)
 const showImportModal = ref(false)
 const showDetailModal = ref(false)
@@ -516,13 +427,8 @@ const goToLocation = () => {
   router.push('/location')
 }
 
-const handleLogout = async () => {
-  try {
-    await authStore.logout()
-    router.push('/login')
-  } catch (error) {
-    toast.error('Erro ao fazer logout')
-  }
+const goToSecureNotes = () => {
+  router.push('/secure-notes')
 }
 
 const handlePasswordCreated = () => {
@@ -555,24 +461,12 @@ onMounted(async () => {
     }
   }
   
-  
-  if (!passwordsStore.statsLoaded) {
-    await passwordsStore.loadCompleteStats()
+  if (authStore.isAuthenticated && !passwordsStore.statsLoaded) {
+    try {
+      await passwordsStore.loadCompleteStats()
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error)
+    }
   }
-})
-
-
-const handleClickOutside = (event: Event) => {
-  if (!(event.target as Element).closest('.relative')) {
-    showUserMenu.value = false
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 </script>

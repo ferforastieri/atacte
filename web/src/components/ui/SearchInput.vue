@@ -192,24 +192,26 @@ defineExpose({
 }
 
 .search-input {
-  @apply w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg 
-         focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-         disabled:bg-gray-100 disabled:cursor-not-allowed
-         placeholder-gray-500 text-gray-900;
+  @apply w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+         placeholder-gray-500 dark:placeholder-gray-400
+         focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400
+         disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed;
 }
 
 .search-icon {
-  @apply absolute left-3 h-5 w-5 text-gray-400 pointer-events-none;
+  @apply absolute left-3 h-5 w-5 text-gray-400 dark:text-gray-500 pointer-events-none;
 }
 
 .clear-button {
-  @apply absolute right-3 p-1 rounded-full hover:bg-gray-100 
-         focus:outline-none focus:ring-2 focus:ring-blue-500 
+  @apply absolute right-3 p-1 rounded-full 
+         hover:bg-gray-100 dark:hover:bg-gray-700
+         focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
          disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .clear-icon {
-  @apply h-4 w-4 text-gray-400;
+  @apply h-4 w-4 text-gray-400 dark:text-gray-500;
 }
 
 .search-loading {
@@ -217,30 +219,6 @@ defineExpose({
 }
 
 .loading-spinner {
-  @apply h-4 w-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .search-input {
-    @apply bg-gray-800 border-gray-600 text-white placeholder-gray-400
-           focus:ring-blue-400 focus:border-blue-400;
-  }
-  
-  .search-icon {
-    @apply text-gray-500;
-  }
-  
-  .clear-button {
-    @apply hover:bg-gray-700;
-  }
-  
-  .clear-icon {
-    @apply text-gray-500;
-  }
-  
-  .loading-spinner {
-    @apply border-gray-600 border-t-blue-400;
-  }
+  @apply h-4 w-4 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin;
 }
 </style>

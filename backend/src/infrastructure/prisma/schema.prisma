@@ -30,6 +30,7 @@ model User {
   
   // Relacionamentos
   passwordEntries      PasswordEntry[]
+  secureNotes          SecureNote[]
   userSessions         UserSession[]
   auditLogs            AuditLog[]
   preferences          UserPreferences?
@@ -78,6 +79,23 @@ model CustomField {
   passwordEntry     PasswordEntry @relation(fields: [passwordEntryId], references: [id], onDelete: Cascade)
   
   @@map("custom_fields")
+}
+
+model SecureNote {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  title             String
+  encryptedContent  String   @map("encrypted_content")
+  folder            String?
+  isFavorite        Boolean  @default(false) @map("is_favorite")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@map("secure_notes")
 }
 
 model UserSession {

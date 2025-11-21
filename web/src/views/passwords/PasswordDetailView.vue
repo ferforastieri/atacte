@@ -1,38 +1,32 @@
 <template>
-  <div v-if="password" class="min-h-screen bg-gray-50">
+  <div v-if="password" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center">
-            <router-link to="/dashboard" class="flex items-center">
-              <ArrowLeftIcon class="h-5 w-5 text-gray-400 mr-2" />
-              <span class="text-lg font-semibold text-gray-900">{{ password.name }}</span>
-            </router-link>
-          </div>
-          
-          <div class="flex items-center space-x-2">
-            <BaseButton
-              variant="secondary"
-              @click="editPassword"
-            >
-              <PencilIcon class="w-4 h-4 mr-2" />
-              Editar
-            </BaseButton>
-            
-            <BaseButton
-              variant="danger"
-              @click="deletePassword"
-            >
-              <TrashIcon class="w-4 h-4 mr-2" />
-              Deletar
-            </BaseButton>
-          </div>
-        </div>
-      </div>
-    </header>
+    <AppHeader
+      :show-logo="true"
+      :show-back-button="true"
+      :show-navigation="true"
+      :title="password.name"
+    />
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Action Buttons -->
+      <div class="mb-6 flex justify-end space-x-2">
+        <BaseButton
+          variant="secondary"
+          @click="editPassword"
+        >
+          <PencilIcon class="w-4 h-4 mr-2" />
+          Editar
+        </BaseButton>
+        
+        <BaseButton
+          variant="danger"
+          @click="deletePassword"
+        >
+          <TrashIcon class="w-4 h-4 mr-2" />
+          Deletar
+        </BaseButton>
+      </div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Info -->
         <div class="lg:col-span-2 space-y-6">
@@ -293,7 +287,7 @@ import {
   GlobeAltIcon
 } from '@heroicons/vue/24/outline'
 import { usePasswordsStore } from '@/stores/passwords'
-import { BaseButton, BaseCard, TotpCode } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, TotpCode } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { copyToClipboard } from '@/utils/clipboard'
 

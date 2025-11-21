@@ -38,6 +38,12 @@
 - **Auto-lock** configurável por inatividade
 - **Logs de auditoria** detalhados
 
+#### 📝 Notas Seguras
+- **Notas criptografadas** com suporte a conteúdo extenso
+- **Organização por pastas** para melhor gerenciamento
+- **Sistema de favoritos** para acesso rápido
+- **Busca avançada** por título e conteúdo
+
 #### 👨‍👩‍👧‍👦 Segurança Familiar
 - **Rastreamento de localização** em tempo real
 - **Criação de grupos familiares** com códigos de convite
@@ -422,6 +428,23 @@ Atualizar senha existente.
 
 #### DELETE `/api/passwords/:id`
 Excluir senha.
+
+### Notas Seguras
+
+#### GET `/api/secure-notes`
+Listar notas do usuário.
+
+#### POST `/api/secure-notes`
+Criar nova nota segura.
+
+#### PUT `/api/secure-notes/:id`
+Atualizar nota existente.
+
+#### DELETE `/api/secure-notes/:id`
+Excluir nota.
+
+#### GET `/api/secure-notes/folders/list`
+Listar pastas disponíveis.
 
 ### TOTP/2FA
 

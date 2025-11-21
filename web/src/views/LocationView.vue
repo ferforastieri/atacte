@@ -1,67 +1,27 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <!-- Logo -->
-          <Logo :size="32" text-size="text-lg sm:text-xl" />
-
-          <!-- Actions -->
-          <div class="flex items-center space-x-2 sm:space-x-3">
-            <ThemeToggle />
-            
-            <BaseButton
-              variant="ghost"
-              size="sm"
-              @click="refreshLocations"
-              :loading="isLoading"
-              class="hidden sm:flex"
-            >
-              <ArrowPathIcon class="w-4 h-4 mr-1" />
-              <span class="hidden sm:inline">Atualizar</span>
-            </BaseButton>
-
-                   <BaseButton
-                     variant="primary"
-                     size="sm"
-                     @click="startCreatingZone"
-                     class="hidden sm:flex"
-                   >
-                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                     </svg>
-                     <span class="hidden sm:inline">Nova Zona</span>
-                   </BaseButton>
-
-            <!-- Mobile buttons -->
-            <BaseButton
-              variant="ghost"
-              size="sm"
-              @click="refreshLocations"
-              :loading="isLoading"
-              class="sm:hidden"
-            >
-              <ArrowPathIcon class="w-4 h-4" />
-            </BaseButton>
-
-                   <BaseButton
-                     variant="primary"
-                     size="sm"
-                     @click="startCreatingZone"
-                     class="sm:hidden"
-                   >
-                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                     </svg>
-                   </BaseButton>
-          </div>
-        </div>
-      </div>
-    </header>
+    <AppHeader
+      :show-logo="true"
+      :show-navigation="true"
+    />
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <!-- Action Button -->
+      <div class="mb-6 flex justify-end">
+        <BaseButton
+          variant="primary"
+          size="sm"
+          @click="startCreatingZone"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Nova Zona
+        </BaseButton>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Map Container -->
         <div class="lg:col-span-2">
@@ -303,7 +263,7 @@ import { useToast } from 'vue-toastification'
 import { locationApi, type FamilyMember, type GeofenceZone, type CreateZoneData } from '@/api/location'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Logo, ThemeToggle, BaseButton } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 
 // Types

@@ -1,18 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center">
-            <router-link to="/dashboard" class="flex items-center">
-              <ArrowLeftIcon class="h-5 w-5 text-gray-400 mr-2" />
-              <span class="text-lg font-semibold text-gray-900">Perfil</span>
-            </router-link>
-          </div>
-        </div>
-      </div>
-    </header>
+    <AppHeader
+      :show-logo="true"
+      :show-back-button="true"
+      :show-navigation="true"
+      title="Perfil"
+    />
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -105,7 +99,7 @@ import { useRouter } from 'vue-router'
 import { ArrowLeftIcon, CogIcon, DocumentTextIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
-import { BaseButton, BaseCard } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
 
 const router = useRouter()
 const authStore = useAuthStore()
