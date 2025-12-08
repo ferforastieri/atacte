@@ -205,7 +205,7 @@ export default function FamilyScreen({ navigation }: any) {
     },
     inviteCodeContainer: {
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      borderRadius: 8,
+      borderRadius: 12,
       padding: 12,
       marginBottom: 12,
     },
@@ -221,7 +221,7 @@ export default function FamilyScreen({ navigation }: any) {
     },
     copyButton: {
       padding: 4,
-      borderRadius: 4,
+      borderRadius: 8,
       backgroundColor: isDark ? '#1f2937' : '#ffffff',
     },
     inviteCode: {

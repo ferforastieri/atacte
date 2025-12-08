@@ -18,7 +18,7 @@ export const Card: React.FC<CardProps> = ({
   const getCardStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
       borderRadius: 12,
-      padding: 16,
+      padding: 24,
     };
 
     const variantStyles: Record<string, ViewStyle> = {
@@ -34,7 +34,7 @@ export const Card: React.FC<CardProps> = ({
       },
       outlined: {
         backgroundColor: isDark ? '#1f2937' : '#ffffff',
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: isDark ? '#374151' : '#e5e7eb',
       },
       elevated: {

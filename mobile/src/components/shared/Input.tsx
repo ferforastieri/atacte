@@ -64,13 +64,13 @@ export const Input: React.FC<InputProps> = ({
             flex: 1,
             borderWidth: 1,
             borderColor: error ? '#dc2626' : (isDark ? '#4b5563' : '#d1d5db'),
-            borderRadius: 8,
+            borderRadius: 12,
             paddingHorizontal: 12,
-            paddingVertical: 12,
-            fontSize: 16,
+            paddingVertical: 10,
+            fontSize: 14,
             color: isDark ? '#f9fafb' : '#111827',
             backgroundColor: disabled ? (isDark ? '#374151' : '#f9fafb') : (isDark ? '#1f2937' : '#ffffff'),
-            minHeight: multiline ? 80 : 44,
+            minHeight: multiline ? 80 : 40,
             textAlignVertical: multiline ? 'top' : 'center',
           }, inputStyle]}
           placeholder={placeholder}

@@ -16,7 +16,7 @@ import { familyService } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 
-export default function GeofenceScreen({ navigation }: any) {
+export default function GeofenceScreen() {
   const [zones, setZones] = useState<GeofenceZone[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -134,7 +134,7 @@ export default function GeofenceScreen({ navigation }: any) {
           showError(response.message || 'Erro ao atualizar zona');
         }
       } else {
-        // Buscar a primeira família do usuário para criar a zona
+       
         const familiesResponse = await familyService.getFamilies();
         if (!familiesResponse.success || !familiesResponse.data || familiesResponse.data.length === 0) {
           showError('Você precisa estar em uma família para criar zonas');
@@ -220,7 +220,10 @@ export default function GeofenceScreen({ navigation }: any) {
     },
     content: {
       flex: 1,
-      padding: 20,
+      paddingHorizontal: 20,
+    },
+    scrollContent: {
+      flexGrow: 1,
     },
     emptyContainer: {
       alignItems: 'center',
@@ -243,7 +246,7 @@ export default function GeofenceScreen({ navigation }: any) {
       paddingHorizontal: 32,
     },
     zoneCard: {
-      marginBottom: 12,
+      marginBottom: 16,
     },
     zoneHeader: {
       flexDirection: 'row',
@@ -277,7 +280,7 @@ export default function GeofenceScreen({ navigation }: any) {
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
       paddingHorizontal: 8,
       paddingVertical: 4,
-      borderRadius: 6,
+      borderRadius: 8,
     },
     detailIcon: {
       marginRight: 4,
@@ -303,13 +306,14 @@ export default function GeofenceScreen({ navigation }: any) {
       height: 56,
       borderRadius: 28,
       backgroundColor: '#16a34a',
-      alignItems: 'center',
       justifyContent: 'center',
+      alignItems: 'center',
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      zIndex: 1000,
     },
     modalContent: {
       gap: 16,
@@ -350,11 +354,17 @@ export default function GeofenceScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Header title="Zonas" showThemeToggle={true} onThemeToggle={toggleTheme} />
+      <Header 
+        title="Geofences" 
+        showThemeToggle={true} 
+        onThemeToggle={toggleTheme}
+        showBackButton={true}
+      />
       
       <View style={styles.content}>
         <ScrollView
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}

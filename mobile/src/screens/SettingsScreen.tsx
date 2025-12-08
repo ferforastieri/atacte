@@ -4,23 +4,25 @@ import Constants from 'expo-constants';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Header } from '../components/shared';
+import { useNavigation } from '@react-navigation/native';
 import { userService } from '../services/users/userService';
 import { useToast } from '../hooks/useToast';
 import axios from '../lib/axios';
 
 const SettingsScreen: React.FC = () => {
+  const navigation = useNavigation();
   const { isDark, toggleTheme } = useTheme();
   const { user, refreshUser } = useAuth();
   const { showError, showSuccess } = useToast();
   
-  // Estados para edição de perfil
+ 
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Carregar dados do usuário
+ 
   useEffect(() => {
     loadUserProfile();
   }, []);
@@ -36,7 +38,7 @@ const SettingsScreen: React.FC = () => {
       }
     } catch (error) {
       showError('Erro ao carregar dados do perfil');
-      // Fallback para dados do contexto
+     
       if (user) {
         setName(user.name || '');
         setPhoneNumber(user.phoneNumber || '');
@@ -62,7 +64,7 @@ const SettingsScreen: React.FC = () => {
       if (response.success) {
         showSuccess('Perfil atualizado com sucesso!');
         setIsEditing(false);
-        // Atualizar dados do usuário no contexto
+       
         await refreshUser();
       } else {
         showError(response.message || 'Erro ao atualizar perfil');
@@ -144,9 +146,14 @@ const SettingsScreen: React.FC = () => {
     },
   ];
 
-  const renderSettingItem = (item: any, index: number) => {
+  const renderSettingItem = (item: any, index: number, sectionItems: any[]) => {
+    const isLastItem = index === sectionItems.length - 1;
     return (
-      <View key={index} style={[styles.settingItem, isDark && styles.settingItemDark]}>
+      <View key={index} style={[
+        styles.settingItem, 
+        isDark && styles.settingItemDark,
+        isLastItem && styles.settingItemLast
+      ]}>
         <Text style={[styles.settingLabel, isDark && styles.settingLabelDark]}>
           {item.label}
         </Text>
@@ -175,7 +182,10 @@ const SettingsScreen: React.FC = () => {
             style={[
               styles.input,
               isDark && styles.inputDark,
-              !isEditing && styles.inputDisabled
+              !isEditing && {
+                backgroundColor: isDark ? '#1f2937' : '#f9fafb',
+                color: isDark ? '#6b7280' : '#9ca3af',
+              }
             ]}
             value={item.value}
             onChangeText={item.onChangeText}
@@ -212,7 +222,13 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
-      <Header title="Configurações" showThemeToggle={false} />
+      <Header 
+        title="Configurações" 
+        showBackButton={true}
+        onBack={navigation.goBack}
+        showThemeToggle={true}
+        onThemeToggle={toggleTheme}
+      />
       
       <ScrollView style={styles.scrollView}>
         {settingsSections.map((section, sectionIndex) => (
@@ -222,7 +238,7 @@ const SettingsScreen: React.FC = () => {
             </Text>
             
             <View style={[styles.sectionContent, isDark && styles.sectionContentDark]}>
-              {section.items.map((item, itemIndex) => renderSettingItem(item, itemIndex))}
+              {section.items.map((item, itemIndex) => renderSettingItem(item, itemIndex, section.items))}
             </View>
           </View>
         ))}
@@ -266,7 +282,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 1,
   },
   sectionContentDark: {
     backgroundColor: '#1f2937',
@@ -282,6 +298,9 @@ const styles = StyleSheet.create({
   },
   settingItemDark: {
     borderBottomColor: '#374151',
+  },
+  settingItemLast: {
+    borderBottomWidth: 0,
   },
   settingLabel: {
     fontSize: 16,
@@ -301,12 +320,12 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: '#111827',
     backgroundColor: '#f9fafb',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
@@ -315,15 +334,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#374151',
     borderColor: '#4b5563',
   },
-  inputDisabled: {
-    backgroundColor: '#f9fafb',
-    color: '#9ca3af',
-  },
   button: {
     backgroundColor: '#22c55e',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   buttonDestructive: {
     backgroundColor: '#ef4444',

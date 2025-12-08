@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, Header, PasswordGeneratorModal, SearchInput } from '../components/shared';
+import { Button, Card, Header, PasswordGeneratorModal, SearchInput, SkeletonLoader } from '../components/shared';
 import { Modal } from '../components/shared/Modal';
 import { Input } from '../components/shared/Input';
 import { Switch } from 'react-native';
@@ -58,12 +58,6 @@ export default function DashboardScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentOffset, setCurrentOffset] = useState(0);
-  const [allPasswordsStats, setAllPasswordsStats] = useState({
-    total: 0,
-    favorites: 0,
-    totp: 0
-  });
-  const [totalFromAPI, setTotalFromAPI] = useState(0);
   const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
 
@@ -74,53 +68,48 @@ export default function DashboardScreen() {
     },
     content: {
       flex: 1,
-      padding: 20,
+      paddingHorizontal: 20,
     },
     listStyle: {
       flex: 1,
     },
     listContainer: {
       flexGrow: 1,
-      paddingBottom: 20,
     },
     searchContainer: {
+      paddingTop: 20,
       marginBottom: 20,
     },
     searchInput: {
       backgroundColor: isDark ? '#1f2937' : '#ffffff',
       borderColor: isDark ? '#374151' : '#e5e7eb',
       borderWidth: 1,
-      borderRadius: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      fontSize: 16,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: 14,
       color: isDark ? '#f9fafb' : '#111827',
     },
-    statsCard: {
-      marginBottom: 20,
-    },
-    statsRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-    },
-    statItem: {
+    fab: {
+      position: 'absolute',
+      bottom: 20,
+      right: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: '#16a34a',
+      justifyContent: 'center',
       alignItems: 'center',
-    },
-    statNumber: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    statLabel: {
-      fontSize: 12,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginTop: 4,
-    },
-    addButton: {
-      marginBottom: 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      zIndex: 1000,
     },
     form: {
       gap: 16,
+      paddingBottom: 20,
     },
     passwordSection: {
       gap: 8,
@@ -138,7 +127,7 @@ export default function DashboardScreen() {
       backgroundColor: '#16a34a',
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 6,
+      borderRadius: 8,
     },
     generateButtonText: {
       color: '#ffffff',
@@ -223,12 +212,12 @@ export default function DashboardScreen() {
     },
     copyButton: {
       padding: 8,
-      borderRadius: 6,
+      borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
     },
     favoriteButton: {
       padding: 8,
-      borderRadius: 6,
+      borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
     },
     editButton: {
@@ -264,12 +253,6 @@ export default function DashboardScreen() {
     loadUser();
     loadPasswords();
   }, []);
-
-  useEffect(() => {
-    if (totalFromAPI > 0) {
-      loadAllPasswordsStats();
-    }
-  }, [totalFromAPI]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -311,18 +294,11 @@ export default function DashboardScreen() {
         }
         
         if (response.pagination) {
-          
           const currentTotal = offset + response.data.length;
           const hasMoreData = currentTotal < response.pagination.total;
           setHasMore(hasMoreData);
           setCurrentOffset(offset + response.data.length);
-          
-          
-          if (response.pagination.total > totalFromAPI) {
-            setTotalFromAPI(response.pagination.total);
-          }
         } else {
-          
           setHasMore(false);
           setCurrentOffset(offset + response.data.length);
         }
@@ -345,26 +321,10 @@ export default function DashboardScreen() {
     }
   }, [searchQuery]);
 
-  const loadAllPasswordsStats = async () => {
-    try {
-      
-      const allResponse = await passwordService.getPasswords({ limit: 10000 });
-      if (allResponse.success && allResponse.data) {
-        setAllPasswordsStats({
-          total: totalFromAPI || allResponse.data.length, 
-          favorites: allResponse.data.filter(p => p.isFavorite).length,
-          totp: allResponse.data.filter(p => p.totpEnabled).length
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
-    }
-  };
-
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setCurrentOffset(0);
-    await Promise.all([loadPasswords(0, false), loadAllPasswordsStats()]);
+    await loadPasswords(0, false);
   }, [loadPasswords]);
 
   
@@ -539,7 +499,6 @@ export default function DashboardScreen() {
     setShowPasswordModal(false);
     setEditingPassword(null);
     loadPasswords(0, false);
-    loadAllPasswordsStats();
   };
 
   const handleDeletePassword = (password: PasswordEntry) => {
@@ -555,7 +514,6 @@ export default function DashboardScreen() {
       if (response.success) {
         showSuccess('Senha excluída!');
         loadPasswords(0, false);
-        loadAllPasswordsStats();
       } else {
         showError(response.message || 'Erro ao excluir senha');
       }
@@ -621,8 +579,21 @@ export default function DashboardScreen() {
     return (
       <View style={styles.container}>
         <Header title="Dashboard" onThemeToggle={toggleTheme} />
-        <View style={[styles.content, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={styles.loadingText}>Carregando senhas...</Text>
+        <View style={styles.content}>
+          <View style={styles.searchContainer}>
+            <SkeletonLoader />
+          </View>
+          <View style={styles.listContainer}>
+            <Card style={styles.emptyCard}>
+              <SkeletonLoader />
+            </Card>
+            <Card style={styles.emptyCard}>
+              <SkeletonLoader />
+            </Card>
+            <Card style={styles.emptyCard}>
+              <SkeletonLoader />
+            </Card>
+          </View>
         </View>
       </View>
     );
@@ -646,32 +617,6 @@ export default function DashboardScreen() {
           />
         </View>
 
-        {/* Stats */}
-        <Card style={styles.statsCard}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{allPasswordsStats.total}</Text>
-              <Text style={styles.statLabel}>Total</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{allPasswordsStats.favorites}</Text>
-              <Text style={styles.statLabel}>Favoritas</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{allPasswordsStats.totp}</Text>
-              <Text style={styles.statLabel}>TOTP</Text>
-            </View>
-          </View>
-        </Card>
-
-        {/* Add Password Button */}
-        <Button
-          title="Adicionar Nova Senha"
-          onPress={handleCreatePassword}
-          variant="primary"
-          style={styles.addButton}
-        />
-
         {/* Passwords List */}
         <FlatList
           data={passwords}
@@ -687,8 +632,18 @@ export default function DashboardScreen() {
           showsVerticalScrollIndicator={false}
           style={styles.listStyle}
           contentContainerStyle={styles.listContainer}
+          contentInsetAdjustmentBehavior="automatic"
         />
       </View>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleCreatePassword}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color="#ffffff" />
+      </TouchableOpacity>
 
       {/* Password Form Modal */}
       <Modal
@@ -781,14 +736,9 @@ export default function DashboardScreen() {
 
             {formData.totpEnabled && (
               <View style={styles.totpSecretSection}>
-                <View style={styles.totpSecretHeader}>
-                  <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
+                <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827', marginBottom: 8 }]}>
                     Chave Secreta TOTP
                   </Text>
-                  <TouchableOpacity onPress={generateTotpSecret} style={styles.generateButton}>
-                    <Text style={styles.generateButtonText}>Gerar</Text>
-                  </TouchableOpacity>
-                </View>
                 <Input
                   placeholder="Digite a chave secreta do app autenticador"
                   value={formData.totpSecret}

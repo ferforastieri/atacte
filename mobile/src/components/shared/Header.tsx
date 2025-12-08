@@ -5,20 +5,26 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Logo } from './Logo';
+import { useNavigation } from '@react-navigation/native';
 
 interface HeaderProps {
   title?: string;
   showThemeToggle?: boolean;
   onThemeToggle?: () => void;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
   title, 
   showThemeToggle = true, 
-  onThemeToggle
+  onThemeToggle,
+  showBackButton = false,
+  onBack
 }) => {
   const { isDark } = useTheme();
   const { logout } = useAuth();
+  const navigation = useNavigation();
 
   const styles = StyleSheet.create({
     container: {
@@ -60,15 +66,30 @@ export const Header: React.FC<HeaderProps> = ({
       alignItems: 'center',
     },
     themeButton: {
-      padding: 8,
-      borderRadius: 8,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
       marginRight: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     logoutButton: {
-      padding: 8,
-      borderRadius: 8,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      marginRight: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 
@@ -76,6 +97,18 @@ export const Header: React.FC<HeaderProps> = ({
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.content}>
         <View style={styles.leftSection}>
+          {showBackButton && (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={onBack || (() => navigation.goBack())}
+            >
+              <Ionicons 
+                name="arrow-back" 
+                size={20} 
+                color={isDark ? '#f9fafb' : '#111827'} 
+              />
+            </TouchableOpacity>
+          )}
           <View style={styles.logoContainer}>
             <Logo size={40} showText={false} />
           </View>

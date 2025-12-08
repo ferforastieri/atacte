@@ -261,12 +261,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
-  // Estilos para layout compacto
+ 
   compactMemberCard: {
     width: 140,
     marginRight: 12,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 3,
+    elevation: 1,
   },
   compactMemberHeader: {
     alignItems: 'center',

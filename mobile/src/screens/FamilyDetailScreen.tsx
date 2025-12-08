@@ -9,19 +9,20 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, Header, Modal, Input } from '../components/shared';
+import { Button, Card, Header, Modal, Input, SkeletonLoader } from '../components/shared';
 import { FamilyMap, FamilyMembersList, ZoneManager } from '../components/family';
 import { locationService, FamilyMemberLocation } from '../services/location/locationService';
 import { geofenceService, GeofenceZone, CreateGeofenceZoneData, UpdateGeofenceZoneData } from '../services/geofence/geofenceService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocation } from '../contexts/LocationContext';
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
-export default function FamilyDetailScreen({ route, navigation }: any) {
+export default function FamilyDetailScreen({ route }: any) {
+  const navigation = useNavigation();
   const { familyId, familyName } = route.params;
   const [locations, setLocations] = useState<FamilyMemberLocation[]>([]);
   const [zones, setZones] = useState<GeofenceZone[]>([]);
@@ -34,10 +35,10 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
   const [zoneCoordinatesCallback, setZoneCoordinatesCallback] = useState<((lat: number, lng: number) => void) | null>(null);
 
   const { showSuccess, showError } = useToast();
-  const { isDark } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const { currentLocation, sendCurrentLocation } = useLocation();
 
-  // Carregar dados iniciais
+ 
   useEffect(() => {
     loadData();
   }, [familyId]);
@@ -80,17 +81,17 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Atualizar própria localização primeiro
+     
       await sendCurrentLocation();
       
-      // Solicitar atualização forçada para a família (notifica outros membros)
+     
       const result = await locationService.requestFamilyLocationUpdate(familyId);
       
       if (result.success) {
         showSuccess('Família notificada para atualizar localização');
       }
       
-      // Recarregar dados após um pequeno delay para dar tempo dos outros atualizarem
+     
       setTimeout(async () => {
         await loadData();
         setIsRefreshing(false);
@@ -169,19 +170,19 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
   };
 
   const handleZoneClick = (zone: GeofenceZone) => {
-    // Implementar lógica para editar zona
+   
   };
 
   const handleMemberPress = (member: FamilyMemberLocation) => {
     
-    // Focar no membro no mapa
+   
     if (activeTab === 'map') {
-      // Definir coordenadas para focar
+     
       setFocusOnMember({ latitude: member.latitude, longitude: member.longitude });
     } else {
-      // Se não estiver na aba do mapa, mudar para ela
+     
       setActiveTab('map');
-      // Aguardar um pouco e então focar no membro
+     
       setTimeout(() => {
         setFocusOnMember({ latitude: member.latitude, longitude: member.longitude });
       }, 100);
@@ -191,22 +192,16 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: isDark ? '#111827' : '#f9fafb' }]}>
-        <SafeAreaView style={styles.header} edges={['top']}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerLeft}>
-              <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Ionicons name="arrow-back" size={20} color={isDark ? '#f9fafb' : '#111827'} />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>{familyName}</Text>
-            </View>
-          </View>
-        </SafeAreaView>
+        <Header 
+          title={familyName} 
+          showBackButton={true} 
+          onBack={navigation.goBack}
+          showThemeToggle={true}
+          onThemeToggle={toggleTheme}
+        />
         
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#16a34a" />
-          <Text style={[styles.loadingText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-            Carregando dados da família...
-          </Text>
+        <View style={styles.content}>
+          <SkeletonLoader />
         </View>
       </View>
     );
@@ -214,24 +209,13 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#111827' : '#f9fafb' }]}>
-      <SafeAreaView style={styles.header} edges={['top']}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={20} color={isDark ? '#f9fafb' : '#111827'} />
-            </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: isDark ? '#f9fafb' : '#111827' }]}>{familyName}</Text>
-          </View>
-          <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
-            <Ionicons 
-              name="refresh" 
-              size={20} 
-              color={isDark ? '#9ca3af' : '#6b7280'} 
-              style={isRefreshing ? styles.refreshing : undefined}
-            />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <Header 
+        title={familyName} 
+        showBackButton={true} 
+        onBack={navigation.goBack}
+        showThemeToggle={true}
+        onThemeToggle={toggleTheme}
+      />
 
       {/* Tabs de navegação */}
       <View style={[styles.tabContainer, { backgroundColor: isDark ? '#1f2937' : '#ffffff' }]}>
@@ -304,7 +288,6 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
             {/* Lista de membros na parte de baixo do mapa */}
             <View style={[styles.membersListContainer, { 
               backgroundColor: isDark ? '#1f2937' : '#ffffff',
-              borderTopColor: isDark ? '#374151' : '#e5e7eb'
             }]}>
               <FamilyMembersList
                 members={locations}
@@ -344,42 +327,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    backgroundColor: 'transparent',
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  backButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  refreshButton: {
-    padding: 8,
-  },
-  refreshing: {
-    transform: [{ rotate: '180deg' }],
-  },
   tabContainer: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   tab: {
     flex: 1,
@@ -388,7 +339,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginHorizontal: 4,
   },
   activeTab: {
@@ -407,8 +358,6 @@ const styles = StyleSheet.create({
   },
   membersListContainer: {
     maxHeight: 200,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
     paddingTop: 8,
     paddingHorizontal: 16,
   },

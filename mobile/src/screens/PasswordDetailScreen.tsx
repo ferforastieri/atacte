@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Header, TotpCode, Button } from '../components/shared';
+import { Card, Header, TotpCode, Button, SkeletonLoader } from '../components/shared';
 import { passwordService } from '../services/passwords/passwordService';
 import { totpService } from '../services/totp/totpService';
 import { useToast } from '../hooks/useToast';
@@ -152,7 +152,7 @@ export default function PasswordDetailScreen() {
       alignItems: 'center',
       paddingVertical: 8,
       paddingHorizontal: 12,
-      borderRadius: 8,
+      borderRadius: 12,
       backgroundColor: password?.isFavorite ? '#fef3c7' : (isDark ? '#374151' : '#f3f4f6'),
       alignSelf: 'flex-start',
     },
@@ -193,7 +193,7 @@ export default function PasswordDetailScreen() {
     },
     copyButton: {
       padding: 8,
-      borderRadius: 6,
+      borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
       marginLeft: 8,
     },
@@ -259,9 +259,8 @@ export default function PasswordDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Ionicons name="key-outline" size={48} color={isDark ? '#9ca3af' : '#6b7280'} />
-          <Text style={styles.loadingText}>Carregando senha...</Text>
+        <View style={styles.content}>
+          <SkeletonLoader />
         </View>
       </View>
     );

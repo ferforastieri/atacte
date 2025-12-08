@@ -154,18 +154,6 @@ export default function ZoneManager({
 
   return (
     <View style={styles.container}>
-      {/* Header com botão de criar zona */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: isDark ? '#f9fafb' : '#111827' }]}>
-          Zonas de Geofence
-        </Text>
-        <Button
-          title="Nova Zona"
-          onPress={handleStartCreating}
-          style={styles.createButton}
-        />
-      </View>
-
       {/* Lista de zonas */}
       <ScrollView 
         style={styles.zonesList}
@@ -383,6 +371,15 @@ export default function ZoneManager({
           />
         </View>
       </Modal>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleStartCreating}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color="#ffffff" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -391,28 +388,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  createButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
   zonesList: {
     flex: 1,
   },
   zonesContent: {
     padding: 16,
+    paddingBottom: 90,
   },
   zoneCard: {
     marginBottom: 12,
@@ -452,7 +433,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
-    borderRadius: 6,
+    borderRadius: 8,
     backgroundColor: '#f3f4f6',
   },
   zoneDetails: {
@@ -515,7 +496,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     backgroundColor: '#f3f4f6',
-    borderRadius: 8,
+    borderRadius: 12,
   },
   positionText: {
     fontSize: 14,
@@ -553,5 +534,22 @@ const styles = StyleSheet.create({
     width: '100%',
     marginHorizontal: -20,
     marginVertical: -20,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 1000,
   },
 });

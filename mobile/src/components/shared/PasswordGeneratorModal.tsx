@@ -111,7 +111,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
     },
     copyButton: {
       padding: 8,
-      borderRadius: 6,
+      borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
       height: 48, 
       justifyContent: 'center',

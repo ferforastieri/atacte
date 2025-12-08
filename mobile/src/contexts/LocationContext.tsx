@@ -36,12 +36,12 @@ export function LocationProvider({ children }: LocationProviderProps) {
     if (isAuthenticated) {
       initializeLocation();
     } else {
-      // Se desautenticado, parar tracking
+     
       stopTracking();
     }
   }, [isAuthenticated]);
 
-  // Verificar se o tracking ainda está ativo periodicamente
+ 
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -59,7 +59,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
       }
     };
 
-    // Verificar a cada 30 segundos
+   
     const interval = setInterval(checkTrackingStatus, 30000);
     
     return () => clearInterval(interval);
@@ -87,7 +87,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const checkAndStartTracking = async () => {
     try {
-      // Primeiro, solicitar permissões de localização
+     
       const permissionsGranted = await locationService.requestPermissions();
       
       if (!permissionsGranted) {
@@ -135,7 +135,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
       if (response.success && response.data) {
         setCurrentLocation(response.data);
         
-        // Verificar zonas apenas a cada 30 segundos para economizar bateria
+       
         const now = Date.now();
         if (now - lastCheckTime.current >= 30000) {
           await checkGeofenceZones(response.data);
@@ -170,12 +170,12 @@ export function LocationProvider({ children }: LocationProviderProps) {
         if (isInZone) {
           currentlyInZones.add(zone.id);
           
-          // Se acabou de entrar na zona
+         
           if (!activeZones.current.has(zone.id) && zone.notifyOnEnter) {
             await sendGeofenceNotification(zone, 'enter');
           }
         } else {
-          // Se acabou de sair da zona
+         
           if (activeZones.current.has(zone.id) && zone.notifyOnExit) {
             await sendGeofenceNotification(zone, 'exit');
           }
@@ -190,7 +190,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const sendGeofenceNotification = async (zone: GeofenceZone, type: 'enter' | 'exit') => {
     try {
-      // Notificar apenas a família (não notificar a si mesmo)
+     
       await notifyFamilyAboutGeofence(zone, type);
     } catch (error) {
       console.error('Erro ao enviar notificação de zona:', error);
@@ -199,7 +199,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const notifyFamilyAboutGeofence = async (zone: GeofenceZone, type: 'enter' | 'exit') => {
     try {
-      // Usar o serviço de notificação seguindo o padrão do projeto
+     
       await notificationService.sendGeofenceNotification({
         zoneName: zone.name,
         eventType: type,

@@ -57,7 +57,7 @@ export const SecureNoteFormModal: React.FC<SecureNoteFormModalProps> = ({
       backgroundColor: isDark ? '#1f2937' : '#ffffff',
       borderColor: isDark ? '#374151' : '#e5e7eb',
       borderWidth: 1,
-      borderRadius: 8,
+      borderRadius: 12,
       minHeight: 300,
       maxHeight: SCREEN_HEIGHT * 0.4,
       padding: 12,
@@ -83,7 +83,7 @@ export const SecureNoteFormModal: React.FC<SecureNoteFormModalProps> = ({
     folderTag: {
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 16,
+      borderRadius: 12,
     },
     folderTagText: {
       fontSize: 12,

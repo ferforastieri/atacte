@@ -116,18 +116,24 @@ export const TotpCard: React.FC<TotpCardProps> = ({
     },
     deleteButton: {
       padding: 8,
-      borderRadius: 6,
+      borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     copyButton: {
       padding: 8,
-      borderRadius: 6,
+      borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     favoriteButton: {
       padding: 8,
-      borderRadius: 6,
+      borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     editButton: {
       flex: 1,
@@ -213,13 +219,13 @@ export const TotpCard: React.FC<TotpCardProps> = ({
           <View style={{
             backgroundColor: '#16a34a',
             paddingVertical: 8,
-            paddingHorizontal: 16,
-            borderRadius: 6,
+            paddingHorizontal: 14,
+            borderRadius: 10,
             alignItems: 'center',
           }}>
             <Text style={{
               color: '#ffffff',
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: '500',
             }}>
               Copiar Senha

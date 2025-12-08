@@ -34,16 +34,16 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   const initializeNotifications = async () => {
     try {
-      // Registrar para notificações push
+     
       await notificationService.registerForPushNotifications();
 
-      // Configurar listeners
+     
       notificationService.setupNotificationListeners(
         handleNotificationReceived,
         handleNotificationResponse
       );
 
-      // Carregar notificações iniciais
+     
       await refreshNotifications();
       await updateUnreadCount();
     } catch (error) {
@@ -54,10 +54,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const handleNotificationReceived = async (notification: Notifications.Notification) => {
     const data = notification.request.content.data as any;
     
-    // Se for solicitação de atualização de localização, atualizar automaticamente
+   
     if (data?.type === 'location_update_request') {
       try {
-        // Importar locationService dinamicamente para evitar circular dependency
+       
         const { locationService } = await import('../services/location/locationService');
         await locationService.sendCurrentLocation();
       } catch (error) {
@@ -65,7 +65,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       }
     }
     
-    // Atualizar lista de notificações
+   
     refreshNotifications();
     updateUnreadCount();
   };
@@ -74,14 +74,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     
     const data = response.notification.request.content.data;
     
-    // Lidar com diferentes tipos de notificações
+   
     if (data?.type === 'sos') {
-      // Navegar para o mapa da família
+     
     } else if (data?.type === 'family_invite') {
-      // Navegar para a tela de famílias
+     
     } else if (data?.type === 'location_update_request') {
-      // Já foi atualizado automaticamente no handleNotificationReceived
-      // Mas pode navegar para a tela de família se necessário
+     
+     
     }
   };
 
@@ -107,7 +107,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       if (response.success && response.data) {
         setUnreadCount(response.data.count);
         
-        // Atualizar badge do app
+       
         await notificationService.setBadgeCount(response.data.count);
       }
     } catch (error) {
@@ -171,7 +171,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       const response = await notificationService.sendSOS({ latitude, longitude });
       
       if (response.success) {
-        // Exibir notificação local de confirmação
+       
         await notificationService.showLocalNotification(
           '🚨 SOS Enviado',
           'Sua família foi notificada sobre sua emergência!',

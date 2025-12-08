@@ -3,9 +3,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { SkeletonLoader } from '../components/shared/Skeleton';
 
 
 import LoginScreen from '../screens/LoginScreen';
@@ -16,6 +17,7 @@ import PasswordDetailScreen from '../screens/PasswordDetailScreen';
 import FamilyScreen from '../screens/FamilyScreen';
 import FamilyDetailScreen from '../screens/FamilyDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import SecureNoteDetailScreen from '../screens/SecureNoteDetailScreen';
 
 
 export type RootStackParamList = {
@@ -24,6 +26,7 @@ export type RootStackParamList = {
   PasswordDetail: { passwordId: string };
   FamilyDetail: { familyId: string; familyName: string };
   FamilyDetails: { familyId: string };
+  SecureNoteDetail: { noteId: string };
 };
 
 export type AuthStackParamList = {
@@ -130,13 +133,7 @@ export default function AppNavigator() {
   const { isDark } = useTheme();
 
   if (isLoading) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: isDark ? '#111827' : '#f9fafb' }]}>
-        <Text style={[styles.loadingText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-          Carregando...
-        </Text>
-      </View>
-    );
+    return <SkeletonLoader variant="app" />;
   }
 
   return (
@@ -190,6 +187,13 @@ export default function AppNavigator() {
                 },
               }}
             />
+            <Stack.Screen 
+              name="SecureNoteDetail" 
+              component={SecureNoteDetailScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />
@@ -199,13 +203,3 @@ export default function AppNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-  },
-});

@@ -20,6 +20,7 @@ interface SecureNoteCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleFavorite: () => void;
+  onView: () => void;
 }
 
 export const SecureNoteCard: React.FC<SecureNoteCardProps> = ({
@@ -28,6 +29,7 @@ export const SecureNoteCard: React.FC<SecureNoteCardProps> = ({
   onEdit,
   onDelete,
   onToggleFavorite,
+  onView,
 }) => {
   const { isDark } = useTheme();
 
@@ -71,12 +73,33 @@ export const SecureNoteCard: React.FC<SecureNoteCardProps> = ({
     },
     actions: {
       flexDirection: 'row',
+      alignItems: 'center',
       gap: 8,
+      marginTop: 12,
     },
-    actionButton: {
+    deleteButton: {
       padding: 8,
       borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    copyButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    favoriteButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    viewButton: {
+      flex: 1,
     },
     favoriteIcon: {
       marginLeft: 8,
@@ -122,34 +145,46 @@ export const SecureNoteCard: React.FC<SecureNoteCardProps> = ({
       
       <View style={styles.actions}>
         <TouchableOpacity
-          style={styles.actionButton}
-          onPress={onToggleFavorite}
-        >
-          <Ionicons
-            name={note.isFavorite ? 'star' : 'star-outline'}
-            size={20}
-            color={note.isFavorite ? '#fbbf24' : (isDark ? '#9ca3af' : '#6b7280')}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={onEdit}
-        >
-          <Ionicons
-            name="create-outline"
-            size={20}
-            color={isDark ? '#9ca3af' : '#6b7280'}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
+          style={styles.deleteButton}
           onPress={onDelete}
         >
-          <Ionicons
-            name="trash-outline"
-            size={20}
-            color="#dc2626"
+          <Ionicons name="trash-outline" size={16} color="#dc2626" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.copyButton}
+          onPress={onEdit}
+        >
+          <Ionicons name="create-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.favoriteButton}
+          onPress={onToggleFavorite}
+        >
+          <Ionicons 
+            name={note.isFavorite ? "star" : "star-outline"} 
+            size={16} 
+            color={note.isFavorite ? "#fbbf24" : (isDark ? '#9ca3af' : '#6b7280')} 
           />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.viewButton}
+          onPress={onView}
+        >
+          <View style={{
+            backgroundColor: '#16a34a',
+            paddingVertical: 8,
+            paddingHorizontal: 14,
+            borderRadius: 10,
+            alignItems: 'center',
+          }}>
+            <Text style={{
+              color: '#ffffff',
+              fontSize: 13,
+              fontWeight: '500',
+            }}>
+              Ver Nota
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
     </Card>

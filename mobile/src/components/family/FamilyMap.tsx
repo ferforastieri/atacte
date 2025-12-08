@@ -27,7 +27,7 @@ export default function FamilyMap({
 }: FamilyMapProps) {
   const webViewRef = useRef<WebView>(null);
 
-  // Focar no membro quando a prop mudar
+ 
   useEffect(() => {
     if (focusOnMember && webViewRef.current) {
       const script = `
@@ -37,20 +37,20 @@ export default function FamilyMap({
     }
   }, [focusOnMember]);
 
-  // Atualizar modo de criação de zona quando a prop mudar
+ 
   useEffect(() => {
     if (webViewRef.current) {
       if (isCreatingZone) {
         const script = `
           (function() {
             window.isCreatingZone = true;
-            // Verificar se o mapa já foi inicializado
+           
             if (window.getMap && window.getMap()) {
               if (window.startCreatingZone) {
                 window.startCreatingZone();
               }
             } else {
-              // Se o mapa ainda não foi inicializado, aguardar um pouco
+             
               setTimeout(function() {
                 window.isCreatingZone = true;
                 if (window.startCreatingZone) {
@@ -59,7 +59,7 @@ export default function FamilyMap({
               }, 1500);
             }
           })();
-          true; // Sempre retornar true para evitar warning
+          true;
         `;
         setTimeout(() => {
           webViewRef.current?.injectJavaScript(script);
@@ -72,14 +72,14 @@ export default function FamilyMap({
               window.cancelZoneCreation();
             }
           })();
-          true; // Sempre retornar true para evitar warning
+          true;
         `;
         webViewRef.current.injectJavaScript(script);
       }
     }
   }, [isCreatingZone]);
 
-  // Função para enviar dados para o mapa
+ 
   const updateMapData = useCallback(() => {
     const script = `
       window.updateMapData(
@@ -91,10 +91,10 @@ export default function FamilyMap({
     return script;
   }, [locations, currentLocation, zones]);
 
-  // Atualizar mapa quando zonas, localizações ou localização atual mudarem
+ 
   useEffect(() => {
     if (webViewRef.current) {
-      // Aguardar um pouco para garantir que o mapa foi inicializado
+     
       const timeoutId = setTimeout(() => {
         webViewRef.current?.injectJavaScript(updateMapData());
       }, 500);
@@ -102,7 +102,7 @@ export default function FamilyMap({
     }
   }, [updateMapData]);
 
-  // HTML do Leaflet com funcionalidades completas
+ 
   const leafletHTML = `
     <!DOCTYPE html>
     <html>
@@ -213,28 +213,28 @@ export default function FamilyMap({
             maxZoom: 19
           }).addTo(map);
           
-          // Eventos do mapa
+         
           map.on('click', onMapClick);
           map.on('mousemove', onMapMouseMove);
           
-          // Aplicar cursor de criação se necessário
+         
           if (isCreatingZone) {
             document.body.classList.add('creating-zone');
           }
         }
         
         function onMapClick(e) {
-          // Verificar sempre a variável isCreatingZone, não apenas no início
+         
           if (window.isCreatingZone) {
             const { lat, lng } = e.latlng;
-            // Enviar coordenadas para React Native
+           
             if (window.ReactNativeWebView) {
               window.ReactNativeWebView.postMessage(JSON.stringify({
                 type: 'mapClick',
                 latitude: lat,
                 longitude: lng
               }));
-              // Desabilitar modo de criação após o clique
+             
               window.isCreatingZone = false;
               cancelZoneCreation();
             }
@@ -249,11 +249,11 @@ export default function FamilyMap({
         }
         
         function updateMarkers(locations, currentLocation) {
-          // Limpar marcadores existentes
+         
           markers.forEach(marker => map.removeLayer(marker));
           markers = [];
           
-          // Adicionar marcadores dos membros da família
+         
           locations.forEach(member => {
             const markerColor = getMarkerColor(member);
             const marker = L.marker([member.latitude, member.longitude], {
@@ -277,7 +277,7 @@ export default function FamilyMap({
             marker.addTo(map);
           });
           
-          // Adicionar marcador da localização atual do usuário
+         
           if (currentLocation) {
             const userMarker = L.marker([currentLocation.latitude, currentLocation.longitude], {
               icon: L.divIcon({
@@ -292,7 +292,7 @@ export default function FamilyMap({
             userMarker.addTo(map);
           }
           
-          // Ajustar zoom para mostrar todos os marcadores
+         
           if (locations.length > 0 || currentLocation) {
             const group = new L.featureGroup(markers);
             map.fitBounds(group.getBounds().pad(0.1));
@@ -300,11 +300,11 @@ export default function FamilyMap({
         }
         
         function updateZones(zones) {
-          // Limpar círculos existentes
+         
           zoneCircles.forEach(circle => map.removeLayer(circle));
           zoneCircles = [];
           
-          // Adicionar círculos das zonas
+         
           zones.forEach(zone => {
             const circle = L.circle([zone.latitude, zone.longitude], {
               radius: zone.radius,
@@ -335,7 +335,7 @@ export default function FamilyMap({
           isCreatingZone = true;
           document.body.classList.add('creating-zone');
           
-          // Mostrar popup de instrução
+         
           if (map) {
             map.openPopup(L.popup()
               .setLatLng(map.getCenter())
@@ -388,11 +388,11 @@ export default function FamilyMap({
           return \`\${Math.floor(diff / 86400000)}d atrás\`;
         }
         
-        // Função para focar em um membro específico
+       
         function focusOnMember(latitude, longitude) {
           if (map) {
             map.setView([latitude, longitude], 16);
-            // Encontrar e abrir popup do marcador
+           
             markers.forEach(marker => {
               const latLng = marker.getLatLng();
               if (Math.abs(latLng.lat - latitude) < 0.0001 && Math.abs(latLng.lng - longitude) < 0.0001) {
@@ -402,7 +402,7 @@ export default function FamilyMap({
           }
         }
         
-        // Funções globais para comunicação com React Native
+       
         window.startCreatingZone = startCreatingZone;
         window.cancelZoneCreation = cancelZoneCreation;
         window.focusOnMember = focusOnMember;
@@ -411,15 +411,15 @@ export default function FamilyMap({
           updateZones(zones);
         };
         
-        // Expor map globalmente para verificação
+       
         window.getMap = function() {
           return map;
         };
         
-        // Inicializar mapa quando a página carregar
+       
         document.addEventListener('DOMContentLoaded', function() {
           initMap();
-          // Após inicializar, verificar se precisa entrar em modo de criação
+         
           if (window.isCreatingZone) {
             setTimeout(function() {
               if (window.startCreatingZone) {
@@ -434,7 +434,7 @@ export default function FamilyMap({
   `;
 
 
-  // Função para iniciar criação de zona
+ 
   const startCreatingZone = () => {
     const script = `
       window.startCreatingZone();
@@ -442,7 +442,7 @@ export default function FamilyMap({
     return script;
   };
 
-  // Função para cancelar criação de zona
+ 
   const cancelZoneCreation = () => {
     const script = `
       window.cancelZoneCreation();
@@ -450,7 +450,7 @@ export default function FamilyMap({
     return script;
   };
 
-  // Lidar com mensagens do WebView
+ 
   const handleMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -468,11 +468,11 @@ export default function FamilyMap({
           }
           break;
         case 'deleteZone':
-          // Implementar exclusão se necessário
+         
           break;
       }
     } catch (error) {
-      // Erro silencioso
+     
     }
   };
 
@@ -483,7 +483,7 @@ export default function FamilyMap({
         source={{ html: leafletHTML }}
         style={styles.map}
         onLoadEnd={() => {
-          // Enviar dados para o mapa após carregar
+         
           setTimeout(() => {
             webViewRef.current?.injectJavaScript(updateMapData());
           }, 1000);

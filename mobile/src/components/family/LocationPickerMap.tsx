@@ -15,7 +15,7 @@ export default function LocationPickerMap({
 }: LocationPickerMapProps) {
   const webViewRef = useRef<WebView>(null);
 
-  // HTML do Leaflet para seleção de localização
+ 
   const leafletHTML = `
     <!DOCTYPE html>
     <html>
@@ -80,7 +80,7 @@ export default function LocationPickerMap({
             maxZoom: 19
           }).addTo(map);
           
-          // Adicionar marcador inicial se houver localização inicial
+         
           if (initialLat && initialLng) {
             marker = L.marker([initialLat, initialLng], {
               icon: L.divIcon({
@@ -103,16 +103,16 @@ export default function LocationPickerMap({
             });
           }
           
-          // Evento de clique no mapa
+         
           map.on('click', function(e) {
             const { lat, lng } = e.latlng;
             
-            // Remover marcador anterior se existir
+           
             if (marker) {
               map.removeLayer(marker);
             }
             
-            // Adicionar novo marcador na posição clicada
+           
             marker = L.marker([lat, lng], {
               icon: L.divIcon({
                 className: 'location-marker',
@@ -122,7 +122,7 @@ export default function LocationPickerMap({
               draggable: true
             }).addTo(map);
             
-            // Enviar coordenadas para React Native
+           
             if (window.ReactNativeWebView) {
               window.ReactNativeWebView.postMessage(JSON.stringify({
                 type: 'locationSelect',
@@ -131,7 +131,7 @@ export default function LocationPickerMap({
               }));
             }
             
-            // Atualizar evento de drag
+           
             marker.on('dragend', function(e) {
               const position = marker.getLatLng();
               if (window.ReactNativeWebView) {
@@ -145,7 +145,7 @@ export default function LocationPickerMap({
           });
         }
         
-        // Inicializar mapa quando a página carregar
+       
         document.addEventListener('DOMContentLoaded', function() {
           initMap();
         });
@@ -154,7 +154,7 @@ export default function LocationPickerMap({
     </html>
   `;
 
-  // Lidar com mensagens do WebView
+ 
   const handleMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -163,7 +163,7 @@ export default function LocationPickerMap({
         onLocationSelect(data.latitude, data.longitude);
       }
     } catch (error) {
-      // Erro silencioso
+     
     }
   };
 

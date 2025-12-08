@@ -120,10 +120,11 @@ export const Modal: React.FC<ModalProps> = ({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ 
           flexGrow: 1,
-          paddingBottom: 20
+          paddingBottom: 40
         }}
         keyboardShouldPersistTaps="handled"
         bounces={false}
+        nestedScrollEnabled={true}
       >
         {children}
       </ScrollView>
@@ -190,10 +191,10 @@ const styles = StyleSheet.create({
   modal: {
     borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 2,
+    elevation: 1,
   },
   modalSm: {
     width: '100%',
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
     borderBottomWidth: 1,
   },
   title: {
@@ -219,12 +220,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   content: {
-    padding: 20,
-    paddingBottom: 30,
+    padding: 24,
     flexGrow: 1,
   },
   confirmContent: {
-    padding: 20,
+    padding: 24,
     paddingBottom: 30,
   },
   message: {

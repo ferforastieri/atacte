@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Header, Button, Modal, SearchInput } from '../components/shared';
+import { useNavigation } from '@react-navigation/native';
+import { Header, Modal, SearchInput, Card, SkeletonLoader } from '../components/shared';
 import { SecureNoteCard, FolderSelector, SecureNoteFormModal } from '../components/secureNotes';
 import { secureNoteService } from '../services/secureNotes/secureNoteService';
 import { useToast } from '../hooks/useToast';
@@ -18,6 +19,7 @@ interface SecureNote {
 }
 
 export default function SecureNotesScreen() {
+  const navigation = useNavigation<any>();
   const [notes, setNotes] = useState<SecureNote[]>([]);
   const [allNotes, setAllNotes] = useState<SecureNote[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
@@ -244,16 +246,17 @@ export default function SecureNotesScreen() {
     },
     content: {
       flex: 1,
-      padding: 20,
-      paddingTop: 60,
-      paddingBottom: 100,
+      paddingHorizontal: 20,
     },
-    scrollContent: {
+    listStyle: {
+      flex: 1,
+    },
+    listContainer: {
       flexGrow: 1,
-      paddingBottom: 20,
     },
     searchContainer: {
-      marginBottom: 12,
+      paddingTop: 20,
+      marginBottom: 20,
     },
     filterContainer: {
       marginBottom: 20,
@@ -266,33 +269,42 @@ export default function SecureNotesScreen() {
       borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
     },
-    addButton: {
-      marginBottom: 20,
-    },
-    emptyContainer: {
-      flex: 1,
+    fab: {
+      position: 'absolute',
+      bottom: 20,
+      right: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: '#16a34a',
       justifyContent: 'center',
       alignItems: 'center',
-      padding: 40,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      zIndex: 1000,
     },
-    emptyIcon: {
-      marginBottom: 16,
+    emptyCard: {
+      alignItems: 'center',
+      paddingVertical: 40,
     },
     emptyTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 8,
-      textAlign: 'center',
+      color: isDark ? '#f9fafb' : '#6b7280',
+      marginTop: 16,
     },
     emptyText: {
       fontSize: 14,
       color: isDark ? '#9ca3af' : '#6b7280',
+      marginTop: 8,
       textAlign: 'center',
-      lineHeight: 20,
     },
-    notesList: {
-      gap: 12,
+    emptyCard: {
+      alignItems: 'center',
+      paddingVertical: 40,
     },
     loadingContainer: {
       flex: 1,
@@ -325,9 +337,9 @@ export default function SecureNotesScreen() {
     },
     modalButton: {
       flex: 1,
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 12,
       alignItems: 'center',
     },
     cancelButton: {
@@ -354,24 +366,65 @@ export default function SecureNotesScreen() {
     return (
       <View style={styles.container}>
         <Header title="Notas Seguras" onThemeToggle={toggleTheme} />
-        <View style={styles.loadingContainer}>
-          <Ionicons name="document-text-outline" size={48} color={isDark ? '#9ca3af' : '#6b7280'} />
-          <Text style={styles.loadingText}>Carregando notas...</Text>
+        <View style={styles.content}>
+          <View style={styles.searchContainer}>
+            <SkeletonLoader />
+          </View>
+          <View style={styles.listContainer}>
+            <Card style={styles.emptyCard}>
+              <SkeletonLoader />
+            </Card>
+            <Card style={styles.emptyCard}>
+              <SkeletonLoader />
+            </Card>
+            <Card style={styles.emptyCard}>
+              <SkeletonLoader />
+            </Card>
+          </View>
         </View>
       </View>
     );
   }
 
+  const handleViewNote = (note: SecureNote) => {
+    navigation.navigate('SecureNoteDetail', { noteId: note.id });
+  };
+
+  const renderNoteItem = ({ item }: { item: SecureNote }) => (
+    <SecureNoteCard
+      note={item}
+      onPress={() => handleEditNote(item)}
+      onEdit={() => handleEditNote(item)}
+      onDelete={() => handleDeleteNote(item)}
+      onToggleFavorite={() => handleToggleFavorite(item)}
+      onView={() => handleViewNote(item)}
+    />
+  );
+
+  const renderEmpty = () => (
+    <Card style={styles.emptyCard}>
+      <Ionicons 
+        name="document-text-outline" 
+        size={48} 
+        color="#9ca3af"
+      />
+      <Text style={styles.emptyTitle}>
+        {searchQuery || selectedFolder ? 'Nenhuma nota encontrada' : 'Nenhuma nota ainda'}
+      </Text>
+      <Text style={styles.emptyText}>
+        {searchQuery || selectedFolder
+          ? 'Tente ajustar os filtros de busca' 
+          : 'Crie sua primeira nota segura para armazenar informações importantes'}
+      </Text>
+    </Card>
+  );
+
   return (
     <View style={styles.container}>
       <Header title="Notas Seguras" onThemeToggle={toggleTheme} />
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
-      >
+      
+      <View style={styles.content}>
+        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <SearchInput
             placeholder="Buscar notas..."
@@ -380,6 +433,7 @@ export default function SecureNotesScreen() {
           />
         </View>
 
+        {/* Filter Container */}
         <View style={styles.filterContainer}>
           <FolderSelector
             folders={folders}
@@ -396,46 +450,30 @@ export default function SecureNotesScreen() {
           )}
         </View>
 
-        <View style={styles.addButton}>
-          <Button
-            title="+ Nova Nota"
-            onPress={handleCreateNote}
-            variant="primary"
-          />
-        </View>
+        {/* Notes List */}
+        <FlatList
+          data={notes}
+          renderItem={renderNoteItem}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
+          ListEmptyComponent={renderEmpty}
+          showsVerticalScrollIndicator={false}
+          style={styles.listStyle}
+          contentContainerStyle={styles.listContainer}
+          contentInsetAdjustmentBehavior="automatic"
+        />
+      </View>
 
-        {notes.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons 
-              name="document-text-outline" 
-              size={64} 
-              color={isDark ? '#9ca3af' : '#6b7280'} 
-              style={styles.emptyIcon}
-            />
-            <Text style={styles.emptyTitle}>
-              {searchQuery || selectedFolder ? 'Nenhuma nota encontrada' : 'Nenhuma nota ainda'}
-            </Text>
-            <Text style={styles.emptyText}>
-              {searchQuery || selectedFolder
-                ? 'Tente ajustar os filtros de busca' 
-                : 'Crie sua primeira nota segura para armazenar informações importantes'}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.notesList}>
-            {notes.map((note) => (
-              <SecureNoteCard
-                key={note.id}
-                note={note}
-                onPress={() => handleEditNote(note)}
-                onEdit={() => handleEditNote(note)}
-                onDelete={() => handleDeleteNote(note)}
-                onToggleFavorite={() => handleToggleFavorite(note)}
-              />
-            ))}
-          </View>
-        )}
-      </ScrollView>
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleCreateNote}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color="#ffffff" />
+      </TouchableOpacity>
 
       <SecureNoteFormModal
         visible={showCreateModal}

@@ -46,7 +46,7 @@ const CustomToast: React.FC<CustomToastProps> = ({ type, text1, text2, onHide })
   const styles = {
     container: {
       backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      borderRadius: 16,
+      borderRadius: 12,
       marginHorizontal: 16,
       marginTop: 60,
       paddingHorizontal: 20,
@@ -56,11 +56,11 @@ const CustomToast: React.FC<CustomToastProps> = ({ type, text1, text2, onHide })
       shadowColor: '#000',
       shadowOffset: {
         width: 0,
-        height: 4,
+        height: 1,
       },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 1,
       borderLeftWidth: 4,
       borderLeftColor: getIconColor(),
     },

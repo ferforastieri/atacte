@@ -112,7 +112,7 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
       borderRadius: 12,
       borderWidth: 1,
       borderColor: isDark ? '#374151' : '#e5e7eb',
-      padding: 16,
+      padding: 24,
       gap: 16,
     },
     codeWrapper: {
@@ -125,7 +125,7 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
       fontWeight: 'bold',
       textAlign: 'center',
       backgroundColor: isDark ? '#374151' : '#f9fafb',
-      borderRadius: 8,
+      borderRadius: 12,
       paddingVertical: 16,
       paddingHorizontal: 24,
       borderWidth: 2,

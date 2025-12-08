@@ -7,3 +7,4 @@ export { Header } from './Header';
 export { SearchInput } from './SearchInput';
 export { TotpCode } from '../totp/TotpCode';
 export { PasswordGeneratorModal } from './PasswordGeneratorModal';
+export { Skeleton, SkeletonLoader } from './Skeleton';

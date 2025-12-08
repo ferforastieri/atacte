@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Card, Header, Button } from '../components/shared';
+import { Card, Header, Button, SkeletonLoader } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { passwordService } from '../services/passwords/passwordService';
 import { userService } from '../services/users/userService';
@@ -42,7 +42,7 @@ export default function ProfileScreen() {
     loadStats();
   }, []);
 
-  // Recarregar dados quando a tela ganhar foco (ex: voltar das configurações)
+ 
   useFocusEffect(
     React.useCallback(() => {
       loadProfileData();
@@ -57,7 +57,7 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       showError('Erro ao carregar dados do perfil');
-      // Fallback para dados do contexto
+     
       setProfileData(user);
     }
   };
@@ -221,9 +221,8 @@ export default function ProfileScreen() {
     return (
       <View style={styles.container}>
         <Header title="Perfil" onThemeToggle={toggleTheme} />
-        <View style={styles.loadingContainer}>
-          <Ionicons name="person-outline" size={48} color={isDark ? '#9ca3af' : '#6b7280'} />
-          <Text style={styles.loadingText}>Carregando perfil...</Text>
+        <View style={styles.content}>
+          <SkeletonLoader />
         </View>
       </View>
     );
