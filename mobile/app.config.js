@@ -88,7 +88,8 @@ export default {
             usesCleartextTraffic: true
           }
         }
-      ]
+      ],
+      "./plugins/withPersistentLocation"
     ]
   }
 };
