@@ -356,11 +356,7 @@ class ForegroundTrackingModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun restartTracking(title: String?, body: String?, promise: Promise) {
     try {
-      ForegroundTrackingService.restart(
-        appContext,
-        title ?: "Atacte",
-        body ?: "Rastreamento de localização ativo"
-      )
+      ForegroundTrackingService.restart(appContext)
       promise.resolve(true)
     } catch (error: Exception) {
       promise.reject("FOREGROUND_RESTART_ERROR", error)
