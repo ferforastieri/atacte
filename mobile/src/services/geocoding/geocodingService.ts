@@ -12,7 +12,7 @@ class GeocodingService {
 
     try {
       const response = await fetch(
-        `https:
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
         {
           headers: {
             'User-Agent': 'AtacteApp/1.0',

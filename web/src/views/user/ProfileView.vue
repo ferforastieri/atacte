@@ -14,17 +14,17 @@
         <div class="lg:col-span-2 space-y-6">
           <BaseCard>
             <div class="space-y-4">
-              <h2 class="text-xl font-semibold text-gray-900">Informações do Perfil</h2>
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Informações do Perfil</h2>
               
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <p class="text-gray-900">{{ authStore.userEmail }}</p>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                  <p class="text-gray-900 dark:text-white">{{ authStore.userEmail }}</p>
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">ID do Usuário</label>
-                  <p class="text-gray-900 font-mono text-sm">{{ authStore.userId }}</p>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID do Usuário</label>
+                  <p class="text-gray-900 dark:text-white font-mono text-sm">{{ authStore.userId }}</p>
                 </div>
               </div>
             </div>
@@ -32,22 +32,22 @@
 
           <BaseCard>
             <div class="space-y-4">
-              <h3 class="text-lg font-semibold text-gray-900">Estatísticas</h3>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Estatísticas</h3>
               
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                  <p class="text-2xl font-bold text-primary-600">{{ passwordsStore.totalCount }}</p>
-                  <p class="text-sm text-gray-600">Total de Senhas</p>
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p class="text-2xl font-bold text-primary-600 dark:text-primary-400">{{ passwordsStore.totalCount }}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Total de Senhas</p>
                 </div>
                 
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                  <p class="text-2xl font-bold text-green-600">{{ passwordsStore.allFavoritePasswords.length }}</p>
-                  <p class="text-sm text-gray-600">Favoritas</p>
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ passwordsStore.allFavoritePasswords.length }}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Favoritas</p>
                 </div>
                 
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                  <p class="text-2xl font-bold text-blue-600">{{ totpEnabledCount }}</p>
-                  <p class="text-sm text-gray-600">Com TOTP</p>
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ totpEnabledCount }}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Com TOTP</p>
                 </div>
               </div>
             </div>
@@ -57,7 +57,7 @@
         <!-- Sidebar -->
         <div class="space-y-6">
           <BaseCard>
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Ações</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ações</h3>
             <div class="space-y-2">
               <BaseButton
                 variant="primary"

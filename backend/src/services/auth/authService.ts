@@ -52,7 +52,7 @@ export class AuthService {
     const masterPasswordHash = await bcrypt.hash(data.masterPassword, salt);
 
     
-    const encryptionKey = crypto.SHA256(data.masterPassword + data.email).toString();
+    const encryptionKey = crypto.SHA256(data.email).toString();
 
     const userData: CreateUserData = {
       email: data.email,
@@ -204,7 +204,7 @@ export class AuthService {
     await emailService.sendPasswordResetEmail(user.email, token, PASSWORD_RESET_URL);
 
     return { 
-      token: process.env['NODE_ENV'] === 'development' ? token : undefined, 
+      token: undefined,
       expiresAt 
     };
   }
@@ -229,7 +229,7 @@ export class AuthService {
     const salt = await bcrypt.genSalt(12);
     const masterPasswordHash = await bcrypt.hash(newPassword, salt);
     
-    const encryptionKey = crypto.SHA256(newPassword + user.email).toString();
+    const encryptionKey = crypto.SHA256(user.email).toString();
 
     await this.userRepository.update(user.id, {
       masterPasswordHash,

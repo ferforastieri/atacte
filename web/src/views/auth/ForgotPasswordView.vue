@@ -26,10 +26,8 @@
           />
 
           <div class="text-sm text-gray-600 dark:text-gray-400 text-center">
-            <p>Se o email existir, você receberá um token de recuperação.</p>
-            <p v-if="devToken" class="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900 rounded text-xs break-all">
-              <strong>Token (dev):</strong> {{ devToken }}
-            </p>
+            <p>Se o email existir, você receberá um token de recuperação por email.</p>
+            <p class="mt-2 font-medium">Verifique sua caixa de entrada e spam.</p>
           </div>
 
           <BaseButton
@@ -122,7 +120,6 @@ const toast = useToast()
 
 const isLoading = ref(false)
 const step = ref<'request' | 'reset'>('request')
-const devToken = ref('')
 const errors = ref<Record<string, string>>({})
 
 const form = reactive({
@@ -140,13 +137,7 @@ const handleSubmit = async () => {
     const response = await authApi.requestPasswordReset(form.email)
     
     if (response.success) {
-      toast.success(response.message || 'Token enviado com sucesso!')
-      
-      if (response.data?.token) {
-        devToken.value = response.data.token
-        form.token = response.data.token
-      }
-      
+      toast.success(response.message || 'Token enviado com sucesso! Verifique seu email.')
       step.value = 'reset'
     } else {
       toast.error(response.message || 'Erro ao solicitar recuperação')

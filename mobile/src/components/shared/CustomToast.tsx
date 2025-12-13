@@ -46,11 +46,11 @@ const CustomToast: React.FC<CustomToastProps> = ({ type, text1, text2, onHide })
   const styles = {
     container: {
       backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      borderRadius: 12,
+      borderRadius: 20,
       marginHorizontal: 16,
       marginTop: 60,
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       shadowColor: '#000',
@@ -61,25 +61,25 @@ const CustomToast: React.FC<CustomToastProps> = ({ type, text1, text2, onHide })
       shadowOpacity: 0.1,
       shadowRadius: 2,
       elevation: 1,
-      borderLeftWidth: 4,
+      borderLeftWidth: 3,
       borderLeftColor: getIconColor(),
     },
     iconContainer: {
-      marginRight: 12,
+      marginRight: 10,
     },
     textContainer: {
       flex: 1,
     },
     title: {
-      fontSize: 16,
-      fontWeight: '700' as const,
+      fontSize: 14,
+      fontWeight: '600' as const,
       color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 2,
+      marginBottom: 1,
     },
     message: {
-      fontSize: 14,
+      fontSize: 12,
       color: isDark ? '#d1d5db' : '#6b7280',
-      lineHeight: 20,
+      lineHeight: 16,
     },
     closeButton: {
       marginLeft: 12,
@@ -92,7 +92,7 @@ const CustomToast: React.FC<CustomToastProps> = ({ type, text1, text2, onHide })
       <View style={styles.iconContainer}>
         <Ionicons 
           name={getIconName() as any} 
-          size={24} 
+          size={20} 
           color={getIconColor()} 
         />
       </View>

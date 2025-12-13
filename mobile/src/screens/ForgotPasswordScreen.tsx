@@ -29,19 +29,8 @@ export default function ForgotPasswordScreen() {
       const response = await authService.requestPasswordReset(email);
       
       if (response.success) {
-        if (response.data?.token) {
-          Alert.alert(
-            'Token de Recuperação',
-            `Token: ${response.data.token}\n\nUse este token para redefinir sua senha.`,
-            [
-              { text: 'Copiar Token', onPress: () => setToken(response.data.token) },
-              { text: 'OK', onPress: () => setStep('reset') }
-            ]
-          );
-        } else {
-          showSuccess('Se o email existir, você receberá um link de recuperação');
-          setStep('reset');
-        }
+        showSuccess('Se o email existir, você receberá um token de recuperação por email. Verifique sua caixa de entrada.');
+        setStep('reset');
       } else {
         showError(response.message || 'Erro ao solicitar recuperação');
       }

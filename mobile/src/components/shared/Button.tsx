@@ -68,6 +68,8 @@ export const Button: React.FC<ButtonProps> = ({
       },
       ghost: {
         backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: isDark ? '#4b5563' : '#d1d5db',
       },
     };
 
@@ -75,7 +77,7 @@ export const Button: React.FC<ButtonProps> = ({
       ...baseStyle,
       ...sizeStyles[size],
       ...variantStyles[variant],
-      opacity: disabled ? 0.5 : 1,
+      opacity: disabled || loading ? 0.7 : 1,
     };
   };
 
@@ -109,15 +111,16 @@ export const Button: React.FC<ButtonProps> = ({
       style={[getButtonStyle(), style]}
       onPress={onPress}
       disabled={disabled || loading}
+      activeOpacity={0.7}
     >
-      {loading && (
+      {loading ? (
         <ActivityIndicator
-          size="small"
-          color={variant === 'ghost' ? (isDark ? '#d1d5db' : '#374151') : '#ffffff'}
-          style={{ marginRight: 8 }}
+          size={size === 'lg' ? 'small' : 'small'}
+          color={variant === 'ghost' ? (isDark ? '#d1d5db' : '#374151') : variant === 'secondary' ? (isDark ? '#f9fafb' : '#111827') : '#ffffff'}
         />
+      ) : (
+        <Text style={[getTextStyle(), textStyle]}>{title}</Text>
       )}
-      <Text style={[getTextStyle(), textStyle]}>{title}</Text>
     </TouchableOpacity>
   );
 };

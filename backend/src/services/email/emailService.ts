@@ -24,21 +24,29 @@ export class EmailService {
     this.isEnabled = !!(smtpHost && smtpPort && smtpUser && smtpPass);
 
     if (this.isEnabled) {
+      const port = parseInt(smtpPort || '587');
+      const isSecure = smtpPort === '465';
+      
       this.transporter = nodemailer.createTransport({
         host: smtpHost,
-        port: parseInt(smtpPort || '587'),
-        secure: smtpPort === '465',
+        port: port,
+        secure: isSecure,
         auth: {
           user: smtpUser,
           pass: smtpPass,
         },
+        tls: {
+          rejectUnauthorized: false
+        }
       });
+      
+      this.transporter.verify(() => {});
     }
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     if (!this.isEnabled || !this.transporter) {
-      return false;
+      throw new Error('Serviço de email não configurado. Verifique as variáveis SMTP_HOST, SMTP_PORT, SMTP_USER e SMTP_PASS.');
     }
 
     try {
@@ -52,7 +60,7 @@ export class EmailService {
 
       return true;
     } catch (error: any) {
-      return false;
+      throw new Error(`Erro ao enviar email: ${error.message}`);
     }
   }
 

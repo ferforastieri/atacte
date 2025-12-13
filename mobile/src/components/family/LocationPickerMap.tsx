@@ -23,7 +23,7 @@ export default function LocationPickerMap({
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <title>Selecionar Localização</title>
-      <link rel="stylesheet" href="https:
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       <style>
         body { 
           margin: 0; 
@@ -65,7 +65,7 @@ export default function LocationPickerMap({
     <body>
       <div class="instruction">Toque no mapa para selecionar a localização</div>
       <div id="map"></div>
-      <script src="https:
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <script>
         let map;
         let marker = null;
@@ -75,7 +75,7 @@ export default function LocationPickerMap({
         function initMap() {
           map = L.map('map').setView([initialLat, initialLng], 13);
           
-          L.tileLayer('https:
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 19
           }).addTo(map);

@@ -3,8 +3,7 @@
     <!-- Main App -->
     <router-view />
     
-    <!-- Bottom Navigation (Mobile only, authenticated users) -->
-    <BottomNavigation v-if="authStore.isAuthenticated" />
+    <!-- Bottom Navigation removed - using hamburger menu instead -->
     
     <!-- Toast Container -->
     <ToastContainer />
@@ -15,7 +14,6 @@
 import { onMounted, getCurrentInstance } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import ToastContainer from '@/components/layout/ToastContainer.vue'
-import BottomNavigation from '@/components/layout/BottomNavigation.vue'
 
 const authStore = useAuthStore()
 const instance = getCurrentInstance()

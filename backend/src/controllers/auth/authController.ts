@@ -151,12 +151,11 @@ router.post('/forgot-password', async (req, res) => {
       });
     }
 
-    const result = await authService.requestPasswordReset(email);
+    await authService.requestPasswordReset(email);
 
     return res.json({
       success: true,
-      message: 'Se o email existir, você receberá um link de recuperação',
-      data: process.env['NODE_ENV'] === 'development' && result.token ? { token: result.token } : undefined
+      message: 'Se o email existir, você receberá um link de recuperação'
     });
   } catch (error: any) {
     return res.status(400).json({
