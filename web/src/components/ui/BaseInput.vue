@@ -123,7 +123,7 @@ const inputClasses = computed(() => {
     sizeClasses,
     errorClasses,
     readonlyClasses,
-    'py-2'
+    'py-1.5'
   ].join(' ')
 })
 

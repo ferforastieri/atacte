@@ -509,11 +509,19 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import androidx.core.content.ContextCompat
 
 class BootReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
-    if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+    if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
+        intent.action == "android.intent.action.QUICKBOOT_POWERON" ||
+        intent.action == "com.htc.intent.action.QUICKBOOT_POWERON") {
+      
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        NotificationChannelHelper.setupChannels(context)
+      }
+      
       val prefs: SharedPreferences = context.getSharedPreferences(
         "atacte_tracking_prefs",
         Context.MODE_PRIVATE
@@ -545,6 +553,113 @@ class BootReceiver : BroadcastReceiver() {
   config = withDangerousMod(config, [
     'android',
     async (config) => {
+      const notificationHelperPath = path.join(
+        config.modRequest.platformProjectRoot,
+        'app',
+        'src',
+        'main',
+        'java',
+        'atacte',
+        'seguranca',
+        'NotificationChannelHelper.kt'
+      );
+
+      const notificationHelperDir = path.dirname(notificationHelperPath);
+      if (!fs.existsSync(notificationHelperDir)) {
+        fs.mkdirSync(notificationHelperDir, { recursive: true });
+      }
+
+      const notificationHelperCode = `package atacte.seguranca
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
+
+object NotificationChannelHelper {
+  @RequiresApi(Build.VERSION_CODES.O)
+  fun setupChannels(context: Context) {
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    
+    val channels = listOf(
+      "atacte_tracking_channel" to NotificationChannel(
+        "atacte_tracking_channel",
+        "Rastreamento de Localização",
+        NotificationManager.IMPORTANCE_HIGH
+      ).apply {
+        description = "Notificação permanente para rastreamento de localização do Atacte"
+        setShowBadge(false)
+        lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+        enableVibration(false)
+        enableLights(false)
+        setSound(null, null)
+        setBypassDnd(false)
+      },
+      "default" to NotificationChannel(
+        "default",
+        "Atacte",
+        NotificationManager.IMPORTANCE_HIGH
+      ).apply {
+        description = "Notificações gerais do Atacte"
+        enableVibration(true)
+        vibrationPattern = longArrayOf(0, 250, 250, 250)
+        setShowBadge(true)
+        lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+      },
+      "family" to NotificationChannel(
+        "family",
+        "Família",
+        NotificationManager.IMPORTANCE_HIGH
+      ).apply {
+        description = "Notificações da sua família"
+        enableVibration(true)
+        vibrationPattern = longArrayOf(0, 250, 250, 250)
+        setShowBadge(true)
+        lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+      },
+      "sos" to NotificationChannel(
+        "sos",
+        "Emergência",
+        NotificationManager.IMPORTANCE_MAX
+      ).apply {
+        description = "Alertas de emergência da família"
+        enableVibration(true)
+        vibrationPattern = longArrayOf(0, 250, 250, 250)
+        setShowBadge(true)
+        lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+      },
+      "location" to NotificationChannel(
+        "location",
+        "Localização",
+        NotificationManager.IMPORTANCE_LOW
+      ).apply {
+        description = "Rastreamento de localização em andamento"
+        enableVibration(false)
+        setShowBadge(false)
+        lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+        setSound(null, null)
+      }
+    )
+
+    channels.forEach { (_, channel) ->
+      val existingChannel = notificationManager.getNotificationChannel(channel.id)
+      if (existingChannel == null) {
+        notificationManager.createNotificationChannel(channel)
+      } else {
+        try {
+          notificationManager.deleteNotificationChannel(channel.id)
+        } catch (e: Exception) {
+        }
+        notificationManager.createNotificationChannel(channel)
+      }
+    }
+  }
+}
+`;
+
+      fs.writeFileSync(notificationHelperPath, notificationHelperCode, 'utf8');
+
       const mainAppPath = path.join(
         config.modRequest.platformProjectRoot,
         'app',
@@ -564,6 +679,8 @@ class BootReceiver : BroadcastReceiver() {
           if (importIndex !== -1) {
             mainAppContent = mainAppContent.slice(0, importIndex) +
               'import atacte.seguranca.ForegroundTrackingPackage\n' +
+              'import atacte.seguranca.NotificationChannelHelper\n' +
+              'import android.os.Build\n' +
               mainAppContent.slice(importIndex);
           }
         }
@@ -585,6 +702,22 @@ class BootReceiver : BroadcastReceiver() {
                   '              add(ForegroundTrackingPackage())\n' +
                   mainAppContent.slice(insertIndex);
               }
+            }
+          }
+        }
+
+        if (!mainAppContent.includes('NotificationChannelHelper.setupChannels')) {
+          const onCreateIndex = mainAppContent.indexOf('override fun onCreate()');
+          if (onCreateIndex !== -1) {
+            const onCreateStart = mainAppContent.indexOf('{', onCreateIndex) + 1;
+            const superCallIndex = mainAppContent.indexOf('super.onCreate()', onCreateStart);
+            if (superCallIndex !== -1) {
+              const insertIndex = mainAppContent.indexOf('\n', superCallIndex) + 1;
+              mainAppContent = mainAppContent.slice(0, insertIndex) +
+                '      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\n' +
+                '        NotificationChannelHelper.setupChannels(this)\n' +
+                '      }\n' +
+                mainAppContent.slice(insertIndex);
             }
           }
         }

@@ -58,7 +58,7 @@
           <BaseButton
             type="submit"
             variant="primary"
-            size="lg"
+            size="md"
             :loading="isLoading"
             class="w-full"
           >
