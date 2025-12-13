@@ -32,7 +32,6 @@ interface NotificationQuery {
   offset?: string;
 }
 
-// Validações
 const createNotificationValidation = [
   body('receiverId')
     .notEmpty()
@@ -72,10 +71,8 @@ const geofenceValidation = [
     .withMessage('ID da zona é obrigatório'),
 ];
 
-// Rotas
 router.use(authenticateToken);
 
-// Listar notificações do usuário
 router.get(
   '/',
   async (req: Request<{}, {}, {}, NotificationQuery>, res: Response) => {
@@ -98,7 +95,6 @@ router.get(
         count: notifications.length,
       });
     } catch (error) {
-      console.error('Erro ao buscar notificações:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -107,7 +103,6 @@ router.get(
   }
 );
 
-// Obter contagem de não lidas
 router.get('/unread-count', asAuthenticatedHandler(async (req, res) => {
   try {
     const count = await notificationService.getUnreadCount(req.user.id);
@@ -117,7 +112,6 @@ router.get('/unread-count', asAuthenticatedHandler(async (req, res) => {
       data: { count },
     });
   } catch (error) {
-    console.error('Erro ao buscar contagem:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor',
@@ -125,7 +119,6 @@ router.get('/unread-count', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Criar notificação (admin)
 router.post(
   '/',
   createNotificationValidation,
@@ -153,7 +146,6 @@ router.post(
         data: notification,
       });
     } catch (error) {
-      console.error('Erro ao criar notificação:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -162,7 +154,6 @@ router.post(
   }
 );
 
-// Marcar como lida
 router.patch('/:id/read', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -181,7 +172,6 @@ router.patch('/:id/read', asAuthenticatedHandler(async (req, res) => {
       data: notification,
     });
   } catch (error) {
-    console.error('Erro ao marcar notificação:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao marcar notificação';
     res.status(400).json({
       success: false,
@@ -190,7 +180,6 @@ router.patch('/:id/read', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Marcar todas como lidas
 router.patch('/read-all', asAuthenticatedHandler(async (req, res) => {
   try {
     const count = await notificationService.markAllAsRead(req.user.id);
@@ -201,7 +190,6 @@ router.patch('/read-all', asAuthenticatedHandler(async (req, res) => {
       data: { count },
     });
   } catch (error) {
-    console.error('Erro ao marcar notificações:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor',
@@ -209,7 +197,6 @@ router.patch('/read-all', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Deletar notificação
 router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -227,7 +214,6 @@ router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
       message: 'Notificação deletada',
     });
   } catch (error: any) {
-    console.error('Erro ao deletar notificação:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao deletar notificação';
     res.status(400).json({
       success: false,
@@ -236,7 +222,6 @@ router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Enviar SOS
 router.post(
   '/sos',
   sosValidation,
@@ -266,7 +251,6 @@ router.post(
         message: 'Alerta SOS enviado para sua família',
       });
     } catch (error) {
-      console.error('Erro ao enviar SOS:', error);
       res.status(500).json({
         success: false,
         message: 'Erro ao enviar SOS',
@@ -275,7 +259,6 @@ router.post(
   }
 );
 
-// Notificar família sobre geofencing
 router.post(
   '/geofence',
   geofenceValidation,
@@ -306,7 +289,6 @@ router.post(
         message: 'Família notificada sobre o movimento na zona',
       });
     } catch (error) {
-      console.error('Erro ao notificar família sobre geofencing:', error);
       res.status(500).json({
         success: false,
         message: 'Erro ao notificar família',

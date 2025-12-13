@@ -63,9 +63,7 @@ class ImportExportService {
     this.importExportRepository = new ImportExportRepository();
   }
 
-  /**
-   * Importa senhas do formato Bitwarden
-   */
+  
   async importFromBitwarden(userId: string, importData: BitwardenImportData): Promise<ImportResult> {
     const { items } = importData
 
@@ -136,9 +134,7 @@ class ImportExportService {
     }
   }
 
-  /**
-   * Exporta senhas para formato Bitwarden
-   */
+  
   async exportToBitwarden(userId: string): Promise<ExportResult> {
     
     const passwords = await this.importExportRepository.findUserPasswords(userId)
@@ -186,9 +182,7 @@ class ImportExportService {
     }
   }
 
-  /**
-   * Exporta senhas para formato CSV
-   */
+  
   async exportToCSV(userId: string): Promise<ExportResult> {
     const passwords = await this.importExportRepository.findUserPasswords(userId)
 
@@ -231,9 +225,7 @@ class ImportExportService {
     }
   }
 
-  /**
-   * Valida dados de importação
-   */
+  
   validateImportData(data: any): { valid: boolean; errors: string[] } {
     const errors: string[] = []
 

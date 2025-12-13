@@ -79,7 +79,6 @@ router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Erro ao buscar notas:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -112,7 +111,6 @@ router.get('/:id', asAuthenticatedHandler(async (req, res) => {
       data: note
     });
   } catch (error) {
-    console.error('Erro ao buscar nota:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -142,7 +140,6 @@ router.post('/', createNoteValidation, asAuthenticatedHandler(async (req, res) =
       data: newNote
     });
   } catch (error) {
-    console.error('Erro ao criar nota:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -188,7 +185,6 @@ router.put('/:id', asAuthenticatedHandler(async (req, res) => {
       data: updatedNote
     });
   } catch (error) {
-    console.error('Erro ao atualizar nota:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -221,7 +217,6 @@ router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
       message: 'Nota deletada com sucesso'
     });
   } catch (error) {
-    console.error('Erro ao deletar nota:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -238,7 +233,6 @@ router.get('/folders/list', asAuthenticatedHandler(async (req, res) => {
       data: folders
     });
   } catch (error) {
-    console.error('Erro ao buscar pastas:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'

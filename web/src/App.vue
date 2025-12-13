@@ -35,6 +35,6 @@ onMounted(async () => {
 </script>
 
 <style>
-/* Estilos globais já estão no style.css */
+
 </style>
 

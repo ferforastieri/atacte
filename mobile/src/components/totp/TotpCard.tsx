@@ -170,7 +170,7 @@ export const TotpCard: React.FC<TotpCardProps> = ({
         </View>
       </TouchableOpacity>
       
-      {/* TOTP Code */}
+      {}
       {password.totpEnabled && totpSecret && (
         <View style={styles.totpContainer}>
           <TotpCode

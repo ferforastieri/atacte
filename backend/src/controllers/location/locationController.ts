@@ -19,7 +19,6 @@ interface UpdateLocationRequest {
   isMoving?: boolean;
 }
 
-// Validações
 const updateLocationValidation = [
   body('latitude')
     .isFloat({ min: -90, max: 90 })
@@ -66,10 +65,8 @@ const historyValidation = [
     .withMessage('Limite deve estar entre 1 e 1000'),
 ];
 
-// Rotas
 router.use(authenticateToken);
 
-// Atualizar localização
 router.post(
   '/',
   updateLocationValidation,
@@ -98,7 +95,6 @@ router.post(
         data: location,
       });
     } catch (error) {
-      console.error('Erro ao atualizar localização:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -107,7 +103,6 @@ router.post(
   }
 );
 
-// Obter última localização
 router.get('/latest', asAuthenticatedHandler(async (req, res) => {
   try {
     const location = await locationService.getLatestLocation(req.user.id);
@@ -125,7 +120,6 @@ router.get('/latest', asAuthenticatedHandler(async (req, res) => {
       data: location,
     });
   } catch (error) {
-    console.error('Erro ao buscar localização:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor',
@@ -133,7 +127,6 @@ router.get('/latest', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Obter histórico de localização
 router.get(
   '/history',
   historyValidation,
@@ -166,7 +159,6 @@ router.get(
         count: locations.length,
       });
     } catch (error) {
-      console.error('Erro ao buscar histórico:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -175,7 +167,6 @@ router.get(
   })
 );
 
-// Obter localizações da família
 router.get(
   '/family/:familyId',
   asAuthenticatedHandler(async (req, res) => {
@@ -199,7 +190,6 @@ router.get(
         data: familyData,
       });
     } catch (error) {
-      console.error('Erro ao buscar localizações da família:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
       res.status(errorMessage.includes('permissão') ? 403 : 500).json({
         success: false,
@@ -209,7 +199,6 @@ router.get(
   })
 );
 
-// Obter estatísticas de localização
 router.get('/stats', asAuthenticatedHandler(async (req, res) => {
   try {
     const stats = await locationService.getLocationStats(req.user.id);
@@ -219,7 +208,6 @@ router.get('/stats', asAuthenticatedHandler(async (req, res) => {
       data: stats,
     });
   } catch (error) {
-    console.error('Erro ao buscar estatísticas:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor',
@@ -227,7 +215,6 @@ router.get('/stats', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Limpar localizações antigas
 router.delete('/cleanup', asAuthenticatedHandler(async (req, res) => {
   try {
     const daysToKeep = req.query['days'] ? parseInt(req.query['days'] as string) : 30;
@@ -242,7 +229,6 @@ router.delete('/cleanup', asAuthenticatedHandler(async (req, res) => {
       data: { deletedCount },
     });
   } catch (error) {
-    console.error('Erro ao limpar localizações:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor',
@@ -250,7 +236,6 @@ router.delete('/cleanup', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Solicitar atualização de localização para toda a família
 router.post(
   '/request-update/:familyId',
   updateLocationValidation,
@@ -289,7 +274,6 @@ router.post(
         data: location,
       });
     } catch (error) {
-      console.error('Erro ao solicitar atualização de localização:', error);
       const message = error instanceof Error ? error.message : 'Erro interno do servidor';
       const statusCode = message.includes('permissão') ? 403 : 500;
       res.status(statusCode).json({

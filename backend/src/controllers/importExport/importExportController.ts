@@ -47,7 +47,6 @@ router.post('/import', asAuthenticatedHandler(async (req, res) => {
     })
 
   } catch (error) {
-    console.error('Erro na importação:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor durante a importação'
     res.status(500).json({
       success: false,
@@ -87,7 +86,6 @@ router.get('/export/bitwarden', asAuthenticatedHandler(async (req, res) => {
     })
 
   } catch (error) {
-    console.error('Erro na exportação:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor durante a exportação'
     res.status(500).json({
       success: false,
@@ -122,7 +120,6 @@ router.get('/export/csv', asAuthenticatedHandler(async (req, res) => {
     res.send(result.data)
 
   } catch (error) {
-    console.error('Erro na exportação CSV:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor durante a exportação CSV'
     res.status(500).json({
       success: false,

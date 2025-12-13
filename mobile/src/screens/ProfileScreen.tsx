@@ -239,7 +239,7 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Info */}
+        {}
         <Card style={styles.profileCard}>
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
@@ -267,7 +267,7 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
-        {/* Statistics */}
+        {}
         <Card style={styles.statsCard}>
           <Text style={styles.sectionTitle}>Estatísticas</Text>
           <View style={styles.statsGrid}>
@@ -286,7 +286,7 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
-        {/* Actions */}
+        {}
         <Card style={styles.actionsCard}>
           <Text style={styles.sectionTitle}>Ações</Text>
           

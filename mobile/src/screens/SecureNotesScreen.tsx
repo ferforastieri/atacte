@@ -409,7 +409,7 @@ export default function SecureNotesScreen() {
       <Header title="Notas Seguras" onThemeToggle={toggleTheme} />
       
       <View style={styles.content}>
-        {/* Search Bar */}
+        {}
         <View style={styles.searchContainer}>
           <SearchInput
             placeholder="Buscar notas..."
@@ -418,7 +418,7 @@ export default function SecureNotesScreen() {
           />
         </View>
 
-        {/* Filter Container */}
+        {}
         <View style={styles.filterContainer}>
           <FolderSelector
             folders={folders}
@@ -435,7 +435,7 @@ export default function SecureNotesScreen() {
           )}
         </View>
 
-        {/* Notes List */}
+        {}
         <FlatList
           data={notes}
           renderItem={renderNoteItem}
@@ -451,7 +451,7 @@ export default function SecureNotesScreen() {
         />
       </View>
 
-      {/* Floating Action Button */}
+      {}
       <TouchableOpacity
         style={styles.fab}
         onPress={handleCreateNote}

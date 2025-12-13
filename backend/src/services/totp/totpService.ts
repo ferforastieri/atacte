@@ -31,9 +31,7 @@ export class TOTPService {
     this.passwordRepository = new PasswordRepository();
   }
 
-  /**
-   * Gerar um novo secret TOTP
-   */
+  
   static generateSecret(serviceName: string, accountName: string): TOTPData {
     const secret = speakeasy.generateSecret({
       name: `${serviceName} (${accountName})`,
@@ -48,9 +46,7 @@ export class TOTPService {
     };
   }
 
-  /**
-   * Gerar código TOTP atual baseado no secret
-   */
+  
   static generateCurrentCode(secret: string): TOTPCode {
     
     
@@ -77,9 +73,7 @@ export class TOTPService {
     };
   }
 
-  /**
-   * Validar um código TOTP
-   */
+  
   static validateCode(secret: string, code: string): TOTPValidation {
     const verified = speakeasy.totp.verify({
       secret: secret,
@@ -95,9 +89,7 @@ export class TOTPService {
     };
   }
 
-  /**
-   * Gerar múltiplos códigos para teste
-   */
+  
   static generateMultipleCodes(secret: string): {
     previous: number;
     current: number;
@@ -138,16 +130,12 @@ export class TOTPService {
     };
   }
 
-  /**
-   * Formatar código TOTP com zeros à esquerda
-   */
+  
   static formatCode(code: number): string {
     return code.toString().padStart(6, '0');
   }
 
-  /**
-   * Verificar se um secret TOTP é válido
-   */
+  
   static isValidSecret(secret: string): boolean {
     try {
       
@@ -162,9 +150,7 @@ export class TOTPService {
     }
   }
 
-  /**
-   * Gerar QR Code para uma URL otpauth
-   */
+  
   static async generateQRCode(otpauthUrl: string): Promise<string> {
     try {
       return await qrcode.toDataURL(otpauthUrl);
@@ -173,9 +159,7 @@ export class TOTPService {
     }
   }
 
-  /**
-   * Extrair informações de uma URL otpauth
-   */
+  
   static parseOtpAuthUrl(otpauthUrl: string): {
     secret: string;
     serviceName: string;
@@ -187,7 +171,7 @@ export class TOTPService {
       const cleanUrl = otpauthUrl.trim();
       
       
-      if (!cleanUrl.startsWith('otpauth://')) {
+      if (!cleanUrl.startsWith('otpauth://totp/')) {
         return null;
       }
       
@@ -228,25 +212,19 @@ export class TOTPService {
     }
   }
 
-  /**
-   * Criptografar secret TOTP
-   */
+  
   static encryptSecret(secret: string, encryptionKey: string): string {
     return CryptoUtil.encrypt(secret, encryptionKey);
   }
 
-  /**
-   * Descriptografar secret TOTP
-   */
+  
   static decryptSecret(encryptedSecret: string, encryptionKey: string): string {
     return CryptoUtil.decrypt(encryptedSecret, encryptionKey);
   }
 
   
 
-  /**
-   * Adicionar TOTP a uma entrada de senha
-   */
+  
   async addTotpToEntry(
     userId: string, 
     passwordId: string, 
@@ -308,9 +286,7 @@ export class TOTPService {
     return updatedEntry;
   }
 
-  /**
-   * Remover TOTP de uma entrada de senha
-   */
+  
   async removeTotpFromEntry(
     userId: string, 
     passwordId: string, 
@@ -345,9 +321,7 @@ export class TOTPService {
     return updatedEntry;
   }
 
-  /**
-   * Buscar código TOTP atual para uma entrada
-   */
+  
   async getTotpCodeForEntry(
     userId: string, 
     passwordId: string, 
@@ -382,14 +356,11 @@ export class TOTPService {
 
       return totpCode;
     } catch (error) {
-      console.error('Erro ao descriptografar TOTP secret:', error);
       return null;
     }
   }
 
-  /**
-   * Buscar apenas o secret TOTP para uma entrada (para geração client-side)
-   */
+  
   async getTotpSecretForEntry(
     userId: string, 
     passwordId: string, 
@@ -422,7 +393,6 @@ export class TOTPService {
 
       return { secret: decryptedSecret };
     } catch (error) {
-      console.error('Erro ao descriptografar TOTP secret:', error);
       return null;
     }
   }

@@ -31,11 +31,9 @@ export class GeofenceService {
   private familyRepository: FamilyRepository;
   private userGeofenceStateRepository: UserGeofenceStateRepository;
   
-  // Cooldown mínimo entre notificações da mesma zona (5 minutos)
   private readonly NOTIFICATION_COOLDOWN_MS = 5 * 60 * 1000;
   
-  // Margem de segurança (hysteresis) em metros para evitar oscilações na borda
-  private readonly HYSTERESIS_MARGIN = 10; // 10 metros
+  private readonly HYSTERESIS_MARGIN = 10; 
 
   constructor() {
     this.geofenceRepository = new GeofenceRepository();
@@ -50,7 +48,6 @@ export class GeofenceService {
     data: Omit<CreateGeofenceZoneData, 'familyId'>,
     req?: Request
   ): Promise<GeofenceZoneDto> {
-    // Verificar se o usuário é membro da família
     const isMember = await this.familyRepository.isUserMemberOfFamily(userId, familyId);
     if (!isMember) {
       throw new Error('Você não tem permissão para criar zonas nesta família');
@@ -61,7 +58,6 @@ export class GeofenceService {
       ...data,
     });
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'GEOFENCE_ZONE_CREATED',
@@ -75,7 +71,6 @@ export class GeofenceService {
   }
 
   async getFamilyZones(userId: string, familyId: string): Promise<GeofenceZoneDto[]> {
-    // Verificar se o usuário é membro da família
     const isMember = await this.familyRepository.isUserMemberOfFamily(userId, familyId);
     if (!isMember) {
       throw new Error('Você não tem permissão para acessar zonas desta família');
@@ -86,7 +81,6 @@ export class GeofenceService {
   }
 
   async getActiveFamilyZones(userId: string, familyId: string): Promise<GeofenceZoneDto[]> {
-    // Verificar se o usuário é membro da família
     const isMember = await this.familyRepository.isUserMemberOfFamily(userId, familyId);
     if (!isMember) {
       throw new Error('Você não tem permissão para acessar zonas desta família');
@@ -97,7 +91,6 @@ export class GeofenceService {
   }
 
   async getActiveUserZones(userId: string): Promise<GeofenceZoneDto[]> {
-    // Buscar todas as famílias do usuário e retornar todas as zonas ativas
     const families = await this.familyRepository.findByUserId(userId);
     const familyIds = families.map(f => f.id);
 
@@ -115,7 +108,6 @@ export class GeofenceService {
     data: UpdateGeofenceZoneData,
     req?: Request
   ): Promise<GeofenceZoneDto> {
-    // Verificar se a zona existe e se o usuário é membro da família
     const zone = await this.geofenceRepository.findById(zoneId);
     if (!zone) {
       throw new Error('Zona não encontrada');
@@ -128,7 +120,6 @@ export class GeofenceService {
 
     const updatedZone = await this.geofenceRepository.update(zoneId, data);
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'GEOFENCE_ZONE_UPDATED',
@@ -142,7 +133,6 @@ export class GeofenceService {
   }
 
   async deleteZone(userId: string, zoneId: string, req?: Request): Promise<void> {
-    // Verificar se a zona existe e se o usuário é membro da família
     const zone = await this.geofenceRepository.findById(zoneId);
     if (!zone) {
       throw new Error('Zona não encontrada');
@@ -153,12 +143,10 @@ export class GeofenceService {
       throw new Error('Você não tem permissão para deletar esta zona');
     }
 
-    // Deletar estados dos usuários relacionados a esta zona
     await this.userGeofenceStateRepository.deleteByZone(zoneId);
     
     await this.geofenceRepository.delete(zoneId);
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'GEOFENCE_ZONE_DELETED',
@@ -169,18 +157,15 @@ export class GeofenceService {
     );
   }
 
-  // Verificar se uma localização está dentro de alguma zona
   async checkLocationInZones(
     userId: string,
     latitude: number,
     longitude: number,
     accuracy?: number
   ): Promise<{ zone: GeofenceZoneDto; distance: number; isInside: boolean }[]> {
-    // Buscar todas as zonas ativas das famílias do usuário
     const zones = await this.getActiveUserZones(userId);
     const zonesInRange: { zone: GeofenceZoneDto; distance: number; isInside: boolean }[] = [];
     
-    // Buscar estados atuais do usuário
     const userStates = await this.userGeofenceStateRepository.findByUserId(userId);
     const stateMap = new Map(userStates.map(s => [s.zoneId, s]));
 
@@ -195,20 +180,14 @@ export class GeofenceService {
       const currentState = stateMap.get(zone.id);
       const wasInside = currentState?.isInside ?? false;
       
-      // Aplicar hysteresis: se estava dentro, precisa estar mais longe para sair
-      // Se estava fora, precisa estar mais perto para entrar
       let effectiveRadius = zone.radius;
       if (wasInside) {
-        // Se estava dentro, adiciona margem de segurança para evitar saída falsa
         effectiveRadius = zone.radius + this.HYSTERESIS_MARGIN;
       } else {
-        // Se estava fora, subtrai margem para evitar entrada falsa
         effectiveRadius = Math.max(0, zone.radius - this.HYSTERESIS_MARGIN);
       }
       
-      // Considerar precisão do GPS se disponível
       if (accuracy && accuracy > 0) {
-        // Se a precisão é maior que a margem, usar ela como margem adicional
         const accuracyMargin = Math.min(accuracy, this.HYSTERESIS_MARGIN);
         if (wasInside) {
           effectiveRadius += accuracyMargin;
@@ -229,7 +208,6 @@ export class GeofenceService {
     return zonesInRange;
   }
 
-  // Notificar entrada/saída de zona com cooldown
   async handleZoneEvent(
     userId: string,
     zoneId: string,
@@ -242,7 +220,6 @@ export class GeofenceService {
       return false;
     }
 
-    // Verificar se deve notificar
     const shouldNotify =
       (eventType === 'enter' && zone.notifyOnEnter) ||
       (eventType === 'exit' && zone.notifyOnExit);
@@ -251,27 +228,23 @@ export class GeofenceService {
       return false;
     }
 
-    // Buscar estado atual
     const currentState = await this.userGeofenceStateRepository.findByUserAndZone(
       userId,
       zoneId
     );
 
-    // Verificar cooldown - não notificar se já houve evento recente
     if (currentState?.lastEventAt) {
       const timeSinceLastEvent = Date.now() - currentState.lastEventAt.getTime();
       if (timeSinceLastEvent < this.NOTIFICATION_COOLDOWN_MS) {
-        return false; // Ainda em cooldown
+        return false; 
       }
     }
 
-    // Verificar se o estado realmente mudou
     const newIsInside = eventType === 'enter';
     if (currentState && currentState.isInside === newIsInside) {
-      return false; // Estado não mudou, não notificar
+      return false; 
     }
 
-    // Atualizar estado
     const now = new Date();
     await this.userGeofenceStateRepository.upsert(userId, zoneId, {
       userId,
@@ -281,7 +254,6 @@ export class GeofenceService {
       ...(eventType === 'enter' ? { lastEnterAt: now } : { lastExitAt: now }),
     });
 
-    // Notificar a família sobre o evento de geofence
     await this.notificationService.sendGeofenceToFamily(
       userId,
       zone.name,
@@ -292,14 +264,13 @@ export class GeofenceService {
     return true;
   }
 
-  // Calcular distância entre dois pontos (fórmula de Haversine)
   private calculateDistance(
     lat1: number,
     lon1: number,
     lat2: number,
     lon2: number
   ): number {
-    const R = 6371e3; // Raio da Terra em metros
+    const R = 6371e3; 
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;

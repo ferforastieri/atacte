@@ -4,9 +4,6 @@ import { locationService, UpdateLocationRequest } from './locationService';
 
 const LOCATION_TASK_NAME = 'background-location-task';
 
-// Definir a tarefa em background
-// Esta tarefa roda automaticamente quando o app está em background
-// Ela coleta a localização e usa o locationService para enviar ao backend
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
   if (error) {
     console.error('Erro na tarefa de localização:', error);
@@ -19,10 +16,8 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
 
     if (location) {
       try {
-        // Obter nível de bateria
         const batteryLevel = await locationService.getBatteryLevel();
         
-        // Preparar dados para enviar (usando o mesmo formato do locationService)
         const payload: UpdateLocationRequest = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
@@ -34,7 +29,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
           isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
         };
 
-        // Usar o locationService para enviar (ele faz POST para /location no backend)
         const result = await locationService.updateLocation(payload);
         
         if (result.success) {
@@ -53,12 +47,10 @@ class ForegroundLocationService {
 
   async start(): Promise<boolean> {
     try {
-      // Verificar se já está ativo
       if (this.isActiveRef) {
         return true;
       }
 
-      // Solicitar permissões
       const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
       if (foregroundStatus !== 'granted') {
         console.error('Permissão de foreground não concedida');
@@ -71,7 +63,6 @@ class ForegroundLocationService {
         return false;
       }
 
-      // Verificar se a tarefa já está registrada
       const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
       if (!isTaskDefined) {
         console.error('Tarefa não está definida');
@@ -79,18 +70,16 @@ class ForegroundLocationService {
       }
 
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.Highest, // Precisão máxima
-        timeInterval: 30000, // 30 segundos (obrigatório)
-        distanceInterval: 0, // 0 = não usar filtro de distância, apenas tempo (garante atualização a cada 30s)
+        accuracy: Location.Accuracy.Highest, 
+        timeInterval: 30000, 
+        distanceInterval: 0, 
         foregroundService: {
           notificationTitle: 'Atacte',
           notificationBody: 'Rastreando localização',
-          notificationColor: '#16a34a', // Verde
+          notificationColor: '#16a34a', 
         },
-        pausesUpdatesAutomatically: false, // Não pausar automaticamente
-        showsBackgroundLocationIndicator: true, // Mostrar indicador no iOS
-        // Android: foregroundService garante execução mesmo com app em background
-        // iOS: showsBackgroundLocationIndicator mostra que está rastreando
+        pausesUpdatesAutomatically: false, 
+        showsBackgroundLocationIndicator: true, 
       });
 
       this.isActiveRef = true;

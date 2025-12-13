@@ -153,15 +153,13 @@ router.post('/forgot-password', async (req, res) => {
 
     const result = await authService.requestPasswordReset(email);
 
-    // Não retornar o token por segurança (já foi enviado por email)
-    res.json({
+    return res.json({
       success: true,
       message: 'Se o email existir, você receberá um link de recuperação',
-      // Em desenvolvimento, ainda retornar o token se não houver SendGrid configurado
-      data: process.env.NODE_ENV === 'development' && result.token ? { token: result.token } : undefined
+      data: process.env['NODE_ENV'] === 'development' && result.token ? { token: result.token } : undefined
     });
   } catch (error: any) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: error.message
     });
@@ -188,12 +186,12 @@ router.post('/reset-password', async (req, res) => {
 
     await authService.resetPassword(token, newPassword);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Senha redefinida com sucesso'
     });
   } catch (error: any) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: error.message
     });

@@ -1,18 +1,11 @@
-/**
- * Utilitário para cópia de texto para a área de transferência
- * Lida com diferentes cenários: HTTPS, HTTP, navegadores antigos
- */
+
 
 export interface CopyResult {
   success: boolean
   message: string
 }
 
-/**
- * Copia texto para a área de transferência
- * @param text - Texto a ser copiado
- * @returns Promise com resultado da operação
- */
+
 export async function copyToClipboard(text: string): Promise<CopyResult> {
   try {
     
@@ -36,11 +29,7 @@ export async function copyToClipboard(text: string): Promise<CopyResult> {
   }
 }
 
-/**
- * Fallback para cópia usando document.execCommand
- * @param text - Texto a ser copiado
- * @returns Promise com resultado da operação
- */
+
 async function fallbackCopyToClipboard(text: string): Promise<CopyResult> {
   try {
     const textArea = document.createElement('textarea')
@@ -77,18 +66,12 @@ async function fallbackCopyToClipboard(text: string): Promise<CopyResult> {
   }
 }
 
-/**
- * Verifica se a API de clipboard está disponível
- * @returns boolean indicando se a API está disponível
- */
+
 export function isClipboardSupported(): boolean {
   return !!(navigator.clipboard && window.isSecureContext)
 }
 
-/**
- * Verifica se o fallback de cópia está disponível
- * @returns boolean indicando se o fallback está disponível
- */
+
 export function isFallbackCopySupported(): boolean {
   return !!(document.queryCommandSupported && document.queryCommandSupported('copy'))
 }

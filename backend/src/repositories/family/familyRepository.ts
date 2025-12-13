@@ -130,7 +130,6 @@ export class FamilyRepository {
   }
 
   async addMember(data: AddMemberData): Promise<FamilyMember> {
-    // Verificar se o membro já existe
     const existingMember = await prisma.familyMember.findUnique({
       where: {
         familyId_userId: {
@@ -141,7 +140,6 @@ export class FamilyRepository {
     });
 
     if (existingMember) {
-      // Reativar se estava inativo
       return await prisma.familyMember.update({
         where: { id: existingMember.id },
         data: {

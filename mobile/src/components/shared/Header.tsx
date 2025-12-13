@@ -153,7 +153,6 @@ export const Header: React.FC<HeaderProps> = ({
               try {
                 navigation.navigate('Main', { screen: 'Dashboard' });
               } catch (e) {
-                // Fallback se já estiver na tela principal
                 navigation.navigate('Dashboard');
               }
             }}

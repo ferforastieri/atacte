@@ -42,7 +42,6 @@ router.post('/generate', [
       }
     });
   } catch (error) {
-    console.error('Erro ao gerar secret TOTP:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -79,7 +78,6 @@ router.post('/qrcode', [
       }
     });
   } catch (error) {
-    console.error('Erro ao gerar QR Code:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -130,7 +128,6 @@ router.post('/validate', [
       }
     });
   } catch (error) {
-    console.error('Erro ao validar código TOTP:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -171,7 +168,6 @@ router.post('/parse', [
       data: parsed
     });
   } catch (error) {
-    console.error('Erro ao analisar URL otpauth:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -227,7 +223,6 @@ router.post('/test', [
       }
     });
   } catch (error) {
-    console.error('Erro ao gerar códigos de teste:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -261,7 +256,6 @@ router.get('/passwords/:id', asAuthenticatedHandler(async (req, res) => {
       data: totpCode
     });
   } catch (error) {
-    console.error('Erro ao buscar código TOTP:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(500).json({
       success: false,
@@ -296,7 +290,6 @@ router.get('/passwords/:id/secret', asAuthenticatedHandler(async (req, res) => {
       data: totpSecret
     });
   } catch (error) {
-    console.error('Erro ao buscar secret TOTP:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(500).json({
       success: false,
@@ -345,7 +338,6 @@ router.post('/passwords/:id', [
       data: result
     });
   } catch (error) {
-    console.error('Erro ao adicionar TOTP:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     
     if (errorMessage === 'Secret TOTP inválido') {
@@ -382,7 +374,6 @@ router.delete('/passwords/:id', asAuthenticatedHandler(async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('Erro ao remover TOTP:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(500).json({
       success: false,

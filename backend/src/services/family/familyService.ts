@@ -62,21 +62,18 @@ export class FamilyService {
     data: CreateFamilyData,
     req?: Request
   ): Promise<FamilyDto> {
-    // Criar família
     const family = await this.familyRepository.create({
       name: data.name,
       description: data.description,
       createdById: userId,
     });
 
-    // Adicionar o criador como admin
     await this.familyRepository.addMember({
       familyId: family.id,
       userId,
       role: 'admin',
     });
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'FAMILY_CREATED',
@@ -86,14 +83,12 @@ export class FamilyService {
       req
     );
 
-    // Buscar família com membros
     const familyWithMembers = await this.familyRepository.findById(family.id);
     
     return this.mapFamilyToDto(familyWithMembers!);
   }
 
   async getFamilyById(userId: string, familyId: string): Promise<FamilyDto | null> {
-    // Verificar se o usuário é membro da família
     const isMember = await this.familyRepository.isUserMemberOfFamily(userId, familyId);
     
     if (!isMember) {
@@ -121,7 +116,6 @@ export class FamilyService {
     data: UpdateFamilyData,
     req?: Request
   ): Promise<FamilyDto | null> {
-    // Verificar se o usuário é admin da família
     const isAdmin = await this.familyRepository.isUserAdminOfFamily(userId, familyId);
     
     if (!isAdmin) {
@@ -130,7 +124,6 @@ export class FamilyService {
 
     await this.familyRepository.update(familyId, data);
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'FAMILY_UPDATED',
@@ -146,7 +139,6 @@ export class FamilyService {
   }
 
   async deleteFamily(userId: string, familyId: string, req?: Request): Promise<boolean> {
-    // Verificar se o usuário é admin da família
     const isAdmin = await this.familyRepository.isUserAdminOfFamily(userId, familyId);
     
     if (!isAdmin) {
@@ -155,7 +147,6 @@ export class FamilyService {
 
     await this.familyRepository.delete(familyId);
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'FAMILY_DELETED',
@@ -173,14 +164,12 @@ export class FamilyService {
     data: JoinFamilyData,
     req?: Request
   ): Promise<FamilyDto> {
-    // Buscar família pelo código de convite
     const family = await this.familyRepository.findByInviteCode(data.inviteCode);
     
     if (!family || !family.isActive) {
       throw new Error('Código de convite inválido ou família inativa');
     }
 
-    // Verificar se já é membro
     const existingMember = await this.familyRepository.findMemberByFamilyAndUser(
       family.id,
       userId
@@ -190,7 +179,6 @@ export class FamilyService {
       throw new Error('Você já é membro desta família');
     }
 
-    // Adicionar membro
     await this.familyRepository.addMember({
       familyId: family.id,
       userId,
@@ -198,7 +186,6 @@ export class FamilyService {
       nickname: data.nickname,
     });
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'FAMILY_JOINED',
@@ -214,7 +201,6 @@ export class FamilyService {
   }
 
   async leaveFamily(userId: string, familyId: string, req?: Request): Promise<boolean> {
-    // Verificar se o usuário é membro da família
     const member = await this.familyRepository.findMemberByFamilyAndUser(
       familyId,
       userId
@@ -226,7 +212,6 @@ export class FamilyService {
 
     await this.familyRepository.removeMember(member.id);
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'FAMILY_LEFT',
@@ -245,14 +230,12 @@ export class FamilyService {
     memberUserId: string,
     req?: Request
   ): Promise<boolean> {
-    // Verificar se o usuário é admin da família
     const isAdmin = await this.familyRepository.isUserAdminOfFamily(userId, familyId);
     
     if (!isAdmin) {
       throw new Error('Apenas administradores podem remover membros');
     }
 
-    // Não pode remover a si mesmo
     if (userId === memberUserId) {
       throw new Error('Use a função de sair da família para remover você mesmo');
     }
@@ -268,7 +251,6 @@ export class FamilyService {
 
     await this.familyRepository.removeMember(member.id);
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'MEMBER_REMOVED',
@@ -288,7 +270,6 @@ export class FamilyService {
     newRole: string,
     req?: Request
   ): Promise<FamilyMemberDto> {
-    // Verificar se o usuário é admin da família
     const isAdmin = await this.familyRepository.isUserAdminOfFamily(userId, familyId);
     
     if (!isAdmin) {
@@ -308,7 +289,6 @@ export class FamilyService {
       role: newRole,
     });
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'MEMBER_ROLE_UPDATED',
@@ -318,7 +298,6 @@ export class FamilyService {
       req
     );
 
-    // Buscar dados completos do membro
     const family = await this.familyRepository.findById(familyId);
     const fullMember = family?.members.find((m) => m.id === updatedMember.id);
 
@@ -342,7 +321,6 @@ export class FamilyService {
 
     const updatedMember = await this.familyRepository.updateMember(member.id, data);
 
-    // Log de auditoria
     await AuditUtil.log(
       userId,
       'MEMBER_SETTINGS_UPDATED',
@@ -352,7 +330,6 @@ export class FamilyService {
       req
     );
 
-    // Buscar dados completos do membro
     const family = await this.familyRepository.findById(familyId);
     const fullMember = family?.members.find((m) => m.id === updatedMember.id);
 

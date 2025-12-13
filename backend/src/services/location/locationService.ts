@@ -79,14 +79,12 @@ export class LocationService {
       ...data,
     });
 
-    // Verificar alertas (bateria baixa, etc)
     if (data.batteryLevel && data.batteryLevel < 0.15) {
       await this.notificationService.sendLowBatteryAlert(userId, data.batteryLevel);
     }
 
     await this.processGeofenceEvents(userId, data, previousLocation);
 
-    // Log de auditoria (apenas para debug, não para todas as localizações)
     if (process.env['LOG_LOCATIONS'] === 'true') {
       await AuditUtil.log(
         userId,
@@ -107,7 +105,6 @@ export class LocationService {
     _previousLocation: Location | null
   ): Promise<void> {
     try {
-      // Verificar zonas com estado persistente e hysteresis
       const zonesCheck = await this.geofenceService.checkLocationInZones(
         userId,
         data.latitude,
@@ -115,7 +112,6 @@ export class LocationService {
         data.accuracy
       );
 
-      // Processar cada zona verificada
       for (const { zone, isInside } of zonesCheck) {
         const eventType = isInside ? 'enter' : 'exit';
         await this.geofenceService.handleZoneEvent(userId, zone.id, eventType, {
@@ -124,7 +120,6 @@ export class LocationService {
         });
       }
     } catch (error) {
-      console.error('Erro ao processar eventos de geofence:', error);
     }
   }
 
@@ -158,7 +153,6 @@ export class LocationService {
     userId: string,
     familyId: string
   ): Promise<FamilyMapData> {
-    // Verificar se o usuário é membro da família
     const isMember = await this.familyRepository.isUserMemberOfFamily(
       userId,
       familyId
@@ -168,14 +162,12 @@ export class LocationService {
       throw new Error('Você não tem permissão para acessar esta família');
     }
 
-    // Buscar informações da família
     const family = await this.familyRepository.findById(familyId);
     
     if (!family) {
       throw new Error('Família não encontrada');
     }
 
-    // Buscar localizações dos membros
     const locations = await this.locationRepository.getFamilyMembersLocations(
       familyId
     );
@@ -227,7 +219,6 @@ export class LocationService {
     locationData: CreateLocationData,
     req?: Request
   ): Promise<LocationDto> {
-    // Verificar se o usuário é membro da família
     const isMember = await this.familyRepository.isUserMemberOfFamily(
       userId,
       familyId
@@ -237,18 +228,14 @@ export class LocationService {
       throw new Error('Você não tem permissão para acessar esta família');
     }
 
-    // Atualizar localização do usuário que solicitou
     const location = await this.updateLocation(userId, locationData, req);
 
-    // Buscar todos os membros da família (exceto o próprio usuário)
     const members = await this.familyRepository.getFamilyMembers(familyId);
     
-    // Buscar informações do usuário que solicitou
     const { UserRepository } = await import('../../repositories/users/userRepository');
     const userRepository = new UserRepository();
     const requestingUser = await userRepository.findById(userId);
 
-    // Criar notificações para os outros membros
     const notifications = members
       .filter((member) => member.userId !== userId)
       .map((member) => ({
@@ -265,7 +252,6 @@ export class LocationService {
       }));
 
     if (notifications.length > 0) {
-      // Usar createNotification que já envia push automaticamente
       for (const notificationData of notifications) {
         await this.notificationService.createNotification(notificationData);
       }

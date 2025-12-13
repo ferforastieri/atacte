@@ -154,7 +154,7 @@ export default function ZoneManager({
 
   return (
     <View style={styles.container}>
-      {/* Lista de zonas */}
+      {}
       <ScrollView 
         style={styles.zonesList}
         showsVerticalScrollIndicator={false}
@@ -231,7 +231,7 @@ export default function ZoneManager({
         )}
       </ScrollView>
 
-      {/* Modal de criação/edição */}
+      {}
       <Modal
         visible={showCreateModal || showEditModal}
         onClose={handleCancelCreating}
@@ -350,7 +350,7 @@ export default function ZoneManager({
         </View>
       </Modal>
 
-      {/* Modal do mapa para seleção de localização */}
+      {}
       <Modal
         visible={showMapModal}
         onClose={() => setShowMapModal(false)}
@@ -372,7 +372,7 @@ export default function ZoneManager({
         </View>
       </Modal>
 
-      {/* Floating Action Button */}
+      {}
       <TouchableOpacity
         style={styles.fab}
         onPress={handleStartCreating}

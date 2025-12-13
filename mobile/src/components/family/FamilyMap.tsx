@@ -110,7 +110,7 @@ export default function FamilyMap({
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <title>Mapa da Família</title>
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <link rel="stylesheet" href="https:
       <style>
         body { 
           margin: 0; 
@@ -196,7 +196,7 @@ export default function FamilyMap({
     </head>
     <body>
       <div id="map"></div>
-      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <script src="https:
       <script>
         let map;
         let markers = [];
@@ -208,7 +208,7 @@ export default function FamilyMap({
         function initMap() {
           map = L.map('map').setView([-23.5505, -46.6333], 12);
           
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          L.tileLayer('https:
             attribution: '© OpenStreetMap contributors',
             maxZoom: 19
           }).addTo(map);
@@ -479,7 +479,7 @@ export default function FamilyMap({
         startInLoadingState={true}
         renderLoading={() => (
           <View style={styles.loadingContainer}>
-            {/* Loading será mostrado pelo WebView */}
+            {}
           </View>
         )}
       />

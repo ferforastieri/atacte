@@ -401,7 +401,7 @@ export default function FamilyScreen({ navigation }: any) {
         </View>
       )}
 
-      {/* Modal Criar Família */}
+      {}
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -434,7 +434,7 @@ export default function FamilyScreen({ navigation }: any) {
         </View>
       </Modal>
 
-      {/* Modal Entrar na Família */}
+      {}
       <Modal
         visible={showJoinModal}
         onClose={() => setShowJoinModal(false)}

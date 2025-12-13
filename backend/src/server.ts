@@ -62,8 +62,7 @@ app.use('/api/geofence', geofenceRoutes);
 app.use('/api/secure-notes', secureNoteRoutes);
 
 
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Erro:', err);
+app.use((_err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   res.status(500).json({
     success: false,
     message: 'Erro interno do servidor'
@@ -80,11 +79,7 @@ app.use('*', (_req, res) => {
 
 
 if (require.main === module) {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor Atacte Password Manager rodando na porta ${PORT}`);
-    console.log(`🔐 API disponível em http://localhost:${PORT}/api`);
-    console.log(`❤️  Health check em http://localhost:${PORT}/health`);
-  });
+  app.listen(PORT, '0.0.0.0', () => {});
 }
 
 export default app;

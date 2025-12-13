@@ -142,7 +142,6 @@ const handleSubmit = async () => {
     if (response.success) {
       toast.success(response.message || 'Token enviado com sucesso!')
       
-      // Em desenvolvimento, mostrar o token
       if (response.data?.token) {
         devToken.value = response.data.token
         form.token = response.data.token

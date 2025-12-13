@@ -280,7 +280,7 @@ export default function PasswordDetailScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>
-        {/* Header */}
+        {}
         <Card style={styles.headerCard}>
           <Text style={styles.passwordName}>{password.name}</Text>
           {password.website && (
@@ -298,7 +298,7 @@ export default function PasswordDetailScreen() {
           </TouchableOpacity>
         </Card>
 
-        {/* Password Info */}
+        {}
         <Card style={styles.infoCard}>
           <Text style={styles.sectionTitle}>Informações</Text>
           
@@ -353,7 +353,7 @@ export default function PasswordDetailScreen() {
           </View>
         </Card>
 
-        {/* Notes */}
+        {}
         {password.notes && (
           <Card style={styles.notesCard}>
             <Text style={styles.sectionTitle}>Notas</Text>
@@ -361,7 +361,7 @@ export default function PasswordDetailScreen() {
           </Card>
         )}
 
-        {/* Custom Fields */}
+        {}
         {password.customFields && password.customFields.length > 0 && (
           <Card style={styles.customFieldsCard}>
             <Text style={styles.sectionTitle}>Campos Personalizados</Text>
@@ -380,7 +380,7 @@ export default function PasswordDetailScreen() {
           </Card>
         )}
 
-        {/* TOTP Code - Above Actions */}
+        {}
         {password.totpEnabled && totpCode && (
           <TotpCode
             code={totpCode.code}
@@ -391,7 +391,7 @@ export default function PasswordDetailScreen() {
           />
         )}
 
-        {/* Actions */}
+        {}
         <View style={styles.actionsContainer}>
           <Button
             title="Editar"

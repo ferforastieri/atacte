@@ -41,15 +41,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (token) {
         const cachedUser = await authService.getStoredUser();
         if (cachedUser) {
-          // Mostrar imediatamente com dados do cache
           setUser(cachedUser);
           setIsAuthenticated(true);
-          setIsLoading(false); // Liberar a UI imediatamente
+          setIsLoading(false); 
           
-          // Validar em background sem bloquear
           validateTokenInBackground(token, cachedUser);
         } else {
-          // Sem cache, precisa validar antes de liberar
           try {
             const response = await authService.getMe();
             if (response.success && response.data) {
@@ -97,17 +94,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
         }
       } else {
-        // Só fazer logout se for erro de autenticação, não se for erro de rede
         if (response.isAuthError) {
           await authService.logout();
           setUser(null);
           setIsAuthenticated(false);
         }
-        // Se for erro de rede, manter o cache válido
       }
     } catch (error: any) {
       console.error('Erro ao validar token em background:', error);
-      // Manter o cache válido em caso de erro inesperado
     }
   };
 

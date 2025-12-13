@@ -589,7 +589,7 @@ export default function DashboardScreen() {
       <Header title="Dashboard" onThemeToggle={toggleTheme} />
       
       <View style={styles.content}>
-        {/* Search Bar */}
+        {}
         <View style={styles.searchContainer}>
           <SearchInput
             value={searchQuery}
@@ -602,7 +602,7 @@ export default function DashboardScreen() {
           />
         </View>
 
-        {/* Passwords List */}
+        {}
         <FlatList
           data={passwords}
           renderItem={renderPasswordItem}
@@ -621,7 +621,7 @@ export default function DashboardScreen() {
         />
       </View>
 
-      {/* Floating Action Button */}
+      {}
       <TouchableOpacity
         style={styles.fab}
         onPress={handleCreatePassword}
@@ -630,7 +630,7 @@ export default function DashboardScreen() {
         <Ionicons name="add" size={28} color="#ffffff" />
       </TouchableOpacity>
 
-      {/* Password Form Modal */}
+      {}
       <Modal
         visible={showPasswordModal}
         onClose={() => {
@@ -650,7 +650,7 @@ export default function DashboardScreen() {
 
           <Input
             label="Website"
-            placeholder="https://exemplo.com"
+            placeholder="https:
             value={formData.website}
             onChangeText={(text) => setFormData({ ...formData, website: text })}
             keyboardType="url"
@@ -705,7 +705,7 @@ export default function DashboardScreen() {
             numberOfLines={3}
           />
 
-          {/* TOTP Section */}
+          {}
           <View style={styles.totpSection}>
             <View style={styles.totpHeader}>
               <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
@@ -746,7 +746,7 @@ export default function DashboardScreen() {
             )}
           </View>
 
-          {/* Favorite Section */}
+          {}
           <View style={styles.favoriteSection}>
             <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
               Marcar como favorita
@@ -782,7 +782,7 @@ export default function DashboardScreen() {
         </View>
       </Modal>
 
-      {/* Password Generator Modal */}
+      {}
       <PasswordGeneratorModal
         visible={showPasswordGeneratorModal}
         onClose={() => setShowPasswordGeneratorModal(false)}
@@ -790,7 +790,7 @@ export default function DashboardScreen() {
         initialPassword={formData.password}
       />
 
-      {/* Delete Confirmation Modal */}
+      {}
       <Modal
         visible={showDeleteModal}
         onClose={() => {

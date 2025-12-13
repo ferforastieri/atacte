@@ -184,17 +184,14 @@ export class AuthService {
     await this.userRepository.deleteSession(sessionId);
   }
 
-  async requestPasswordReset(email: string): Promise<{ token: string; expiresAt: Date }> {
+  async requestPasswordReset(email: string): Promise<{ token: string | undefined; expiresAt: Date }> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      // Por segurança, não revelar se o email existe ou não
       throw new Error('Se o email existir, você receberá um link de recuperação');
     }
 
-    // Gerar token único
     const token = crypto.SHA256(email + Date.now() + Math.random().toString()).toString();
     
-    // Token expira em 1 hora
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
 
@@ -204,11 +201,12 @@ export class AuthService {
       expiresAt,
     });
 
-    // Enviar email com o token
     await emailService.sendPasswordResetEmail(user.email, token, PASSWORD_RESET_URL);
 
-    // Não retornar o token em produção por segurança
-    return { token: process.env.NODE_ENV === 'development' ? token : undefined, expiresAt };
+    return { 
+      token: process.env['NODE_ENV'] === 'development' ? token : undefined, 
+      expiresAt 
+    };
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -228,24 +226,18 @@ export class AuthService {
 
     const user = resetToken.user;
     
-    // Gerar novo hash da senha
     const salt = await bcrypt.genSalt(12);
     const masterPasswordHash = await bcrypt.hash(newPassword, salt);
     
-    // Gerar nova chave de criptografia
     const encryptionKey = crypto.SHA256(newPassword + user.email).toString();
 
-    // Atualizar senha e chave de criptografia
     await this.userRepository.update(user.id, {
       masterPasswordHash,
       masterPasswordSalt: salt,
       encryptionKeyHash: encryptionKey,
     });
 
-    // Marcar token como usado
     await this.passwordResetRepository.markAsUsed(token);
-
-    // Invalidar todas as sessões do usuário
     const sessions = await this.userRepository.findUserSessions(user.id);
     for (const session of sessions) {
       await this.userRepository.deleteSession(session.id);

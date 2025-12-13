@@ -86,7 +86,6 @@ router.put('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
       message: 'Preferências atualizadas com sucesso'
     });
   } catch (error) {
-    console.error('Erro ao atualizar preferências:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar preferências';
     res.status(400).json({
       success: false,
@@ -117,7 +116,6 @@ router.patch('/', authenticateToken, asAuthenticatedHandler(async (req, res) => 
       message: 'Preferências salvas com sucesso'
     });
   } catch (error) {
-    console.error('Erro ao fazer upsert das preferências:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar preferências';
     res.status(400).json({
       success: false,

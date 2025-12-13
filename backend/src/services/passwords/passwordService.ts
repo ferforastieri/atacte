@@ -121,9 +121,6 @@ export class PasswordService {
         const decryptedPassword = await this.decryptPasswordEntry(password, user.encryptionKeyHash);
         decryptedPasswords.push(decryptedPassword);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        console.error('🔐 PasswordService: ERRO ao descriptografar senha, pulando:', password.name, errorMessage);
-        
         continue;
       }
     }
@@ -353,7 +350,6 @@ export class PasswordService {
         const decryptedTotpSecret = TOTPService.decryptSecret(password.totpSecret, encryptionKey);
         totpCode = TOTPService.generateCurrentCode(decryptedTotpSecret);
       } catch (error) {
-        console.error('Erro ao gerar código TOTP:', error);
       }
     }
 

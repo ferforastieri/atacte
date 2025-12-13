@@ -20,7 +20,7 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   return (
     <View style={[{ flexDirection: 'row', alignItems: 'center' }, style]}>
-      {/* Logo Image */}
+      {}
       <Image
         source={require('../../../assets/logo.png')}
         style={{
@@ -30,7 +30,7 @@ export const Logo: React.FC<LogoProps> = ({
         }}
       />
       
-      {/* Texto do logo */}
+      {}
       {showText && (
         <Text
           style={[

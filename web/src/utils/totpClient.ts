@@ -11,18 +11,12 @@ export interface TOTPValidation {
   delta?: number | undefined 
 }
 
-/**
- * Classe para geração de códigos TOTP no cliente
- * Reduz drasticamente as requisições ao servidor
- * Compatível com browser usando otpauth
- */
+
 export class TOTPClient {
   private static readonly TOTP_PERIOD = 30 
   private static readonly TOTP_WINDOW = 2 
 
-  /**
-   * Gerar código TOTP atual baseado no secret
-   */
+  
   static generateCurrentCode(secret: string): TOTPCode {
     
     const cleanSecret = secret.trim().replace(/\s/g, '').toUpperCase()
@@ -57,9 +51,7 @@ export class TOTPClient {
     }
   }
 
-  /**
-   * Validar um código TOTP
-   */
+  
   static validateCode(secret: string, code: string): TOTPValidation {
     try {
       const totp = new TOTP({
@@ -84,9 +76,7 @@ export class TOTPClient {
     }
   }
 
-  /**
-   * Gerar múltiplos códigos para teste
-   */
+  
   static generateTestCodes(secret: string, count: number = 5): TOTPCode[] {
     const codes: TOTPCode[] = []
     const now = Math.floor(Date.now() / 1000)
@@ -118,16 +108,12 @@ export class TOTPClient {
     return codes
   }
 
-  /**
-   * Calcular tempo restante para o próximo período
-   */
+  
   static getTimeRemaining(): number {
     return this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD)
   }
 
-  /**
-   * Verificar se o código está próximo de expirar (últimos 5 segundos)
-   */
+  
   static isNearExpiry(timeRemaining: number): boolean {
     return timeRemaining <= 5
   }

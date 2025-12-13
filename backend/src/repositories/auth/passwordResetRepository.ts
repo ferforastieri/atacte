@@ -10,7 +10,6 @@ export interface CreatePasswordResetTokenData {
 
 export class PasswordResetRepository {
   async create(data: CreatePasswordResetTokenData): Promise<PasswordResetToken> {
-    // Invalidar tokens anteriores do usuário
     await prisma.passwordResetToken.updateMany({
       where: { userId: data.userId, used: false },
       data: { used: true },
@@ -21,11 +20,11 @@ export class PasswordResetRepository {
     });
   }
 
-  async findByToken(token: string): Promise<PasswordResetToken | null> {
+  async findByToken(token: string): Promise<(PasswordResetToken & { user: { id: string; email: string } }) | null> {
     return prisma.passwordResetToken.findUnique({
       where: { token },
       include: { user: true },
-    });
+    }) as Promise<(PasswordResetToken & { user: { id: string; email: string } }) | null>;
   }
 
   async markAsUsed(token: string): Promise<void> {

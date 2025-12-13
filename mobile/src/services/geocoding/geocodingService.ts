@@ -1,6 +1,6 @@
 class GeocodingService {
   private cache: Map<string, { address: string; timestamp: number }> = new Map();
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas
+  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; 
 
   async reverseGeocode(latitude: number, longitude: number): Promise<string | null> {
     const cacheKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
@@ -12,7 +12,7 @@ class GeocodingService {
 
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        `https:
         {
           headers: {
             'User-Agent': 'AtacteApp/1.0',

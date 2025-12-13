@@ -28,7 +28,6 @@ export interface SendSOSRequest {
   longitude: number;
 }
 
-// Configurar como as notificações devem ser exibidas
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -52,7 +51,6 @@ class NotificationService {
     }
   }
 
-  // Solicitar permissões de notificação
   async requestPermissions(): Promise<boolean> {
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -74,7 +72,6 @@ class NotificationService {
     }
   }
 
-  // Registrar push token
   async registerForPushNotifications(): Promise<string | null> {
     try {
       const hasPermission = await this.requestPermissions();
@@ -89,7 +86,6 @@ class NotificationService {
 
       const token = tokenData.data;
 
-      // Configurar canal de notificação para Android
       if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
           name: 'Atacte',
@@ -128,13 +124,12 @@ class NotificationService {
           description: 'Rastreamento de localização em andamento',
           importance: Notifications.AndroidImportance.MAX,
           lightColor: '#16a34a',
-          sound: null, // Sem som
+          sound: null, 
           showBadge: false,
           enableVibrate: false,
         });
       }
 
-      // Enviar token para o servidor
       await this.updatePushToken(token);
 
       return token;
@@ -144,7 +139,6 @@ class NotificationService {
     }
   }
 
-  // Atualizar push token no servidor
   async updatePushToken(pushToken: string): Promise<{ success: boolean; message?: string }> {
     return this.makeRequest('/users/push-token', {
       method: 'PATCH',
@@ -152,40 +146,34 @@ class NotificationService {
     });
   }
 
-  // Listar notificações
   async getNotifications(isRead?: boolean, limit?: number, offset?: number): Promise<{ success: boolean; data?: NotificationData[]; message?: string }> {
     return this.makeRequest('/notifications', {
       params: { isRead, limit, offset },
     });
   }
 
-  // Obter contagem de não lidas
   async getUnreadCount(): Promise<{ success: boolean; data?: { count: number }; message?: string }> {
     return this.makeRequest('/notifications/unread-count');
   }
 
-  // Marcar como lida
   async markAsRead(id: string): Promise<{ success: boolean; data?: NotificationData; message?: string }> {
     return this.makeRequest(`/notifications/${id}/read`, {
       method: 'PATCH',
     });
   }
 
-  // Marcar todas como lidas
   async markAllAsRead(): Promise<{ success: boolean; data?: { count: number }; message?: string }> {
     return this.makeRequest('/notifications/read-all', {
       method: 'PATCH',
     });
   }
 
-  // Deletar notificação
   async deleteNotification(id: string): Promise<{ success: boolean; message?: string }> {
     return this.makeRequest(`/notifications/${id}`, {
       method: 'DELETE',
     });
   }
 
-  // Enviar SOS
   async sendSOS(data: SendSOSRequest): Promise<{ success: boolean; message?: string }> {
     return this.makeRequest('/notifications/sos', {
       method: 'POST',
@@ -193,7 +181,6 @@ class NotificationService {
     });
   }
 
-  // Notificar família sobre geofencing
   async sendGeofenceNotification(data: {
     zoneName: string;
     eventType: 'enter' | 'exit';
@@ -205,7 +192,6 @@ class NotificationService {
     });
   }
 
-  // Exibir notificação local
   async showLocalNotification(title: string, body: string, data?: Record<string, unknown>, channelId: string = 'default'): Promise<void> {
     try {
       await Notifications.scheduleNotificationAsync({
@@ -220,30 +206,26 @@ class NotificationService {
             color: '#16a34a',
           }),
         },
-        trigger: null, // Exibir imediatamente
+        trigger: null, 
       });
     } catch (error) {
       console.error('Erro ao exibir notificação local:', error);
     }
   }
 
-  // Configurar listeners de notificação
   setupNotificationListeners(
     onNotificationReceived?: (notification: Notifications.Notification) => void,
     onNotificationResponse?: (response: Notifications.NotificationResponse) => void
   ): void {
-    // Listener para notificações recebidas enquanto o app está aberto
     if (onNotificationReceived) {
       Notifications.addNotificationReceivedListener(onNotificationReceived);
     }
 
-    // Listener para quando o usuário toca na notificação
     if (onNotificationResponse) {
       Notifications.addNotificationResponseReceivedListener(onNotificationResponse);
     }
   }
 
-  // Cancelar todas as notificações agendadas
   async cancelAllNotifications(): Promise<void> {
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
@@ -252,7 +234,6 @@ class NotificationService {
     }
   }
 
-  // Atualizar badge do app
   async setBadgeCount(count: number): Promise<void> {
     try {
       await Notifications.setBadgeCountAsync(count);

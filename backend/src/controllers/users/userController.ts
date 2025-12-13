@@ -21,7 +21,6 @@ router.get('/profile', asAuthenticatedHandler(async (req, res) => {
       data: userProfile
     });
   } catch (error) {
-    console.error('Erro ao buscar perfil:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -39,7 +38,6 @@ router.get('/stats', asAuthenticatedHandler(async (req, res) => {
       data: stats
     });
   } catch (error) {
-    console.error('Erro ao buscar estatísticas:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -57,7 +55,6 @@ router.get('/folders', asAuthenticatedHandler(async (req, res) => {
       data: folders
     });
   } catch (error) {
-    console.error('Erro ao buscar pastas:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -84,7 +81,6 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Erro ao buscar logs de auditoria:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -103,7 +99,6 @@ router.post('/export', asAuthenticatedHandler(async (req, res) => {
       data: exportData
     });
   } catch (error) {
-    console.error('Erro ao exportar dados:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -121,7 +116,6 @@ router.delete('/account', asAuthenticatedHandler(async (req, res) => {
       message: 'Conta deletada com sucesso'
     });
   } catch (error) {
-    console.error('Erro ao deletar conta:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -129,7 +123,6 @@ router.delete('/account', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Atualizar perfil
 router.patch(
   '/profile',
   [
@@ -157,7 +150,6 @@ router.patch(
         data: updatedProfile
       });
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -166,7 +158,6 @@ router.patch(
   })
 );
 
-// Atualizar push token
 router.patch(
   '/push-token',
   [
@@ -191,7 +182,6 @@ router.patch(
         message: 'Push token atualizado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao atualizar push token:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

@@ -131,7 +131,6 @@ router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Erro ao buscar senhas:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -165,7 +164,6 @@ router.get('/:id', asAuthenticatedHandler(async (req, res) => {
       data: password
     });
   } catch (error) {
-    console.error('Erro ao buscar senha:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -196,7 +194,6 @@ router.post('/', createPasswordValidation, asAuthenticatedHandler(async (req, re
       data: newPassword
     });
   } catch (error) {
-    console.error('Erro ao criar senha:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -243,7 +240,6 @@ router.put('/:id', asAuthenticatedHandler(async (req, res) => {
       data: updatedPassword
     });
   } catch (error) {
-    console.error('Erro ao atualizar senha:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -277,7 +273,6 @@ router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
       message: 'Senha deletada com sucesso'
     });
   } catch (error) {
-    console.error('Erro ao deletar senha:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -307,7 +302,6 @@ router.get('/generate', asAuthenticatedHandler(async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Erro ao gerar senha:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'

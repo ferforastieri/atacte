@@ -50,7 +50,6 @@ class GeofenceService {
     }
   }
 
-  // Criar zona
   async createZone(data: CreateGeofenceZoneData): Promise<{ success: boolean; data?: GeofenceZone; message?: string }> {
     return this.makeRequest('/geofence/zones', {
       method: 'POST',
@@ -58,7 +57,6 @@ class GeofenceService {
     });
   }
 
-  // Listar zonas do usuário (todas as famílias) ou de uma família específica
   async getUserZones(activeOnly: boolean = false, familyId?: string): Promise<{ success: boolean; data?: GeofenceZone[]; message?: string }> {
     const params = new URLSearchParams();
     if (activeOnly) params.append('active', 'true');
@@ -70,7 +68,6 @@ class GeofenceService {
     });
   }
 
-  // Atualizar zona
   async updateZone(id: string, data: UpdateGeofenceZoneData): Promise<{ success: boolean; data?: GeofenceZone; message?: string }> {
     return this.makeRequest(`/geofence/zones/${id}`, {
       method: 'PATCH',
@@ -78,14 +75,12 @@ class GeofenceService {
     });
   }
 
-  // Deletar zona
   async deleteZone(id: string): Promise<{ success: boolean; message?: string }> {
     return this.makeRequest(`/geofence/zones/${id}`, {
       method: 'DELETE',
     });
   }
 
-  // Verificar se localização está em alguma zona
   async checkLocation(latitude: number, longitude: number): Promise<{ 
     success: boolean; 
     data?: { 
@@ -100,9 +95,8 @@ class GeofenceService {
     });
   }
 
-  // Calcular distância entre dois pontos (local)
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371e3; // Raio da Terra em metros
+    const R = 6371e3; 
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -116,7 +110,6 @@ class GeofenceService {
     return R * c;
   }
 
-  // Verificar se um ponto está dentro de uma zona (local)
   isPointInZone(latitude: number, longitude: number, zone: GeofenceZone): boolean {
     const distance = this.calculateDistance(latitude, longitude, zone.latitude, zone.longitude);
     return distance <= zone.radius;

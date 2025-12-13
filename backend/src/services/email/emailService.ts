@@ -1,4 +1,4 @@
-import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
 
 export interface EmailOptions {
   to: string;
@@ -8,52 +8,50 @@ export interface EmailOptions {
 }
 
 export class EmailService {
+  private transporter: nodemailer.Transporter | null = null;
   private fromEmail: string;
   private fromName: string;
   private isEnabled: boolean;
 
   constructor() {
-    const apiKey = process.env.SENDGRID_API_KEY;
-    this.fromEmail = process.env.EMAIL_FROM || 'noreply@atacte.com';
-    this.fromName = process.env.EMAIL_FROM_NAME || 'Atacte';
-    this.isEnabled = !!apiKey;
+    const smtpHost = process.env['SMTP_HOST'];
+    const smtpPort = process.env['SMTP_PORT'];
+    const smtpUser = process.env['SMTP_USER'];
+    const smtpPass = process.env['SMTP_PASS'];
+    
+    this.fromEmail = process.env['EMAIL_FROM'] || 'noreply@atacte.com';
+    this.fromName = process.env['EMAIL_FROM_NAME'] || 'Atacte';
+    this.isEnabled = !!(smtpHost && smtpPort && smtpUser && smtpPass);
 
     if (this.isEnabled) {
-      sgMail.setApiKey(apiKey!);
-    } else {
-      console.warn('⚠️  SendGrid API Key não configurada. Emails não serão enviados.');
+      this.transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: parseInt(smtpPort || '587'),
+        secure: smtpPort === '465',
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+      });
     }
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    if (!this.isEnabled) {
-      console.log('📧 Email não enviado (SendGrid não configurado):', {
-        to: options.to,
-        subject: options.subject,
-      });
+    if (!this.isEnabled || !this.transporter) {
       return false;
     }
 
     try {
-      const msg = {
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
         to: options.to,
-        from: {
-          email: this.fromEmail,
-          name: this.fromName,
-        },
         subject: options.subject,
         text: options.text || options.html.replace(/<[^>]*>/g, ''),
         html: options.html,
-      };
+      });
 
-      await sgMail.send(msg);
-      console.log('✅ Email enviado com sucesso para:', options.to);
       return true;
     } catch (error: any) {
-      console.error('❌ Erro ao enviar email:', error);
-      if (error.response) {
-        console.error('Detalhes do erro:', error.response.body);
-      }
       return false;
     }
   }

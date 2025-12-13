@@ -190,7 +190,7 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
             <View style={styles.timerInner}>
               <Text style={styles.timerText}>{displayTimeRemaining}s</Text>
             </View>
-            {/* Progress ring would go here if needed */}
+            {}
           </View>
         </View>
       </View>

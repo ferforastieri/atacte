@@ -30,8 +30,10 @@ export interface EnvironmentConfig {
   
   LOG_LEVEL: 'error' | 'warn' | 'info' | 'debug'
   
-  // Email
-  SENDGRID_API_KEY?: string
+  SMTP_HOST?: string
+  SMTP_PORT?: string
+  SMTP_USER?: string
+  SMTP_PASS?: string
   EMAIL_FROM?: string
   EMAIL_FROM_NAME?: string
   PASSWORD_RESET_URL?: string
@@ -72,8 +74,10 @@ class Environment {
       
       LOG_LEVEL: this.getString('LOG_LEVEL', 'info') as 'error' | 'warn' | 'info' | 'debug',
       
-      // Email
-      SENDGRID_API_KEY: this.getString('SENDGRID_API_KEY', ''),
+      SMTP_HOST: this.getString('SMTP_HOST', ''),
+      SMTP_PORT: this.getString('SMTP_PORT', ''),
+      SMTP_USER: this.getString('SMTP_USER', ''),
+      SMTP_PASS: this.getString('SMTP_PASS', ''),
       EMAIL_FROM: this.getString('EMAIL_FROM', ''),
       EMAIL_FROM_NAME: this.getString('EMAIL_FROM_NAME', ''),
       PASSWORD_RESET_URL: this.getString('PASSWORD_RESET_URL', '')
@@ -161,7 +165,10 @@ export const {
   RATE_LIMIT_MAX_REQUESTS,
   CORS_ORIGIN,
   LOG_LEVEL,
-  SENDGRID_API_KEY,
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASS,
   EMAIL_FROM,
   EMAIL_FROM_NAME,
   PASSWORD_RESET_URL

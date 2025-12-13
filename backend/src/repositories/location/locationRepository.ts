@@ -72,7 +72,6 @@ export class LocationRepository {
   }
 
   async findLatestByUserIds(userIds: string[]): Promise<Location[]> {
-    // Para cada usuário, buscar a localização mais recente
     const locations = await prisma.$queryRaw<Location[]>`
       SELECT DISTINCT ON (user_id) *
       FROM locations

@@ -295,7 +295,6 @@ import 'leaflet/dist/leaflet.css'
 import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 
-// Types
 interface NewZone {
   name: string
   description: string
@@ -306,7 +305,6 @@ interface NewZone {
   notifyOnExit: boolean
 }
 
-// Reactive data
 const isLoading = ref(false)
 const zonesLoading = ref(false)
 const isCreatingZone = ref(false)
@@ -314,7 +312,6 @@ const showCreateZoneModal = ref(false)
 const familyMembers = ref<FamilyMember[]>([])
 const zones = ref<GeofenceZone[]>([])
 
-// Map variables
 let map: L.Map | null = null
 let markers: L.Marker[] = []
 let zoneCircles: L.Circle[] = []
@@ -334,60 +331,48 @@ const newZone = ref<NewZone>({
 const toast = useToast()
 const authStore = useAuthStore()
 
-// Computed
 const currentUserMember = computed(() => {
   return familyMembers.value.find(member => member.id === authStore.userId)
 })
 
-// Methods
 const initMap = () => {
   if (map) return
 
-  // Determinar posição inicial do mapa
   let initialLat = -23.5505
   let initialLng = -46.6333
   let initialZoom = 12
 
-  // Se temos localização do usuário atual, usar ela
   if (currentUserMember.value?.latitude && currentUserMember.value?.longitude) {
     initialLat = currentUserMember.value.latitude
     initialLng = currentUserMember.value.longitude
     initialZoom = 14
   }
 
-  // Inicializar mapa Leaflet
   map = L.map('map').setView([initialLat, initialLng], initialZoom)
 
-  // Adicionar tiles do OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 19
   }).addTo(map)
 
-  // Adicionar controles
   map.addControl(L.control.zoom({ position: 'topright' }))
   map.addControl(L.control.scale({ position: 'bottomright' }))
 
-  // Eventos do mapa
   map.on('click', onMapClick)
   map.on('mousemove', onMapMouseMove)
 
-  // Carregar dados iniciais
   updateMapMarkers()
   updateMapZones()
 }
 
-// Evento de clique no mapa para criar zona
 const onMapClick = (e: L.LeafletMouseEvent) => {
   if (!isCreatingZoneMode) return
 
   const { lat, lng } = e.latlng
   
-  // Atualizar coordenadas no formulário
   newZone.value.latitude = lat
   newZone.value.longitude = lng
   
-  // Mostrar círculo temporário
   if (tempCircle) {
     map?.removeLayer(tempCircle)
   }
@@ -400,13 +385,11 @@ const onMapClick = (e: L.LeafletMouseEvent) => {
     weight: 2
   }).addTo(map!)
   
-  // Sair do modo criação e mostrar modal
   isCreatingZoneMode = false
   map?.closePopup()
   showCreateZoneModal.value = true
 }
 
-// Evento de movimento do mouse para atualizar círculo
 const onMapMouseMove = (e: L.LeafletMouseEvent) => {
   if (!isCreatingZoneMode || !tempCircle) return
   
@@ -414,12 +397,10 @@ const onMapMouseMove = (e: L.LeafletMouseEvent) => {
   tempCircle.setLatLng([lat, lng])
 }
 
-// Iniciar criação de zona
 const startCreatingZone = () => {
   isCreatingZoneMode = true
   showCreateZoneModal.value = false
   
-  // Adicionar instrução visual
   if (map) {
     const instruction = L.popup()
       .setLatLng(map.getCenter())
@@ -442,7 +423,6 @@ const startCreatingZone = () => {
   }
 }
 
-// Cancelar criação de zona
 const cancelZoneCreation = () => {
   isCreatingZoneMode = false
   if (tempCircle) {
@@ -452,7 +432,6 @@ const cancelZoneCreation = () => {
   map?.closePopup()
 }
 
-// Fechar modal e sair do modo criação
 const closeModal = () => {
   showCreateZoneModal.value = false
   isCreatingZoneMode = false
@@ -465,14 +444,11 @@ const closeModal = () => {
 const updateMapMarkers = () => {
   if (!map) return
 
-  // Limpar marcadores existentes
   markers.forEach(marker => map?.removeLayer(marker))
   markers = []
 
-  // Adicionar marcadores dos membros da família
   familyMembers.value.forEach(member => {
     if (member.latitude && member.longitude) {
-      // Criar ícone personalizado baseado na bateria e se é o usuário atual
       const isCurrentUser = member.id === authStore.userId
       const iconColor = member.batteryLevel && member.batteryLevel < 0.2 ? '#dc2626' : '#16a34a'
       const borderColor = isCurrentUser ? '#22c55e' : 'white'
@@ -511,11 +487,9 @@ const updateMapMarkers = () => {
 const updateMapZones = () => {
   if (!map) return
 
-  // Limpar círculos existentes
   zoneCircles.forEach(circle => map?.removeLayer(circle))
   zoneCircles = []
 
-  // Adicionar círculos das zonas
   if (zones.value && Array.isArray(zones.value)) {
     zones.value.forEach(zone => {
       const circle = L.circle([zone.latitude, zone.longitude], {
@@ -546,32 +520,26 @@ const refreshLocations = async () => {
     familyMembers.value = await locationApi.getFamilyLocations()
     updateMapMarkers()
     
-    // Se o mapa ainda não foi inicializado e temos localização do usuário atual, inicializar centrado nele
     if (!map && currentUserMember.value?.latitude && currentUserMember.value?.longitude) {
       setTimeout(() => {
         initMap()
       }, 100)
     } else if (map && currentUserMember.value?.latitude && currentUserMember.value?.longitude) {
-      // Se o mapa já foi inicializado mas agora temos a localização do usuário, centralizar nele
       map.setView([currentUserMember.value.latitude, currentUserMember.value.longitude], 14)
     }
   } catch (error) {
-    // Toast já é mostrado pelo interceptor do axios
     console.error('Erro ao carregar localizações:', error)
   } finally {
     isLoading.value = false
   }
 }
 
-// Navegar para localização de um membro
 const goToMemberLocation = (member: FamilyMember) => {
   if (!map) return
   
   if (member.latitude && member.longitude) {
-    // Navegar para a localização do membro
     map.setView([member.latitude, member.longitude], 14)
     
-    // Abrir popup do marcador se existir
     const marker = markers.find(m => {
       const latlng = m.getLatLng()
       return latlng.lat === member.latitude && latlng.lng === member.longitude
@@ -591,7 +559,6 @@ const loadZones = async () => {
     zones.value = await locationApi.getZones()
     updateMapZones()
   } catch (error) {
-    // Toast já é mostrado pelo interceptor do axios
     console.error('Erro ao carregar zonas:', error)
   } finally {
     zonesLoading.value = false
@@ -606,14 +573,12 @@ const createZone = async () => {
     toast.success('Zona criada com sucesso!')
     showCreateZoneModal.value = false
     
-    // Limpar círculo temporário e sair do modo criação
     if (tempCircle) {
       map?.removeLayer(tempCircle)
       tempCircle = null
     }
     isCreatingZoneMode = false
     
-    // Reset form
     newZone.value = {
       name: '',
       description: '',
@@ -624,10 +589,8 @@ const createZone = async () => {
       notifyOnExit: true
     }
     
-    // Reload zones
     await loadZones()
   } catch (error) {
-    // Toast de erro já é mostrado pelo interceptor do axios
     console.error('Erro ao criar zona:', error)
   } finally {
     isCreatingZone.value = false
@@ -643,7 +606,6 @@ const deleteZone = async (zoneId: string) => {
     toast.success('Zona deletada com sucesso!')
     await loadZones()
   } catch (error) {
-    // Toast de erro já é mostrado pelo interceptor do axios
     console.error('Erro ao deletar zona:', error)
   }
 }
@@ -659,16 +621,12 @@ const formatTime = (dateString: string) => {
   return `${Math.floor(diff / 86400000)}d atrás`
 }
 
-// Expor função global para cancelar criação
 ;(window as any).cancelZoneCreation = cancelZoneCreation
 
-// Lifecycle
 onMounted(async () => {
-  // Carregar localizações primeiro para ter os dados do usuário atual
   await refreshLocations()
   await loadZones()
   
-  // Aguardar um pouco para o DOM estar pronto e então inicializar o mapa
   setTimeout(() => {
     if (!map) {
       initMap()

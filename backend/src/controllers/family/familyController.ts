@@ -32,7 +32,6 @@ interface UpdateMemberRoleRequest {
   role: string;
 }
 
-// Validações
 const createFamilyValidation = [
   body('name')
     .trim()
@@ -61,10 +60,8 @@ const updateMemberRoleValidation = [
     .withMessage('Função deve ser "admin" ou "member"'),
 ];
 
-// Rotas
 router.use(authenticateToken);
 
-// Listar todas as famílias do usuário
 router.get('/', asAuthenticatedHandler(async (req, res) => {
   try {
     const families = await familyService.getUserFamilies(req.user.id);
@@ -74,7 +71,6 @@ router.get('/', asAuthenticatedHandler(async (req, res) => {
       data: families,
     });
   } catch (error) {
-    console.error('Erro ao buscar famílias:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor',
@@ -82,7 +78,6 @@ router.get('/', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Buscar família específica
 router.get('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -108,7 +103,6 @@ router.get('/:id', asAuthenticatedHandler(async (req, res) => {
       data: family,
     });
   } catch (error) {
-    console.error('Erro ao buscar família:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(errorMessage.includes('permissão') ? 403 : 500).json({
       success: false,
@@ -117,7 +111,6 @@ router.get('/:id', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Criar nova família
 router.post(
   '/',
   createFamilyValidation,
@@ -146,7 +139,6 @@ router.post(
         data: family,
       });
     } catch (error) {
-      console.error('Erro ao criar família:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -155,7 +147,6 @@ router.post(
   }
 );
 
-// Atualizar família
 router.put(
   '/:id',
   createFamilyValidation,
@@ -202,7 +193,6 @@ router.put(
         data: family,
       });
     } catch (error) {
-      console.error('Erro ao atualizar família:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
       res.status(errorMessage.includes('admin') ? 403 : 500).json({
         success: false,
@@ -212,7 +202,6 @@ router.put(
   })
 );
 
-// Deletar família
 router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -230,7 +219,6 @@ router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
       message: 'Família excluída com sucesso',
     });
   } catch (error) {
-    console.error('Erro ao deletar família:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(errorMessage.includes('admin') ? 403 : 500).json({
       success: false,
@@ -239,7 +227,6 @@ router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Entrar em família via código de convite
 router.post(
   '/join',
   joinFamilyValidation,
@@ -269,7 +256,6 @@ router.post(
         data: family,
       });
     } catch (error) {
-      console.error('Erro ao entrar na família:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao entrar na família';
       res.status(400).json({
         success: false,
@@ -279,7 +265,6 @@ router.post(
   }
 );
 
-// Sair da família
 router.post('/:id/leave', asAuthenticatedHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -297,7 +282,6 @@ router.post('/:id/leave', asAuthenticatedHandler(async (req, res) => {
       message: 'Você saiu da família',
     });
   } catch (error) {
-    console.error('Erro ao sair da família:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao sair da família';
     res.status(400).json({
       success: false,
@@ -306,7 +290,6 @@ router.post('/:id/leave', asAuthenticatedHandler(async (req, res) => {
   }
 }));
 
-// Remover membro
 router.delete(
   '/:id/members/:userId',
   asAuthenticatedHandler(async (req, res) => {
@@ -326,7 +309,6 @@ router.delete(
         message: 'Membro removido com sucesso',
       });
     } catch (error) {
-      console.error('Erro ao remover membro:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao remover membro';
       res.status(errorMessage.includes('admin') ? 403 : 400).json({
         success: false,
@@ -336,7 +318,6 @@ router.delete(
   })
 );
 
-// Atualizar função de membro
 router.patch(
   '/:id/members/:userId/role',
   updateMemberRoleValidation,
@@ -377,7 +358,6 @@ router.patch(
         data: member,
       });
     } catch (error) {
-      console.error('Erro ao atualizar função:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar função';
       res.status(errorMessage.includes('admin') ? 403 : 400).json({
         success: false,
@@ -387,7 +367,6 @@ router.patch(
   })
 );
 
-// Atualizar configurações do membro (próprio usuário)
 router.patch(
   '/:id/settings',
   asAuthenticatedHandler(async (req, res) => {
@@ -415,7 +394,6 @@ router.patch(
         data: member,
       });
     } catch (error) {
-      console.error('Erro ao atualizar configurações:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar configurações';
       res.status(400).json({
         success: false,

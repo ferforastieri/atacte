@@ -165,7 +165,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        {/* Senha Gerada */}
+        {}
         <View style={styles.passwordSection}>
           <Text style={styles.sectionTitle}>Senha Gerada</Text>
           
@@ -196,11 +196,11 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
           </View>
         </View>
 
-        {/* Opções de Geração */}
+        {}
         <View style={styles.optionsSection}>
           <Text style={styles.sectionTitle}>Opções de Geração</Text>
 
-          {/* Comprimento */}
+          {}
           <View style={styles.optionRow}>
             <Text style={styles.optionLabel}>Comprimento</Text>
             <Input
@@ -211,7 +211,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
             />
           </View>
 
-          {/* Tipos de Caracteres */}
+          {}
           <View style={styles.optionRow}>
             <Text style={styles.optionLabel}>Maiúsculas (A-Z)</Text>
             <Switch
@@ -253,7 +253,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
           </View>
         </View>
 
-        {/* Ações */}
+        {}
         <View style={styles.actions}>
           <Button
             title="Gerar"

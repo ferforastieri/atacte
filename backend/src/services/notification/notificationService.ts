@@ -52,7 +52,6 @@ export class NotificationService {
   async createNotification(data: CreateNotificationData): Promise<NotificationDto> {
     const notification = await this.notificationRepository.create(data);
     
-    // Enviar push notification
     await this.sendPushNotification(notification);
 
     return this.mapNotificationToDto(notification as any);
@@ -107,7 +106,6 @@ export class NotificationService {
     return true;
   }
 
-  // Notificações específicas do sistema
 
   async sendFamilyInviteNotification(
     inviterId: string,
@@ -133,7 +131,6 @@ export class NotificationService {
     newMemberId: string,
     newMemberName: string
   ): Promise<void> {
-    // Enviar notificação para todos os membros da família
     const family = await this.familyRepository.findById(familyId);
     
     if (!family) return;
@@ -155,7 +152,6 @@ export class NotificationService {
     if (notifications.length > 0) {
       const createdNotifications = await this.notificationRepository.createBatchAndReturn(notifications);
       
-      // Enviar push para cada notificação criada
       for (const notification of createdNotifications) {
         await this.sendPushNotification(notification);
       }
@@ -184,7 +180,6 @@ export class NotificationService {
       }
     }
 
-    // Enviar alerta para todos os membros das famílias do usuário
     const families = await this.familyRepository.findByUserId(userId);
     
     const notifications: CreateNotificationData[] = [];
@@ -221,7 +216,6 @@ export class NotificationService {
     if (notifications.length > 0) {
       const createdNotifications = await this.notificationRepository.createBatchAndReturn(notifications);
       
-      // Enviar push para cada notificação criada
       for (const notification of createdNotifications) {
         await this.sendPushNotification(notification);
       }
@@ -229,7 +223,6 @@ export class NotificationService {
   }
 
   async sendSOSAlert(userId: string, latitude: number, longitude: number): Promise<void> {
-    // Enviar SOS para todos os membros das famílias do usuário
     const families = await this.familyRepository.findByUserId(userId);
     
     const notifications: CreateNotificationData[] = [];
@@ -257,27 +250,23 @@ export class NotificationService {
     if (notifications.length > 0) {
       const createdNotifications = await this.notificationRepository.createBatchAndReturn(notifications);
       
-      // Enviar push para cada notificação criada
       for (const notification of createdNotifications) {
         await this.sendPushNotification(notification);
       }
     }
   }
 
-  // Notificar família sobre geofencing
   async sendGeofenceToFamily(
     userId: string, 
     zoneName: string, 
     eventType: 'enter' | 'exit',
     zoneId: string
   ): Promise<void> {
-    // Buscar todas as famílias do usuário
     const families = await this.familyRepository.findByUserId(userId);
     
     const notifications: CreateNotificationData[] = [];
 
     for (const family of families) {
-      // Buscar o membro que entrou na zona para obter o nickname/apelido dele na família
       const senderMember = family.members.find((member) => member.userId === userId);
       const senderName =
         senderMember?.nickname ||
@@ -285,7 +274,6 @@ export class NotificationService {
         senderMember?.user?.email ||
         'um membro da família';
 
-      // Buscar todos os membros da família (exceto o próprio usuário) para notificar
       const members = family.members.filter((member) => member.userId !== userId);
 
       for (const member of members) {
@@ -319,7 +307,6 @@ export class NotificationService {
     if (notifications.length > 0) {
       const createdNotifications = await this.notificationRepository.createBatchAndReturn(notifications);
       
-      // Enviar push para cada notificação criada
       for (const notification of createdNotifications) {
         await this.sendPushNotification(notification);
       }
@@ -330,10 +317,8 @@ export class NotificationService {
     return await this.notificationRepository.deleteOldNotifications(daysToKeep);
   }
 
-  // Enviar push notification via Expo Push Notifications
   private async sendPushNotification(notification: Notification): Promise<void> {
     try {
-      // Buscar o push token do receptor através do UserRepository
       const { UserRepository } = await import('../../repositories/users/userRepository');
       const userRepository = new UserRepository();
       
@@ -346,17 +331,14 @@ export class NotificationService {
       const pushToken = receiver.pushToken;
       
       if (!pushToken.startsWith('ExponentPushToken')) {
-        console.warn(`Token inválido ignorado: ${pushToken}`);
         return;
       }
 
-      // Usar Expo SDK para enviar notificações com chunks
       const expo = new Expo({
         useFcmV1: true,
       });
 
       if (!Expo.isExpoPushToken(pushToken)) {
-        console.warn(`Token inválido ignorado: ${pushToken}`);
         return;
       }
 
@@ -383,7 +365,6 @@ export class NotificationService {
         try {
           const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
           
-          // Marcar como enviado apenas se não houver erro
           const hasError = ticketChunk.some(ticket => 
             ticket.status === 'error' && ticket.details?.error !== 'DeviceNotRegistered'
           );
@@ -392,11 +373,9 @@ export class NotificationService {
             await this.notificationRepository.markAsSent(notification.id);
           }
         } catch (error) {
-          console.error('Erro ao enviar chunk de notificação:', error);
         }
       }
     } catch (error) {
-      console.error('Erro ao enviar push notification:', error);
     }
   }
 

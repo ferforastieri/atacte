@@ -29,7 +29,6 @@ export default function ForgotPasswordScreen() {
       const response = await authService.requestPasswordReset(email);
       
       if (response.success) {
-        // Em desenvolvimento, mostrar o token
         if (response.data?.token) {
           Alert.alert(
             'Token de Recuperação',

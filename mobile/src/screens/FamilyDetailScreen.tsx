@@ -322,7 +322,7 @@ export default function FamilyDetailScreen({ route }: any) {
         isRefreshing={isRefreshing}
       />
 
-      {/* Tabs de navegação */}
+      {}
       <View style={[styles.tabContainer, { backgroundColor: isDark ? '#1f2937' : '#ffffff' }]}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'map' && [styles.activeTab, { backgroundColor: isDark ? '#374151' : '#f0fdf4' }]]}
@@ -393,7 +393,7 @@ export default function FamilyDetailScreen({ route }: any) {
         </TouchableOpacity>
       </View>
 
-      {/* Conteúdo das tabs */}
+      {}
       <View style={styles.content}>
         {activeTab === 'map' && (
           <View style={styles.mapContainer}>
@@ -407,7 +407,7 @@ export default function FamilyDetailScreen({ route }: any) {
               focusOnMember={focusOnMember}
             />
             
-            {/* Lista de membros na parte de baixo do mapa */}
+            {}
             <View style={[styles.membersListContainer, { 
               backgroundColor: isDark ? '#1f2937' : '#ffffff',
             }]}>
@@ -484,7 +484,7 @@ export default function FamilyDetailScreen({ route }: any) {
         )}
       </View>
 
-      {/* Modal Criar Família */}
+      {}
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -517,7 +517,7 @@ export default function FamilyDetailScreen({ route }: any) {
         </View>
       </Modal>
 
-      {/* Modal Entrar na Família */}
+      {}
       <Modal
         visible={showJoinModal}
         onClose={() => setShowJoinModal(false)}

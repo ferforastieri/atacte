@@ -7,13 +7,11 @@ import { asAuthenticatedHandler } from '../../types/express';
 const router = Router();
 const geofenceService = new GeofenceService();
 
-// POST /api/geofence/zones
 router.post('/zones', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     const userId = req.user.id;
     const { familyId, name, description, latitude, longitude, radius, notifyOnEnter, notifyOnExit } = req.body;
 
-    // Validações
     if (!familyId || !name || !latitude || !longitude || !radius) {
       res.status(400).json({
         success: false,
@@ -50,7 +48,6 @@ router.post('/zones', authenticateToken, asAuthenticatedHandler(async (req, res)
       data: zone,
     });
   } catch (error) {
-    console.error('Erro ao criar zona:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar zona';
     const statusCode = errorMessage.includes('permissão') ? 403 : 500;
     res.status(statusCode).json({
@@ -60,7 +57,6 @@ router.post('/zones', authenticateToken, asAuthenticatedHandler(async (req, res)
   }
 }));
 
-// GET /api/geofence/zones
 router.get('/zones', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     const userId = req.user.id;
@@ -68,12 +64,10 @@ router.get('/zones', authenticateToken, asAuthenticatedHandler(async (req, res) 
 
     let zones;
     if (familyId) {
-      // Buscar zonas de uma família específica
       zones = active === 'true'
         ? await geofenceService.getActiveFamilyZones(userId, familyId as string)
         : await geofenceService.getFamilyZones(userId, familyId as string);
     } else {
-      // Buscar todas as zonas ativas das famílias do usuário
       zones = await geofenceService.getActiveUserZones(userId);
     }
 
@@ -82,7 +76,6 @@ router.get('/zones', authenticateToken, asAuthenticatedHandler(async (req, res) 
       data: zones,
     });
   } catch (error) {
-    console.error('Erro ao buscar zonas:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar zonas';
     const statusCode = errorMessage.includes('permissão') ? 403 : 500;
     res.status(statusCode).json({
@@ -92,7 +85,6 @@ router.get('/zones', authenticateToken, asAuthenticatedHandler(async (req, res) 
   }
 }));
 
-// PATCH /api/geofence/zones/:id
 router.patch('/zones/:id', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     const userId = req.user.id;
@@ -133,7 +125,6 @@ router.patch('/zones/:id', authenticateToken, asAuthenticatedHandler(async (req,
       data: zone,
     });
   } catch (error) {
-    console.error('Erro ao atualizar zona:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar zona';
     res.status(errorMessage.includes('permissão') ? 403 : 500).json({
       success: false,
@@ -142,7 +133,6 @@ router.patch('/zones/:id', authenticateToken, asAuthenticatedHandler(async (req,
   }
 }));
 
-// DELETE /api/geofence/zones/:id
 router.delete('/zones/:id', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     const userId = req.user.id;
@@ -163,7 +153,6 @@ router.delete('/zones/:id', authenticateToken, asAuthenticatedHandler(async (req
       message: 'Zona deletada com sucesso',
     });
   } catch (error) {
-    console.error('Erro ao deletar zona:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao deletar zona';
     res.status(errorMessage.includes('permissão') ? 403 : 500).json({
       success: false,
@@ -172,7 +161,6 @@ router.delete('/zones/:id', authenticateToken, asAuthenticatedHandler(async (req
   }
 }));
 
-// POST /api/geofence/check
 router.post('/check', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     const userId = req.user.id;
@@ -200,7 +188,6 @@ router.post('/check', authenticateToken, asAuthenticatedHandler(async (req, res)
       },
     });
   } catch (error) {
-    console.error('Erro ao verificar localização:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar localização';
     res.status(500).json({
       success: false,

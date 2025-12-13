@@ -143,7 +143,7 @@ watch(() => props.show, (show) => {
   @apply flex items-center justify-end space-x-3 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800;
 }
 
-/* Transições */
+
 .modal-enter-active,
 .modal-leave-active {
   transition: all 0.3s ease;

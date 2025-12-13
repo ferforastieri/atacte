@@ -68,7 +68,6 @@ export class AuditUtil {
         }
       });
     } catch (error) {
-      console.error('Erro ao criar log de auditoria:', error);
     }
   }
 

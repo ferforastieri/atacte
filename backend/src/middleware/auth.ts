@@ -94,7 +94,6 @@ export const authenticateToken = async (
         data: { lastUsed: new Date() }
       });
     } catch (updateError) {
-      console.error('Erro ao atualizar sessão:', updateError);
       
     }
 
@@ -104,7 +103,6 @@ export const authenticateToken = async (
     
     next();
   } catch (error) {
-    console.error('Erro na autenticação:', error);
     res.status(403).json({ 
       success: false, 
       message: 'Token inválido' 

@@ -2,29 +2,22 @@ import { TOTP } from 'otpauth'
 
 export interface TOTPCode {
   code: string
-  timeRemaining: number // segundos restantes até expirar
-  period: number // período total (30s)
+  timeRemaining: number 
+  period: number 
 }
 
 export interface TOTPValidation {
   isValid: boolean
-  delta?: number | undefined // diferença de tempo
+  delta?: number | undefined 
 }
 
-/**
- * Classe para geração de códigos TOTP no cliente
- * Reduz drasticamente as requisições ao servidor
- * Compatível com React Native usando otpauth
- */
-export class TOTPClient {
-  private static readonly TOTP_PERIOD = 30 // 30 segundos por período
-  private static readonly TOTP_WINDOW = 2 // Janela de tolerância (±2 períodos)
 
-  /**
-   * Gerar código TOTP atual baseado no secret
-   */
+export class TOTPClient {
+  private static readonly TOTP_PERIOD = 30 
+  private static readonly TOTP_WINDOW = 2 
+
+  
   static generateCurrentCode(secret: string): TOTPCode {
-    // Limpar e normalizar o secret
     const cleanSecret = secret.trim().replace(/\s/g, '').toUpperCase()
     
     if (!cleanSecret) {
@@ -32,7 +25,6 @@ export class TOTPClient {
     }
 
     try {
-      // Criar instância TOTP
       const totp = new TOTP({
         secret: cleanSecret,
         algorithm: 'SHA1',
@@ -40,10 +32,8 @@ export class TOTPClient {
         period: this.TOTP_PERIOD
       })
 
-      // Gerar código atual
       const token = totp.generate()
 
-      // Calcular tempo restante até o próximo período
       const timeRemaining = this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD)
 
       return {
@@ -57,9 +47,7 @@ export class TOTPClient {
     }
   }
 
-  /**
-   * Validar um código TOTP
-   */
+  
   static validateCode(secret: string, code: string): TOTPValidation {
     try {
       const totp = new TOTP({
@@ -84,9 +72,7 @@ export class TOTPClient {
     }
   }
 
-  /**
-   * Gerar múltiplos códigos para teste
-   */
+  
   static generateTestCodes(secret: string, count: number = 5): TOTPCode[] {
     const codes: TOTPCode[] = []
     const now = Math.floor(Date.now() / 1000)
@@ -118,16 +104,12 @@ export class TOTPClient {
     return codes
   }
 
-  /**
-   * Calcular tempo restante para o próximo período
-   */
+  
   static getTimeRemaining(): number {
     return this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD)
   }
 
-  /**
-   * Verificar se o código está próximo de expirar (últimos 5 segundos)
-   */
+  
   static isNearExpiry(timeRemaining: number): boolean {
     return timeRemaining <= 5
   }

@@ -85,8 +85,6 @@ export class SecureNoteService {
         const decryptedNote = await this.decryptSecureNote(note, user.encryptionKeyHash);
         decryptedNotes.push(decryptedNote);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        console.error('🔐 SecureNoteService: ERRO ao descriptografar nota, pulando:', note.title, errorMessage);
         continue;
       }
     }

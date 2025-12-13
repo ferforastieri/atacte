@@ -41,9 +41,7 @@ export class PasswordGenerator {
     this.options = { ...DEFAULT_OPTIONS, ...options };
   }
 
-  /**
-   * Gera uma senha baseada nas opções configuradas
-   */
+  
   generate(): string {
     const { length, includeUppercase, includeLowercase, includeNumbers, includeSymbols, excludeSimilar, excludeAmbiguous, customSymbols } = this.options;
 
@@ -125,9 +123,7 @@ export class PasswordGenerator {
     return this.shuffleArray(password).join('');
   }
 
-  /**
-   * Gera múltiplas senhas
-   */
+  
   generateMultiple(count: number): string[] {
     const passwords: string[] = [];
     for (let i = 0; i < count; i++) {
@@ -136,9 +132,7 @@ export class PasswordGenerator {
     return passwords;
   }
 
-  /**
-   * Avalia a força da senha
-   */
+  
   evaluateStrength(password: string): PasswordStrength {
     let score = 0;
     let feedback: string[] = [];
@@ -194,9 +188,7 @@ export class PasswordGenerator {
     };
   }
 
-  /**
-   * Gera uma senha memorável (usando palavras)
-   */
+  
   generateMemorable(wordCount: number = 4, separator: string = '-', capitalize: boolean = true): string {
     const words = [
       'apple', 'banana', 'cherry', 'dragon', 'eagle', 'forest', 'garden', 'house',
@@ -217,23 +209,17 @@ export class PasswordGenerator {
     return selectedWords.join(separator);
   }
 
-  /**
-   * Atualiza as opções do gerador
-   */
+  
   updateOptions(newOptions: Partial<PasswordGeneratorOptions>): void {
     this.options = { ...this.options, ...newOptions };
   }
 
-  /**
-   * Obtém as opções atuais
-   */
+  
   getOptions(): PasswordGeneratorOptions {
     return { ...this.options };
   }
 
-  /**
-   * Valida as opções
-   */
+  
   validateOptions(options: Partial<PasswordGeneratorOptions>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 

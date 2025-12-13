@@ -81,13 +81,11 @@ class LocationService {
 
   async requestPermissions(): Promise<boolean> {
     try {
-      // Solicitar permissão de foreground
       const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
       if (foregroundStatus !== 'granted') {
         return false;
       }
 
-      // Solicitar permissão de background
       const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
       if (backgroundStatus !== 'granted') {
         return false;
@@ -240,7 +238,6 @@ class LocationService {
 
   async requestFamilyLocationUpdate(familyId: string): Promise<{ success: boolean; data?: LocationData; message?: string }> {
     try {
-      // Obter localização atual
       const location = await this.getCurrentLocation();
       
       if (!location) {
@@ -260,7 +257,6 @@ class LocationService {
         isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
       };
 
-      // Chamar a rota que atualiza e notifica a família
       return this.makeRequest(`/location/request-update/${familyId}`, {
         method: 'POST',
         data: payload,
