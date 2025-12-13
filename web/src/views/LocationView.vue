@@ -101,8 +101,10 @@
                     </p>
                   </div>
                   <div v-if="member.batteryLevel !== null" class="flex items-center space-x-1">
-                    <svg class="w-4 h-4" :class="member.batteryLevel < 0.2 ? 'text-red-500' : 'text-green-500'" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 1v10h10V5H5z" clip-rule="evenodd" />
+                    <svg class="w-4 h-4" :class="member.batteryLevel < 0.2 ? 'text-red-500' : 'text-green-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                      <rect x="2" y="7" width="16" height="10" rx="2" ry="2" />
+                      <line x1="20" y1="10" x2="20" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <rect v-if="member.batteryLevel > 0" x="4" y="9" :width="12 * member.batteryLevel" height="6" rx="1" :fill="member.batteryLevel < 0.2 ? '#ef4444' : '#16a34a'" />
                     </svg>
                     <span class="text-xs text-gray-500 dark:text-gray-400">{{ Math.round(member.batteryLevel * 100) }}%</span>
                   </div>

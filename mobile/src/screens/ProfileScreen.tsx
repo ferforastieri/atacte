@@ -201,10 +201,9 @@ export default function ProfileScreen() {
       marginLeft: 12,
     },
     logoutButton: {
-      backgroundColor: isDark ? '#7f1d1d' : '#fee2e2',
     },
     logoutButtonText: {
-      color: '#dc2626',
+      color: isDark ? '#f9fafb' : '#111827',
     },
     loadingContainer: {
       flex: 1,
@@ -302,7 +301,7 @@ export default function ProfileScreen() {
             style={[styles.actionButton, styles.logoutButton]}
             onPress={handleLogout}
           >
-            <Ionicons name="exit-outline" size={24} color="#dc2626" />
+            <Ionicons name="exit-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
             <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Sair</Text>
           </TouchableOpacity>
         </Card>
