@@ -90,6 +90,20 @@ class AuthService {
   async getStoredToken() {
     return AsyncStorage.getItem('auth_token');
   }
+
+  async requestPasswordReset(email: string): Promise<AuthResponse> {
+    return this.makeRequest('/auth/forgot-password', {
+      method: 'POST',
+      data: { email },
+    });
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<AuthResponse> {
+    return this.makeRequest('/auth/reset-password', {
+      method: 'POST',
+      data: { token, newPassword },
+    });
+  }
 }
 
 export const authService = new AuthService();

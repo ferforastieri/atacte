@@ -38,6 +38,8 @@ model User {
   locations            Location[]
   sentNotifications    Notification[] @relation("NotificationSender")
   receivedNotifications Notification[] @relation("NotificationReceiver")
+  geofenceStates       UserGeofenceState[]
+  passwordResetTokens  PasswordResetToken[]
   
   @@map("users")
 }
@@ -249,7 +251,45 @@ model GeofenceZone {
   
   // Relacionamentos
   family       Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  userStates   UserGeofenceState[]
   
   @@index([familyId])
   @@map("geofence_zones")
+}
+
+model UserGeofenceState {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  zoneId       String   @map("zone_id")
+  isInside     Boolean  @default(false) @map("is_inside")
+  lastEventAt  DateTime? @map("last_event_at") // Última vez que houve evento (enter/exit)
+  lastEnterAt  DateTime? @map("last_enter_at") // Última vez que entrou
+  lastExitAt   DateTime? @map("last_exit_at") // Última vez que saiu
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zone         GeofenceZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, zoneId])
+  @@index([userId])
+  @@index([zoneId])
+  @@map("user_geofence_states")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId   String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
 }

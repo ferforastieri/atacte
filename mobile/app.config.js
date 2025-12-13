@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "Atacte",
     slug: "atacte-mobile",
-    version: "2.0.0",
+    version: "2.0.1",
     orientation: "portrait",
     icon: "./assets/logo.png",
     userInterfaceStyle: "light",

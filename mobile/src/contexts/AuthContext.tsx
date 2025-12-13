@@ -41,49 +41,73 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (token) {
         const cachedUser = await authService.getStoredUser();
         if (cachedUser) {
+          // Mostrar imediatamente com dados do cache
           setUser(cachedUser);
           setIsAuthenticated(true);
-        }
-
-        try {
-          const response = await authService.getMe();
-          if (response.success && response.data) {
-            setUser(response.data.user);
-            setIsAuthenticated(true);
-            if (response.data.user) {
-              await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-            }
-          } else {
-            if (response.isAuthError) {
-              await authService.logout();
-              setUser(null);
-              setIsAuthenticated(false);
-            } else if (response.isNetworkError || !cachedUser) {
-              if (!cachedUser) {
+          setIsLoading(false); // Liberar a UI imediatamente
+          
+          // Validar em background sem bloquear
+          validateTokenInBackground(token, cachedUser);
+        } else {
+          // Sem cache, precisa validar antes de liberar
+          try {
+            const response = await authService.getMe();
+            if (response.success && response.data) {
+              setUser(response.data.user);
+              setIsAuthenticated(true);
+              if (response.data.user) {
+                await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+              }
+            } else {
+              if (response.isAuthError) {
                 await authService.logout();
                 setUser(null);
                 setIsAuthenticated(false);
               }
             }
-          }
-        } catch (error: any) {
-          console.error('Erro ao verificar autenticação no servidor:', error);
-          if (!cachedUser) {
+          } catch (error: any) {
+            console.error('Erro ao verificar autenticação no servidor:', error);
             await authService.logout();
             setUser(null);
             setIsAuthenticated(false);
+          } finally {
+            setIsLoading(false);
           }
         }
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
       setUser(null);
       setIsAuthenticated(false);
-    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const validateTokenInBackground = async (token: string, cachedUser: User) => {
+    try {
+      const response = await authService.getMe();
+      if (response.success && response.data) {
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        if (response.data.user) {
+          await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+      } else {
+        // Só fazer logout se for erro de autenticação, não se for erro de rede
+        if (response.isAuthError) {
+          await authService.logout();
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+        // Se for erro de rede, manter o cache válido
+      }
+    } catch (error: any) {
+      console.error('Erro ao validar token em background:', error);
+      // Manter o cache válido em caso de erro inesperado
     }
   };
 

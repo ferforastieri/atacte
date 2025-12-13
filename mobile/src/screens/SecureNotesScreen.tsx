@@ -366,22 +366,7 @@ export default function SecureNotesScreen() {
     return (
       <View style={styles.container}>
         <Header title="Notas Seguras" onThemeToggle={toggleTheme} />
-        <View style={styles.content}>
-          <View style={styles.searchContainer}>
-            <SkeletonLoader />
-          </View>
-          <View style={styles.listContainer}>
-            <Card style={styles.emptyCard}>
-              <SkeletonLoader />
-            </Card>
-            <Card style={styles.emptyCard}>
-              <SkeletonLoader />
-            </Card>
-            <Card style={styles.emptyCard}>
-              <SkeletonLoader />
-            </Card>
-          </View>
-        </View>
+        <SkeletonLoader variant="secureNotes" />
       </View>
     );
   }

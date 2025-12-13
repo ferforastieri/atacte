@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Card, Header, Button, SkeletonLoader } from '../components/shared';
+import { Card, Header, Button, SkeletonLoader, Modal } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { passwordService } from '../services/passwords/passwordService';
 import { userService } from '../services/users/userService';
@@ -34,6 +34,7 @@ export default function ProfileScreen() {
     totpPasswords: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   const { showError } = useToast();
 
@@ -84,21 +85,13 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Confirmar Logout',
-      'Tem certeza que deseja sair?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ]
-    );
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    await logout();
+    setShowLogoutModal(false);
   };
 
   const styles = StyleSheet.create({
@@ -106,10 +99,12 @@ export default function ProfileScreen() {
       flex: 1,
       backgroundColor: isDark ? '#111827' : '#f9fafb',
     },
-    content: {
+    scrollView: {
       flex: 1,
+    },
+    content: {
       padding: 20,
-      paddingTop: 60,
+      paddingBottom: 24,
     },
     profileCard: {
       marginBottom: 20,
@@ -188,7 +183,7 @@ export default function ProfileScreen() {
       textAlign: 'center',
     },
     actionsCard: {
-      marginBottom: 20,
+      marginBottom: 0,
     },
     actionButton: {
       flexDirection: 'row',
@@ -204,6 +199,12 @@ export default function ProfileScreen() {
       fontWeight: '500',
       color: isDark ? '#f9fafb' : '#111827',
       marginLeft: 12,
+    },
+    logoutButton: {
+      backgroundColor: isDark ? '#7f1d1d' : '#fee2e2',
+    },
+    logoutButtonText: {
+      color: '#dc2626',
     },
     loadingContainer: {
       flex: 1,
@@ -221,9 +222,7 @@ export default function ProfileScreen() {
     return (
       <View style={styles.container}>
         <Header title="Perfil" onThemeToggle={toggleTheme} />
-        <View style={styles.content}>
-          <SkeletonLoader />
-        </View>
+        <SkeletonLoader variant="profile" />
       </View>
     );
   }
@@ -235,7 +234,11 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <Header title="Perfil" onThemeToggle={toggleTheme} />
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Info */}
         <Card style={styles.profileCard}>
           <View style={styles.profileHeader}>
@@ -287,16 +290,36 @@ export default function ProfileScreen() {
         <Card style={styles.actionsCard}>
           <Text style={styles.sectionTitle}>Ações</Text>
           
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('Settings' as never)}
-        >
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('Settings' as never)}
+          >
             <Ionicons name="settings-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
             <Text style={styles.actionButtonText}>Configurações</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.logoutButton]}
+            onPress={handleLogout}
+          >
+            <Ionicons name="exit-outline" size={24} color="#dc2626" />
+            <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Sair</Text>
           </TouchableOpacity>
         </Card>
 
       </ScrollView>
+
+      <Modal
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        type="confirm"
+        title="Confirmar Logout"
+        message="Tem certeza que deseja sair?"
+        confirmText="Sair"
+        cancelText="Cancelar"
+        confirmVariant="danger"
+        onConfirm={confirmLogout}
+      />
     </View>
   );
 }

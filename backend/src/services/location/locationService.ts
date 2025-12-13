@@ -104,46 +104,24 @@ export class LocationService {
   private async processGeofenceEvents(
     userId: string,
     data: CreateLocationData,
-    previousLocation: Location | null
+    _previousLocation: Location | null
   ): Promise<void> {
     try {
-      const currentZones = await this.geofenceService.checkLocationInZones(
+      // Verificar zonas com estado persistente e hysteresis
+      const zonesCheck = await this.geofenceService.checkLocationInZones(
         userId,
         data.latitude,
-        data.longitude
+        data.longitude,
+        data.accuracy
       );
 
-      const previousZones = previousLocation
-        ? await this.geofenceService.checkLocationInZones(
-            userId,
-            Number(previousLocation.latitude),
-            Number(previousLocation.longitude)
-          )
-        : [];
-
-      if (currentZones.length === 0 && previousZones.length === 0) {
-        return;
-      }
-
-      const currentZoneIds = new Set(currentZones.map(({ zone }) => zone.id));
-      const previousZoneIds = new Set(previousZones.map(({ zone }) => zone.id));
-
-      for (const { zone } of currentZones) {
-        if (!previousZoneIds.has(zone.id)) {
-          await this.geofenceService.handleZoneEvent(userId, zone.id, 'enter', {
-            latitude: data.latitude,
-            longitude: data.longitude,
-          });
-        }
-      }
-
-      for (const { zone } of previousZones) {
-        if (!currentZoneIds.has(zone.id)) {
-          await this.geofenceService.handleZoneEvent(userId, zone.id, 'exit', {
-            latitude: data.latitude,
-            longitude: data.longitude,
-          });
-        }
+      // Processar cada zona verificada
+      for (const { zone, isInside } of zonesCheck) {
+        const eventType = isInside ? 'enter' : 'exit';
+        await this.geofenceService.handleZoneEvent(userId, zone.id, eventType, {
+          latitude: data.latitude,
+          longitude: data.longitude,
+        });
       }
     } catch (error) {
       console.error('Erro ao processar eventos de geofence:', error);

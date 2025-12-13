@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
+import ForgotPasswordView from '@/views/auth/ForgotPasswordView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 
 const router = createRouter({
@@ -29,6 +30,15 @@ const router = createRouter({
       meta: { 
         requiresAuth: false,
         title: 'Registro - Atacte'
+      }
+    },
+    {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      component: ForgotPasswordView,
+      meta: { 
+        requiresAuth: false,
+        title: 'Recuperar Senha - Atacte'
       }
     },
     {

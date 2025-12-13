@@ -579,22 +579,7 @@ export default function DashboardScreen() {
     return (
       <View style={styles.container}>
         <Header title="Dashboard" onThemeToggle={toggleTheme} />
-        <View style={styles.content}>
-          <View style={styles.searchContainer}>
-            <SkeletonLoader />
-          </View>
-          <View style={styles.listContainer}>
-            <Card style={styles.emptyCard}>
-              <SkeletonLoader />
-            </Card>
-            <Card style={styles.emptyCard}>
-              <SkeletonLoader />
-            </Card>
-            <Card style={styles.emptyCard}>
-              <SkeletonLoader />
-            </Card>
-          </View>
-        </View>
+        <SkeletonLoader variant="dashboard" />
       </View>
     );
   }

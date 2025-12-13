@@ -140,5 +140,64 @@ router.delete('/sessions/:sessionId', authenticateToken, async (req: any, res) =
   }
 });
 
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email é obrigatório'
+      });
+    }
+
+    const result = await authService.requestPasswordReset(email);
+
+    // Não retornar o token por segurança (já foi enviado por email)
+    res.json({
+      success: true,
+      message: 'Se o email existir, você receberá um link de recuperação',
+      // Em desenvolvimento, ainda retornar o token se não houver SendGrid configurado
+      data: process.env.NODE_ENV === 'development' && result.token ? { token: result.token } : undefined
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token e nova senha são obrigatórios'
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'A senha deve ter pelo menos 8 caracteres'
+      });
+    }
+
+    await authService.resetPassword(token, newPassword);
+
+    res.json({
+      success: true,
+      message: 'Senha redefinida com sucesso'
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
 
 export default router;

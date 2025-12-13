@@ -10,14 +10,16 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, Header, Modal, Input, SkeletonLoader } from '../components/shared';
+import { Button, Card, Header, SkeletonLoader, Modal, Input } from '../components/shared';
 import { FamilyMap, FamilyMembersList, ZoneManager } from '../components/family';
 import { locationService, FamilyMemberLocation } from '../services/location/locationService';
 import { geofenceService, GeofenceZone, CreateGeofenceZoneData, UpdateGeofenceZoneData } from '../services/geofence/geofenceService';
+import { familyService } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocation } from '../contexts/LocationContext';
 import { useNavigation } from '@react-navigation/native';
+import * as Clipboard from 'expo-clipboard';
 
 const { width, height } = Dimensions.get('window');
 
@@ -28,11 +30,17 @@ export default function FamilyDetailScreen({ route }: any) {
   const [zones, setZones] = useState<GeofenceZone[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'map' | 'members' | 'zones'>('map');
+  const [activeTab, setActiveTab] = useState<'map' | 'members' | 'zones' | 'settings'>('map');
   const [isCreatingZone, setIsCreatingZone] = useState(false);
   const [isSavingZone, setIsSavingZone] = useState(false);
   const [focusOnMember, setFocusOnMember] = useState<{ latitude: number; longitude: number } | undefined>();
   const [zoneCoordinatesCallback, setZoneCoordinatesCallback] = useState<((lat: number, lng: number) => void) | null>(null);
+  const [inviteCodeForFamily, setInviteCodeForFamily] = useState<string>('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [newFamilyName, setNewFamilyName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
@@ -48,13 +56,28 @@ export default function FamilyDetailScreen({ route }: any) {
       setIsLoading(true);
       await Promise.all([
         loadFamilyLocations(),
-        loadZones()
+        loadZones(),
+        loadFamilyInviteCode()
       ]);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       showError('Erro ao carregar dados da família');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadFamilyInviteCode = async () => {
+    try {
+      const response = await familyService.getFamilies();
+      if (response.success && response.data) {
+        const currentFamily = response.data.find((f: any) => f.id === familyId);
+        if (currentFamily) {
+          setInviteCodeForFamily(currentFamily.inviteCode);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar código de convite:', error);
     }
   };
 
@@ -174,18 +197,99 @@ export default function FamilyDetailScreen({ route }: any) {
   };
 
   const handleMemberPress = (member: FamilyMemberLocation) => {
-    
-   
-    if (activeTab === 'map') {
-     
+    setActiveTab('map');
+    setTimeout(() => {
       setFocusOnMember({ latitude: member.latitude, longitude: member.longitude });
-    } else {
-     
-      setActiveTab('map');
-     
-      setTimeout(() => {
-        setFocusOnMember({ latitude: member.latitude, longitude: member.longitude });
-      }, 100);
+    }, 300);
+  };
+
+
+  const handleLeaveFamily = async () => {
+    Alert.alert(
+      'Sair da Família',
+      `Tem certeza que deseja sair da família "${familyName}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await familyService.leaveFamily(familyId);
+              
+              if (response.success) {
+                showSuccess('Você saiu da família!');
+                navigation.goBack();
+              } else {
+                showError(response.message || 'Erro ao sair da família');
+              }
+            } catch (error) {
+              console.error('Leave family error:', error);
+              showError('Erro ao sair da família');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleCopyInviteCode = async () => {
+    try {
+      await Clipboard.setStringAsync(inviteCodeForFamily);
+      showSuccess('Código de convite copiado!');
+    } catch (error) {
+      showError('Erro ao copiar código de convite');
+    }
+  };
+
+  const handleCreateFamily = async () => {
+    if (!newFamilyName.trim()) {
+      showError('Digite o nome da família');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const response = await familyService.createFamily({ name: newFamilyName });
+      
+      if (response.success) {
+        showSuccess('Família criada com sucesso!');
+        setNewFamilyName('');
+        setShowCreateModal(false);
+        navigation.goBack();
+      } else {
+        showError(response.message || 'Erro ao criar família');
+      }
+    } catch (error) {
+      showError('Erro ao criar família');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleJoinFamily = async () => {
+    if (!inviteCode.trim()) {
+      showError('Digite o código de convite');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const response = await familyService.joinFamily({ inviteCode });
+      
+      if (response.success) {
+        showSuccess('Você entrou na família!');
+        setInviteCode('');
+        setShowJoinModal(false);
+        navigation.goBack();
+      } else {
+        showError(response.message || 'Erro ao entrar na família');
+      }
+    } catch (error) {
+      console.error('Join family error:', error);
+      showError('Erro ao entrar na família');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -200,9 +304,7 @@ export default function FamilyDetailScreen({ route }: any) {
           onThemeToggle={toggleTheme}
         />
         
-        <View style={styles.content}>
-          <SkeletonLoader />
-        </View>
+        <SkeletonLoader variant="familyDetail" />
       </View>
     );
   }
@@ -215,6 +317,9 @@ export default function FamilyDetailScreen({ route }: any) {
         onBack={navigation.goBack}
         showThemeToggle={true}
         onThemeToggle={toggleTheme}
+        showRefreshButton={true}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
       />
 
       {/* Tabs de navegação */}
@@ -269,6 +374,23 @@ export default function FamilyDetailScreen({ route }: any) {
             Zonas
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'settings' && [styles.activeTab, { backgroundColor: isDark ? '#374151' : '#f0fdf4' }]]}
+          onPress={() => setActiveTab('settings')}
+        >
+          <Ionicons 
+            name="settings-outline" 
+            size={20} 
+            color={activeTab === 'settings' ? '#16a34a' : (isDark ? '#9ca3af' : '#6b7280')} 
+          />
+          <Text style={[
+            styles.tabText, 
+            { color: activeTab === 'settings' ? '#16a34a' : (isDark ? '#9ca3af' : '#6b7280') }
+          ]}>
+            Config
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Conteúdo das tabs */}
@@ -318,7 +440,115 @@ export default function FamilyDetailScreen({ route }: any) {
             onRequestMapForZone={handleRequestMapForZone}
           />
         )}
+
+        {activeTab === 'settings' && (
+          <ScrollView style={styles.settingsContent}>
+            <Card style={styles.settingsCard}>
+              {inviteCodeForFamily && (
+                <View style={styles.inviteCodeSection}>
+                  <View style={styles.inviteCodeHeader}>
+                    <Text style={[styles.inviteCodeLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Código de Convite</Text>
+                    <TouchableOpacity
+                      style={[styles.copyButton, { backgroundColor: isDark ? '#1f2937' : '#f0fdf4' }]}
+                      onPress={handleCopyInviteCode}
+                    >
+                      <Ionicons name="copy-outline" size={18} color="#16a34a" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.inviteCode}>{inviteCodeForFamily}</Text>
+                </View>
+              )}
+
+              <Button
+                title="Criar Nova Família"
+                onPress={() => setShowCreateModal(true)}
+                variant="primary"
+                style={styles.actionButton}
+              />
+              
+              <Button
+                title="Entrar em Outra Família"
+                onPress={() => setShowJoinModal(true)}
+                variant="secondary"
+                style={styles.actionButton}
+              />
+              
+              <Button
+                title="Sair da Família"
+                onPress={handleLeaveFamily}
+                variant="danger"
+                style={styles.actionButton}
+              />
+            </Card>
+          </ScrollView>
+        )}
       </View>
+
+      {/* Modal Criar Família */}
+      <Modal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Nova Família"
+        size="sm"
+      >
+        <View style={styles.modalContent}>
+          <Input
+            label="Nome da Família"
+            placeholder="Digite o nome da família"
+            value={newFamilyName}
+            onChangeText={setNewFamilyName}
+          />
+
+          <View style={styles.modalActions}>
+            <Button
+              title="Cancelar"
+              onPress={() => setShowCreateModal(false)}
+              variant="ghost"
+              style={styles.modalButton}
+            />
+            <Button
+              title="Criar"
+              onPress={handleCreateFamily}
+              variant="primary"
+              loading={isSaving}
+              style={styles.modalButton}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Entrar na Família */}
+      <Modal
+        visible={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        title="Entrar na Família"
+        size="sm"
+      >
+        <View style={styles.modalContent}>
+          <Input
+            label="Código de Convite"
+            placeholder="Digite o código"
+            value={inviteCode}
+            onChangeText={(text) => setInviteCode(text.toUpperCase())}
+          />
+
+          <View style={styles.modalActions}>
+            <Button
+              title="Cancelar"
+              onPress={() => setShowJoinModal(false)}
+              variant="ghost"
+              style={styles.modalButton}
+            />
+            <Button
+              title="Entrar"
+              onPress={handleJoinFamily}
+              variant="primary"
+              loading={isSaving}
+              style={styles.modalButton}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -334,21 +564,21 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     borderRadius: 12,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
+    gap: 4,
   },
   activeTab: {
     backgroundColor: '#f0fdf4',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '500',
-    marginLeft: 6,
+    marginTop: 2,
   },
   content: {
     flex: 1,
@@ -371,5 +601,52 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 16,
     textAlign: 'center',
+  },
+  inviteCodeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  inviteCodeLabel: {
+    fontSize: 12,
+  },
+  copyButton: {
+    padding: 6,
+    borderRadius: 8,
+  },
+  inviteCode: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#16a34a',
+    fontFamily: 'monospace',
+  },
+  settingsContent: {
+    flex: 1,
+    padding: 16,
+  },
+  settingsCard: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  inviteCodeSection: {
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+  },
+  actionButton: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  modalContent: {
+    gap: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  modalButton: {
+    flex: 1,
   },
 });

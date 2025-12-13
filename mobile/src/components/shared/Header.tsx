@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useAuth } from '../../contexts/AuthContext';
 import { Logo } from './Logo';
 import { useNavigation } from '@react-navigation/native';
 
@@ -13,6 +12,12 @@ interface HeaderProps {
   onThemeToggle?: () => void;
   showBackButton?: boolean;
   onBack?: () => void;
+  showRefreshButton?: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  showNotificationsButton?: boolean;
+  onNotificationsPress?: () => void;
+  notificationCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -20,10 +25,15 @@ export const Header: React.FC<HeaderProps> = ({
   showThemeToggle = true, 
   onThemeToggle,
   showBackButton = false,
-  onBack
+  onBack,
+  showRefreshButton = false,
+  onRefresh,
+  isRefreshing = false,
+  showNotificationsButton = false,
+  onNotificationsPress,
+  notificationCount = 0
 }) => {
   const { isDark } = useTheme();
-  const { logout } = useAuth();
   const navigation = useNavigation();
 
   const styles = StyleSheet.create({
@@ -70,17 +80,45 @@ export const Header: React.FC<HeaderProps> = ({
       height: 36,
       borderRadius: 18,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      marginRight: 8,
+      marginRight: 0,
       justifyContent: 'center',
       alignItems: 'center',
     },
-    logoutButton: {
+    refreshButton: {
       width: 36,
       height: 36,
       borderRadius: 18,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      marginRight: 8,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    notificationsButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      marginRight: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'relative',
+    },
+    notificationBadge: {
+      position: 'absolute',
+      top: -2,
+      right: -2,
+      backgroundColor: '#ef4444',
+      borderRadius: 10,
+      minWidth: 18,
+      height: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 4,
+    },
+    notificationBadgeText: {
+      color: '#ffffff',
+      fontSize: 10,
+      fontWeight: '600',
     },
     backButton: {
       width: 36,
@@ -109,13 +147,56 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </TouchableOpacity>
           )}
-          <View style={styles.logoContainer}>
+          <TouchableOpacity 
+            style={styles.logoContainer}
+            onPress={() => {
+              try {
+                navigation.navigate('Main', { screen: 'Dashboard' });
+              } catch (e) {
+                // Fallback se já estiver na tela principal
+                navigation.navigate('Dashboard');
+              }
+            }}
+            activeOpacity={0.7}
+          >
             <Logo size={40} showText={false} />
-          </View>
+          </TouchableOpacity>
           {title && <Text style={styles.title}>{title}</Text>}
         </View>
         
         <View style={styles.rightSection}>
+          {showRefreshButton && (
+            <TouchableOpacity 
+              style={styles.refreshButton}
+              onPress={onRefresh}
+              disabled={isRefreshing}
+            >
+              <Ionicons 
+                name="refresh" 
+                size={20} 
+                color={isRefreshing ? (isDark ? '#6b7280' : '#9ca3af') : (isDark ? '#f9fafb' : '#111827')} 
+              />
+            </TouchableOpacity>
+          )}
+          {showNotificationsButton && (
+            <TouchableOpacity 
+              style={styles.notificationsButton}
+              onPress={onNotificationsPress}
+            >
+              <Ionicons 
+                name="notifications-outline" 
+                size={20} 
+                color={isDark ? '#f9fafb' : '#111827'} 
+              />
+              {notificationCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
           {showThemeToggle && (
             <TouchableOpacity 
               style={styles.themeButton}
@@ -128,16 +209,6 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </TouchableOpacity>
           )}
-          <TouchableOpacity 
-            style={styles.logoutButton}
-            onPress={logout}
-          >
-            <Ionicons 
-              name="log-out-outline" 
-              size={20} 
-              color="#dc2626" 
-            />
-          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>

@@ -5,6 +5,7 @@ import { Button, Input, Card, Logo } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ export default function LoginScreen() {
   const { showSuccess, showError } = useToast();
   const { login, register } = useAuth();
   const { isDark } = useTheme();
+  const navigation = useNavigation();
 
   const handleLogin = async () => {
     if (!email || !masterPassword) {
@@ -138,6 +140,13 @@ export default function LoginScreen() {
         <Button
           title={isRegisterMode ? 'Já tenho uma conta' : 'Criar nova conta'}
           onPress={() => setIsRegisterMode(!isRegisterMode)}
+          variant="ghost"
+          style={styles.toggleButton}
+        />
+
+        <Button
+          title="Esqueci minha senha"
+          onPress={() => navigation.navigate('ForgotPassword' as any)}
           variant="ghost"
           style={styles.toggleButton}
         />

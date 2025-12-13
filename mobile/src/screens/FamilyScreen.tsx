@@ -7,8 +7,10 @@ import {
   RefreshControl,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Button, Card, Modal, Input, Header } from '../components/shared';
 import { familyService, Family } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
@@ -33,13 +35,27 @@ export default function FamilyScreen({ navigation }: any) {
     loadFamilies();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      loadFamilies();
+    }, [])
+  );
+
   const loadFamilies = async () => {
     try {
       setIsLoading(true);
       const response = await familyService.getFamilies();
       
       if (response.success && response.data) {
-        setFamilies(response.data);
+        const loadedFamilies = response.data;
+        
+        if (loadedFamilies.length === 1) {
+          setIsLoading(false);
+          handleViewMap(loadedFamilies[0]);
+          return;
+        }
+        
+        setFamilies(loadedFamilies);
       } else {
         showError(response.message || 'Erro ao carregar famílias');
       }
@@ -65,7 +81,14 @@ export default function FamilyScreen({ navigation }: any) {
         showSuccess('Família criada com sucesso!');
         setNewFamilyName('');
         setShowCreateModal(false);
-        loadFamilies();
+        const updatedResponse = await familyService.getFamilies();
+        if (updatedResponse.success && updatedResponse.data) {
+          const updatedFamilies = updatedResponse.data;
+          setFamilies(updatedFamilies);
+          if (updatedFamilies.length === 1) {
+            handleViewMap(updatedFamilies[0]);
+          }
+        }
         await checkAndStartTracking();
       } else {
         showError(response.message || 'Erro ao criar família');
@@ -92,7 +115,14 @@ export default function FamilyScreen({ navigation }: any) {
         showSuccess('Você entrou na família!');
         setInviteCode('');
         setShowJoinModal(false);
-        loadFamilies();
+        const updatedResponse = await familyService.getFamilies();
+        if (updatedResponse.success && updatedResponse.data) {
+          const updatedFamilies = updatedResponse.data;
+          setFamilies(updatedFamilies);
+          if (updatedFamilies.length === 1) {
+            handleViewMap(updatedFamilies[0]);
+          }
+        }
         await checkAndStartTracking();
       } else {
         showError(response.message || 'Erro ao entrar na família');
@@ -119,20 +149,34 @@ export default function FamilyScreen({ navigation }: any) {
   };
 
   const handleLeaveFamily = async (familyId: string, familyName: string) => {
-    try {
-      const response = await familyService.leaveFamily(familyId);
-      
-      if (response.success) {
-        showSuccess('Você saiu da família!');
-        loadFamilies();
-      } else {
-        showError(response.message || 'Erro ao sair da família');
-      }
-    } catch (error) {
-      console.error('Leave family error:', error);
-      showError('Erro ao sair da família');
-    }
+    Alert.alert(
+      'Sair da Família',
+      `Tem certeza que deseja sair da família "${familyName}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await familyService.leaveFamily(familyId);
+              
+              if (response.success) {
+                showSuccess('Você saiu da família!');
+                loadFamilies();
+              } else {
+                showError(response.message || 'Erro ao sair da família');
+              }
+            } catch (error) {
+              console.error('Leave family error:', error);
+              showError('Erro ao sair da família');
+            }
+          },
+        },
+      ]
+    );
   };
+
 
   const styles = StyleSheet.create({
     container: {
@@ -165,19 +209,6 @@ export default function FamilyScreen({ navigation }: any) {
     },
     familyCard: {
       marginBottom: 12,
-      borderWidth: 1,
-      borderColor: isDark ? '#374151' : '#e5e7eb',
-      borderRadius: 12,
-      padding: 16,
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3.84,
-      elevation: 5,
     },
     familyHeader: {
       flexDirection: 'row',
@@ -198,37 +229,27 @@ export default function FamilyScreen({ navigation }: any) {
       fontSize: 14,
       color: isDark ? '#9ca3af' : '#6b7280',
     },
-    leaveButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#7f1d1d' : '#fee2e2',
-    },
-    inviteCodeContainer: {
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      borderRadius: 12,
-      padding: 12,
-      marginBottom: 12,
-    },
-    inviteCodeHeader: {
+    familyActions: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      gap: 8,
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: isDark ? '#374151' : '#e5e7eb',
+    },
+    actionButton: {
+      flex: 1,
+      flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 4,
-    },
-    inviteCodeLabel: {
-      fontSize: 12,
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
-    copyButton: {
-      padding: 4,
+      justifyContent: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 12,
       borderRadius: 8,
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      gap: 6,
     },
-    inviteCode: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: '#16a34a',
-      fontFamily: 'monospace',
+    actionButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
     },
     actions: {
       marginTop: 0,
@@ -273,10 +294,13 @@ export default function FamilyScreen({ navigation }: any) {
     },
   });
 
-  if (isLoading && !isRefreshing) {
+  if (isLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#16a34a" />
+        <Text style={[styles.loadingText, { color: isDark ? '#9ca3af' : '#6b7280', marginTop: 16 }]}>
+          Carregando família...
+        </Text>
       </View>
     );
   }
@@ -308,62 +332,74 @@ export default function FamilyScreen({ navigation }: any) {
               </Text>
             </View>
           ) : (
-            families.map((family) => (
-              <TouchableOpacity 
-                key={family.id} 
-                style={styles.familyCard}
-                onPress={() => handleViewMap(family)}
-              >
-                <View style={styles.familyHeader}>
-                  <View style={styles.familyInfo}>
-                    <Text style={styles.familyName}>{family.name}</Text>
-                    <Text style={styles.familyMembers}>
-                      {family.members.length} {family.members.length === 1 ? 'membro' : 'membros'}
-                    </Text>
-                  </View>
+            <>
+              {families.map((family) => (
+                <Card key={family.id} style={styles.familyCard}>
                   <TouchableOpacity 
-                    style={styles.leaveButton}
-                    onPress={() => handleLeaveFamily(family.id, family.name)}
+                    onPress={() => handleViewMap(family)}
                   >
-                    <Ionicons name="exit-outline" size={20} color="#dc2626" />
+                    <View style={styles.familyHeader}>
+                      <View style={styles.familyInfo}>
+                        <Text style={styles.familyName}>{family.name}</Text>
+                        <Text style={styles.familyMembers}>
+                          {family.members.length} {family.members.length === 1 ? 'membro' : 'membros'}
+                        </Text>
+                      </View>
+                    </View>
                   </TouchableOpacity>
-                </View>
-
-                <View style={styles.inviteCodeContainer}>
-                  <View style={styles.inviteCodeHeader}>
-                    <Text style={styles.inviteCodeLabel}>Código de Convite</Text>
+                  
+                  <View style={styles.familyActions}>
                     <TouchableOpacity
-                      style={styles.copyButton}
+                      style={[styles.actionButton, { backgroundColor: isDark ? '#1f2937' : '#f0fdf4' }]}
                       onPress={() => handleCopyInviteCode(family.inviteCode)}
                     >
-                      <Ionicons name="copy-outline" size={16} color="#16a34a" />
+                      <Ionicons name="copy-outline" size={18} color="#16a34a" />
+                      <Text style={[styles.actionButtonText, { color: '#16a34a' }]}>Copiar Código</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={[styles.actionButton, { backgroundColor: isDark ? '#1f2937' : '#fef2f2' }]}
+                      onPress={() => handleLeaveFamily(family.id, family.name)}
+                    >
+                      <Ionicons name="exit-outline" size={18} color="#dc2626" />
+                      <Text style={[styles.actionButtonText, { color: '#dc2626' }]}>Sair</Text>
                     </TouchableOpacity>
                   </View>
-                  <Text style={styles.inviteCode}>{family.inviteCode}</Text>
-                </View>
-
-              </TouchableOpacity>
-            ))
+                </Card>
+              ))}
+            </>
           )}
         </ScrollView>
       </View>
 
+      {families.length === 0 && (
+        <View style={styles.fab}>
+          <TouchableOpacity
+            style={[styles.fabButton, styles.fabSecondary]}
+            onPress={() => setShowJoinModal(true)}
+          >
+            <Ionicons name="enter-outline" size={24} color="#16a34a" />
+          </TouchableOpacity>
 
-      <View style={styles.fab}>
-        <TouchableOpacity
-          style={[styles.fabButton, styles.fabSecondary]}
-          onPress={() => setShowJoinModal(true)}
-        >
-          <Ionicons name="enter-outline" size={24} color="#16a34a" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.fabButton, styles.fabPrimary]}
+            onPress={() => setShowCreateModal(true)}
+          >
+            <Ionicons name="add" size={24} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
+      )}
 
-        <TouchableOpacity
-          style={[styles.fabButton, styles.fabPrimary]}
-          onPress={() => setShowCreateModal(true)}
-        >
-          <Ionicons name="add" size={24} color="#ffffff" />
-        </TouchableOpacity>
-      </View>
+      {families.length >= 1 && (
+        <View style={styles.fab}>
+          <TouchableOpacity
+            style={[styles.fabButton, styles.fabSecondary]}
+            onPress={() => setShowJoinModal(true)}
+          >
+            <Ionicons name="enter-outline" size={24} color="#16a34a" />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Modal Criar Família */}
       <Modal

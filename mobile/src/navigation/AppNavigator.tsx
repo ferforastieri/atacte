@@ -10,6 +10,7 @@ import { SkeletonLoader } from '../components/shared/Skeleton';
 
 
 import LoginScreen from '../screens/LoginScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import SecureNotesScreen from '../screens/SecureNotesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -31,6 +32,7 @@ export type RootStackParamList = {
 
 export type AuthStackParamList = {
   Login: undefined;
+  ForgotPassword: undefined;
 };
 
 export type MainTabParamList = {
@@ -50,6 +52,7 @@ function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </AuthStack.Navigator>
   );
 }

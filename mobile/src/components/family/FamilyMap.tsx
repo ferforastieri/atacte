@@ -84,12 +84,12 @@ export default function FamilyMap({
     const script = `
       window.updateMapData(
         ${JSON.stringify(locations)},
-        ${currentLocation ? JSON.stringify(currentLocation) : 'null'},
+        null,
         ${JSON.stringify(zones)}
       );
     `;
     return script;
-  }, [locations, currentLocation, zones]);
+  }, [locations, zones]);
 
  
   useEffect(() => {
@@ -248,7 +248,7 @@ export default function FamilyMap({
           }
         }
         
-        function updateMarkers(locations, currentLocation) {
+        function updateMarkers(locations) {
          
           markers.forEach(marker => map.removeLayer(marker));
           markers = [];
@@ -278,22 +278,7 @@ export default function FamilyMap({
           });
           
          
-          if (currentLocation) {
-            const userMarker = L.marker([currentLocation.latitude, currentLocation.longitude], {
-              icon: L.divIcon({
-                className: 'custom-marker user-location',
-                html: '<div class="custom-marker user-location">EU</div>',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
-              })
-            }).bindPopup('<div style="padding: 8px;"><h3 style="margin: 0; font-weight: 600; color: #1f2937;">Sua localização</h3></div>');
-            
-            markers.push(userMarker);
-            userMarker.addTo(map);
-          }
-          
-         
-          if (locations.length > 0 || currentLocation) {
+          if (locations.length > 0) {
             const group = new L.featureGroup(markers);
             map.fitBounds(group.getBounds().pad(0.1));
           }
@@ -407,7 +392,7 @@ export default function FamilyMap({
         window.cancelZoneCreation = cancelZoneCreation;
         window.focusOnMember = focusOnMember;
         window.updateMapData = function(locations, currentLocation, zones) {
-          updateMarkers(locations, currentLocation);
+          updateMarkers(locations);
           updateZones(zones);
         };
         

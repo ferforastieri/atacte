@@ -7,7 +7,7 @@
     />
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
       <!-- Action Button -->
       <div class="mb-6 flex justify-end">
         <BaseButton

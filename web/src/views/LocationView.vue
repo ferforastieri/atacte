@@ -7,7 +7,7 @@
     />
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
       <!-- Action Button -->
       <div class="mb-6 flex justify-end">
         <BaseButton
@@ -55,19 +55,47 @@
                 <div
                   v-for="member in familyMembers"
                   :key="member.id"
-                  class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  class="flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors"
+                  :class="
+                    member.id === authStore.userId
+                      ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-400'
+                      : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  "
+                  @click="goToMemberLocation(member)"
                 >
                   <div class="flex-shrink-0">
-                    <div class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                      <span class="text-sm font-medium text-green-800 dark:text-green-200">
+                    <div
+                      class="w-10 h-10 rounded-full flex items-center justify-center"
+                      :class="
+                        member.id === authStore.userId
+                          ? 'bg-green-500 dark:bg-green-600'
+                          : 'bg-green-100 dark:bg-green-900'
+                      "
+                    >
+                      <span
+                        class="text-sm font-medium"
+                        :class="
+                          member.id === authStore.userId
+                            ? 'text-white'
+                            : 'text-green-800 dark:text-green-200'
+                        "
+                      >
                         {{ member.name?.charAt(0) || '?' }}
                       </span>
                     </div>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {{ member.name || 'Membro' }}
-                    </p>
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        {{ member.name || 'Membro' }}
+                      </p>
+                      <span
+                        v-if="member.id === authStore.userId"
+                        class="text-xs font-medium text-green-600 dark:text-green-400"
+                      >
+                        (Você)
+                      </span>
+                    </div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
                       {{ member.lastSeen ? formatTime(member.lastSeen) : 'Nunca visto' }}
                     </p>
@@ -258,8 +286,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '@/stores/auth'
 import { locationApi, type FamilyMember, type GeofenceZone, type CreateZoneData } from '@/api/location'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -303,13 +332,31 @@ const newZone = ref<NewZone>({
 })
 
 const toast = useToast()
+const authStore = useAuthStore()
+
+// Computed
+const currentUserMember = computed(() => {
+  return familyMembers.value.find(member => member.id === authStore.userId)
+})
 
 // Methods
 const initMap = () => {
   if (map) return
 
+  // Determinar posição inicial do mapa
+  let initialLat = -23.5505
+  let initialLng = -46.6333
+  let initialZoom = 12
+
+  // Se temos localização do usuário atual, usar ela
+  if (currentUserMember.value?.latitude && currentUserMember.value?.longitude) {
+    initialLat = currentUserMember.value.latitude
+    initialLng = currentUserMember.value.longitude
+    initialZoom = 14
+  }
+
   // Inicializar mapa Leaflet
-  map = L.map('map').setView([-23.5505, -46.6333], 12)
+  map = L.map('map').setView([initialLat, initialLng], initialZoom)
 
   // Adicionar tiles do OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -425,20 +472,25 @@ const updateMapMarkers = () => {
   // Adicionar marcadores dos membros da família
   familyMembers.value.forEach(member => {
     if (member.latitude && member.longitude) {
-      // Criar ícone personalizado baseado na bateria
+      // Criar ícone personalizado baseado na bateria e se é o usuário atual
+      const isCurrentUser = member.id === authStore.userId
       const iconColor = member.batteryLevel && member.batteryLevel < 0.2 ? '#dc2626' : '#16a34a'
+      const borderColor = isCurrentUser ? '#22c55e' : 'white'
+      const borderWidth = isCurrentUser ? 3 : 2
+      const iconSize = isCurrentUser ? 26 : 20
+      
       const icon = L.divIcon({
         className: 'custom-marker',
         html: `<div style="
           background-color: ${iconColor};
-          width: 20px;
-          height: 20px;
+          width: ${iconSize}px;
+          height: ${iconSize}px;
           border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          border: ${borderWidth}px solid ${borderColor};
+          box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         "></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+        iconSize: [iconSize, iconSize],
+        iconAnchor: [iconSize / 2, iconSize / 2]
       })
 
       const marker = L.marker([member.latitude, member.longitude], { icon })
@@ -449,7 +501,7 @@ const updateMapMarkers = () => {
             ${member.batteryLevel !== null ? `<p style="margin: 0; font-size: 14px; color: #6b7280;">Bateria: ${Math.round(member.batteryLevel * 100)}%</p>` : ''}
           </div>
         `)
-        .addTo(map)
+        .addTo(map!)
 
       markers.push(marker)
     }
@@ -481,7 +533,7 @@ const updateMapZones = () => {
             <p style="margin: 0; font-size: 14px; color: #6b7280;">Status: ${zone.isActive ? 'Ativa' : 'Inativa'}</p>
           </div>
         `)
-        .addTo(map)
+        .addTo(map!)
 
       zoneCircles.push(circle)
     })
@@ -493,11 +545,43 @@ const refreshLocations = async () => {
   try {
     familyMembers.value = await locationApi.getFamilyLocations()
     updateMapMarkers()
+    
+    // Se o mapa ainda não foi inicializado e temos localização do usuário atual, inicializar centrado nele
+    if (!map && currentUserMember.value?.latitude && currentUserMember.value?.longitude) {
+      setTimeout(() => {
+        initMap()
+      }, 100)
+    } else if (map && currentUserMember.value?.latitude && currentUserMember.value?.longitude) {
+      // Se o mapa já foi inicializado mas agora temos a localização do usuário, centralizar nele
+      map.setView([currentUserMember.value.latitude, currentUserMember.value.longitude], 14)
+    }
   } catch (error) {
     // Toast já é mostrado pelo interceptor do axios
     console.error('Erro ao carregar localizações:', error)
   } finally {
     isLoading.value = false
+  }
+}
+
+// Navegar para localização de um membro
+const goToMemberLocation = (member: FamilyMember) => {
+  if (!map) return
+  
+  if (member.latitude && member.longitude) {
+    // Navegar para a localização do membro
+    map.setView([member.latitude, member.longitude], 14)
+    
+    // Abrir popup do marcador se existir
+    const marker = markers.find(m => {
+      const latlng = m.getLatLng()
+      return latlng.lat === member.latitude && latlng.lng === member.longitude
+    })
+    
+    if (marker) {
+      marker.openPopup()
+    }
+  } else {
+    toast.info(`${member.name} não possui localização disponível`)
   }
 }
 
@@ -579,12 +663,16 @@ const formatTime = (dateString: string) => {
 ;(window as any).cancelZoneCreation = cancelZoneCreation
 
 // Lifecycle
-onMounted(() => {
-  refreshLocations()
-  loadZones()
-  // Aguardar um pouco para o DOM estar pronto
+onMounted(async () => {
+  // Carregar localizações primeiro para ter os dados do usuário atual
+  await refreshLocations()
+  await loadZones()
+  
+  // Aguardar um pouco para o DOM estar pronto e então inicializar o mapa
   setTimeout(() => {
-    initMap()
+    if (!map) {
+      initMap()
+    }
   }, 100)
 })
 
