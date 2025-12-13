@@ -2,17 +2,32 @@ const { withAndroidManifest, withDangerousMod } = require('@expo/config-plugins'
 const fs = require('fs');
 const path = require('path');
 
-/**
- * Plugin Expo para implementar localização persistente com notificação permanente
- * Similar ao Life360 - garante que o serviço nunca seja morto pelo sistema
- * 
- * Este plugin modifica os arquivos Kotlin durante o build, não diretamente
- */
 const withPersistentLocation = (config) => {
-  // 1. Modificar AndroidManifest.xml
   config = withAndroidManifest(config, (config) => {
     const androidManifest = config.modResults;
     const { manifest } = androidManifest;
+
+    if (!manifest['uses-permission']) {
+      manifest['uses-permission'] = [];
+    }
+
+    const permissions = manifest['uses-permission'];
+    
+    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.RECEIVE_BOOT_COMPLETED')) {
+      permissions.push({
+        $: {
+          'android:name': 'android.permission.RECEIVE_BOOT_COMPLETED',
+        },
+      });
+    }
+
+    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS')) {
+      permissions.push({
+        $: {
+          'android:name': 'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+        },
+      });
+    }
 
     if (!manifest.application) {
       manifest.application = [{}];
@@ -24,7 +39,6 @@ const withPersistentLocation = (config) => {
       application.service = [];
     }
 
-    // Verificar se o serviço já existe
     const existingService = application.service.find(
       (service) => service.$?.['android:name'] === '.ForegroundTrackingService'
     );
@@ -40,15 +54,38 @@ const withPersistentLocation = (config) => {
         },
       });
     } else {
-      // Atualizar serviço existente
       existingService.$['android:stopWithTask'] = 'false';
       existingService.$['android:enabled'] = 'true';
+    }
+
+    if (!application.receiver) {
+      application.receiver = [];
+    }
+
+    const existingReceiver = application.receiver.find(
+      (receiver) => receiver.$?.['android:name'] === '.BootReceiver'
+    );
+
+    if (!existingReceiver) {
+      application.receiver.push({
+        $: {
+          'android:name': '.BootReceiver',
+          'android:enabled': 'true',
+          'android:exported': 'true',
+        },
+        'intent-filter': [{
+          action: [{
+            $: {
+              'android:name': 'android.intent.action.BOOT_COMPLETED',
+            },
+          }],
+        }],
+      });
     }
 
     return config;
   });
 
-  // 2. Criar/Modificar ForegroundTrackingService.kt durante o build
   config = withDangerousMod(config, [
     'android',
     async (config) => {
@@ -64,12 +101,10 @@ const withPersistentLocation = (config) => {
       
       const servicePath = path.join(serviceDir, 'ForegroundTrackingService.kt');
 
-      // Criar diretório se não existir
       if (!fs.existsSync(serviceDir)) {
         fs.mkdirSync(serviceDir, { recursive: true });
       }
 
-      // Criar ou substituir o arquivo completamente
         const improvedService = `package atacte.seguranca
 
 import android.app.Notification
@@ -79,16 +114,15 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 
-/**
- * Serviço de localização persistente com notificação permanente
- * Similar ao Life360 - garante que o serviço nunca seja morto pelo sistema
- */
 class ForegroundTrackingService : Service() {
 
   companion object {
@@ -133,6 +167,7 @@ class ForegroundTrackingService : Service() {
     super.onCreate()
     createNotificationChannel()
     acquireWakeLock()
+    requestIgnoreBatteryOptimizations()
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -143,15 +178,16 @@ class ForegroundTrackingService : Service() {
         val notification = buildNotification(title, body)
         startForeground(NOTIFICATION_ID, notification)
         isRunning = true
+        saveTrackingState(this, true, title, body)
       }
       ACTION_STOP -> {
         releaseWakeLock()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
         isRunning = false
+        clearTrackingState(this)
       }
       ACTION_RESTART -> {
-        // Reiniciar o serviço se foi morto
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "Atacte"
         val body = intent.getStringExtra(EXTRA_BODY) ?: "Rastreamento de localização ativo"
         val notification = buildNotification(title, body)
@@ -159,7 +195,6 @@ class ForegroundTrackingService : Service() {
         isRunning = true
       }
       else -> {
-        // Se o serviço foi reiniciado pelo sistema, manter rodando
         if (!isRunning) {
           val notification = buildNotification(
             "Atacte",
@@ -171,9 +206,6 @@ class ForegroundTrackingService : Service() {
       }
     }
 
-    // START_STICKY garante que o serviço seja reiniciado se morto pelo sistema
-    // START_REDELIVER_INTENT garante que intents sejam redeliverados
-    // Isso garante que mesmo se o Android matar o serviço, ele será reiniciado automaticamente
     return START_STICKY or START_REDELIVER_INTENT
   }
 
@@ -182,14 +214,12 @@ class ForegroundTrackingService : Service() {
     releaseWakeLock()
     isRunning = false
     
-    // Tentar reiniciar o serviço se foi morto inesperadamente
     try {
       val restartIntent = Intent(this, ForegroundTrackingService::class.java).apply {
         action = ACTION_RESTART
       }
       ContextCompat.startForegroundService(this, restartIntent)
     } catch (e: Exception) {
-      // Ignorar erros ao tentar reiniciar
     }
   }
 
@@ -199,13 +229,30 @@ class ForegroundTrackingService : Service() {
     try {
       val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
       wakeLock = powerManager.newWakeLock(
-        PowerManager.PARTIAL_WAKE_LOCK,
+        PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
         "Atacte::LocationWakeLock"
       ).apply {
-        acquire(10 * 60 * 60 * 1000L) // 10 horas
+        acquire(10 * 60 * 60 * 1000L)
       }
     } catch (e: Exception) {
-      // Ignorar se não conseguir adquirir wake lock
+    }
+  }
+
+  private fun requestIgnoreBatteryOptimizations() {
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val packageName = packageName
+        
+        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+          val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+            data = Uri.parse("package:$packageName")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+          }
+          startActivity(intent)
+        }
+      }
+    } catch (e: Exception) {
     }
   }
 
@@ -218,7 +265,6 @@ class ForegroundTrackingService : Service() {
       }
       wakeLock = null
     } catch (e: Exception) {
-      // Ignorar erros
     }
   }
 
@@ -226,7 +272,6 @@ class ForegroundTrackingService : Service() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
       
-      // Verificar se o canal já existe
       val existingChannel = manager.getNotificationChannel(CHANNEL_ID)
       if (existingChannel != null) {
         return
@@ -235,7 +280,7 @@ class ForegroundTrackingService : Service() {
       val channel = NotificationChannel(
         CHANNEL_ID,
         "Rastreamento de Localização",
-        NotificationManager.IMPORTANCE_LOW
+        NotificationManager.IMPORTANCE_HIGH
       ).apply {
         description = "Notificação permanente para rastreamento de localização do Atacte"
         setShowBadge(false)
@@ -243,8 +288,7 @@ class ForegroundTrackingService : Service() {
         enableVibration(false)
         enableLights(false)
         setSound(null, null)
-        setBypassDnd(false) // Não ignorar modo não perturbe
-        // IMPORTANCE_LOW garante que a notificação não seja removida automaticamente
+        setBypassDnd(false)
       }
 
       manager.createNotificationChannel(channel)
@@ -267,29 +311,58 @@ class ForegroundTrackingService : Service() {
       .setContentTitle(title)
       .setContentText(body)
       .setSmallIcon(R.drawable.notification_icon)
-      .setOngoing(true) // NOTIFICAÇÃO PERSISTENTE - não pode ser removida pelo usuário
+      .setOngoing(true)
       .setOnlyAlertOnce(true)
       .setContentIntent(pendingIntent)
       .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-      .setPriority(NotificationCompat.PRIORITY_LOW)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
       .setCategory(NotificationCompat.CATEGORY_SERVICE)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
       .setShowWhen(false)
-      .setAutoCancel(false) // Não remove automaticamente
-      .setDeleteIntent(null) // Não permite remoção
+      .setAutoCancel(false)
+      .setSilent(true)
+      .setDeleteIntent(null)
       .build()
+  }
+
+  private fun saveTrackingState(context: Context, active: Boolean, title: String, body: String) {
+    try {
+      val prefs: SharedPreferences = context.getSharedPreferences(
+        "atacte_tracking_prefs",
+        Context.MODE_PRIVATE
+      )
+      prefs.edit().apply {
+        putBoolean("tracking_active", active)
+        putString("notification_title", title)
+        putString("notification_body", body)
+        apply()
+      }
+    } catch (e: Exception) {
+    }
+  }
+
+  private fun clearTrackingState(context: Context) {
+    try {
+      val prefs: SharedPreferences = context.getSharedPreferences(
+        "atacte_tracking_prefs",
+        Context.MODE_PRIVATE
+      )
+      prefs.edit().apply {
+        putBoolean("tracking_active", false)
+        apply()
+      }
+    } catch (e: Exception) {
+    }
   }
 }
 `;
 
-      // Sempre escrever o arquivo (criar ou substituir)
       fs.writeFileSync(servicePath, improvedService, 'utf8');
 
       return config;
     },
   ]);
 
-  // 3. Criar ForegroundTrackingModule.kt
   config = withDangerousMod(config, [
     'android',
     async (config) => {
@@ -305,7 +378,6 @@ class ForegroundTrackingService : Service() {
       
       const modulePath = path.join(moduleDir, 'ForegroundTrackingModule.kt');
 
-      // Criar diretório se não existir
       if (!fs.existsSync(moduleDir)) {
         fs.mkdirSync(moduleDir, { recursive: true });
       }
@@ -371,7 +443,6 @@ class ForegroundTrackingModule(reactContext: ReactApplicationContext) :
     },
   ]);
 
-  // 4. Criar ForegroundTrackingPackage.kt
   config = withDangerousMod(config, [
     'android',
     async (config) => {
@@ -387,7 +458,6 @@ class ForegroundTrackingModule(reactContext: ReactApplicationContext) :
       
       const packagePath = path.join(packageDir, 'ForegroundTrackingPackage.kt');
 
-      // Criar diretório se não existir
       if (!fs.existsSync(packageDir)) {
         fs.mkdirSync(packageDir, { recursive: true });
       }
@@ -414,7 +484,64 @@ class ForegroundTrackingPackage : ReactPackage {
     },
   ]);
 
-  // 5. Modificar MainApplication.kt para registrar o package
+  config = withDangerousMod(config, [
+    'android',
+    async (config) => {
+      const receiverDir = path.join(
+        config.modRequest.platformProjectRoot,
+        'app',
+        'src',
+        'main',
+        'java',
+        'atacte',
+        'seguranca'
+      );
+      
+      const receiverPath = path.join(receiverDir, 'BootReceiver.kt');
+
+      if (!fs.existsSync(receiverDir)) {
+        fs.mkdirSync(receiverDir, { recursive: true });
+      }
+
+      const receiverContent = `package atacte.seguranca
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import androidx.core.content.ContextCompat
+
+class BootReceiver : BroadcastReceiver() {
+  override fun onReceive(context: Context, intent: Intent) {
+    if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+      val prefs: SharedPreferences = context.getSharedPreferences(
+        "atacte_tracking_prefs",
+        Context.MODE_PRIVATE
+      )
+      
+      val wasTrackingActive = prefs.getBoolean("tracking_active", false)
+      
+      if (wasTrackingActive) {
+        try {
+          val title = prefs.getString("notification_title", "Atacte") ?: "Atacte"
+          val body = prefs.getString("notification_body", "Rastreamento de localização ativo") 
+            ?: "Rastreamento de localização ativo"
+          
+          ForegroundTrackingService.start(context, title, body)
+        } catch (e: Exception) {
+        }
+      }
+    }
+  }
+}
+`;
+
+      fs.writeFileSync(receiverPath, receiverContent, 'utf8');
+
+      return config;
+    },
+  ]);
+
   config = withDangerousMod(config, [
     'android',
     async (config) => {
@@ -432,7 +559,6 @@ class ForegroundTrackingPackage : ReactPackage {
       if (fs.existsSync(mainAppPath)) {
         let mainAppContent = fs.readFileSync(mainAppPath, 'utf8');
         
-        // Adicionar import se não existir
         if (!mainAppContent.includes('import atacte.seguranca.ForegroundTrackingPackage')) {
           const importIndex = mainAppContent.indexOf('import expo.modules.ApplicationLifecycleDispatcher');
           if (importIndex !== -1) {
@@ -442,7 +568,6 @@ class ForegroundTrackingPackage : ReactPackage {
           }
         }
 
-        // Adicionar package se não existir
         if (!mainAppContent.includes('ForegroundTrackingPackage()')) {
           const packagesIndex = mainAppContent.indexOf('PackageList(this).packages.apply');
           if (packagesIndex !== -1) {
@@ -453,7 +578,6 @@ class ForegroundTrackingPackage : ReactPackage {
                 '              add(ForegroundTrackingPackage())\n' +
                 mainAppContent.slice(insertIndex);
             } else {
-              // Se não encontrar o comentário, adicionar após apply {
               const applyIndex = mainAppContent.indexOf('apply {', packagesIndex);
               if (applyIndex !== -1) {
                 const insertIndex = mainAppContent.indexOf('\n', applyIndex) + 1;
