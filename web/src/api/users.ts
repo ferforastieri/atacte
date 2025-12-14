@@ -8,6 +8,19 @@ export interface UserProfile {
   updatedAt: string
   lastLogin?: string
   isActive: boolean
+  role?: 'USER' | 'ADMIN'
+}
+
+export interface AdminUser {
+  id: string
+  email: string
+  name?: string
+  phoneNumber?: string
+  createdAt: string
+  updatedAt: string
+  lastLogin?: string
+  isActive: boolean
+  role: 'USER' | 'ADMIN'
 }
 
 export interface UserStats {
@@ -74,6 +87,7 @@ const usersApi = {
   
   async getAuditLogs(limit = 50, offset = 0, filters?: {
     query?: string;
+    userId?: string;
     action?: string;
     startDate?: string;
     endDate?: string;
@@ -85,6 +99,9 @@ const usersApi = {
     
     if (filters?.query) {
       params.append('query', filters.query)
+    }
+    if (filters?.userId) {
+      params.append('userId', filters.userId)
     }
     if (filters?.action) {
       params.append('action', filters.action)
@@ -109,6 +126,27 @@ const usersApi = {
   
   async deleteAccount(password: string) {
     const response = await api.delete('/users/account', { data: { password } })
+    return response.data
+  },
+
+  async getAllUsers() {
+    const response = await api.get('/users/admin/users')
+    return response.data
+  },
+
+  async updateUser(userId: string, data: {
+    email?: string
+    name?: string
+    phoneNumber?: string
+    isActive?: boolean
+    role?: 'USER' | 'ADMIN'
+  }) {
+    const response = await api.patch(`/users/admin/users/${userId}`, data)
+    return response.data
+  },
+
+  async changeUserPassword(userId: string, newPassword: string) {
+    const response = await api.post(`/users/admin/users/${userId}/change-password`, { newPassword })
     return response.data
   }
 }

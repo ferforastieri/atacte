@@ -19,8 +19,8 @@
       </BaseCard>
 
       <!-- Date Filter -->
-      <BaseCard class="mb-6">
-        <div class="flex flex-col sm:flex-row gap-4">
+      <BaseCard class="mb-6" style="overflow: visible; position: relative; z-index: 10;">
+        <div class="flex flex-col sm:flex-row gap-4" style="position: relative; overflow: visible;">
           <div class="flex-1">
             <DatePicker
               v-model="startDate"
@@ -48,12 +48,12 @@
       </BaseCard>
 
       <!-- Map Container -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6" style="position: relative; z-index: 1;">
         <div class="p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Mapa</h2>
         </div>
         <div class="relative">
-          <div id="history-map" class="h-96 bg-gray-100 dark:bg-gray-700 rounded-b-lg" style="z-index: 1;"></div>
+          <div id="history-map" class="h-96 bg-gray-100 dark:bg-gray-700 rounded-b-lg"></div>
         </div>
       </div>
 

@@ -13,6 +13,9 @@ export interface UserDto {
   updatedAt: Date;
   lastLogin: Date | null;
   isActive: boolean;
+  role: 'USER' | 'ADMIN';
+  name?: string;
+  phoneNumber?: string;
 }
 
 export interface LoginRequest {
@@ -321,6 +324,9 @@ export class AuthService {
       updatedAt: user.updatedAt,
       lastLogin: user.lastLogin,
       isActive: user.isActive,
+      role: user.role || 'USER',
+      name: user.name || undefined,
+      phoneNumber: user.phoneNumber || undefined,
     };
   }
 }

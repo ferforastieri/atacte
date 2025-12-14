@@ -6,7 +6,7 @@
       :show-navigation="true"
     />
 
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
       <div class="space-y-4 sm:space-y-6">
         <!-- Security Settings -->
         <BaseCard class="dark:bg-gray-800 dark:border-gray-700">
@@ -29,8 +29,8 @@
         </BaseCard>
 
         <!-- Preferences -->
-        <BaseCard class="dark:bg-gray-800 dark:border-gray-700">
-          <div class="space-y-4">
+        <BaseCard class="dark:bg-gray-800 dark:border-gray-700" overflow-visible>
+          <div class="space-y-4" style="position: relative; overflow: visible;">
             <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Preferências</h2>
             
             <div class="space-y-4">
@@ -91,6 +91,7 @@
             placeholder="Digite sua senha atual"
             required
             :error="changePasswordErrors.currentPassword"
+            :left-icon="LockClosedIcon"
             show-password-toggle
           />
 
@@ -101,6 +102,7 @@
             placeholder="Digite a nova senha"
             required
             :error="changePasswordErrors.newPassword"
+            :left-icon="LockClosedIcon"
             show-password-toggle
           />
 
@@ -111,6 +113,7 @@
             placeholder="Confirme a nova senha"
             required
             :error="changePasswordErrors.confirmPassword"
+            :left-icon="LockClosedIcon"
             show-password-toggle
           />
 
@@ -142,6 +145,7 @@
             placeholder="Digite sua senha para confirmar"
             required
             :error="deleteAccountErrors.password"
+            :left-icon="LockClosedIcon"
             show-password-toggle
           />
 
@@ -168,6 +172,7 @@ import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
 import authApi from '@/api/auth'
 import usersApi from '@/api/users'
+import { LockClosedIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const toast = useToast()

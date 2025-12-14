@@ -17,6 +17,7 @@
           placeholder="Digite o título da nota"
           required
           :error="errors.title"
+          :left-icon="DocumentTextIcon"
         />
       </div>
 
@@ -48,6 +49,7 @@
           type="text"
           placeholder="Ex: Trabalho, Pessoal, Projetos"
           :error="errors.folder"
+          :left-icon="FolderIcon"
         />
         <div v-if="folders.length > 0" class="mt-2 flex flex-wrap gap-2">
           <button
@@ -107,6 +109,7 @@ import { ref, watch, computed } from 'vue'
 import { BaseModal, BaseInput, BaseButton } from '@/components/ui'
 import { useSecureNotesStore } from '@/stores/secureNotes'
 import { useToast } from '@/hooks/useToast'
+import { DocumentTextIcon, FolderIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
   show: boolean

@@ -96,8 +96,8 @@
       </div>
 
       <!-- Search and Filters -->
-      <BaseCard class="mb-6">
-        <div class="flex flex-col gap-4">
+      <BaseCard class="mb-6" overflow-visible>
+        <div class="flex flex-col gap-4" style="position: relative; overflow: visible;">
           <div class="flex-1">
             <SearchInput
               v-model="searchQuery"

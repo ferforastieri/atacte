@@ -17,6 +17,7 @@
           placeholder="Ex: Gmail, Facebook, Netflix"
           required
           :error="errors.name"
+          :left-icon="TagIcon"
         />
       </div>
 
@@ -31,6 +32,7 @@
           type="url"
           placeholder="https://exemplo.com"
           :error="errors.website"
+          :left-icon="GlobeAltIcon"
         />
       </div>
 
@@ -45,6 +47,7 @@
           type="text"
           placeholder="usuario@exemplo.com"
           :error="errors.username"
+          :left-icon="UserIcon"
         />
       </div>
 
@@ -69,6 +72,7 @@
           placeholder="Digite ou gere uma senha"
           required
           :error="errors.password"
+          :left-icon="LockClosedIcon"
         >
           <template #right-icon>
             <button
@@ -97,6 +101,7 @@
           type="text"
           placeholder="Ex: Trabalho, Pessoal, Bancos"
           :error="errors.folder"
+          :left-icon="FolderIcon"
         />
       </div>
 
@@ -142,6 +147,7 @@
               type="text"
               placeholder="Digite a chave secreta do app autenticador"
               :error="errors.totpSecret"
+              :left-icon="KeyIcon"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
@@ -189,7 +195,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useToast } from '@/hooks/useToast'
-import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
+import { EyeIcon, EyeSlashIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon, KeyIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength } from '@/components/ui'
 import { usePasswordsStore } from '@/stores/passwords'
 

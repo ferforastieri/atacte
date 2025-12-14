@@ -7,6 +7,10 @@ export interface User {
   createdAt: string
   updatedAt: string
   lastLogin?: string
+  role: 'USER' | 'ADMIN'
+  isActive?: boolean
+  name?: string
+  phoneNumber?: string
 }
 
 export interface LoginRequest {

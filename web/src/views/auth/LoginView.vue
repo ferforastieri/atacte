@@ -23,7 +23,7 @@
             placeholder="seu@email.com"
             required
             :error="errors.email"
-            left-icon="EnvelopeIcon"
+            :left-icon="EnvelopeIcon"
           />
 
           <BaseInput
@@ -33,7 +33,7 @@
             placeholder="Digite sua senha master"
             required
             :error="errors.masterPassword"
-            left-icon="LockClosedIcon"
+            :left-icon="LockClosedIcon"
             show-password-toggle
           />
 

@@ -21,16 +21,19 @@ interface Props {
   variant?: 'default' | 'elevated' | 'outlined'
   padding?: 'none' | 'sm' | 'md' | 'lg'
   hover?: boolean
+  overflowVisible?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'default',
   padding: 'md',
-  hover: false
+  hover: false,
+  overflowVisible: false
 })
 
 const cardClasses = computed(() => {
-  const baseClasses = 'bg-white dark:bg-gray-800 rounded-lg overflow-hidden transition-colors duration-200'
+  const overflowClass = props.overflowVisible ? 'overflow-visible' : 'overflow-hidden'
+  const baseClasses = `bg-white dark:bg-gray-800 rounded-lg ${overflowClass} transition-colors duration-200`
   
   const variantClasses = {
     default: 'shadow-sm border border-gray-200 dark:border-gray-700',

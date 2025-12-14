@@ -203,6 +203,7 @@
               label="Nome da Zona"
               placeholder="Ex: Casa, Trabalho, Escola"
               required
+              :left-icon="MapPinIcon"
             />
             
             <BaseTextarea
@@ -213,22 +214,34 @@
             />
             
             <div class="grid grid-cols-2 gap-4">
-              <BaseInput
-                v-model="latitudeInput"
-                type="number"
-                label="Latitude"
-                placeholder="-23.5505"
-                step="any"
-                required
-              />
-              <BaseInput
-                v-model="longitudeInput"
-                type="number"
-                label="Longitude"
-                placeholder="-46.6333"
-                step="any"
-                required
-              />
+              <div>
+                <label for="latitude" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Latitude *
+                </label>
+                <input
+                  id="latitude"
+                  v-model="latitudeInput"
+                  type="number"
+                  placeholder="-23.5505"
+                  step="any"
+                  required
+                  class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-800 py-1.5 px-3"
+                />
+              </div>
+              <div>
+                <label for="longitude" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Longitude *
+                </label>
+                <input
+                  id="longitude"
+                  v-model="longitudeInput"
+                  type="number"
+                  placeholder="-46.6333"
+                  step="any"
+                  required
+                  class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-800 py-1.5 px-3"
+                />
+              </div>
             </div>
             
             <BaseSelect
@@ -297,7 +310,7 @@ import { locationApi, type FamilyMember, type GeofenceZone, type CreateZoneData 
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { AppHeader, BaseButton, BaseCard, BaseInput, BaseSelect, BaseTextarea } from '@/components/ui'
-import { ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { ArrowPathIcon, MapPinIcon } from '@heroicons/vue/24/outline'
 
 interface NewZone {
   name: string

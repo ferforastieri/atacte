@@ -13,6 +13,7 @@ export interface UpdateUserData {
   phoneNumber?: string;
   profilePicture?: string;
   pushToken?: string;
+  role?: 'USER' | 'ADMIN';
 }
 
 export class UserRepository {
@@ -51,6 +52,12 @@ export class UserRepository {
   async delete(id: string): Promise<void> {
     await prisma.user.delete({
       where: { id },
+    });
+  }
+
+  async findAll(): Promise<User[]> {
+    return await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -141,13 +148,29 @@ export class UserRepository {
     logs: any[];
     total: number;
   }> {
-    const where: any = { userId };
+    console.log('[AUDIT LOGS] getUserAuditLogs called with:', {
+      userId,
+      limit,
+      offset,
+      filters
+    });
+
+    const where: any = {
+      userId
+    };
+
+    const andConditions: any[] = [];
 
     if (filters?.action) {
+      console.log('[AUDIT LOGS] Adding action filter:', filters.action);
       where.action = filters.action;
     }
 
     if (filters?.startDate || filters?.endDate) {
+      console.log('[AUDIT LOGS] Adding date filters:', {
+        startDate: filters.startDate,
+        endDate: filters.endDate
+      });
       where.createdAt = {};
       if (filters.startDate) {
         where.createdAt.gte = filters.startDate;
@@ -158,13 +181,42 @@ export class UserRepository {
     }
 
     if (filters?.query) {
-      const query = filters.query.toLowerCase();
-      where.OR = [
-        { action: { contains: query } },
-        { ipAddress: { contains: query } },
-        { userAgent: { contains: query } }
+      console.log('[AUDIT LOGS] Adding query filter:', filters.query);
+      const query = filters.query;
+      const queryOrConditions = [
+        { action: { contains: query, mode: 'insensitive' } },
+        { ipAddress: { contains: query, mode: 'insensitive' } },
+        { userAgent: { contains: query, mode: 'insensitive' } }
       ];
+      andConditions.push({ OR: queryOrConditions });
     }
+
+    if (andConditions.length > 0) {
+      console.log('[AUDIT LOGS] Building AND conditions');
+      const baseWhere: any = { userId };
+      if (filters?.action) {
+        baseWhere.action = filters.action;
+      }
+      if (filters?.startDate || filters?.endDate) {
+        baseWhere.createdAt = {};
+        if (filters.startDate) {
+          baseWhere.createdAt.gte = filters.startDate;
+        }
+        if (filters.endDate) {
+          baseWhere.createdAt.lte = filters.endDate;
+        }
+      }
+      
+      where.AND = [
+        baseWhere,
+        ...andConditions
+      ];
+      
+      delete where.action;
+      delete where.createdAt;
+    }
+
+    console.log('[AUDIT LOGS] Final where clause:', JSON.stringify(where, null, 2));
 
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
@@ -177,6 +229,11 @@ export class UserRepository {
         where,
       }),
     ]);
+
+    console.log('[AUDIT LOGS] Results:', {
+      logsCount: logs.length,
+      total
+    });
 
     return { logs, total };
   }

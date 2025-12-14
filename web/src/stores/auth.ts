@@ -15,6 +15,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const userEmail = computed(() => user.value?.email || '')
   const userId = computed(() => user.value?.id || '')
+  const userRole = computed(() => user.value?.role || 'USER')
+  const isAdmin = computed(() => userRole.value === 'ADMIN')
 
   
   const setAuth = (newToken: string, newUser: User) => {
@@ -109,10 +111,10 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authApi.verifyToken()
       if (response.success && response.data) {
         user.value = response.data
+        localStorage.setItem('user', JSON.stringify(response.data))
         return true
       }
     } catch (error) {
-      
       clearAuth()
     }
     
@@ -124,7 +126,7 @@ export const useAuthStore = defineStore('auth', () => {
     loadUserFromStorage()
     
     
-    if (token.value && user.value) {
+    if (token.value) {
       try {
         const isValid = await verifyToken()
         if (!isValid) {
@@ -150,6 +152,8 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     userEmail,
     userId,
+    userRole,
+    isAdmin,
     
     
     setAuth,

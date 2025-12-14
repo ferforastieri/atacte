@@ -22,7 +22,7 @@
             placeholder="seu@email.com"
             required
             :error="errors.email"
-            left-icon="EnvelopeIcon"
+            :left-icon="EnvelopeIcon"
           />
 
           <div class="text-sm text-gray-600 dark:text-gray-400 text-center">
@@ -58,7 +58,7 @@
             placeholder="Token de recuperação"
             required
             :error="errors.token"
-            left-icon="KeyIcon"
+            :left-icon="KeyIcon"
           />
 
           <BaseInput
@@ -68,7 +68,7 @@
             placeholder="Mínimo 8 caracteres"
             required
             :error="errors.newPassword"
-            left-icon="LockClosedIcon"
+            :left-icon="LockClosedIcon"
             show-password-toggle
           />
 
@@ -79,7 +79,7 @@
             placeholder="Digite novamente"
             required
             :error="errors.confirmPassword"
-            left-icon="LockClosedIcon"
+            :left-icon="LockClosedIcon"
             show-password-toggle
           />
 

@@ -13,6 +13,27 @@ export interface UserProfileDto {
   updatedAt: Date;
   lastLogin?: Date;
   isActive: boolean;
+  role?: 'USER' | 'ADMIN';
+}
+
+export interface AdminUserDto {
+  id: string;
+  email: string;
+  name?: string;
+  phoneNumber?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  lastLogin?: Date;
+  isActive: boolean;
+  role: 'USER' | 'ADMIN';
+}
+
+export interface UpdateUserByAdminData {
+  email?: string;
+  name?: string;
+  phoneNumber?: string;
+  isActive?: boolean;
+  role?: 'USER' | 'ADMIN';
 }
 
 export interface UpdateUserProfileData {
@@ -274,6 +295,92 @@ export class UserService {
       'USER', 
       userId, 
       { action: 'reactivated' }, 
+      req
+    );
+  }
+
+  async getAllUsers(): Promise<AdminUserDto[]> {
+    const users = await this.userRepository.findAll();
+    return users.map(user => ({
+      id: user.id,
+      email: user.email,
+      name: user.name || undefined,
+      phoneNumber: user.phoneNumber || undefined,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      lastLogin: user.lastLogin || undefined,
+      isActive: user.isActive,
+      role: (user as any).role || 'USER'
+    }));
+  }
+
+  async updateUserByAdmin(
+    adminUserId: string,
+    userId: string,
+    data: UpdateUserByAdminData,
+    req?: Request
+  ): Promise<AdminUserDto> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    const updateData: any = {};
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.role !== undefined) updateData.role = data.role;
+
+    const updatedUser = await this.userRepository.update(userId, updateData);
+
+    await AuditUtil.log(
+      adminUserId,
+      'PROFILE_UPDATED',
+      'USER',
+      userId,
+      { changes: data },
+      req
+    );
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name || undefined,
+      phoneNumber: updatedUser.phoneNumber || undefined,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+      lastLogin: updatedUser.lastLogin || undefined,
+      isActive: updatedUser.isActive,
+      role: (updatedUser as any).role || 'USER'
+    };
+  }
+
+  async changeUserPasswordByAdmin(
+    adminUserId: string,
+    userId: string,
+    newPassword: string,
+    req?: Request
+  ): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const masterPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    await this.userRepository.update(userId, {
+      masterPasswordHash,
+      masterPasswordSalt: salt
+    });
+
+    await AuditUtil.log(
+      adminUserId,
+      'PROFILE_UPDATED',
+      'USER',
+      userId,
+      { changedBy: adminUserId, action: 'password_changed' },
       req
     );
   }

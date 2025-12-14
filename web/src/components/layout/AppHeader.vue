@@ -31,37 +31,77 @@
           <div v-if="showNavigation" class="hidden md:flex items-center space-x-2">
             <router-link
               to="/dashboard"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
               :class="isActive('/dashboard') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
+              <KeyIcon class="w-4 h-4" />
               Dashboard
+              <div v-if="isActive('/dashboard')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
             </router-link>
             
             <router-link
               to="/location"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
               :class="isActive('/location') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
-              <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <MapPinIcon class="w-4 h-4" />
               Localização
+              <div v-if="isActive('/location')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
             </router-link>
             
             <router-link
               to="/secure-notes"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
               :class="isActive('/secure-notes') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
-              <DocumentTextIcon class="w-4 h-4 inline mr-1" />
+              <DocumentTextIcon class="w-4 h-4" />
               Notas Seguras
+              <div v-if="isActive('/secure-notes')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+            </router-link>
+            
+            <router-link
+              v-if="authStore.isAdmin"
+              to="/audit"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              :class="isActive('/audit') 
+                ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            >
+              <DocumentTextIcon class="w-4 h-4" />
+              Auditoria
+              <div v-if="isActive('/audit')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+            </router-link>
+            
+            <router-link
+              v-if="authStore.isAdmin"
+              to="/sessions"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              :class="isActive('/sessions') 
+                ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            >
+              <ComputerDesktopIcon class="w-4 h-4" />
+              Sessões
+              <div v-if="isActive('/sessions')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+            </router-link>
+            
+            <router-link
+              v-if="authStore.isAdmin"
+              to="/admin/users"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              :class="isActive('/admin/users') 
+                ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            >
+              <UserGroupIcon class="w-4 h-4" />
+              Usuários
+              <div v-if="isActive('/admin/users')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
             </router-link>
           </div>
         </div>
@@ -184,6 +224,48 @@
               </router-link>
 
               <router-link
+                v-if="authStore.isAdmin"
+                to="/audit"
+                @click="mobileMenuOpen = false"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
+                :class="isActive('/audit')
+                  ? 'text-gray-900 dark:text-gray-100 bg-primary-100 dark:bg-primary-900 shadow-sm'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              >
+                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" />
+                <span class="text-sm font-medium">Auditoria</span>
+                <div v-if="isActive('/audit')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              </router-link>
+
+              <router-link
+                v-if="authStore.isAdmin"
+                to="/sessions"
+                @click="mobileMenuOpen = false"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
+                :class="isActive('/sessions')
+                  ? 'text-gray-900 dark:text-gray-100 bg-primary-100 dark:bg-primary-900 shadow-sm'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              >
+                <ComputerDesktopIcon class="h-5 w-5 flex-shrink-0" />
+                <span class="text-sm font-medium">Sessões</span>
+                <div v-if="isActive('/sessions')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              </router-link>
+
+              <router-link
+                v-if="authStore.isAdmin"
+                to="/admin/users"
+                @click="mobileMenuOpen = false"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
+                :class="isActive('/admin/users')
+                  ? 'text-gray-900 dark:text-gray-100 bg-primary-100 dark:bg-primary-900 shadow-sm'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              >
+                <UserGroupIcon class="h-5 w-5 flex-shrink-0" />
+                <span class="text-sm font-medium">Usuários</span>
+                <div v-if="isActive('/admin/users')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              </router-link>
+
+              <router-link
                 to="/profile"
                 @click="mobileMenuOpen = false"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
@@ -208,7 +290,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Logo, ThemeToggle } from '@/components/ui'
-import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, KeyIcon, MapPinIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, KeyIcon, MapPinIcon, ComputerDesktopIcon, UserGroupIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
   showLogo?: boolean

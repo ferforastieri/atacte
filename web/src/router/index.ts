@@ -83,6 +83,7 @@ const router = createRouter({
       component: () => import('@/views/user/AuditLogsView.vue'),
       meta: { 
         requiresAuth: true,
+        requiresAdmin: true,
         title: 'Logs de Auditoria - Atacte'
       }
     },
@@ -92,7 +93,18 @@ const router = createRouter({
       component: () => import('@/views/user/SessionsView.vue'),
       meta: { 
         requiresAuth: true,
+        requiresAdmin: true,
         title: 'Sessões - Atacte'
+      }
+    },
+    {
+      path: '/admin/users',
+      name: 'AdminUsers',
+      component: () => import('@/views/admin/UsersView.vue'),
+      meta: { 
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: 'Gerenciar Usuários - Atacte'
       }
     },
     {
@@ -156,6 +168,11 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
       next('/login')
+      return
+    }
+    
+    if (to.meta.requiresAdmin && !authStore.isAdmin) {
+      next('/dashboard')
       return
     }
     

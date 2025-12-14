@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { authenticateToken } from '../../middleware/auth';
+import { authenticateToken, requireAdmin } from '../../middleware/auth';
 import { asAuthenticatedHandler } from '../../types/express';
 import { UserService } from '../../services/users/userService';
 
@@ -66,10 +66,13 @@ router.get('/folders', asAuthenticatedHandler(async (req, res) => {
 router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
   try {
     const queryParams = req.query;
+    console.log('[AUDIT LOGS CONTROLLER] Request query params:', queryParams);
+    
     const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
     const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
     const query = queryParams['query'] as string | undefined;
     const action = queryParams['action'] as string | undefined;
+    const filterUserId = queryParams['userId'] as string | undefined;
     
     let startDate: Date | undefined;
     let endDate: Date | undefined;
@@ -77,20 +80,39 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
     if (queryParams['startDate']) {
       startDate = new Date(queryParams['startDate'] as string);
       startDate.setHours(0, 0, 0, 0);
+      console.log('[AUDIT LOGS CONTROLLER] Parsed startDate:', startDate);
     }
     
     if (queryParams['endDate']) {
       endDate = new Date(queryParams['endDate'] as string);
       endDate.setHours(23, 59, 59, 999);
+      console.log('[AUDIT LOGS CONTROLLER] Parsed endDate:', endDate);
     }
     
-    const auditLogs = await userService.getUserAuditLogs(req.user.id, { 
+    const targetUserId = filterUserId && req.user.role === 'ADMIN' ? filterUserId : req.user.id;
+    
+    console.log('[AUDIT LOGS CONTROLLER] Calling getUserAuditLogs with:', {
+      userId: targetUserId,
+      limit,
+      offset,
+      query,
+      action,
+      startDate,
+      endDate
+    });
+    
+    const auditLogs = await userService.getUserAuditLogs(targetUserId, { 
       limit, 
       offset,
       query,
       action,
       startDate,
       endDate
+    });
+
+    console.log('[AUDIT LOGS CONTROLLER] Response:', {
+      logsCount: auditLogs.logs.length,
+      total: auditLogs.total
     });
 
     res.json({
@@ -102,7 +124,8 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
         offset
       }
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[AUDIT LOGS CONTROLLER] Error:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -218,6 +241,110 @@ router.patch(
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
+      });
+    }
+  })
+);
+
+router.get('/admin/users', requireAdmin, asAuthenticatedHandler(async (_req, res) => {
+  try {
+    const users = await userService.getAllUsers();
+    res.json({
+      success: true,
+      data: users
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Erro interno do servidor'
+    });
+  }
+}));
+
+router.patch(
+  '/admin/users/:userId',
+  requireAdmin,
+  [
+    body('email').optional().isEmail().withMessage('Email inválido'),
+    body('name').optional().trim().isLength({ max: 255 }).withMessage('Nome deve ter até 255 caracteres'),
+    body('phoneNumber').optional().trim().isMobilePhone('any').withMessage('Número de telefone inválido'),
+    body('isActive').optional().isBoolean().withMessage('isActive deve ser um booleano'),
+    body('role').optional().isIn(['USER', 'ADMIN']).withMessage('Role deve ser USER ou ADMIN'),
+  ],
+  asAuthenticatedHandler(async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Dados inválidos',
+          errors: errors.array()
+        });
+        return;
+      }
+
+      const userId = req.params['userId'];
+      if (!userId) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do usuário é obrigatório'
+        });
+        return;
+      }
+      const updatedUser = await userService.updateUserByAdmin(req.user.id, userId, req.body, req);
+
+      res.json({
+        success: true,
+        message: 'Usuário atualizado com sucesso',
+        data: updatedUser
+      });
+    } catch (error: any) {
+      const statusCode = error.message === 'Usuário não encontrado' ? 404 : 500;
+      res.status(statusCode).json({
+        success: false,
+        message: error.message || 'Erro interno do servidor'
+      });
+    }
+  })
+);
+
+router.post(
+  '/admin/users/:userId/change-password',
+  requireAdmin,
+  [
+    body('newPassword').notEmpty().isLength({ min: 8 }).withMessage('Nova senha deve ter pelo menos 8 caracteres'),
+  ],
+  asAuthenticatedHandler(async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Dados inválidos',
+          errors: errors.array()
+        });
+        return;
+      }
+
+      const userId = req.params['userId'];
+      if (!userId) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do usuário é obrigatório'
+        });
+        return;
+      }
+      await userService.changeUserPasswordByAdmin(req.user.id, userId, req.body.newPassword, req);
+
+      res.json({
+        success: true,
+        message: 'Senha alterada com sucesso'
+      });
+    } catch (error: any) {
+      const statusCode = error.message === 'Usuário não encontrado' ? 404 : 500;
+      res.status(statusCode).json({
+        success: false,
+        message: error.message || 'Erro interno do servidor'
       });
     }
   })

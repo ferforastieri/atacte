@@ -40,6 +40,7 @@
             readonly
             showPasswordToggle
             class="flex-1"
+            :left-icon="LockClosedIcon"
           />
           <button
             @click="copyPassword"
@@ -124,7 +125,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useToast } from '@/hooks/useToast'
-import { HeartIcon, KeyIcon } from '@heroicons/vue/24/outline'
+import { HeartIcon, KeyIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, TotpCode, ConfirmModal } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { usePasswordsStore } from '@/stores/passwords'

@@ -1,17 +1,17 @@
 <template>
-  <div class="space-y-1 relative" style="z-index: 1;">
-      <label 
+  <div class="space-y-1" :style="{ position: 'relative', zIndex: isOpen ? 10002 : 1 }">
+    <label 
       v-if="label" 
-      :for="datePickerId.value"
+      :for="datePickerId"
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       {{ label }}
       <span v-if="required" class="text-red-500 ml-1">*</span>
     </label>
     
-    <div class="relative">
+    <div style="position: relative;">
       <button
-        :id="datePickerId.value"
+        :id="datePickerId"
         type="button"
         :disabled="disabled"
         :class="buttonClasses"
@@ -29,57 +29,104 @@
         <div
           v-if="isOpen"
           ref="dropdownRef"
-          class="absolute z-[9999] mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden"
-          @mousedown.prevent
+          class="absolute mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl overflow-hidden"
+          style="z-index: 10001; position: absolute; top: 100%; left: 0; right: 0;"
         >
-          <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-            <div class="grid grid-cols-3 gap-2">
-              <select
-                v-model="selectedDay"
-                class="px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
-                @change="updateDate"
+          <div class="px-4 pt-4 pb-3">
+            <div class="flex items-center gap-3 mb-3">
+              <button
+                type="button"
+                @click="previousMonth"
+                class="flex-shrink-0 p-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
-                <option v-for="day in daysInMonth" :key="day" :value="day">
-                  {{ day }}
-                </option>
-              </select>
+                <ChevronLeftIcon class="h-4 w-4" />
+              </button>
               
-              <select
-                v-model="selectedMonth"
-                class="px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
-                @change="updateDate"
-              >
-                <option v-for="(month, index) in months" :key="index" :value="index + 1">
-                  {{ month }}
-                </option>
-              </select>
+              <div class="flex items-center gap-2 flex-1 justify-center min-w-0">
+                <div class="relative flex-1 basis-0 min-w-0" @mousedown.stop>
+                  <select
+                    data-datepicker-month
+                    v-model="selectedMonth"
+                    class="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer transition-all hover:border-gray-400 dark:hover:border-gray-500"
+                    style="appearance: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; background-image: none !important; background-color: white !important; padding-right: 0.75rem !important;"
+                    @change="updateCalendar"
+                    @mousedown.stop
+                    @click.stop
+                  >
+                    <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                      {{ month }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="relative flex-1 basis-0 min-w-0" @mousedown.stop>
+                  <select
+                    data-datepicker-year
+                    v-model="selectedYear"
+                    class="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer transition-all hover:border-gray-400 dark:hover:border-gray-500"
+                    style="appearance: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; background-image: none !important; background-color: white !important; padding-right: 0.75rem !important;"
+                    @change="updateCalendar"
+                    @mousedown.stop
+                    @click.stop
+                  >
+                    <option v-for="year in years" :key="year" :value="year">
+                      {{ year }}
+                    </option>
+                  </select>
+                </div>
+              </div>
               
-              <select
-                v-model="selectedYear"
-                class="px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
-                @change="updateDate"
+              <button
+                type="button"
+                @click="nextMonth"
+                class="flex-shrink-0 p-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
-                <option v-for="year in years" :key="year" :value="year">
-                  {{ year }}
-                </option>
-              </select>
+                <ChevronRightIcon class="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div class="grid grid-cols-7 gap-0.5 mb-1.5">
+              <div
+                v-for="day in weekDays"
+                :key="day"
+                class="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 py-2"
+              >
+                {{ day }}
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-7 gap-0.5">
+              <button
+                v-for="(day, index) in calendarDays"
+                :key="index"
+                type="button"
+                :disabled="!day.isCurrentMonth || day.isDisabled"
+                :class="[
+                  'text-center py-2 rounded-lg transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500',
+                  day.isCurrentMonth 
+                    ? day.isToday
+                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-semibold ring-2 ring-primary-500'
+                      : day.isSelected
+                        ? 'bg-primary-600 text-white hover:bg-primary-700'
+                        : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-gray-400 dark:text-gray-500 cursor-not-allowed',
+                  day.isDisabled ? 'opacity-50 cursor-not-allowed' : '',
+                  !day.isCurrentMonth || day.isDisabled ? '' : 'cursor-pointer'
+                ]"
+                @click="selectDate(day)"
+              >
+                {{ day.day }}
+              </button>
             </div>
           </div>
           
-          <div class="p-2 flex justify-end gap-2 border-t border-gray-200 dark:border-gray-700">
+          <div class="px-4 py-2.5 flex justify-end border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
             <button
               type="button"
               @click="clearDate"
-              class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+              class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               Limpar
-            </button>
-            <button
-              type="button"
-              @click="confirmDate"
-              class="px-3 py-1.5 text-sm rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
-            >
-              Confirmar
             </button>
           </div>
         </div>
@@ -98,7 +145,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { CalendarIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
 const dropdownRef = ref<HTMLElement | null>(null)
 
@@ -129,6 +176,8 @@ const emit = defineEmits<{
 const datePickerId = ref(`datepicker-${Math.random().toString(36).substr(2, 9)}`)
 const isOpen = ref(false)
 
+const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
 const months = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -144,7 +193,6 @@ const currentDate = computed(() => {
   return new Date()
 })
 
-const selectedDay = ref(currentDate.value.getDate())
 const selectedMonth = ref(currentDate.value.getMonth() + 1)
 const selectedYear = ref(currentDate.value.getFullYear())
 
@@ -157,10 +205,110 @@ const years = computed(() => {
   return yearList
 })
 
-const daysInMonth = computed(() => {
-  const days = new Date(selectedYear.value, selectedMonth.value, 0).getDate()
-  return Array.from({ length: days }, (_, i) => i + 1)
+const today = computed(() => {
+  const now = new Date()
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate()
+  }
 })
+
+const selectedDate = computed(() => {
+  if (props.modelValue) {
+    const date = new Date(props.modelValue)
+    if (!isNaN(date.getTime())) {
+      return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate()
+      }
+    }
+  }
+  return null
+})
+
+const calendarDays = computed(() => {
+  const firstDayOfMonth = new Date(selectedYear.value, selectedMonth.value - 1, 1)
+  const lastDayOfMonth = new Date(selectedYear.value, selectedMonth.value, 0)
+  const daysInMonth = lastDayOfMonth.getDate()
+  const startingDayOfWeek = firstDayOfMonth.getDay()
+  
+  const days: Array<{
+    day: number
+    isCurrentMonth: boolean
+    isToday: boolean
+    isSelected: boolean
+    isDisabled: boolean
+    date: Date
+  }> = []
+  
+  const previousMonthLastDay = new Date(selectedYear.value, selectedMonth.value - 1, 0).getDate()
+  
+  for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+    const day = previousMonthLastDay - i
+    const date = new Date(selectedYear.value, selectedMonth.value - 2, day)
+    days.push({
+      day,
+      isCurrentMonth: false,
+      isToday: false,
+      isSelected: false,
+      isDisabled: isDateDisabled(date),
+      date
+    })
+  }
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(selectedYear.value, selectedMonth.value - 1, day)
+    const isToday = day === today.value.day && 
+                    selectedMonth.value === today.value.month && 
+                    selectedYear.value === today.value.year
+    const isSelected = !!(selectedDate.value && 
+                      day === selectedDate.value.day && 
+                      selectedMonth.value === selectedDate.value.month && 
+                      selectedYear.value === selectedDate.value.year)
+    
+    days.push({
+      day,
+      isCurrentMonth: true,
+      isToday,
+      isSelected,
+      isDisabled: isDateDisabled(date),
+      date
+    })
+  }
+  
+  const remainingDays = 42 - days.length
+  for (let day = 1; day <= remainingDays; day++) {
+    const date = new Date(selectedYear.value, selectedMonth.value, day)
+    days.push({
+      day,
+      isCurrentMonth: false,
+      isToday: false,
+      isSelected: false,
+      isDisabled: isDateDisabled(date),
+      date
+    })
+  }
+  
+  return days
+})
+
+const isDateDisabled = (date: Date): boolean => {
+  if (props.min) {
+    const minDate = new Date(props.min)
+    minDate.setHours(0, 0, 0, 0)
+    if (date < minDate) return true
+  }
+  
+  if (props.max) {
+    const maxDate = new Date(props.max)
+    maxDate.setHours(23, 59, 59, 999)
+    if (date > maxDate) return true
+  }
+  
+  return false
+}
 
 const displayValue = computed(() => {
   if (!props.modelValue) return props.placeholder
@@ -194,36 +342,13 @@ const buttonClasses = computed(() => {
   ].join(' ')
 })
 
-const updateDate = () => {
-  const date = new Date(selectedYear.value, selectedMonth.value - 1, selectedDay.value)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const dateString = `${year}-${month}-${day}`
+const selectDate = (day: { day: number; isCurrentMonth: boolean; isDisabled: boolean; date: Date }) => {
+  if (!day.isCurrentMonth || day.isDisabled) return
   
-  if (props.min && dateString < props.min) {
-    const minDate = new Date(props.min)
-    selectedDay.value = minDate.getDate()
-    selectedMonth.value = minDate.getMonth() + 1
-    selectedYear.value = minDate.getFullYear()
-    return
-  }
-  
-  if (props.max && dateString > props.max) {
-    const maxDate = new Date(props.max)
-    selectedDay.value = maxDate.getDate()
-    selectedMonth.value = maxDate.getMonth() + 1
-    selectedYear.value = maxDate.getFullYear()
-    return
-  }
-}
-
-const confirmDate = () => {
-  const date = new Date(selectedYear.value, selectedMonth.value - 1, selectedDay.value)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const dateString = `${year}-${month}-${day}`
+  const year = day.date.getFullYear()
+  const month = String(day.date.getMonth() + 1).padStart(2, '0')
+  const dayStr = String(day.day).padStart(2, '0')
+  const dateString = `${year}-${month}-${dayStr}`
   
   emit('update:modelValue', dateString)
   isOpen.value = false
@@ -234,14 +359,43 @@ const clearDate = () => {
   isOpen.value = false
 }
 
+const previousMonth = () => {
+  if (selectedMonth.value === 1) {
+    selectedMonth.value = 12
+    selectedYear.value--
+  } else {
+    selectedMonth.value--
+  }
+  updateCalendar()
+}
+
+const nextMonth = () => {
+  if (selectedMonth.value === 12) {
+    selectedMonth.value = 1
+    selectedYear.value++
+  } else {
+    selectedMonth.value++
+  }
+  updateCalendar()
+}
+
+const updateCalendar = () => {
+  if (selectedMonth.value < 1) {
+    selectedMonth.value = 12
+    selectedYear.value--
+  } else if (selectedMonth.value > 12) {
+    selectedMonth.value = 1
+    selectedYear.value++
+  }
+}
+
 const toggleDropdown = () => {
   if (props.disabled) return
   isOpen.value = !isOpen.value
   
-  if (props.modelValue) {
+  if (isOpen.value && props.modelValue) {
     const date = new Date(props.modelValue)
     if (!isNaN(date.getTime())) {
-      selectedDay.value = date.getDate()
       selectedMonth.value = date.getMonth() + 1
       selectedYear.value = date.getFullYear()
     }
@@ -287,17 +441,9 @@ watch(() => props.modelValue, (newValue) => {
   if (newValue) {
     const date = new Date(newValue)
     if (!isNaN(date.getTime())) {
-      selectedDay.value = date.getDate()
       selectedMonth.value = date.getMonth() + 1
       selectedYear.value = date.getFullYear()
     }
-  }
-})
-
-watch(() => selectedMonth.value, () => {
-  const maxDay = new Date(selectedYear.value, selectedMonth.value, 0).getDate()
-  if (selectedDay.value > maxDay) {
-    selectedDay.value = maxDay
   }
 })
 
@@ -305,7 +451,6 @@ onMounted(() => {
   if (props.modelValue) {
     const date = new Date(props.modelValue)
     if (!isNaN(date.getTime())) {
-      selectedDay.value = date.getDate()
       selectedMonth.value = date.getMonth() + 1
       selectedYear.value = date.getFullYear()
     }
@@ -325,4 +470,3 @@ onMounted(() => {
   transform: translateY(-10px);
 }
 </style>
-

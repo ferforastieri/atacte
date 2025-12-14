@@ -7,6 +7,7 @@ export interface CreateUserData {
   masterPasswordHash: string;
   masterPasswordSalt: string;
   encryptionKeyHash: string;
+  role?: 'USER' | 'ADMIN';
 }
 
 export interface CreateUserSessionData {

@@ -13,6 +13,7 @@
           placeholder="Nome da senha"
           required
           :error="errors.name"
+          :left-icon="TagIcon"
         />
       </div>
 
@@ -25,6 +26,7 @@
             type="url"
             placeholder="https://exemplo.com"
             :error="errors.website"
+            :left-icon="GlobeAltIcon"
           />
         </div>
         
@@ -34,6 +36,7 @@
             label="Username/Email"
             type="text"
             placeholder="seu@email.com"
+            :left-icon="UserIcon"
           />
         </div>
       </div>
@@ -47,6 +50,7 @@
           placeholder="Digite a senha"
           required
           :error="errors.password"
+          :left-icon="LockClosedIcon"
           showPasswordToggle
         />
         
@@ -74,6 +78,7 @@
             v-model="form.folder"
             label="Pasta"
             placeholder="Pasta (opcional)"
+            :left-icon="FolderIcon"
           />
         </div>
         
@@ -113,6 +118,7 @@
               type="text"
               placeholder="Digite a chave secreta do app autenticador"
               :error="errors.totpSecret"
+              :left-icon="KeyIcon"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
@@ -157,7 +163,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useToast } from '@/hooks/useToast'
-import { KeyIcon } from '@heroicons/vue/24/outline'
+import { KeyIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { usePasswordsStore } from '@/stores/passwords'

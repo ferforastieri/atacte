@@ -165,3 +165,29 @@ export const optionalAuth = async (
     next();
   }
 };
+
+export const requireAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const user = (req as AuthenticatedRequest).user;
+  
+  if (!user) {
+    res.status(401).json({
+      success: false,
+      message: 'Não autenticado'
+    });
+    return;
+  }
+
+  if ((user as any).role !== 'ADMIN') {
+    res.status(403).json({
+      success: false,
+      message: 'Acesso negado. Apenas administradores podem acessar este recurso.'
+    });
+    return;
+  }
+
+  next();
+};

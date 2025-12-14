@@ -25,7 +25,7 @@
             placeholder="seu@email.com"
             required
             :error="errors.email"
-            left-icon="EnvelopeIcon"
+            :left-icon="EnvelopeIcon"
           />
 
           <BaseInput
@@ -35,7 +35,7 @@
             placeholder="Crie uma senha master forte"
             required
             :error="errors.masterPassword"
-            left-icon="LockClosedIcon"
+            :left-icon="LockClosedIcon"
             show-password-toggle
             @input="validatePassword"
           />
@@ -52,7 +52,7 @@
             placeholder="Digite a senha novamente"
             required
             :error="errors.confirmPassword"
-            left-icon="LockClosedIcon"
+            :left-icon="LockClosedIcon"
             show-password-toggle
           />
 
