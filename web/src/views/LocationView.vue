@@ -343,7 +343,6 @@ const newZone = ref<NewZone>({
 const toast = useToast()
 const authStore = useAuthStore()
 const router = useRouter()
-const router = useRouter()
 
 const currentUserMember = computed(() => {
   return familyMembers.value.find(member => member.id === authStore.userId)
@@ -565,14 +564,6 @@ const goToMemberLocation = (member: FamilyMember) => {
   } else {
     toast.info(`${member.name} não possui localização disponível`)
   }
-}
-
-const viewLocationHistory = (member: FamilyMember) => {
-  router.push({
-    name: 'LocationHistory',
-    params: { userId: member.id },
-    query: { name: member.name || 'Membro' }
-  })
 }
 
 const viewLocationHistory = (member: FamilyMember) => {
