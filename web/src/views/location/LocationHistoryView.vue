@@ -84,10 +84,11 @@
                   <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {{ formatDateTime(location.timestamp) }}
                   </p>
-                  <p v-if="location.address" class="text-xs font-medium text-gray-700 dark:text-gray-300 mt-1">
-                    📍 {{ location.address }}
+                  <p v-if="location.address" class="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1.5 flex items-start gap-1.5">
+                    <span class="text-primary-600 dark:text-primary-400">📍</span>
+                    <span class="flex-1">{{ location.address }}</span>
                   </p>
-                  <p v-else class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+                  <p v-else class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic">
                     Endereço não disponível
                   </p>
                   <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -255,7 +256,12 @@ const updateMapMarkers = () => {
 
     map.fitBounds(polyline.getBounds(), { padding: [50, 50] })
   } else if (latlngs.length === 1) {
-    map.setView([latlngs[0][0], latlngs[0][1]], 15)
+    const firstLatLng = latlngs[0]
+    if (Array.isArray(firstLatLng)) {
+      map.setView([firstLatLng[0], firstLatLng[1]], 15)
+    } else {
+      map.setView([firstLatLng.lat, firstLatLng.lng], 15)
+    }
   }
 }
 

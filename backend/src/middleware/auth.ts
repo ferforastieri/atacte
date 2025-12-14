@@ -66,7 +66,7 @@ export const authenticateToken = async (
       return;
     }
 
-    const allowedPathsWithoutTrust = ['/auth/trust-device', '/auth/me', '/auth/logout'];
+    const allowedPathsWithoutTrust = ['/api/auth/trust-device', '/api/auth/me', '/api/auth/logout', '/auth/trust-device', '/auth/me', '/auth/logout'];
     const path = req.path;
 
     if (!(session as any).isTrusted && !allowedPathsWithoutTrust.some(allowed => path.includes(allowed))) {

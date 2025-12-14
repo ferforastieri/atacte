@@ -136,7 +136,7 @@ watch(() => props.show, (show) => {
 }
 
 .modal-body {
-  @apply p-4 sm:p-6 overflow-y-auto flex-1;
+  @apply p-4 sm:p-6 overflow-y-auto flex-1 text-left;
 }
 
 .modal-footer {

@@ -4,6 +4,7 @@ import { LocationRepository } from '../../repositories/location/locationReposito
 import { FamilyRepository } from '../../repositories/family/familyRepository';
 import { NotificationService } from '../notification/notificationService';
 import { GeofenceService } from '../geofence/geofenceService';
+import { geocodingService } from '../geocoding/geocodingService';
 import { Location } from '../../../node_modules/.prisma/client';
 
 export interface LocationDto {
@@ -74,9 +75,23 @@ export class LocationService {
   ): Promise<LocationDto> {
     const previousLocation = await this.locationRepository.findLatestByUserId(userId);
 
+    let address = data.address;
+    
+    if (!address) {
+      try {
+        const geocodedAddress = await geocodingService.reverseGeocode(data.latitude, data.longitude);
+        if (geocodedAddress) {
+          address = geocodedAddress;
+        }
+      } catch (error) {
+        console.error('Erro ao obter endereço:', error);
+      }
+    }
+
     const location = await this.locationRepository.create({
       userId,
       ...data,
+      address: address || undefined,
     });
 
     if (data.batteryLevel && data.batteryLevel < 0.15) {

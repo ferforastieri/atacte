@@ -10,26 +10,24 @@
     </template>
 
     <div class="space-y-4">
-      <p class="text-sm text-gray-700 dark:text-gray-300">
+      <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
         Este dispositivo não está na lista de dispositivos confiáveis. Para sua segurança, você precisa confirmar se deseja confiar neste dispositivo.
       </p>
 
-      <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <div class="space-y-2 text-sm">
-          <div class="flex items-center justify-between">
-            <span class="text-gray-600 dark:text-gray-400">Dispositivo:</span>
-            <span class="font-medium text-gray-900 dark:text-gray-100">{{ deviceName || 'Desconhecido' }}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-gray-600 dark:text-gray-400">IP:</span>
-            <span class="font-medium text-gray-900 dark:text-gray-100">{{ ipAddress || 'Desconhecido' }}</span>
-          </div>
+      <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Dispositivo:</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-gray-100 text-right">{{ deviceName || 'Desconhecido' }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600 dark:text-gray-400">IP:</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-gray-100 text-right">{{ ipAddress || 'Desconhecido' }}</span>
         </div>
       </div>
 
       <div class="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <InformationCircleIcon class="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-        <p class="text-xs text-blue-800 dark:text-blue-300">
+        <p class="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
           Ao confiar este dispositivo, você poderá acessar sua conta normalmente. Você pode revogar a confiança a qualquer momento nas configurações.
         </p>
       </div>
