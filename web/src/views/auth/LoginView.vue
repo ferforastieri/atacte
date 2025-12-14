@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
     <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
       <div class="text-center">
         <Logo :size="48" text-size="text-2xl" class="justify-center mb-4" />
         <h2 class="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
@@ -15,7 +14,6 @@
         </p>
       </div>
 
-      <!-- Form -->
       <BaseCard>
         <form @submit.prevent="handleLogin" class="space-y-6">
           <BaseInput

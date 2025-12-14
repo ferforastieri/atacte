@@ -1,13 +1,11 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <!-- Header -->
     <AppHeader
       :show-logo="true"
       :show-navigation="true"
     />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Action Button -->
       <div class="mb-6 flex justify-end">
         <BaseButton
           variant="danger"
@@ -18,7 +16,6 @@
           Revogar Todas
         </BaseButton>
       </div>
-      <!-- Current Session Info -->
       <BaseCard class="mb-6 dark:bg-gray-800 dark:border-gray-700">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
@@ -36,7 +33,6 @@
         </div>
       </BaseCard>
 
-      <!-- Sessions List -->
       <BaseCard class="dark:bg-gray-800 dark:border-gray-700">
         <div v-if="isLoading" class="text-center py-12">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -148,7 +144,6 @@
           </table>
         </div>
 
-        <!-- Empty State -->
         <div v-else class="text-center py-12">
           <ComputerDesktopIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
           <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhuma sessão encontrada</h3>

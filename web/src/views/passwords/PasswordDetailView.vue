@@ -1,6 +1,5 @@
 <template>
   <div v-if="password" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <!-- Header -->
     <AppHeader
       :show-logo="true"
       :show-back-button="true"
@@ -9,7 +8,6 @@
     />
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Action Buttons -->
       <div class="mb-6 flex justify-end space-x-2">
         <BaseButton
           variant="secondary"
@@ -28,9 +26,7 @@
         </BaseButton>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Main Info -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- Basic Info -->
           <BaseCard>
             <div class="space-y-4">
               <div class="flex items-center justify-between">
@@ -80,7 +76,6 @@
             </div>
           </BaseCard>
 
-          <!-- Password -->
           <BaseCard>
             <div class="space-y-4">
               <div class="flex items-center justify-between">
@@ -114,7 +109,6 @@
             </div>
           </BaseCard>
 
-          <!-- TOTP -->
           <BaseCard v-if="password.totpEnabled">
             <div class="space-y-4">
               <div class="flex items-center justify-between">
@@ -146,7 +140,6 @@
             </div>
           </BaseCard>
 
-          <!-- Custom Fields -->
           <BaseCard v-if="password.customFields && password.customFields.length > 0">
             <div class="space-y-4">
               <h3 class="text-lg font-semibold text-gray-900">Campos Personalizados</h3>
@@ -175,7 +168,6 @@
             </div>
           </BaseCard>
 
-          <!-- Notes -->
           <BaseCard v-if="password.notes">
             <div class="space-y-4">
               <h3 class="text-lg font-semibold text-gray-900">Notas</h3>
@@ -184,9 +176,7 @@
           </BaseCard>
         </div>
 
-        <!-- Sidebar -->
         <div class="space-y-6">
-          <!-- Quick Actions -->
           <BaseCard>
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h3>
             <div class="space-y-2">
@@ -221,7 +211,6 @@
             </div>
           </BaseCard>
 
-          <!-- Metadata -->
           <BaseCard>
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Informações</h3>
             <div class="space-y-3 text-sm">
@@ -245,7 +234,6 @@
       </div>
     </div>
 
-    <!-- Modals -->
     <EditPasswordModal
       :show="showEditModal"
       :password="password"
@@ -261,7 +249,6 @@
     />
   </div>
 
-  <!-- Loading -->
   <div v-else class="min-h-screen flex items-center justify-center">
     <div class="text-center">
       <div class="spinner w-12 h-12 mx-auto mb-4"></div>

@@ -1,13 +1,11 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <!-- Header -->
     <AppHeader
       :show-logo="true"
       :show-navigation="true"
     />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Filters -->
       <BaseCard class="mb-6 dark:bg-gray-800 dark:border-gray-700">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <BaseInput
@@ -17,10 +15,20 @@
             left-icon="MagnifyingGlassIcon"
           />
           
-          <select 
-            v-model="filters.action" 
-            class="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
+          <BaseSelect
+            v-model="filters.action"
+            placeholder="Todas as ações"
           >
+            <option value="">Todas as ações</option>
+            <option value="LOGIN">Login</option>
+            <option value="LOGOUT">Logout</option>
+            <option value="CREATE_PASSWORD">Criar Senha</option>
+            <option value="UPDATE_PASSWORD">Atualizar Senha</option>
+            <option value="DELETE_PASSWORD">Deletar Senha</option>
+            <option value="CHANGE_PASSWORD">Alterar Senha</option>
+            <option value="EXPORT_DATA">Exportar Dados</option>
+            <option value="IMPORT_PASSWORDS">Importar Senhas</option>
+          </BaseSelect>
             <option value="">Todas as ações</option>
             <option value="LOGIN">Login</option>
             <option value="LOGOUT">Logout</option>
@@ -44,7 +52,6 @@
         </div>
       </BaseCard>
 
-      <!-- Logs Table -->
       <BaseCard class="dark:bg-gray-800 dark:border-gray-700">
         <div v-if="isLoading" class="text-center py-12">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -107,7 +114,6 @@
           </table>
         </div>
 
-        <!-- Empty State -->
         <div v-else class="text-center py-12">
           <DocumentTextIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
           <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhum log encontrado</h3>
@@ -125,7 +131,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
 import { DocumentTextIcon } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseInput, BaseCard, DatePicker } from '@/components/ui'
+import { AppHeader, BaseInput, BaseCard, BaseSelect, DatePicker } from '@/components/ui'
 import usersApi, { type AuditLog } from '@/api/users'
 
 const router = useRouter()

@@ -1,14 +1,9 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-50">
-    <!-- Main App -->
     <router-view />
     
-    <!-- Bottom Navigation removed - using hamburger menu instead -->
-    
-    <!-- Toast Container -->
     <ToastContainer />
 
-    <!-- Trust Device Modal -->
     <TrustDeviceModal
       :show="showTrustModal"
       :session-id="trustSessionId"

@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-1 relative">
+  <div class="space-y-1 relative" style="z-index: 1;">
       <label 
       v-if="label" 
       :for="datePickerId.value"
@@ -29,7 +29,7 @@
         <div
           v-if="isOpen"
           ref="dropdownRef"
-          class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden"
+          class="absolute z-[9999] mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden"
           @mousedown.prevent
         >
           <div class="p-3 border-b border-gray-200 dark:border-gray-700">

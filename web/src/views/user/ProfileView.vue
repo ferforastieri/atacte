@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <!-- Header -->
     <AppHeader
       :show-logo="true"
       :show-navigation="true"
@@ -8,7 +7,6 @@
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Profile Info -->
         <div class="lg:col-span-2 space-y-6">
           <BaseCard>
             <div class="space-y-4">
@@ -52,7 +50,6 @@
           </BaseCard>
         </div>
 
-        <!-- Sidebar -->
         <div class="space-y-6">
           <BaseCard>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ações</h3>

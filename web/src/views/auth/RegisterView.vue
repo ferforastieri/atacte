@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
     <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
       <div class="text-center">
         <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900">
           <UserPlusIcon class="h-8 w-8 text-primary-600 dark:text-primary-400" />
@@ -17,7 +16,6 @@
         </p>
       </div>
 
-      <!-- Form -->
       <BaseCard>
         <form @submit.prevent="handleRegister" class="space-y-6">
           <BaseInput
@@ -58,7 +56,6 @@
             show-password-toggle
           />
 
-          <!-- Termos -->
           <div class="flex items-start">
             <input
               id="terms"
@@ -88,7 +85,6 @@
         </form>
       </BaseCard>
 
-      <!-- Security Info -->
       <BaseCard variant="outlined" class="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
         <div class="text-center">
           <ShieldCheckIcon class="mx-auto h-8 w-8 text-green-600 dark:text-green-400" />
@@ -117,7 +113,7 @@ const authStore = useAuthStore()
 
 const isLoading = ref(false)
 const errors = ref<Record<string, string>>({})
-const passwordStrength = ref({ score: 0, feedback: { warning: '', suggestions: [] } })
+const passwordStrength = ref<{ score: number; feedback: { warning: string; suggestions: string[] } }>({ score: 0, feedback: { warning: '', suggestions: [] } })
 
 const form = reactive({
   email: '',

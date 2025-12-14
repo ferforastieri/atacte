@@ -2,9 +2,7 @@
   <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
-        <!-- Left Side -->
         <div class="flex items-center space-x-4">
-          <!-- Hamburger Menu Button (Mobile Only) -->
           <button
             v-if="showNavigation"
             @click="mobileMenuOpen = true"
@@ -14,7 +12,6 @@
             <Bars3Icon class="h-5 w-5 text-gray-900 dark:text-gray-100" />
           </button>
 
-          <!-- Back Button -->
           <router-link
             v-if="showBackButton"
             :to="backRoute"
@@ -23,17 +20,14 @@
             <ArrowLeftIcon class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-gray-400" />
           </router-link>
 
-          <!-- Logo -->
           <router-link v-if="showLogo" to="/dashboard" class="flex items-center">
             <Logo :size="32" text-size="text-lg sm:text-xl" />
           </router-link>
 
-          <!-- Title -->
           <h1 v-if="title" class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
             {{ title }}
           </h1>
 
-          <!-- Navigation Buttons (Desktop Only) -->
           <div v-if="showNavigation" class="hidden md:flex items-center space-x-2">
             <router-link
               to="/dashboard"
@@ -72,12 +66,9 @@
           </div>
         </div>
 
-        <!-- Right Side - Always shows ThemeToggle and UserMenu -->
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <!-- Theme Toggle -->
           <ThemeToggle />
 
-          <!-- User Menu - Always visible -->
           <div class="relative">
             <button
               @click="showUserMenuDropdown = !showUserMenuDropdown"
@@ -90,7 +81,6 @@
               <ChevronDownIcon class="h-4 w-4 text-gray-400 dark:text-gray-500" />
             </button>
 
-            <!-- Dropdown Menu -->
             <Transition name="fade">
               <div
                 v-if="showUserMenuDropdown"
@@ -123,27 +113,22 @@
       </div>
     </div>
 
-    <!-- Mobile Menu Modal (Valk UI Style) -->
     <Transition name="mobile-menu">
       <div
         v-if="mobileMenuOpen && showNavigation"
         class="fixed inset-0 z-50 md:hidden"
         @click="mobileMenuOpen = false"
       >
-        <!-- Backdrop -->
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300" />
 
-        <!-- Menu Panel -->
         <div
           class="fixed inset-x-0 top-0 z-50 mx-4 mt-16 max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden"
           @click.stop
         >
-          <!-- Drag Handle -->
           <div class="flex items-center justify-center pt-3 pb-2">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
           </div>
 
-          <!-- Header -->
           <div class="flex items-center justify-between px-6 pb-4 border-b border-gray-200 dark:border-gray-700">
             <router-link to="/dashboard" class="flex items-center gap-3" @click="mobileMenuOpen = false">
               <Logo :size="32" text-size="text-lg" />
@@ -157,7 +142,6 @@
             </button>
           </div>
 
-          <!-- Navigation Items -->
           <nav class="px-4 py-4">
             <div class="space-y-1">
               <router-link
