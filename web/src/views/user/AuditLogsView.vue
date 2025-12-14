@@ -29,16 +29,6 @@
             <option value="EXPORT_DATA">Exportar Dados</option>
             <option value="IMPORT_PASSWORDS">Importar Senhas</option>
           </BaseSelect>
-            <option value="">Todas as ações</option>
-            <option value="LOGIN">Login</option>
-            <option value="LOGOUT">Logout</option>
-            <option value="CREATE_PASSWORD">Criar Senha</option>
-            <option value="UPDATE_PASSWORD">Atualizar Senha</option>
-            <option value="DELETE_PASSWORD">Deletar Senha</option>
-            <option value="CHANGE_PASSWORD">Alterar Senha</option>
-            <option value="EXPORT_DATA">Exportar Dados</option>
-            <option value="IMPORT_PASSWORDS">Importar Senhas</option>
-          </select>
 
           <DatePicker
             v-model="filters.startDate"
