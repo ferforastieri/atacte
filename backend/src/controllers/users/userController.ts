@@ -112,10 +112,11 @@ router.delete('/account', asAuthenticatedHandler(async (req, res) => {
     const { password } = req.body;
     
     if (!password) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Senha é obrigatória para deletar a conta'
       });
+      return;
     }
 
     await userService.deleteUserAccount(req.user.id, password, req);
