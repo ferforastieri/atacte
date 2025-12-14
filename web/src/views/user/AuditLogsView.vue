@@ -32,15 +32,13 @@
             <option value="IMPORT_PASSWORDS">Importar Senhas</option>
           </select>
 
-          <BaseInput
+          <DatePicker
             v-model="filters.startDate"
-            type="date"
             placeholder="Data inicial"
           />
 
-          <BaseInput
+          <DatePicker
             v-model="filters.endDate"
-            type="date"
             placeholder="Data final"
           />
         </div>
@@ -127,7 +125,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
 import { DocumentTextIcon } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseInput, BaseCard } from '@/components/ui'
+import { AppHeader, BaseInput, BaseCard, DatePicker } from '@/components/ui'
 import usersApi, { type AuditLog } from '@/api/users'
 
 const router = useRouter()

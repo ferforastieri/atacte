@@ -6,32 +6,32 @@
       :show-back-button="true"
       :back-route="'/location'"
       :show-navigation="true"
-      :title="`Histórico - ${memberName}`"
     />
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
 
+      <!-- Header Card -->
+      <BaseCard class="mb-6">
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+          Histórico - {{ memberName }}
+        </h1>
+      </BaseCard>
+
       <!-- Date Filter -->
       <BaseCard class="mb-6">
         <div class="flex flex-col sm:flex-row gap-4">
           <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Data Inicial
-            </label>
-            <BaseInput
+            <DatePicker
               v-model="startDate"
-              type="date"
+              label="Data Inicial"
               @update:modelValue="loadHistory"
             />
           </div>
           <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Data Final
-            </label>
-            <BaseInput
+            <DatePicker
               v-model="endDate"
-              type="date"
+              label="Data Final"
               @update:modelValue="loadHistory"
             />
           </div>
@@ -119,7 +119,7 @@ import { useToast } from 'vue-toastification'
 import { locationApi, type LocationData } from '@/api/location'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { AppHeader, BaseButton, BaseCard, BaseInput } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, DatePicker } from '@/components/ui'
 
 const route = useRoute()
 const router = useRouter()

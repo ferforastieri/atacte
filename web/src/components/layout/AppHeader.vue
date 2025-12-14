@@ -24,7 +24,9 @@
           </router-link>
 
           <!-- Logo -->
-          <Logo v-if="showLogo" :size="32" text-size="text-lg sm:text-xl" />
+          <router-link v-if="showLogo" to="/dashboard" class="flex items-center">
+            <Logo :size="32" text-size="text-lg sm:text-xl" />
+          </router-link>
 
           <!-- Title -->
           <h1 v-if="title" class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -143,9 +145,9 @@
 
           <!-- Header -->
           <div class="flex items-center justify-between px-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-            <div class="flex items-center gap-3">
+            <router-link to="/dashboard" class="flex items-center gap-3" @click="mobileMenuOpen = false">
               <Logo :size="32" text-size="text-lg" />
-            </div>
+            </router-link>
             <button
               @click="mobileMenuOpen = false"
               class="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
