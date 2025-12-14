@@ -84,8 +84,8 @@ const usersApi = {
   },
 
   
-  async deleteAccount() {
-    const response = await api.delete('/users/account')
+  async deleteAccount(password: string) {
+    const response = await api.delete('/users/account', { data: { password } })
     return response.data
   }
 }

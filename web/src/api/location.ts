@@ -117,5 +117,22 @@ export const locationApi = {
   async toggleZone(id: string, isActive: boolean): Promise<GeofenceZone> {
     const response = await api.patch(`/geofence/zones/${id}`, { isActive })
     return response.data
+  },
+
+  async getLocationHistory(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+    limit?: number
+  ): Promise<LocationData[]> {
+    const params = new URLSearchParams({
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+    })
+    if (limit) {
+      params.append('limit', limit.toString())
+    }
+    const response = await api.get(`/location/history/${userId}?${params.toString()}`)
+    return response.data.data || []
   }
 }

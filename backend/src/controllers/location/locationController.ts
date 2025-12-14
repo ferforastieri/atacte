@@ -199,6 +199,58 @@ router.get(
   })
 );
 
+router.get(
+  '/history/:userId',
+  historyValidation,
+  asAuthenticatedHandler(async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Parâmetros inválidos',
+          errors: errors.array(),
+        });
+        return;
+      }
+      
+      const targetUserId = req.params['userId'];
+      if (!targetUserId) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do usuário é obrigatório',
+        });
+        return;
+      }
+      
+      const queryParams = req.query;
+      const startDate = new Date(queryParams['startDate'] as string);
+      const endDate = new Date(queryParams['endDate'] as string);
+      const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : undefined;
+
+      const locations = await locationService.getMemberLocationHistory(
+        req.user.id,
+        targetUserId,
+        startDate,
+        endDate,
+        limit
+      );
+
+      res.json({
+        success: true,
+        data: locations,
+        count: locations.length,
+      });
+    } catch (error: any) {
+      const statusCode = error.message.includes('permissão') ? 403 : 500;
+      res.status(statusCode).json({
+        success: false,
+        message: error.message || 'Erro interno do servidor',
+      });
+    }
+  })
+);
+
 router.get('/stats', asAuthenticatedHandler(async (req, res) => {
   try {
     const stats = await locationService.getLocationStats(req.user.id);

@@ -4,14 +4,10 @@ import { UserPreferences } from '@prisma/client';
 export interface CreateUserPreferencesData {
   userId: string;
   theme?: string;
-  language?: string;
-  autoLock?: number;
 }
 
 export interface UpdateUserPreferencesData {
   theme?: string;
-  language?: string;
-  autoLock?: number;
 }
 
 export class PreferencesRepository {
@@ -34,8 +30,6 @@ export class PreferencesRepository {
       where: { userId },
       data: {
         theme: data.theme,
-        language: data.language,
-        autoLock: data.autoLock,
         updatedAt: new Date(),
       },
     });
@@ -55,15 +49,11 @@ export class PreferencesRepository {
       where: { userId },
       update: {
         theme: data.theme,
-        language: data.language,
-        autoLock: data.autoLock,
         updatedAt: new Date(),
       },
       create: {
         userId: data.userId,
         theme: data.theme,
-        language: data.language,
-        autoLock: data.autoLock,
       },
     });
     

@@ -15,7 +15,7 @@ export interface CreateUserSessionData {
   deviceName?: string;
   ipAddress?: string;
   userAgent?: string;
-  expiresAt: Date;
+  expiresAt?: Date | null;
 }
 
 export interface UpdateUserSessionData {

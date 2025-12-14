@@ -109,16 +109,26 @@ router.post('/export', asAuthenticatedHandler(async (req, res) => {
 
 router.delete('/account', asAuthenticatedHandler(async (req, res) => {
   try {
-    await userService.deleteUserAccount(req.user.id, req);
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Senha é obrigatória para deletar a conta'
+      });
+    }
+
+    await userService.deleteUserAccount(req.user.id, password, req);
 
     res.json({
       success: true,
       message: 'Conta deletada com sucesso'
     });
-  } catch (error) {
-    res.status(500).json({
+  } catch (error: any) {
+    const statusCode = error.message === 'Senha incorreta' ? 401 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Erro interno do servidor'
+      message: error.message || 'Erro interno do servidor'
     });
   }
 }));

@@ -93,17 +93,17 @@ model SecureNote {
 }
 
 model UserSession {
-  id          String   @id @default(cuid())
-  userId      String   @map("user_id")
-  tokenHash   String   @map("token_hash")
-  deviceName  String?  @map("device_name")
-  ipAddress   String?  @map("ip_address")
-  userAgent   String?  @map("user_agent")
-  expiresAt   DateTime @map("expires_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  lastUsed    DateTime @default(now()) @map("last_used")
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  tokenHash   String    @map("token_hash")
+  deviceName  String?   @map("device_name")
+  ipAddress   String?   @map("ip_address")
+  userAgent   String?   @map("user_agent")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  lastUsed    DateTime  @default(now()) @map("last_used")
   
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("user_sessions")
 }
@@ -128,8 +128,6 @@ model UserPreferences {
   id        String   @id @default(cuid())
   userId    String   @unique @map("user_id")
   theme     String   @default("light") 
-  language  String   @default("pt-BR") 
-  autoLock  Int      @default(15) @map("auto_lock") 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   

@@ -4,8 +4,6 @@ export interface UserPreferencesDto {
   id: string;
   userId: string;
   theme: string;
-  language: string;
-  autoLock: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,8 +29,6 @@ export class PreferencesService {
     const preferences = await this.preferencesRepository.create({
       userId,
       theme: data.theme || 'light',
-      language: data.language || 'pt-BR',
-      autoLock: data.autoLock !== undefined ? data.autoLock : 15, 
     });
 
     return this.mapToDto(preferences);
@@ -56,8 +52,6 @@ export class PreferencesService {
     const preferences = await this.preferencesRepository.upsert(userId, {
       userId,
       theme: data.theme || 'light',
-      language: data.language || 'pt-BR',
-      autoLock: data.autoLock !== undefined ? data.autoLock : 15, 
     });
 
     return this.mapToDto(preferences);
@@ -77,8 +71,6 @@ export class PreferencesService {
       id: preferences.id,
       userId: preferences.userId,
       theme: preferences.theme,
-      language: preferences.language,
-      autoLock: preferences.autoLock,
       createdAt: preferences.createdAt,
       updatedAt: preferences.updatedAt,
     };

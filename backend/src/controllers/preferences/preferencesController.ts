@@ -34,13 +34,11 @@ router.get('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
 
 router.post('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
-    const { theme, language, autoLock } = req.body;
+    const { theme } = req.body;
     
     const preferences = await preferencesService.createUserPreferences(req.user.id, {
       userId: req.user.id,
       theme,
-      language,
-      autoLock,
     });
 
     res.status(201).json({
@@ -62,13 +60,11 @@ router.post('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
 router.put('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     
-    const { theme, language, autoLock } = req.body;
+    const { theme } = req.body;
     
     
     const preferences = await preferencesService.updateUserPreferences(req.user.id, {
       theme,
-      language,
-      autoLock,
     });
 
 
@@ -99,14 +95,12 @@ router.put('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
 router.patch('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
   try {
     
-    const { theme, language, autoLock } = req.body;
+    const { theme } = req.body;
     
     
     const preferences = await preferencesService.upsertUserPreferences(req.user.id, {
       userId: req.user.id,
       theme,
-      language,
-      autoLock,
     });
 
 

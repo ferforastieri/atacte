@@ -149,6 +149,45 @@ export class LocationService {
     return locations.map((location) => this.mapLocationToDto(location));
   }
 
+  async getMemberLocationHistory(
+    requesterUserId: string,
+    targetUserId: string,
+    startDate: Date,
+    endDate: Date,
+    limit?: number
+  ): Promise<LocationDto[]> {
+    if (requesterUserId === targetUserId) {
+      return this.getLocationHistory(requesterUserId, startDate, endDate, limit);
+    }
+    
+    const requesterFamilies = await this.familyRepository.findByUserId(requesterUserId);
+    const targetFamilies = await this.familyRepository.findByUserId(targetUserId);
+    
+    let hasAccess = false;
+    for (const requesterFamily of requesterFamilies) {
+      for (const targetFamily of targetFamilies) {
+        if (requesterFamily.id === targetFamily.id) {
+          hasAccess = true;
+          break;
+        }
+      }
+      if (hasAccess) break;
+    }
+    
+    if (!hasAccess) {
+      throw new Error('Você não tem permissão para acessar o histórico de localização deste usuário');
+    }
+
+    const locations = await this.locationRepository.getLocationHistory(
+      targetUserId,
+      startDate,
+      endDate,
+      limit
+    );
+
+    return locations.map((location) => this.mapLocationToDto(location));
+  }
+
   async getFamilyLocations(
     userId: string,
     familyId: string

@@ -98,8 +98,7 @@ export class AuthService {
     );
 
     
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30); 
+    const expiresAt = null;
 
     const sessionData: CreateUserSessionData = {
       userId: user.id,
@@ -107,7 +106,7 @@ export class AuthService {
       deviceName: data.deviceName || 'Dispositivo Web',
       ipAddress: ipAddress || 'unknown',
       userAgent: userAgent || 'unknown',
-      expiresAt,
+      expiresAt: expiresAt as any,
     };
 
     const session = await this.userRepository.createSession(sessionData);
@@ -160,7 +159,43 @@ export class AuthService {
     return this.mapToDto(user);
   }
 
-  async getUserSessions(userId: string): Promise<any[]> {
+  async changeMasterPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    if (!user.isActive) {
+      throw new Error('Conta desativada');
+    }
+
+    const isValidPassword = await bcrypt.compare(currentPassword, user.masterPasswordHash);
+    if (!isValidPassword) {
+      throw new Error('Senha atual incorreta');
+    }
+
+    if (newPassword.length < 8) {
+      throw new Error('A nova senha deve ter pelo menos 8 caracteres');
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const masterPasswordHash = await bcrypt.hash(newPassword, salt);
+    
+    const encryptionKey = crypto.SHA256(user.email).toString();
+
+    await this.userRepository.update(user.id, {
+      masterPasswordHash,
+      masterPasswordSalt: salt,
+      encryptionKeyHash: encryptionKey,
+    });
+
+    const sessions = await this.userRepository.findUserSessions(userId);
+    for (const session of sessions) {
+      await this.userRepository.deleteSession(session.id);
+    }
+  }
+
+  async getUserSessions(userId: string, currentTokenHash?: string): Promise<any[]> {
     const sessions = await this.userRepository.findUserSessions(userId);
     return sessions.map(session => ({
       id: session.id,
@@ -170,6 +205,7 @@ export class AuthService {
       createdAt: session.createdAt,
       lastUsed: session.lastUsed,
       expiresAt: session.expiresAt,
+      isCurrent: currentTokenHash ? session.tokenHash === currentTokenHash : false,
     }));
   }
 

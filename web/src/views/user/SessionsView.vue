@@ -3,9 +3,7 @@
     <!-- Header -->
     <AppHeader
       :show-logo="true"
-      :show-back-button="true"
       :show-navigation="true"
-      title="Sessões Ativas"
     />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -21,91 +19,105 @@
         </BaseButton>
       </div>
       <!-- Current Session Info -->
-      <BaseCard class="mb-6">
+      <BaseCard class="mb-6 dark:bg-gray-800 dark:border-gray-700">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
-            <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircleIcon class="h-6 w-6 text-green-600" />
+            <div class="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <CheckCircleIcon class="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <h3 class="text-sm font-medium text-gray-900">Sessão Atual</h3>
-              <p class="text-sm text-gray-500">Esta é sua sessão atual</p>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white">Sessão Atual</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ currentSession?.deviceName || 'Esta é sua sessão atual' }}</p>
             </div>
           </div>
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
             Ativa
           </span>
         </div>
       </BaseCard>
 
       <!-- Sessions List -->
-      <BaseCard>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+      <BaseCard class="dark:bg-gray-800 dark:border-gray-700">
+        <div v-if="isLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Carregando sessões...</p>
+        </div>
+
+        <div v-else-if="sessions.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Dispositivo
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Localização
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  IP Address
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Criada em
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Última Atividade
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               <tr
                 v-for="session in sessions"
                 :key="session.id"
-                class="hover:bg-gray-50"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                        <ComputerDesktopIcon class="h-5 w-5 text-gray-600" />
+                      <div class="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <ComputerDesktopIcon class="h-5 w-5 text-gray-600 dark:text-gray-400" />
                       </div>
                     </div>
                     <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">{{ session.deviceName }}</div>
-                      <div class="text-sm text-gray-500">{{ session.userAgent }}</div>
+                      <div class="text-sm font-medium text-gray-900 dark:text-white">{{ session.deviceName || 'Dispositivo Desconhecido' }}</div>
+                      <div class="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">{{ session.userAgent || '-' }}</div>
                     </div>
                   </div>
                 </td>
                 
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ session.location || '-' }}
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {{ session.ipAddress || '-' }}
                 </td>
                 
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatDateTime(session.lastActivity) }}
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {{ formatDateTime(session.createdAt) }}
+                </td>
+                
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {{ formatDateTime(session.lastUsed) }}
                 </td>
                 
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span
                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    :class="session.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                    :class="session.isCurrent ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'"
                   >
-                    {{ session.isActive ? 'Ativa' : 'Inativa' }}
+                    {{ session.isCurrent ? 'Atual' : 'Ativa' }}
                   </span>
                 </td>
                 
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    v-if="!session.isActive"
+                  <BaseButton
+                    v-if="!session.isCurrent"
+                    variant="ghost"
+                    size="sm"
                     @click="revokeSession(session.id)"
-                    class="text-red-600 hover:text-red-900"
+                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                   >
                     Revogar
-                  </button>
+                  </BaseButton>
                 </td>
               </tr>
             </tbody>
@@ -113,10 +125,10 @@
         </div>
 
         <!-- Empty State -->
-        <div v-if="sessions.length === 0" class="text-center py-12">
-          <ComputerDesktopIcon class="mx-auto h-12 w-12 text-gray-400" />
-          <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma sessão encontrada</h3>
-          <p class="mt-1 text-sm text-gray-500">
+        <div v-else class="text-center py-12">
+          <ComputerDesktopIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhuma sessão encontrada</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Você não tem sessões ativas.
           </p>
         </div>
@@ -126,65 +138,85 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
 import {
-  ArrowLeftIcon,
   TrashIcon,
   CheckCircleIcon,
   ComputerDesktopIcon
 } from '@heroicons/vue/24/outline'
 import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
-
-interface Session {
-  id: string
-  deviceName: string
-  userAgent: string
-  location?: string
-  lastActivity: string
-  isActive: boolean
-}
+import authApi, { type Session } from '@/api/auth'
 
 const router = useRouter()
 const toast = useToast()
 
 const sessions = ref<Session[]>([])
+const isLoading = ref(false)
 const isRevokingAll = ref(false)
 
+const currentSession = computed(() => {
+  return sessions.value.find(s => s.isCurrent)
+})
+
 const formatDateTime = (dateString: string) => {
-  return new Date(dateString).toLocaleString('pt-BR')
+  return new Date(dateString).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 const revokeSession = async (sessionId: string) => {
   try {
-    
+    await authApi.revokeSession(sessionId)
     toast.success('Sessão revogada com sucesso!')
     await fetchSessions()
-  } catch (error) {
-    toast.error('Erro ao revogar sessão')
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || 'Erro ao revogar sessão'
+    toast.error(errorMessage)
   }
 }
 
 const revokeAllSessions = async () => {
+  if (!confirm('Tem certeza que deseja revogar todas as sessões? Você será deslogado.')) {
+    return
+  }
+
   isRevokingAll.value = true
   try {
+    const sessionsToRevoke = sessions.value.filter(s => !s.isCurrent)
+    
+    await Promise.all(sessionsToRevoke.map(session => authApi.revokeSession(session.id)))
     
     toast.success('Todas as sessões foram revogadas!')
     await fetchSessions()
-  } catch (error) {
-    toast.error('Erro ao revogar sessões')
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || 'Erro ao revogar sessões'
+    toast.error(errorMessage)
   } finally {
     isRevokingAll.value = false
   }
 }
 
 const fetchSessions = async () => {
+  isLoading.value = true
   try {
-    
-    sessions.value = []
-  } catch (error) {
+    const response = await authApi.getSessions()
+    if (response.success && response.data) {
+      sessions.value = response.data
+    } else {
+      sessions.value = []
+    }
+  } catch (error: any) {
     console.error('Erro ao buscar sessões:', error)
+    toast.error('Erro ao carregar sessões')
+    sessions.value = []
+  } finally {
+    isLoading.value = false
   }
 }
 

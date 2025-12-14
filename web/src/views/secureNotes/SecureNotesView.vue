@@ -7,217 +7,176 @@
     />
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
-      <!-- Action Button -->
-      <div class="mb-6 flex justify-end">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <DocumentTextIcon class="h-6 w-6 sm:h-8 sm:w-8" />
+            </div>
+            <div class="ml-3 sm:ml-4">
+              <p class="text-blue-100 text-xs sm:text-sm">Total de Notas</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ notes.length }}</p>
+            </div>
+          </div>
+        </BaseCard>
+
+        <BaseCard class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <StarIcon class="h-6 w-6 sm:h-8 sm:w-8" fill="currentColor" />
+            </div>
+            <div class="ml-3 sm:ml-4">
+              <p class="text-yellow-100 text-xs sm:text-sm">Favoritas</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ favoriteCount }}</p>
+            </div>
+          </div>
+        </BaseCard>
+
+        <BaseCard class="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <FolderIcon class="h-6 w-6 sm:h-8 sm:w-8" />
+            </div>
+            <div class="ml-3 sm:ml-4">
+              <p class="text-purple-100 text-xs sm:text-sm">Pastas</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ folders.length }}</p>
+            </div>
+          </div>
+        </BaseCard>
+
+        <BaseCard class="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <DocumentTextIcon class="h-6 w-6 sm:h-8 sm:w-8" />
+            </div>
+            <div class="ml-3 sm:ml-4">
+              <p class="text-green-100 text-xs sm:text-sm">Filtradas</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ filteredNotes.length }}</p>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
         <BaseButton
           variant="primary"
-          size="sm"
           @click="showCreateModal = true"
+          class="w-full sm:w-auto"
         >
           <PlusIcon class="w-4 h-4 mr-2" />
           Nova Nota
         </BaseButton>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Notes List Container -->
-        <div class="lg:col-span-2">
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Notas</h2>
-                
-                <!-- Search and Filter -->
-                <div class="flex flex-col sm:flex-row gap-3">
-                  <div class="flex-1 min-w-0">
-                    <SearchInput
-                      v-model="searchQuery"
-                      placeholder="Buscar notas..."
-                      @search="handleSearch"
-                    />
-                  </div>
-                  
-                  <select
-                    v-model="selectedFolder"
-                    @change="handleFolderFilter"
-                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500 text-sm"
-                  >
-                    <option value="">Todas as pastas</option>
-                    <option v-for="folder in folders" :key="folder" :value="folder">
-                      {{ folder }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            
-            <div class="p-4">
-              <div v-if="filteredNotes.length === 0" class="text-center py-12">
-                <DocumentTextIcon class="mx-auto h-12 w-12 text-gray-400" />
-                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Nenhuma nota encontrada
-                </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {{ searchQuery || selectedFolder ? 'Tente ajustar os filtros de busca' : 'Crie sua primeira nota segura' }}
-                </p>
-                <div v-if="!searchQuery && !selectedFolder" class="mt-6">
-                  <BaseButton @click="showCreateModal = true" variant="primary">
-                    Criar Nota
-                  </BaseButton>
-                </div>
-              </div>
 
-              <div v-else class="space-y-3">
-                <div
-                  v-for="note in filteredNotes"
-                  :key="note.id"
-                  class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
-                  @click="editNote(note)"
-                >
-                  <div class="flex items-start justify-between mb-2">
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-2">
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
-                          {{ note.title }}
-                        </h3>
-                        <StarIcon
-                          v-if="note.isFavorite"
-                          class="h-5 w-5 text-yellow-500 flex-shrink-0"
-                          fill="currentColor"
-                        />
-                      </div>
-                      <p v-if="note.folder" class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                        <FolderIcon class="h-3 w-3" />
-                        {{ note.folder }}
-                      </p>
-                    </div>
-                    <DocumentTextIcon class="h-5 w-5 text-blue-500 flex-shrink-0" />
-                  </div>
+      <!-- Search and Filters -->
+      <BaseCard class="mb-6 dark:bg-gray-800 dark:border-gray-700">
+        <div class="flex flex-col gap-4">
+          <div class="flex-1">
+            <SearchInput
+              v-model="searchQuery"
+              placeholder="Buscar notas..."
+              :debounce-ms="300"
+              :min-length="2"
+              @search="handleSearch"
+              @clear="handleSearchClear"
+            />
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <select
+              v-model="selectedFolder"
+              @change="handleFolderFilter"
+              class="w-full sm:w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
+            >
+              <option value="">Todas as pastas</option>
+              <option v-for="folder in folders" :key="folder" :value="folder">
+                {{ folder }}
+              </option>
+            </select>
 
-                  <!-- Content Preview -->
-                  <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
-                    {{ note.content }}
-                  </p>
-
-                  <!-- Meta and Actions -->
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ formatDate(note.updatedAt) }}
-                    </span>
-                    
-                    <div class="flex items-center gap-2">
-                      <button
-                        @click.stop="toggleFavorite(note)"
-                        class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                        :title="note.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
-                      >
-                        <StarIcon 
-                          :class="note.isFavorite ? 'text-yellow-500 fill-current' : 'text-gray-400'" 
-                          class="h-4 w-4" 
-                        />
-                      </button>
-                      
-                      <button
-                        @click.stop="editNote(note)"
-                        class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                        title="Editar nota"
-                      >
-                        <PencilIcon class="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                      </button>
-                      
-                      <button
-                        @click.stop="confirmDelete(note)"
-                        class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                        title="Excluir nota"
-                      >
-                        <TrashIcon class="h-4 w-4 text-red-600 dark:text-red-400" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <BaseButton
+              variant="ghost"
+              @click="toggleFavorites"
+              :class="{ 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300': showOnlyFavorites }"
+              class="w-full sm:w-auto"
+            >
+              <StarIcon class="w-4 h-4 mr-1" :class="{ 'fill-current': showOnlyFavorites }" />
+              {{ showOnlyFavorites ? 'Todas' : 'Favoritas' }}
+            </BaseButton>
           </div>
         </div>
+      </BaseCard>
 
-        <!-- Sidebar -->
-        <div class="space-y-6">
-          <!-- Stats -->
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Estatísticas</h3>
+      <!-- Notes List -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <BaseCard
+          v-for="note in filteredNotes"
+          :key="note.id"
+          class="hover:shadow-lg transition-shadow cursor-pointer"
+          @click="viewNote(note)"
+        >
+          <div class="flex items-start justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center space-x-2">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ note.title }}</h3>
+                <div class="flex space-x-1">
+                  <StarIcon
+                    v-if="note.isFavorite"
+                    class="h-4 w-4 text-yellow-500 flex-shrink-0"
+                    fill="currentColor"
+                  />
+                </div>
+              </div>
+              
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                {{ note.content }}
+              </p>
+              
+              <p v-if="note.folder" class="text-xs text-gray-400 dark:text-gray-500 mt-2 truncate">
+                📁 {{ note.folder }}
+              </p>
             </div>
-            <div class="p-4 space-y-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <DocumentTextIcon class="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Total</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Notas</p>
-                  </div>
-                </div>
-                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ filteredNotes.length }}</p>
-              </div>
-
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                    <StarIcon class="h-5 w-5 text-yellow-600 dark:text-yellow-400 fill-current" />
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Favoritas</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Notas</p>
-                  </div>
-                </div>
-                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ favoriteCount }}</p>
-              </div>
-
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <FolderIcon class="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Pastas</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Organização</p>
-                  </div>
-                </div>
-                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ folders.length }}</p>
-              </div>
+            
+            <div class="flex flex-col space-y-1 ml-2">
+              <button
+                @click.stop="toggleFavorite(note)"
+                class="text-gray-400 dark:text-gray-500 hover:text-yellow-500 p-1"
+                :class="{ 'text-yellow-500': note.isFavorite }"
+                title="Marcar como favorita"
+              >
+                <StarIcon class="h-4 w-4" :class="{ 'fill-current': note.isFavorite }" />
+              </button>
+              
+              <button
+                @click.stop="editNote(note)"
+                class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+                title="Editar nota"
+              >
+                <PencilIcon class="h-4 w-4" />
+              </button>
             </div>
           </div>
+        </BaseCard>
+      </div>
 
-          <!-- Folders -->
-          <div v-if="folders.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Pastas</h3>
-            </div>
-            <div class="p-4">
-              <div class="space-y-2">
-                <button
-                  v-for="folder in folders"
-                  :key="folder"
-                  @click="selectedFolder = folder; handleFolderFilter()"
-                  class="w-full text-left px-3 py-2 text-sm rounded-lg transition-colors"
-                  :class="selectedFolder === folder
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                >
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <FolderIcon class="h-4 w-4" />
-                      <span>{{ folder }}</span>
-                    </div>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ notes.filter(n => n.folder === folder).length }}
-                    </span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
+      <!-- Empty State -->
+      <div v-if="filteredNotes.length === 0" class="text-center py-12">
+        <DocumentTextIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhuma nota encontrada</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          {{ notes.length === 0 ? 'Comece criando sua primeira nota.' : 'Tente ajustar os filtros de busca.' }}
+        </p>
+        <div v-if="notes.length === 0" class="mt-6">
+          <BaseButton
+            variant="primary"
+            @click="showCreateModal = true"
+          >
+            <PlusIcon class="w-4 h-4 mr-2" />
+            Nova Nota
+          </BaseButton>
         </div>
       </div>
     </div>
@@ -230,6 +189,16 @@
       @created="handleNoteCreated"
     />
 
+    <!-- View Note Modal -->
+    <SecureNoteDetailModal
+      :show="showViewModal"
+      :note="selectedNote"
+      :folders="folders"
+      @close="closeViewModal"
+      @updated="handleNoteUpdated"
+      @deleted="handleNoteDeleted"
+    />
+
     <!-- Edit Modal -->
     <EditSecureNoteModal
       :show="showEditModal"
@@ -237,18 +206,6 @@
       :folders="folders"
       @close="closeEditModal"
       @updated="handleNoteUpdated"
-    />
-
-    <!-- Delete Confirm Modal -->
-    <ConfirmModal
-      :show="showDeleteModal"
-      title="Confirmar Exclusão"
-      message="Tem certeza que deseja excluir esta nota? Esta ação não pode ser desfeita."
-      confirm-text="Excluir"
-      cancel-text="Cancelar"
-      variant="danger"
-      @confirm="handleDelete"
-      @cancel="showDeleteModal = false"
     />
   </div>
 </template>
@@ -260,16 +217,16 @@ import { useSecureNotesStore } from '@/stores/secureNotes'
 import { useToast } from 'vue-toastification'
 import type { SecureNote } from '@/api/secureNotes'
 
-import { AppHeader, BaseButton, BaseCard, SearchInput, ConfirmModal } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, SearchInput } from '@/components/ui'
 import CreateSecureNoteModal from '@/components/secureNotes/CreateSecureNoteModal.vue'
 import EditSecureNoteModal from '@/components/secureNotes/EditSecureNoteModal.vue'
+import SecureNoteDetailModal from '@/components/secureNotes/SecureNoteDetailModal.vue'
 
 import {
   DocumentTextIcon,
   StarIcon,
   FolderIcon,
   PencilIcon,
-  TrashIcon,
   PlusIcon
 } from '@heroicons/vue/24/outline'
 
@@ -278,13 +235,13 @@ const secureNotesStore = useSecureNotesStore()
 const toast = useToast()
 
 const showCreateModal = ref(false)
+const showViewModal = ref(false)
 const showEditModal = ref(false)
-const showDeleteModal = ref(false)
 const selectedNote = ref<SecureNote | null>(null)
-const noteToDelete = ref<SecureNote | null>(null)
 const isRefreshing = ref(false)
 const searchQuery = ref('')
 const selectedFolder = ref('')
+const showOnlyFavorites = ref(false)
 
 const folders = computed(() => secureNotesStore.folders)
 const notes = computed(() => secureNotesStore.notes)
@@ -292,6 +249,10 @@ const favoriteCount = computed(() => notes.value.filter(n => n.isFavorite).lengt
 
 const filteredNotes = computed(() => {
   let filtered = [...notes.value]
+
+  if (showOnlyFavorites.value) {
+    filtered = filtered.filter(note => note.isFavorite)
+  }
 
   if (selectedFolder.value) {
     filtered = filtered.filter(note => note.folder === selectedFolder.value)
@@ -337,9 +298,18 @@ const handleSearch = () => {
   secureNotesStore.fetchNotes()
 }
 
+const handleSearchClear = async () => {
+  searchQuery.value = ''
+  await secureNotesStore.fetchNotes()
+}
+
 const handleFolderFilter = () => {
   secureNotesStore.setFilter({ folder: selectedFolder.value || undefined })
   secureNotesStore.fetchNotes()
+}
+
+const toggleFavorites = () => {
+  showOnlyFavorites.value = !showOnlyFavorites.value
 }
 
 const handleNoteCreated = async () => {
@@ -347,8 +317,19 @@ const handleNoteCreated = async () => {
   await refreshNotes()
 }
 
+const viewNote = (note: SecureNote) => {
+  selectedNote.value = note
+  showViewModal.value = true
+}
+
+const closeViewModal = () => {
+  showViewModal.value = false
+  selectedNote.value = null
+}
+
 const editNote = (note: SecureNote) => {
   selectedNote.value = note
+  showViewModal.value = false
   showEditModal.value = true
 }
 
@@ -359,6 +340,11 @@ const closeEditModal = () => {
 
 const handleNoteUpdated = async () => {
   closeEditModal()
+  closeViewModal()
+  await refreshNotes()
+}
+
+const handleNoteDeleted = async () => {
   await refreshNotes()
 }
 
@@ -368,25 +354,6 @@ const toggleFavorite = async (note: SecureNote) => {
     toast.success(note.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos')
   } catch (error) {
     toast.error('Erro ao atualizar favorito')
-  }
-}
-
-const confirmDelete = (note: SecureNote) => {
-  noteToDelete.value = note
-  showDeleteModal.value = true
-}
-
-const handleDelete = async () => {
-  if (!noteToDelete.value) return
-
-  try {
-    await secureNotesStore.deleteNote(noteToDelete.value.id)
-    toast.success('Nota excluída com sucesso')
-    showDeleteModal.value = false
-    noteToDelete.value = null
-    await refreshNotes()
-  } catch (error) {
-    toast.error('Erro ao excluir nota')
   }
 }
 

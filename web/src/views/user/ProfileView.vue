@@ -3,9 +3,7 @@
     <!-- Header -->
     <AppHeader
       :show-logo="true"
-      :show-back-button="true"
       :show-navigation="true"
-      title="Perfil"
     />
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">

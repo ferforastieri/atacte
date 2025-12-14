@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto-js';
 import { AuthService } from '../../services/auth/authService';
 import { authenticateToken } from '../../middleware/auth';
 
@@ -109,7 +110,9 @@ router.get('/me', authenticateToken, async (req: any, res) => {
 
 router.get('/sessions', authenticateToken, async (req: any, res) => {
   try {
-    const sessions = await authService.getUserSessions(req.user.id);
+    const token = req.headers.authorization?.split(' ')[1];
+    const tokenHash = token ? crypto.SHA256(token).toString() : undefined;
+    const sessions = await authService.getUserSessions(req.user.id, tokenHash);
 
     res.json({
       success: true,
@@ -188,6 +191,38 @@ router.post('/reset-password', async (req, res) => {
     return res.json({
       success: true,
       message: 'Senha redefinida com sucesso'
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+router.post('/change-password', authenticateToken, async (req: any, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Senha atual e nova senha são obrigatórias'
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'A nova senha deve ter pelo menos 8 caracteres'
+      });
+    }
+
+    await authService.changeMasterPassword(req.user.id, currentPassword, newPassword);
+
+    return res.json({
+      success: true,
+      message: 'Senha alterada com sucesso'
     });
   } catch (error: any) {
     return res.status(400).json({

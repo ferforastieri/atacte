@@ -114,6 +114,15 @@ const router = createRouter({
       }
     },
     {
+      path: '/location/history/:userId',
+      name: 'LocationHistory',
+      component: () => import('@/views/location/LocationHistoryView.vue'),
+      meta: { 
+        requiresAuth: true,
+        title: 'Histórico de Localização - Atacte'
+      }
+    },
+    {
       path: '/secure-notes',
       name: 'SecureNotes',
       component: () => import('@/views/secureNotes/SecureNotesView.vue'),

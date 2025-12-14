@@ -2,7 +2,7 @@
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="show" class="modal-overlay" @click="handleOverlayClick">
-        <div class="modal-container" @click.stop>
+        <div :class="['modal-container', `size-${size}`]" @click.stop>
           <!-- Header -->
           <div v-if="$slots.header || title" class="modal-header">
             <slot name="header">

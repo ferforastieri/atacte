@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import bcrypt from 'bcryptjs';
 import { AuditUtil } from '../../utils/auditUtil';
 import { UserRepository } from '../../repositories/users/userRepository';
 
@@ -203,12 +204,17 @@ export class UserService {
   }
 
   
-  async deleteUserAccount(userId: string, req?: Request): Promise<void> {
+  async deleteUserAccount(userId: string, password: string, req?: Request): Promise<void> {
     
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.masterPasswordHash);
+    if (!isValidPassword) {
+      throw new Error('Senha incorreta');
     }
 
     

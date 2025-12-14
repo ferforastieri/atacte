@@ -3,9 +3,7 @@
     <!-- Header -->
     <AppHeader
       :show-logo="true"
-      :show-back-button="true"
       :show-navigation="true"
-      title="Configurações"
     />
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -26,25 +24,6 @@
                 </BaseButton>
               </div>
               
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="flex-1">
-                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Exportar Dados</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">Baixe todas as suas senhas em formato JSON</p>
-                </div>
-                <BaseButton variant="secondary" @click="exportData" class="w-full sm:w-auto">
-                  Exportar
-                </BaseButton>
-              </div>
-
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="flex-1">
-                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Importar Dados</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">Importe senhas de outros aplicativos</p>
-                </div>
-                <BaseButton variant="secondary" @click="showImportModal = true" class="w-full sm:w-auto">
-                  Importar
-                </BaseButton>
-              </div>
             </div>
           </div>
         </BaseCard>
@@ -74,38 +53,6 @@
                 </div>
               </div>
               
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="flex-1">
-                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Idioma</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">Idioma da interface</p>
-                </div>
-                <select 
-                  v-model="language" 
-                  @change="changeLanguage"
-                  class="input-field w-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="pt-BR">Português</option>
-                  <option value="en-US">English</option>
-                </select>
-              </div>
-
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="flex-1">
-                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Auto-lock</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">Bloquear automaticamente após inatividade (0 = nunca trancar)</p>
-                </div>
-                <select 
-                  v-model="autoLock" 
-                  @change="changeAutoLock"
-                  class="input-field w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="5">5 minutos</option>
-                  <option value="15">15 minutos</option>
-                  <option value="30">30 minutos</option>
-                  <option value="60">1 hora</option>
-                  <option value="0">Nunca trancar</option>
-                </select>
-              </div>
             </div>
           </div>
         </BaseCard>
@@ -131,43 +78,82 @@
       </div>
     </div>
 
-    <!-- Modals -->
-    <ImportPasswordModal
-      :show="showImportModal"
-      @close="showImportModal = false"
-      @imported="() => { showImportModal = false; toast.success('Dados importados com sucesso!') }"
-    />
-
-    <!-- Change Password Modal (placeholder) -->
-    <div v-if="showChangePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <!-- Change Password Modal -->
+    <div v-if="showChangePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="showChangePasswordModal = false">
       <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Alterar Senha Master</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Esta funcionalidade será implementada em breve.
-        </p>
-        <div class="flex justify-end space-x-3">
-          <BaseButton variant="secondary" @click="showChangePasswordModal = false">
-            Fechar
-          </BaseButton>
-        </div>
+        
+        <form @submit.prevent="handleChangePassword" class="space-y-4">
+          <BaseInput
+            v-model="changePasswordForm.currentPassword"
+            type="password"
+            label="Senha Atual"
+            placeholder="Digite sua senha atual"
+            required
+            :error="changePasswordErrors.currentPassword"
+            show-password-toggle
+          />
+
+          <BaseInput
+            v-model="changePasswordForm.newPassword"
+            type="password"
+            label="Nova Senha"
+            placeholder="Digite a nova senha"
+            required
+            :error="changePasswordErrors.newPassword"
+            show-password-toggle
+          />
+
+          <BaseInput
+            v-model="changePasswordForm.confirmPassword"
+            type="password"
+            label="Confirmar Nova Senha"
+            placeholder="Confirme a nova senha"
+            required
+            :error="changePasswordErrors.confirmPassword"
+            show-password-toggle
+          />
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <BaseButton variant="secondary" @click="showChangePasswordModal = false" :disabled="isChangingPassword">
+              Cancelar
+            </BaseButton>
+            <BaseButton variant="primary" type="submit" :loading="isChangingPassword">
+              Alterar Senha
+            </BaseButton>
+          </div>
+        </form>
       </div>
     </div>
 
-    <!-- Delete Account Modal (placeholder) -->
-    <div v-if="showDeleteAccountModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <!-- Delete Account Modal -->
+    <div v-if="showDeleteAccountModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="showDeleteAccountModal = false">
       <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
         <h3 class="text-lg font-semibold text-red-900 dark:text-red-300 mb-4">Deletar Conta</h3>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Esta funcionalidade será implementada em breve. Esta ação não pode ser desfeita.
+          Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente deletados, incluindo senhas, notas e configurações.
         </p>
-        <div class="flex justify-end space-x-3">
-          <BaseButton variant="secondary" @click="showDeleteAccountModal = false">
-            Cancelar
-          </BaseButton>
-          <BaseButton variant="danger" disabled>
-            Deletar
-          </BaseButton>
-        </div>
+        
+        <form @submit.prevent="handleDeleteAccount" class="space-y-4">
+          <BaseInput
+            v-model="deleteAccountForm.password"
+            type="password"
+            label="Confirme sua senha"
+            placeholder="Digite sua senha para confirmar"
+            required
+            :error="deleteAccountErrors.password"
+            show-password-toggle
+          />
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <BaseButton variant="secondary" @click="showDeleteAccountModal = false" :disabled="isDeletingAccount">
+              Cancelar
+            </BaseButton>
+            <BaseButton variant="danger" type="submit" :loading="isDeletingAccount">
+              Deletar Conta
+            </BaseButton>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -177,31 +163,37 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
-import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, BaseInput } from '@/components/ui'
 import { useThemeStore } from '@/stores/theme'
-import { usePasswordsStore } from '@/stores/passwords'
 import { useAuthStore } from '@/stores/auth'
-import importExportApi from '@/api/importExport'
-import preferencesApi from '@/api/preferences'
-
-
-import ImportPasswordModal from '@/components/passwords/ImportPasswordModal.vue'
+import authApi from '@/api/auth'
+import usersApi from '@/api/users'
 
 const router = useRouter()
 const toast = useToast()
 const themeStore = useThemeStore()
-const passwordsStore = usePasswordsStore()
 const authStore = useAuthStore()
 
 const showChangePasswordModal = ref(false)
 const showDeleteAccountModal = ref(false)
-const showImportModal = ref(false)
-
+const isChangingPassword = ref(false)
+const isDeletingAccount = ref(false)
 
 const theme = ref('auto')
-const language = ref('pt-BR')
-const autoLock = ref('15')
+
+const changePasswordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const changePasswordErrors = ref<Record<string, string>>({})
+
+const deleteAccountForm = ref({
+  password: ''
+})
+
+const deleteAccountErrors = ref<Record<string, string>>({})
 
 
 onMounted(async () => {
@@ -210,40 +202,9 @@ onMounted(async () => {
 
 const loadSettings = async () => {
   try {
-    
     theme.value = themeStore.isDarkMode ? 'dark' : 'light'
-    
-    
-    const response = await preferencesApi.getPreferences()
-    if (response.success && response.data) {
-      language.value = response.data.language || 'pt-BR'
-      autoLock.value = response.data.autoLock !== undefined ? response.data.autoLock.toString() : '15'
-    } else {
-      
-      const savedLanguage = localStorage.getItem('language')
-      const savedAutoLock = localStorage.getItem('autoLock')
-      
-      if (savedLanguage) {
-        language.value = savedLanguage
-      }
-      
-      if (savedAutoLock) {
-        autoLock.value = savedAutoLock
-      }
-    }
   } catch (error) {
     console.error('Erro ao carregar configurações:', error)
-    
-    const savedLanguage = localStorage.getItem('language')
-    const savedAutoLock = localStorage.getItem('autoLock')
-    
-    if (savedLanguage) {
-      language.value = savedLanguage
-    }
-    
-    if (savedAutoLock) {
-      autoLock.value = savedAutoLock
-    }
   }
 }
 
@@ -262,57 +223,94 @@ const changeTheme = () => {
   toast.success('Tema alterado!')
 }
 
-const changeLanguage = async () => {
+const handleChangePassword = async () => {
+  changePasswordErrors.value = {}
+
+  if (!changePasswordForm.value.currentPassword) {
+    changePasswordErrors.value.currentPassword = 'Senha atual é obrigatória'
+    return
+  }
+
+  if (!changePasswordForm.value.newPassword) {
+    changePasswordErrors.value.newPassword = 'Nova senha é obrigatória'
+    return
+  }
+
+  if (changePasswordForm.value.newPassword.length < 8) {
+    changePasswordErrors.value.newPassword = 'A senha deve ter pelo menos 8 caracteres'
+    return
+  }
+
+  if (changePasswordForm.value.newPassword !== changePasswordForm.value.confirmPassword) {
+    changePasswordErrors.value.confirmPassword = 'As senhas não coincidem'
+    return
+  }
+
+  isChangingPassword.value = true
+
   try {
-    await preferencesApi.upsertPreferences({
-      language: language.value
-    })
-    localStorage.setItem('language', language.value)
-    toast.success('Idioma alterado!')
-  } catch (error) {
-    console.error('Erro ao alterar idioma:', error)
-    toast.error('Erro ao alterar idioma')
+    await authApi.changePassword(
+      changePasswordForm.value.currentPassword,
+      changePasswordForm.value.newPassword
+    )
+
+    toast.success('Senha alterada com sucesso! Você será deslogado.')
+    
+    changePasswordForm.value = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    }
+    showChangePasswordModal.value = false
+
+    setTimeout(() => {
+      authStore.logout()
+      router.push('/login')
+    }, 2000)
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || 'Erro ao alterar senha'
+    
+    if (errorMessage.includes('incorreta') || errorMessage.includes('atual')) {
+      changePasswordErrors.value.currentPassword = errorMessage
+    } else {
+      toast.error(errorMessage)
+    }
+  } finally {
+    isChangingPassword.value = false
   }
 }
 
-const changeAutoLock = async () => {
+const handleDeleteAccount = async () => {
+  deleteAccountErrors.value = {}
+
+  if (!deleteAccountForm.value.password) {
+    deleteAccountErrors.value.password = 'Senha é obrigatória'
+    return
+  }
+
+  isDeletingAccount.value = true
+
   try {
+    await usersApi.deleteAccount(deleteAccountForm.value.password)
+
+    toast.success('Conta deletada com sucesso')
     
-    const response = await preferencesApi.upsertPreferences({
-      autoLock: parseInt(autoLock.value)
-    })
+    setTimeout(() => {
+      authStore.logout()
+      router.push('/login')
+    }, 2000)
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || 'Erro ao deletar conta'
     
-    
-    localStorage.setItem('autoLock', autoLock.value)
-    toast.success('Auto-lock configurado!')
-  } catch (error) {
-    console.error('Erro ao configurar auto-lock:', error)
-    toast.error('Erro ao configurar auto-lock')
+    if (errorMessage.includes('incorreta') || errorMessage.includes('Senha')) {
+      deleteAccountErrors.value.password = errorMessage
+    } else {
+      toast.error(errorMessage)
+    }
+  } finally {
+    isDeletingAccount.value = false
   }
 }
 
-const exportData = async () => {
-  try {
-    toast.info('Preparando exportação...')
-    
-    const result = await passwordsStore.exportToBitwarden()
-    
-    
-    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `atacte-backup-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    
-    toast.success('Dados exportados com sucesso!')
-  } catch (error) {
-    console.error('Erro ao exportar dados:', error)
-    toast.error('Erro ao exportar dados')
-  }
-}
 </script>
 
