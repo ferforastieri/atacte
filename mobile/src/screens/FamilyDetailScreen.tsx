@@ -132,7 +132,6 @@ export default function FamilyDetailScreen({ route }: any) {
       showSuccess('Zona criada com sucesso!');
       setIsCreatingZone(false);
     } catch (error) {
-      console.error('Erro ao criar zona:', error);
       showError('Erro ao criar zona');
     } finally {
       setIsSavingZone(false);
@@ -146,7 +145,6 @@ export default function FamilyDetailScreen({ route }: any) {
       await loadZones();
       showSuccess('Zona atualizada com sucesso!');
     } catch (error) {
-      console.error('Erro ao atualizar zona:', error);
       showError('Erro ao atualizar zona');
     } finally {
       setIsSavingZone(false);
@@ -159,7 +157,6 @@ export default function FamilyDetailScreen({ route }: any) {
       await loadZones();
       showSuccess('Zona excluída com sucesso!');
     } catch (error) {
-      console.error('Erro ao excluir zona:', error);
       showError('Erro ao excluir zona');
     }
   };
@@ -219,7 +216,6 @@ export default function FamilyDetailScreen({ route }: any) {
                 showError(response.message || 'Erro ao sair da família');
               }
             } catch (error) {
-              console.error('Leave family error:', error);
               showError('Erro ao sair da família');
             }
           },
@@ -281,7 +277,6 @@ export default function FamilyDetailScreen({ route }: any) {
         showError(response.message || 'Erro ao entrar na família');
       }
     } catch (error) {
-      console.error('Join family error:', error);
       showError('Erro ao entrar na família');
     } finally {
       setIsSaving(false);

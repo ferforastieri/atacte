@@ -128,7 +128,6 @@ export default function FamilyScreen({ navigation }: any) {
         showError(response.message || 'Erro ao entrar na família');
       }
     } catch (error) {
-      console.error('Join family error:', error);
       showError('Erro ao entrar na família');
     } finally {
       setIsSaving(false);
