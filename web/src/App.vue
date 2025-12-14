@@ -51,7 +51,20 @@ const handleTrustModalClose = () => {
 
 const handleDeviceTrusted = async () => {
   showTrustModal.value = false
-  window.location.reload()
+  
+  await new Promise(resolve => setTimeout(resolve, 500))
+  
+  try {
+    const isValid = await authStore.verifyToken()
+    if (isValid && authStore.isAuthenticated) {
+      await authStore.loadUserPreferences()
+    } else {
+      router.push('/login')
+    }
+  } catch (error) {
+    console.error('Erro ao verificar token após confiar:', error)
+    router.push('/login')
+  }
 }
 
 onMounted(async () => {
