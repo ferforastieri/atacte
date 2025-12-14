@@ -68,8 +68,30 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
     const queryParams = req.query;
     const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
     const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
+    const query = queryParams['query'] as string | undefined;
+    const action = queryParams['action'] as string | undefined;
     
-    const auditLogs = await userService.getUserAuditLogs(req.user.id, { limit, offset });
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+    
+    if (queryParams['startDate']) {
+      startDate = new Date(queryParams['startDate'] as string);
+      startDate.setHours(0, 0, 0, 0);
+    }
+    
+    if (queryParams['endDate']) {
+      endDate = new Date(queryParams['endDate'] as string);
+      endDate.setHours(23, 59, 59, 999);
+    }
+    
+    const auditLogs = await userService.getUserAuditLogs(req.user.id, { 
+      limit, 
+      offset,
+      query,
+      action,
+      startDate,
+      endDate
+    });
 
     res.json({
       success: true,

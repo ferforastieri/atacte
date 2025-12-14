@@ -154,11 +154,25 @@ export class UserService {
   
   async getUserAuditLogs(
     userId: string, 
-    options: { limit: number; offset: number }
+    options: { 
+      limit: number; 
+      offset: number;
+      query?: string;
+      action?: string;
+      startDate?: Date;
+      endDate?: Date;
+    }
   ): Promise<{ logs: AuditLogDto[]; total: number }> {
-    const { limit, offset } = options;
+    const { limit, offset, query, action, startDate, endDate } = options;
 
-    const result = await this.userRepository.getUserAuditLogs(userId, limit, offset);
+    const filters = {
+      query,
+      action,
+      startDate,
+      endDate
+    };
+
+    const result = await this.userRepository.getUserAuditLogs(userId, limit, offset, filters);
 
     const auditLogs: AuditLogDto[] = result.logs.map(log => ({
       id: log.id,

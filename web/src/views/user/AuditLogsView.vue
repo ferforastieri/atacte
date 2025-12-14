@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
 import { DocumentTextIcon } from '@heroicons/vue/24/outline'
@@ -138,39 +138,7 @@ const filters = ref({
 })
 
 const filteredLogs = computed(() => {
-  let filtered = [...logs.value]
-
-  if (filters.value.query) {
-    const query = filters.value.query.toLowerCase()
-    filtered = filtered.filter(log =>
-      log.action.toLowerCase().includes(query) ||
-      JSON.stringify(log.details).toLowerCase().includes(query) ||
-      log.userAgent?.toLowerCase().includes(query) ||
-      log.ipAddress?.toLowerCase().includes(query)
-    )
-  }
-
-  if (filters.value.action) {
-    filtered = filtered.filter(log => log.action === filters.value.action)
-  }
-
-  if (filters.value.startDate) {
-    const startDate = new Date(filters.value.startDate)
-    startDate.setHours(0, 0, 0, 0)
-    filtered = filtered.filter(log => {
-      const logDate = new Date(log.createdAt)
-      logDate.setHours(0, 0, 0, 0)
-      return logDate >= startDate
-    })
-  }
-
-  if (filters.value.endDate) {
-    const endDate = new Date(filters.value.endDate)
-    endDate.setHours(23, 59, 59, 999)
-    filtered = filtered.filter(log => new Date(log.createdAt) <= endDate)
-  }
-
-  return filtered
+  return logs.value
 })
 
 const getActionClass = (action: string) => {
@@ -227,7 +195,19 @@ const formatDetails = (details: any) => {
 const fetchLogs = async () => {
   isLoading.value = true
   try {
-    const response = await usersApi.getAuditLogs(100, 0)
+    const filterParams: {
+      query?: string;
+      action?: string;
+      startDate?: string;
+      endDate?: string;
+    } = {}
+    
+    if (filters.value.query) filterParams.query = filters.value.query
+    if (filters.value.action) filterParams.action = filters.value.action
+    if (filters.value.startDate) filterParams.startDate = filters.value.startDate
+    if (filters.value.endDate) filterParams.endDate = filters.value.endDate
+    
+    const response = await usersApi.getAuditLogs(100, 0, filterParams)
     if (response.success && response.data) {
       logs.value = response.data
     } else {
@@ -240,6 +220,14 @@ const fetchLogs = async () => {
     isLoading.value = false
   }
 }
+
+watch(
+  () => [filters.value.query, filters.value.action, filters.value.startDate, filters.value.endDate],
+  () => {
+    fetchLogs()
+  },
+  { deep: true }
+)
 
 onMounted(() => {
   fetchLogs()

@@ -72,8 +72,31 @@ const usersApi = {
   },
 
   
-  async getAuditLogs(limit = 50, offset = 0) {
-    const response = await api.get(`/users/audit-logs?limit=${limit}&offset=${offset}`)
+  async getAuditLogs(limit = 50, offset = 0, filters?: {
+    query?: string;
+    action?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString()
+    })
+    
+    if (filters?.query) {
+      params.append('query', filters.query)
+    }
+    if (filters?.action) {
+      params.append('action', filters.action)
+    }
+    if (filters?.startDate) {
+      params.append('startDate', filters.startDate)
+    }
+    if (filters?.endDate) {
+      params.append('endDate', filters.endDate)
+    }
+    
+    const response = await api.get(`/users/audit-logs?${params.toString()}`)
     return response.data
   },
 

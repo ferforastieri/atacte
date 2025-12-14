@@ -127,19 +127,54 @@ export class UserRepository {
       .filter(folder => folder) as string[];
   }
 
-  async getUserAuditLogs(userId: string, limit: number = 50, offset: number = 0): Promise<{
+  async getUserAuditLogs(
+    userId: string, 
+    limit: number = 50, 
+    offset: number = 0,
+    filters?: {
+      query?: string;
+      action?: string;
+      startDate?: Date;
+      endDate?: Date;
+    }
+  ): Promise<{
     logs: any[];
     total: number;
   }> {
+    const where: any = { userId };
+
+    if (filters?.action) {
+      where.action = filters.action;
+    }
+
+    if (filters?.startDate || filters?.endDate) {
+      where.createdAt = {};
+      if (filters.startDate) {
+        where.createdAt.gte = filters.startDate;
+      }
+      if (filters.endDate) {
+        where.createdAt.lte = filters.endDate;
+      }
+    }
+
+    if (filters?.query) {
+      const query = filters.query.toLowerCase();
+      where.OR = [
+        { action: { contains: query } },
+        { ipAddress: { contains: query } },
+        { userAgent: { contains: query } }
+      ];
+    }
+
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
-        where: { userId },
+        where,
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
       }),
       prisma.auditLog.count({
-        where: { userId },
+        where,
       }),
     ]);
 
