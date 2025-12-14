@@ -3,26 +3,14 @@
     <!-- Header -->
     <AppHeader
       :show-logo="true"
+      :show-back-button="true"
+      :back-route="'/location'"
       :show-navigation="true"
+      :title="`Histórico - ${memberName}`"
     />
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
-      <!-- Header Section -->
-      <div class="mb-6">
-        <button
-          @click="goBack"
-          class="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Voltar
-        </button>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Histórico de Localização - {{ memberName }}
-        </h1>
-      </div>
 
       <!-- Date Filter -->
       <BaseCard class="mb-6">
@@ -31,22 +19,20 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Data Inicial
             </label>
-            <input
+            <BaseInput
               v-model="startDate"
               type="date"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
-              @change="loadHistory"
+              @update:modelValue="loadHistory"
             />
           </div>
           <div class="flex-1">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Data Final
             </label>
-            <input
+            <BaseInput
               v-model="endDate"
               type="date"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
-              @change="loadHistory"
+              @update:modelValue="loadHistory"
             />
           </div>
           <div class="flex items-end">
@@ -98,8 +84,11 @@
                   <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {{ formatDateTime(location.timestamp) }}
                   </p>
-                  <p v-if="location.address" class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    {{ location.address }}
+                  <p v-if="location.address" class="text-xs font-medium text-gray-700 dark:text-gray-300 mt-1">
+                    📍 {{ location.address }}
+                  </p>
+                  <p v-else class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+                    Endereço não disponível
                   </p>
                   <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>Lat: {{ location.latitude.toFixed(6) }}</span>
@@ -129,7 +118,7 @@ import { useToast } from 'vue-toastification'
 import { locationApi, type LocationData } from '@/api/location'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, BaseInput } from '@/components/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -244,9 +233,12 @@ const updateMapMarkers = () => {
       .bindPopup(`
         <div style="padding: 8px; min-width: 200px;">
           <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #1f2937;">${formatDateTime(location.timestamp)}</h3>
-          ${location.address ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">${location.address}</p>` : ''}
-          <p style="margin: 0 0 4px 0; font-size: 12px; color: #6b7280;">Lat: ${location.latitude.toFixed(6)}</p>
-          <p style="margin: 0; font-size: 12px; color: #6b7280;">Lng: ${location.longitude.toFixed(6)}</p>
+          ${location.address ? `<p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 500; color: #374151;">📍 ${location.address}</p>` : '<p style="margin: 0 0 8px 0; font-size: 12px; color: #9ca3af; font-style: italic;">Endereço não disponível</p>'}
+          <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #6b7280;">Lat: ${location.latitude.toFixed(6)}</p>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #6b7280;">Lng: ${location.longitude.toFixed(6)}</p>
+            ${location.accuracy ? `<p style="margin: 0; font-size: 12px; color: #6b7280;">Precisão: ${Math.round(location.accuracy)}m</p>` : ''}
+          </div>
         </div>
       `)
       .addTo(map!)

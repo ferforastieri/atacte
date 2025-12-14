@@ -95,15 +95,16 @@
                       </svg>
                       <span class="text-xs text-gray-500 dark:text-gray-400">{{ Math.round(member.batteryLevel * 100) }}%</span>
                     </div>
-                    <button
+                    <BaseButton
+                      variant="ghost"
+                      size="sm"
                       @click.stop="viewLocationHistory(member)"
-                      class="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                       title="Ver histórico de localização"
                     >
                       <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m3 8H9m0 0l3-3m-3 3l3 3" />
                       </svg>
-                    </button>
+                    </BaseButton>
                   </div>
                 </div>
               </div>
@@ -133,12 +134,14 @@
               </div>
               <div v-else-if="zones.length === 0" class="text-center py-4">
                 <p class="text-gray-500 dark:text-gray-400 text-sm">Nenhuma zona criada</p>
-                <button
+                <BaseButton
+                  variant="ghost"
+                  size="sm"
                   @click="startCreatingZone"
-                  class="mt-2 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium"
+                  class="mt-2"
                 >
                   Criar primeira zona
-                </button>
+                </BaseButton>
               </div>
               <div v-else class="space-y-2">
                 <div
@@ -157,14 +160,16 @@
                     >
                       {{ zone.isActive ? 'Ativa' : 'Inativa' }}
                     </span>
-                    <button
+                    <BaseButton
+                      variant="ghost"
+                      size="sm"
                       @click="deleteZone(zone.id)"
-                      class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm"
+                      class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                    </button>
+                    </BaseButton>
                   </div>
                 </div>
               </div>
@@ -180,79 +185,65 @@
         <div class="mt-3">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Criar Nova Zona</h3>
-            <button
+            <BaseButton
+              variant="ghost"
+              size="sm"
               @click="closeModal"
-              class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
+            </BaseButton>
           </div>
           
           <form @submit.prevent="createZone" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome da Zona</label>
-              <input
-                v-model="newZone.name"
-                type="text"
-                required
-                class="mt-1 block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                placeholder="Ex: Casa, Trabalho, Escola"
-              />
-            </div>
+            <BaseInput
+              v-model="newZone.name"
+              type="text"
+              label="Nome da Zona"
+              placeholder="Ex: Casa, Trabalho, Escola"
+              required
+            />
             
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição (opcional)</label>
-              <textarea
-                v-model="newZone.description"
-                rows="2"
-                class="mt-1 block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                placeholder="Descrição da zona..."
-              />
-            </div>
+            <BaseTextarea
+              v-model="newZone.description"
+              label="Descrição (opcional)"
+              placeholder="Descrição da zona..."
+              :rows="2"
+            />
             
             <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Latitude</label>
-                <input
-                  v-model.number="newZone.latitude"
-                  type="number"
-                  step="any"
-                  required
-                  class="mt-1 block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="-23.5505"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Longitude</label>
-                <input
-                  v-model.number="newZone.longitude"
-                  type="number"
-                  step="any"
-                  required
-                  class="mt-1 block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="-46.6333"
-                />
-              </div>
+              <BaseInput
+                v-model="latitudeInput"
+                type="number"
+                label="Latitude"
+                placeholder="-23.5505"
+                step="any"
+                required
+              />
+              <BaseInput
+                v-model="longitudeInput"
+                type="number"
+                label="Longitude"
+                placeholder="-46.6333"
+                step="any"
+                required
+              />
             </div>
             
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Raio (metros)</label>
-              <select
-                v-model.number="newZone.radius"
-                class="mt-1 block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-              >
-                <option value="50">50m</option>
-                <option value="100">100m</option>
-                <option value="200">200m</option>
-                <option value="500">500m</option>
-                <option value="1000">1km</option>
-                <option value="2000">2km</option>
-                <option value="5000">5km</option>
-                <option value="10000">10km</option>
-              </select>
-            </div>
+            <BaseSelect
+              v-model.number="newZone.radius"
+              label="Raio (metros)"
+            >
+              <option value="50">50m</option>
+              <option value="100">100m</option>
+              <option value="200">200m</option>
+              <option value="500">500m</option>
+              <option value="1000">1km</option>
+              <option value="2000">2km</option>
+              <option value="5000">5km</option>
+              <option value="10000">10km</option>
+            </BaseSelect>
             
             <div class="flex items-center space-x-4">
               <label class="flex items-center">
@@ -274,20 +265,21 @@
             </div>
             
             <div class="flex justify-end space-x-3 pt-4">
-              <button
+              <BaseButton
                 type="button"
+                variant="ghost"
                 @click="closeModal"
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 Cancelar
-              </button>
-              <button
+              </BaseButton>
+              <BaseButton
                 type="submit"
+                variant="primary"
+                :loading="isCreatingZone"
                 :disabled="isCreatingZone"
-                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
               >
-                {{ isCreatingZone ? 'Criando...' : 'Criar Zona' }}
-              </button>
+                Criar Zona
+              </BaseButton>
             </div>
           </form>
         </div>
@@ -304,7 +296,7 @@ import { useAuthStore } from '@/stores/auth'
 import { locationApi, type FamilyMember, type GeofenceZone, type CreateZoneData } from '@/api/location'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, BaseInput, BaseSelect, BaseTextarea } from '@/components/ui'
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 
 interface NewZone {
@@ -338,6 +330,20 @@ const newZone = ref<NewZone>({
   radius: 100,
   notifyOnEnter: true,
   notifyOnExit: true
+})
+
+const latitudeInput = computed({
+  get: () => newZone.value.latitude.toString(),
+  set: (val: string | number) => {
+    newZone.value.latitude = typeof val === 'number' ? val : parseFloat(val) || 0
+  }
+})
+
+const longitudeInput = computed({
+  get: () => newZone.value.longitude.toString(),
+  set: (val: string | number) => {
+    newZone.value.longitude = typeof val === 'number' ? val : parseFloat(val) || 0
+  }
 })
 
 const toast = useToast()
@@ -385,6 +391,8 @@ const onMapClick = (e: L.LeafletMouseEvent) => {
   
   newZone.value.latitude = lat
   newZone.value.longitude = lng
+  latitudeInput.value = lat.toString()
+  longitudeInput.value = lng.toString()
   
   if (tempCircle) {
     map?.removeLayer(tempCircle)
@@ -609,6 +617,8 @@ const createZone = async () => {
       notifyOnEnter: true,
       notifyOnExit: true
     }
+    latitudeInput.value = newZone.value.latitude.toString()
+    longitudeInput.value = newZone.value.longitude.toString()
     
     await loadZones()
   } catch (error) {

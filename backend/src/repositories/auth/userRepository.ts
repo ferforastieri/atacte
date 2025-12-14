@@ -16,11 +16,13 @@ export interface CreateUserSessionData {
   ipAddress?: string;
   userAgent?: string;
   expiresAt?: Date | null;
+  isTrusted?: boolean;
 }
 
 export interface UpdateUserSessionData {
   lastUsed?: Date;
   deviceName?: string;
+  isTrusted?: boolean;
 }
 
 export class UserRepository {
@@ -64,14 +66,34 @@ export class UserRepository {
 
   
   async createSession(data: CreateUserSessionData): Promise<UserSession> {
+    const sessionData: any = {
+      userId: data.userId,
+      tokenHash: data.tokenHash,
+      deviceName: data.deviceName,
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+      isTrusted: data.isTrusted ?? false,
+    };
+    
+    if (data.expiresAt !== undefined) {
+      sessionData.expiresAt = data.expiresAt;
+    }
+    
     return await prisma.userSession.create({
-      data,
+      data: sessionData,
     });
   }
 
   async findSessionByTokenHash(tokenHash: string): Promise<UserSession | null> {
     return await prisma.userSession.findFirst({
       where: { tokenHash },
+      include: { user: true },
+    });
+  }
+
+  async findSessionById(id: string): Promise<UserSession | null> {
+    return await prisma.userSession.findUnique({
+      where: { id },
       include: { user: true },
     });
   }

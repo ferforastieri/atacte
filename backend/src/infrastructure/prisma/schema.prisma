@@ -100,6 +100,7 @@ model UserSession {
   ipAddress   String?   @map("ip_address")
   userAgent   String?   @map("user_agent")
   expiresAt   DateTime? @map("expires_at")
+  isTrusted   Boolean   @default(false) @map("is_trusted")
   createdAt   DateTime  @default(now()) @map("created_at")
   lastUsed    DateTime  @default(now()) @map("last_used")
   

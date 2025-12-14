@@ -110,16 +110,16 @@
           </div>
           
           <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <select
+            <BaseSelect
               v-model="selectedFolder"
-              @change="handleFolderFilter"
-              class="w-full sm:w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
+              @update:modelValue="handleFolderFilter"
+              class="w-full sm:w-48"
             >
               <option value="">Todas as pastas</option>
               <option v-for="folder in passwordsStore.folders" :key="folder" :value="folder">
                 {{ folder }}
               </option>
-            </select>
+            </BaseSelect>
 
             <BaseButton
               variant="ghost"
@@ -200,20 +200,20 @@
             Mostrando {{ passwordsStore.pagination.offset + 1 }} a {{ Math.min(passwordsStore.pagination.offset + passwordsStore.pagination.limit, passwordsStore.pagination.total) }} de {{ passwordsStore.pagination.total }} senhas
           </div>
           <div class="flex space-x-2">
-            <button
+            <BaseButton
+              variant="ghost"
               @click="passwordsStore.fetchPasswords({ offset: passwordsStore.pagination.offset - passwordsStore.pagination.limit })"
               :disabled="passwordsStore.pagination.offset === 0"
-              class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ← Anterior
-            </button>
-            <button
+            </BaseButton>
+            <BaseButton
+              variant="ghost"
               @click="passwordsStore.fetchPasswords({ offset: passwordsStore.pagination.offset + passwordsStore.pagination.limit })"
               :disabled="passwordsStore.pagination.offset + passwordsStore.pagination.limit >= passwordsStore.pagination.total"
-              class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Próximo →
-            </button>
+            </BaseButton>
           </div>
         </div>
       </div>
@@ -278,7 +278,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
-import { BaseButton, BaseCard, SearchInput, AppHeader } from '@/components/ui'
+import { BaseButton, BaseCard, SearchInput, AppHeader, BaseSelect } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { copyToClipboard } from '@/utils/clipboard'
 

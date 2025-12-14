@@ -49,7 +49,18 @@ api.interceptors.response.use(
           break
           
         case 403:
-          toast.error('Acesso negado.')
+          if (data.requiresTrust && data.sessionId) {
+            const event = new CustomEvent('device-trust-required', {
+              detail: {
+                sessionId: data.sessionId,
+                deviceName: data.deviceName,
+                ipAddress: data.ipAddress
+              }
+            })
+            window.dispatchEvent(event)
+            return Promise.reject(error)
+          }
+          toast.error(data.message || 'Acesso negado.')
           break
           
         case 404:

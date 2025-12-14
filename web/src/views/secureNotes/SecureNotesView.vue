@@ -86,16 +86,16 @@
           </div>
           
           <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <select
+            <BaseSelect
               v-model="selectedFolder"
-              @change="handleFolderFilter"
-              class="w-full sm:w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
+              @update:modelValue="handleFolderFilter"
+              class="w-full sm:w-48"
             >
               <option value="">Todas as pastas</option>
               <option v-for="folder in folders" :key="folder" :value="folder">
                 {{ folder }}
               </option>
-            </select>
+            </BaseSelect>
 
             <BaseButton
               variant="ghost"
@@ -217,7 +217,7 @@ import { useSecureNotesStore } from '@/stores/secureNotes'
 import { useToast } from 'vue-toastification'
 import type { SecureNote } from '@/api/secureNotes'
 
-import { AppHeader, BaseButton, BaseCard, SearchInput } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, SearchInput, BaseSelect } from '@/components/ui'
 import CreateSecureNoteModal from '@/components/secureNotes/CreateSecureNoteModal.vue'
 import EditSecureNoteModal from '@/components/secureNotes/EditSecureNoteModal.vue'
 import SecureNoteDetailModal from '@/components/secureNotes/SecureNoteDetailModal.vue'

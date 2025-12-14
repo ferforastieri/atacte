@@ -66,6 +66,21 @@ export const authenticateToken = async (
       return;
     }
 
+    const allowedPathsWithoutTrust = ['/auth/trust-device', '/auth/me', '/auth/logout'];
+    const path = req.path;
+
+    if (!(session as any).isTrusted && !allowedPathsWithoutTrust.some(allowed => path.includes(allowed))) {
+      res.status(403).json({ 
+        success: false, 
+        message: 'Dispositivo não confiável. Por favor, confirme este dispositivo.',
+        requiresTrust: true,
+        sessionId: session.id,
+        deviceName: session.deviceName,
+        ipAddress: session.ipAddress
+      });
+      return;
+    }
+
     
     try {
       await prisma.userSession.update({

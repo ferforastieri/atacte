@@ -30,6 +30,7 @@ export interface LoginResponse {
   user: UserDto;
   token: string;
   sessionId: string;
+  requiresTrust?: boolean;
 }
 
 export class AuthService {
@@ -107,6 +108,7 @@ export class AuthService {
       ipAddress: ipAddress || 'unknown',
       userAgent: userAgent || 'unknown',
       expiresAt: expiresAt as any,
+      isTrusted: false,
     };
 
     const session = await this.userRepository.createSession(sessionData);
@@ -115,6 +117,7 @@ export class AuthService {
       user: this.mapToDto(user),
       token,
       sessionId: session.id,
+      requiresTrust: !((session as any).isTrusted ?? false),
     };
   }
 
@@ -206,7 +209,16 @@ export class AuthService {
       lastUsed: session.lastUsed,
       expiresAt: session.expiresAt,
       isCurrent: currentTokenHash ? session.tokenHash === currentTokenHash : false,
+      isTrusted: (session as any).isTrusted ?? false,
     }));
+  }
+
+  async trustDevice(userId: string, sessionId: string): Promise<void> {
+    const session = await this.userRepository.findSessionById(sessionId);
+    if (!session || session.userId !== userId) {
+      throw new Error('Sessão não encontrada ou não pertence ao usuário');
+    }
+    await this.userRepository.updateSession(sessionId, { isTrusted: true });
   }
 
   async revokeSession(userId: string, sessionId: string): Promise<void> {

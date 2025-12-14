@@ -126,6 +126,31 @@ router.get('/sessions', authenticateToken, async (req: any, res) => {
   }
 });
 
+router.post('/trust-device', authenticateToken, async (req: any, res) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) {
+      res.status(400).json({
+        success: false,
+        message: 'ID da sessão é obrigatório'
+      });
+      return;
+    }
+
+    await authService.trustDevice(req.user.id, sessionId);
+
+    res.json({
+      success: true,
+      message: 'Dispositivo confiado com sucesso'
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 
 router.delete('/sessions/:sessionId', authenticateToken, async (req: any, res) => {
   try {

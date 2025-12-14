@@ -33,6 +33,7 @@ export interface Session {
   createdAt: string
   lastUsed: string
   expiresAt: string
+  isTrusted?: boolean
   isCurrent?: boolean
 }
 
@@ -86,6 +87,11 @@ const authApi = {
 
   async changePassword(currentPassword: string, newPassword: string) {
     const response = await api.post('/auth/change-password', { currentPassword, newPassword })
+    return response.data
+  },
+
+  async trustDevice(sessionId: string) {
+    const response = await api.post('/auth/trust-device', { sessionId })
     return response.data
   }
 }

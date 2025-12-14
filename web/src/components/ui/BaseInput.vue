@@ -17,8 +17,9 @@
         :placeholder="placeholder"
         :disabled="disabled"
         :readonly="readonly"
+        :step="step"
         :class="inputClasses"
-        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+        @input="handleInput"
         @blur="$emit('blur', $event)"
         @focus="$emit('focus', $event)"
       />
@@ -87,10 +88,19 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string]
+  'update:modelValue': [value: string | number]
   blur: [event: FocusEvent]
   focus: [event: FocusEvent]
 }>()
+
+const handleInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (props.type === 'number') {
+    emit('update:modelValue', parseFloat(target.value) || 0)
+  } else {
+    emit('update:modelValue', target.value)
+  }
+}
 
 const passwordVisible = ref(false)
 
@@ -104,7 +114,7 @@ const inputType = computed(() => {
 })
 
 const inputClasses = computed(() => {
-  const baseClasses = 'block w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
+  const baseClasses = 'block w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
   
   const sizeClasses = props.leftIcon || props.rightIcon || props.showPasswordToggle 
     ? 'pl-8 pr-10' 

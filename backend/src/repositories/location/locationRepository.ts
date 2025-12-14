@@ -132,7 +132,7 @@ export class LocationRepository {
     endDate: Date,
     limit?: number
   ): Promise<Location[]> {
-    return await prisma.location.findMany({
+    const allLocations = await prisma.location.findMany({
       where: {
         userId,
         timestamp: {
@@ -141,8 +141,67 @@ export class LocationRepository {
         },
       },
       orderBy: { timestamp: 'asc' },
-      take: limit || 1000,
+      take: limit ? limit * 10 : 10000,
     });
+
+    if (allLocations.length === 0) {
+      return [];
+    }
+
+    const filteredLocations: Location[] = [];
+    const minDistanceMeters = 10;
+
+    for (const location of allLocations) {
+      if (location.latitude === null || location.longitude === null) {
+        continue;
+      }
+
+      if (filteredLocations.length === 0) {
+        filteredLocations.push(location);
+        continue;
+      }
+
+      const lastLocation = filteredLocations[filteredLocations.length - 1];
+      if (!lastLocation || lastLocation.latitude === null || lastLocation.longitude === null) {
+        filteredLocations.push(location);
+        continue;
+      }
+
+      const distance = this.calculateDistance(
+        lastLocation.latitude,
+        lastLocation.longitude,
+        location.latitude,
+        location.longitude
+      );
+
+      if (distance >= minDistanceMeters) {
+        filteredLocations.push(location);
+      }
+
+      if (limit && filteredLocations.length >= limit) {
+        break;
+      }
+    }
+
+    return filteredLocations;
+  }
+
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371000;
+    const dLat = this.toRad(lat2 - lat1);
+    const dLon = this.toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRad(lat1)) *
+        Math.cos(this.toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  private toRad(degrees: number): number {
+    return degrees * (Math.PI / 180);
   }
 
   async countLocationsByUser(userId: string): Promise<number> {

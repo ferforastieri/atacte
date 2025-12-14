@@ -41,15 +41,15 @@
                 </div>
                 <div class="flex items-center space-x-2">
                   <ThemeToggle />
-                  <select 
+                  <BaseSelect 
                     v-model="theme" 
-                    @change="changeTheme"
-                    class="input-field w-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    @update:modelValue="(val) => changeTheme(val as string)"
+                    class="w-32"
                   >
                     <option value="light">Claro</option>
                     <option value="dark">Escuro</option>
                     <option value="auto">Automático</option>
-                  </select>
+                  </BaseSelect>
                 </div>
               </div>
               
@@ -163,7 +163,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
-import { AppHeader, BaseButton, BaseCard, BaseInput } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, BaseInput, BaseSelect } from '@/components/ui'
 import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
 import authApi from '@/api/auth'
@@ -208,10 +208,11 @@ const loadSettings = async () => {
   }
 }
 
-const changeTheme = () => {
-  if (theme.value === 'dark') {
+const changeTheme = (value?: string) => {
+  const themeValue = value || theme.value
+  if (themeValue === 'dark') {
     themeStore.isDarkMode = true
-  } else if (theme.value === 'light') {
+  } else if (themeValue === 'light') {
     themeStore.isDarkMode = false
   } else {
     

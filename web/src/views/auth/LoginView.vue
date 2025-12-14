@@ -97,11 +97,23 @@ const handleLogin = async () => {
   isLoading.value = true
 
   try {
-    await authStore.login({
+    const response = await authStore.login({
       email: form.email,
       masterPassword: form.masterPassword,
       deviceName: form.deviceName || 'Dispositivo Web'
     })
+
+    if (response.data?.requiresTrust) {
+      const event = new CustomEvent('device-trust-required', {
+        detail: {
+          sessionId: response.data.sessionId,
+          deviceName: form.deviceName || 'Dispositivo Web',
+          ipAddress: 'Desconhecido'
+        }
+      })
+      window.dispatchEvent(event)
+      return
+    }
 
     toast.success('Login realizado com sucesso!')
     router.push('/dashboard')

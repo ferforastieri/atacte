@@ -19,7 +19,7 @@
           
           <select 
             v-model="filters.action" 
-            class="input-field dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            class="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
           >
             <option value="">Todas as ações</option>
             <option value="LOGIN">Login</option>
@@ -32,16 +32,16 @@
             <option value="IMPORT_PASSWORDS">Importar Senhas</option>
           </select>
 
-          <input
+          <BaseInput
             v-model="filters.startDate"
             type="date"
-            class="input-field dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Data inicial"
           />
 
-          <input
+          <BaseInput
             v-model="filters.endDate"
             type="date"
-            class="input-field dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Data final"
           />
         </div>
       </BaseCard>
@@ -144,7 +144,7 @@ const filters = ref({
 })
 
 const filteredLogs = computed(() => {
-  let filtered = logs.value
+  let filtered = [...logs.value]
 
   if (filters.value.query) {
     const query = filters.value.query.toLowerCase()
@@ -161,7 +161,13 @@ const filteredLogs = computed(() => {
   }
 
   if (filters.value.startDate) {
-    filtered = filtered.filter(log => new Date(log.createdAt) >= new Date(filters.value.startDate))
+    const startDate = new Date(filters.value.startDate)
+    startDate.setHours(0, 0, 0, 0)
+    filtered = filtered.filter(log => {
+      const logDate = new Date(log.createdAt)
+      logDate.setHours(0, 0, 0, 0)
+      return logDate >= startDate
+    })
   }
 
   if (filters.value.endDate) {
