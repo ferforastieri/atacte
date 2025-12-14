@@ -56,7 +56,6 @@ export const preferencesApi = {
       const response = await api.put('/preferences', data)
       return response.data
     } catch (error: any) {
-      console.error('preferencesApi.updatePreferences - Erro:', error)
       return {
         success: false,
         message: error.response?.data?.message || 'Erro ao atualizar preferências'
@@ -70,7 +69,6 @@ export const preferencesApi = {
       const response = await api.patch('/preferences', data)
       return response.data
     } catch (error: any) {
-      console.error('preferencesApi.upsertPreferences - Erro:', error)
       return {
         success: false,
         message: error.response?.data?.message || 'Erro ao salvar preferências'

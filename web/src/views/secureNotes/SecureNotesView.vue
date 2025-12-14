@@ -368,7 +368,6 @@ onMounted(async () => {
       secureNotesStore.fetchFolders()
     ])
   } catch (error) {
-    console.error('Erro ao carregar notas:', error)
     toast.error('Erro ao carregar notas')
   }
 })

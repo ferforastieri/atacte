@@ -216,13 +216,10 @@ const loadTotpSecret = async () => {
       totpSecret.value = secretData.secret
     }
   } catch (error) {
-    console.error('Erro ao carregar secret TOTP:', error)
-    
     try {
       const code = await passwordsStore.getTotpCode(props.password.id)
       totpCode.value = code
     } catch (fallbackError) {
-      console.error('Erro ao carregar código TOTP (fallback):', fallbackError)
     }
   }
 }

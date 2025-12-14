@@ -79,7 +79,6 @@ export const usePasswordsStore = defineStore('passwords', () => {
       }
       throw new Error(response.message || 'Erro ao buscar senhas')
     } catch (error) {
-      console.error('Erro ao buscar senhas:', error)
       throw error
     } finally {
       isLoading.value = false
@@ -182,7 +181,6 @@ export const usePasswordsStore = defineStore('passwords', () => {
         folders.value = Array.from(foldersSet).sort()
       }
     } catch (error) {
-      console.error('Erro ao buscar pastas:', error)
     }
   }
 
@@ -329,7 +327,6 @@ export const usePasswordsStore = defineStore('passwords', () => {
 
       statsLoaded.value = true
     } catch (error) {
-      console.error('Erro ao carregar estatísticas completas:', error)
     }
   }
 

@@ -58,7 +58,15 @@ export const authenticateToken = async (
       }
     });
 
-    if (!session || !session.user.isActive) {
+    if (!session) {
+      res.status(401).json({ 
+        success: false, 
+        message: 'Sessão inválida ou expirada' 
+      });
+      return;
+    }
+
+    if (!session.user.isActive) {
       res.status(401).json({ 
         success: false, 
         message: 'Sessão inválida ou expirada' 
@@ -68,8 +76,16 @@ export const authenticateToken = async (
 
     const allowedPathsWithoutTrust = ['/api/auth/trust-device', '/api/auth/me', '/api/auth/logout', '/auth/trust-device', '/auth/me', '/auth/logout'];
     const path = req.path;
+    const originalUrl = req.originalUrl || req.url;
+    
+    const isAllowedPath = allowedPathsWithoutTrust.some(allowed => 
+      path === allowed || 
+      path.includes(allowed) || 
+      originalUrl.includes(allowed) ||
+      originalUrl === allowed
+    );
 
-    if (!(session as any).isTrusted && !allowedPathsWithoutTrust.some(allowed => path.includes(allowed))) {
+    if (!(session as any).isTrusted && !isAllowedPath) {
       res.status(403).json({ 
         success: false, 
         message: 'Dispositivo não confiável. Por favor, confirme este dispositivo.',

@@ -78,12 +78,10 @@ const handleTrust = async () => {
     if (response.success) {
       toast.success('Dispositivo confiado com sucesso!')
       emit('trusted')
-      emit('close')
     } else {
       toast.error(response.message || 'Erro ao confiar dispositivo')
     }
   } catch (error: any) {
-    console.error('Erro ao confiar dispositivo:', error)
     const errorMessage = error.response?.data?.message || error.message || 'Erro ao confiar dispositivo'
     toast.error(errorMessage)
   } finally {

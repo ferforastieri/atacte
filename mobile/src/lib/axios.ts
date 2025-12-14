@@ -20,7 +20,6 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.error('Erro ao obter token:', error);
     }
     return config;
   },
@@ -41,7 +40,6 @@ apiClient.interceptors.response.use(
         await AsyncStorage.removeItem('auth_token');
         await AsyncStorage.removeItem('user');
       } catch (storageError) {
-        console.error('Erro ao limpar storage:', storageError);
       }
     }
     return Promise.reject(error);

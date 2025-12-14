@@ -334,7 +334,6 @@ export default function DashboardScreen() {
       setCurrentOffset(0);
       await loadPasswords(0, false);
     } catch (error) {
-      console.error('Erro ao buscar senhas:', error);
       showError('Erro ao buscar senhas');
     }
   }, [loadPasswords]);
@@ -345,7 +344,6 @@ export default function DashboardScreen() {
       setCurrentOffset(0);
       await loadPasswords(0, false);
     } catch (error) {
-      console.error('Erro ao limpar busca:', error);
       showError('Erro ao limpar busca');
     }
   }, [loadPasswords]);

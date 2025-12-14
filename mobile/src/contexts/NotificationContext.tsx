@@ -47,7 +47,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       await refreshNotifications();
       await updateUnreadCount();
     } catch (error) {
-      console.error('Erro ao inicializar notificações:', error);
     }
   };
 
@@ -61,7 +60,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         const { locationService } = await import('../services/location/locationService');
         await locationService.sendCurrentLocation();
       } catch (error) {
-        console.error('Erro ao atualizar localização automaticamente:', error);
       }
     }
     
@@ -94,7 +92,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         setNotifications(response.data);
       }
     } catch (error) {
-      console.error('Erro ao carregar notificações:', error);
     } finally {
       setIsLoading(false);
     }
@@ -111,7 +108,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         await notificationService.setBadgeCount(response.data.count);
       }
     } catch (error) {
-      console.error('Erro ao atualizar contagem:', error);
     }
   };
 
@@ -127,7 +123,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       
       return false;
     } catch (error) {
-      console.error('Erro ao marcar como lida:', error);
       return false;
     }
   };
@@ -144,7 +139,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       
       return false;
     } catch (error) {
-      console.error('Erro ao marcar todas como lidas:', error);
       return false;
     }
   };
@@ -161,7 +155,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       
       return false;
     } catch (error) {
-      console.error('Erro ao deletar notificação:', error);
       return false;
     }
   };
@@ -183,7 +176,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       
       return false;
     } catch (error) {
-      console.error('Erro ao enviar SOS:', error);
       return false;
     }
   };

@@ -47,25 +47,25 @@
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Dispositivo
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   IP Address
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Criada em
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Última Atividade
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Confiança
                 </th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
@@ -76,60 +76,72 @@
                 :key="session.id"
                 class="hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                        <ComputerDesktopIcon class="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <div class="flex-shrink-0 h-8 w-8">
+                      <div class="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <ComputerDesktopIcon class="h-4 w-4 text-gray-600 dark:text-gray-400" />
                       </div>
                     </div>
-                    <div class="ml-4">
+                    <div class="ml-3">
                       <div class="text-sm font-medium text-gray-900 dark:text-white">{{ session.deviceName || 'Dispositivo Desconhecido' }}</div>
-                      <div class="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">{{ session.userAgent || '-' }}</div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate">{{ session.userAgent || '-' }}</div>
                     </div>
                   </div>
                 </td>
                 
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {{ session.ipAddress || '-' }}
                 </td>
                 
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {{ formatDateTime(session.createdAt) }}
                 </td>
                 
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {{ formatDateTime(session.lastUsed) }}
                 </td>
                 
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                     :class="session.isCurrent ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'"
                   >
                     {{ session.isCurrent ? 'Atual' : 'Ativa' }}
                   </span>
                 </td>
                 
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                     :class="session.isTrusted ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'"
                   >
                     {{ session.isTrusted ? 'Confiável' : 'Não Confiável' }}
                   </span>
                 </td>
                 
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <BaseButton
-                    v-if="!session.isCurrent"
-                    variant="ghost"
-                    size="sm"
-                    @click="revokeSession(session.id)"
-                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                  >
-                    Revogar
-                  </BaseButton>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <BaseButton
+                      v-if="session.isTrusted && session.deviceName"
+                      variant="ghost"
+                      size="sm"
+                      @click="untrustDevice(session.deviceName)"
+                      class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300 p-1.5"
+                      title="Remover confiança do dispositivo"
+                    >
+                      <ShieldExclamationIcon class="w-4 h-4" />
+                    </BaseButton>
+                    <BaseButton
+                      v-if="!session.isCurrent"
+                      variant="ghost"
+                      size="sm"
+                      @click="revokeSession(session.id)"
+                      class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      Revogar
+                    </BaseButton>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -156,7 +168,8 @@ import { useToast } from '@/hooks/useToast'
 import {
   TrashIcon,
   CheckCircleIcon,
-  ComputerDesktopIcon
+  ComputerDesktopIcon,
+  ShieldExclamationIcon
 } from '@heroicons/vue/24/outline'
 import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
 import authApi, { type Session } from '@/api/auth'
@@ -193,6 +206,21 @@ const revokeSession = async (sessionId: string) => {
   }
 }
 
+const untrustDevice = async (deviceName: string) => {
+  if (!confirm(`Tem certeza que deseja remover a confiança do dispositivo "${deviceName}"? Na próxima vez que você fizer login neste dispositivo, será necessário confiar novamente.`)) {
+    return
+  }
+
+  try {
+    await authApi.untrustDevice(deviceName)
+    toast.success('Confiança removida do dispositivo com sucesso!')
+    await fetchSessions()
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || 'Erro ao remover confiança do dispositivo'
+    toast.error(errorMessage)
+  }
+}
+
 const revokeAllSessions = async () => {
   if (!confirm('Tem certeza que deseja revogar todas as sessões? Você será deslogado.')) {
     return
@@ -224,7 +252,6 @@ const fetchSessions = async () => {
       sessions.value = []
     }
   } catch (error: any) {
-    console.error('Erro ao buscar sessões:', error)
     toast.error('Erro ao carregar sessões')
     sessions.value = []
   } finally {

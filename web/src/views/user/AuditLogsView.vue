@@ -240,7 +240,6 @@ const fetchLogs = async () => {
       logs.value = []
     }
   } catch (error: any) {
-    console.error('Erro ao buscar logs:', error)
     toast.error('Erro ao carregar logs de auditoria')
     logs.value = []
   } finally {

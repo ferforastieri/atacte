@@ -50,7 +50,6 @@ class GeocodingService {
 
       return null;
     } catch (error) {
-      console.error('Erro ao fazer reverse geocoding:', error);
       return null;
     }
   }

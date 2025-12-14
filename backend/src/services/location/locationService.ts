@@ -84,7 +84,6 @@ export class LocationService {
           address = geocodedAddress;
         }
       } catch (error) {
-        console.error('Erro ao obter endereço:', error);
       }
     }
 

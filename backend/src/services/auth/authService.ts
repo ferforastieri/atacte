@@ -100,15 +100,19 @@ export class AuthService {
 
     
     const expiresAt = null;
+    const tokenHash = crypto.SHA256(token).toString();
+    const deviceName = data.deviceName || 'Dispositivo Web';
+    
+    const hasTrustedDevice = await this.userRepository.hasTrustedDevice(user.id, deviceName);
 
     const sessionData: CreateUserSessionData = {
       userId: user.id,
-      tokenHash: crypto.SHA256(token).toString(),
-      deviceName: data.deviceName || 'Dispositivo Web',
+      tokenHash: tokenHash,
+      deviceName: deviceName,
       ipAddress: ipAddress || 'unknown',
       userAgent: userAgent || 'unknown',
       expiresAt: expiresAt as any,
-      isTrusted: false,
+      isTrusted: hasTrustedDevice,
     };
 
     const session = await this.userRepository.createSession(sessionData);
@@ -219,6 +223,11 @@ export class AuthService {
       throw new Error('Sessão não encontrada ou não pertence ao usuário');
     }
     await this.userRepository.updateSession(sessionId, { isTrusted: true });
+    
+    if (session.deviceName) {
+      await this.userRepository.addTrustedDevice(userId, session.deviceName);
+    }
+    
   }
 
   async revokeSession(userId: string, sessionId: string): Promise<void> {
@@ -230,6 +239,18 @@ export class AuthService {
     }
 
     await this.userRepository.deleteSession(sessionId);
+  }
+
+  async untrustDevice(userId: string, deviceName: string): Promise<void> {
+    await this.userRepository.removeTrustedDevice(userId, deviceName);
+    
+    const sessions = await this.userRepository.findUserSessions(userId);
+    const sessionsToUpdate = sessions.filter(s => s.deviceName === deviceName && s.isTrusted);
+    
+    for (const session of sessionsToUpdate) {
+      await this.userRepository.updateSession(session.id, { isTrusted: false });
+    }
+    
   }
 
   async requestPasswordReset(email: string): Promise<{ token: string | undefined; expiresAt: Date }> {

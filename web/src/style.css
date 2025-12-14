@@ -38,7 +38,6 @@
   }
 }
 
-/* Animações customizadas */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -64,12 +63,10 @@
   opacity: 0;
 }
 
-/* Estilo para códigos TOTP */
 .totp-timer {
   background: conic-gradient(from 0deg, #3b82f6 0deg, #3b82f6 var(--progress), #e5e7eb var(--progress), #e5e7eb 360deg);
 }
 
-/* Loading spinner */
 .spinner {
   border: 2px solid #f3f3f3;
   border-top: 2px solid #3b82f6;

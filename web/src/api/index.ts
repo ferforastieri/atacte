@@ -38,9 +38,21 @@ api.interceptors.response.use(
       
       switch (status) {
         case 401:
+          if (data.requiresTrust && data.sessionId) {
+            const event = new CustomEvent('device-trust-required', {
+              detail: {
+                sessionId: data.sessionId,
+                deviceName: data.deviceName,
+                ipAddress: data.ipAddress
+              }
+            })
+            window.dispatchEvent(event)
+            return Promise.reject(error)
+          }
           
-          
-          if (!error.config.url?.includes('/auth/me')) {
+          if (!error.config.url?.includes('/auth/me') && 
+              !error.config.url?.includes('/auth/trust-device') &&
+              !error.config.url?.includes('/preferences')) {
             localStorage.removeItem('auth_token')
             localStorage.removeItem('user')
             window.location.href = '/login'

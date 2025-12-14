@@ -174,7 +174,6 @@ const getTotpCode = (passwordId: string) => {
     const codeData = TOTPClient.generateCurrentCode(secret)
     return codeData
   } catch (error) {
-    console.error('Erro ao gerar código TOTP:', error)
     return null
   }
 }
@@ -202,7 +201,6 @@ const loadTotpCodes = async () => {
         totpSecrets.value.set(password.id, response.secret)
       }
     } catch (error) {
-      console.error(`Erro ao carregar secret TOTP para ${password.name}:`, error)
     }
   }
 }
@@ -256,7 +254,6 @@ onMounted(async () => {
     await loadTotpCodes()
     startAutoRefresh()
   } catch (error) {
-    console.error('Erro ao carregar TOTPs:', error)
     toast.error('Erro ao carregar códigos TOTP')
   }
 })

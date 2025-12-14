@@ -76,7 +76,6 @@ export class GeocodingService {
       this.cache.set(cacheKey, { address, timestamp: Date.now() });
       return address;
     } catch (error) {
-      console.error('Erro ao fazer reverse geocoding:', error);
       return null;
     }
   }

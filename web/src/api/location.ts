@@ -84,13 +84,11 @@ export const locationApi = {
             allMembers.push(...members)
           }
         } catch (error) {
-          console.error(`Erro ao buscar localizações da família ${family.id}:`, error)
         }
       }
       
       return allMembers
     } catch (error) {
-      console.error('Erro ao buscar famílias:', error)
       return []
     }
   },

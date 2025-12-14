@@ -202,7 +202,6 @@ const importPasswords = async () => {
     }
     
   } catch (error) {
-    console.error('Erro na importação:', error)
     importResult.value = {
       success: false,
       imported: 0,

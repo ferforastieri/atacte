@@ -549,7 +549,6 @@ const refreshLocations = async () => {
       map.setView([currentUserMember.value.latitude, currentUserMember.value.longitude], 14)
     }
   } catch (error) {
-    console.error('Erro ao carregar localizações:', error)
   } finally {
     isLoading.value = false
   }
@@ -588,7 +587,6 @@ const loadZones = async () => {
     zones.value = await locationApi.getZones()
     updateMapZones()
   } catch (error) {
-    console.error('Erro ao carregar zonas:', error)
   } finally {
     zonesLoading.value = false
   }
@@ -622,7 +620,6 @@ const createZone = async () => {
     
     await loadZones()
   } catch (error) {
-    console.error('Erro ao criar zona:', error)
   } finally {
     isCreatingZone.value = false
   }
@@ -637,7 +634,6 @@ const deleteZone = async (zoneId: string) => {
     toast.success('Zona deletada com sucesso!')
     await loadZones()
   } catch (error) {
-    console.error('Erro ao deletar zona:', error)
   }
 }
 

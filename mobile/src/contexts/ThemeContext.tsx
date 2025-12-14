@@ -31,7 +31,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         setIsDark(systemColorScheme === 'dark');
       }
     } catch (error) {
-      console.error('Erro ao carregar tema:', error);
       setIsDark(systemColorScheme === 'dark');
     } finally {
       setIsLoading(false);
@@ -44,7 +43,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       setIsDark(newTheme);
       await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme ? 'dark' : 'light');
     } catch (error) {
-      console.error('Erro ao salvar tema:', error);
     }
   };
 

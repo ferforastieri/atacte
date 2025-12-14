@@ -63,7 +63,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
               }
             }
           } catch (error: any) {
-            console.error('Erro ao verificar autenticação no servidor:', error);
             await authService.logout();
             setUser(null);
             setIsAuthenticated(false);
@@ -77,7 +76,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
       setUser(null);
       setIsAuthenticated(false);
       setIsLoading(false);
@@ -101,7 +99,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       }
     } catch (error: any) {
-      console.error('Erro ao validar token em background:', error);
     }
   };
 
@@ -116,7 +113,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { success: false, message: response.message || 'Erro no login' };
       }
     } catch (error) {
-      console.error('Erro no login:', error);
       return { success: false, message: 'Erro no login' };
     }
   };
@@ -132,7 +128,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { success: false, message: response.message || 'Erro no registro' };
       }
     } catch (error) {
-      console.error('Erro no registro:', error);
       return { success: false, message: 'Erro no registro' };
     }
   };
@@ -143,7 +138,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setIsAuthenticated(false);
     } catch (error) {
-      console.error('Erro no logout:', error);
     }
   };
 
@@ -154,7 +148,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(response.data.user);
       }
     } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
     }
   };
 

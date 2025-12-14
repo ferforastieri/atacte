@@ -52,18 +52,16 @@ const handleTrustModalClose = () => {
 const handleDeviceTrusted = async () => {
   showTrustModal.value = false
   
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  try {
-    const isValid = await authStore.verifyToken()
-    if (isValid && authStore.isAuthenticated) {
-      await authStore.loadUserPreferences()
-    } else {
-      router.push('/login')
-    }
-  } catch (error) {
-    console.error('Erro ao verificar token após confiar:', error)
+  if (!authStore.isAuthenticated) {
     router.push('/login')
+    return
+  }
+  
+  await new Promise(resolve => setTimeout(resolve, 100))
+  
+  const currentPath = router.currentRoute.value.path
+  if (currentPath === '/login') {
+    router.push('/dashboard')
   }
 }
 
@@ -78,7 +76,6 @@ onMounted(async () => {
 
     window.addEventListener('device-trust-required', handleDeviceTrustRequired as EventListener)
   } catch (error) {
-    console.error('Erro ao inicializar aplicação:', error)
   }
 })
 

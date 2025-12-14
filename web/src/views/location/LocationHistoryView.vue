@@ -327,7 +327,6 @@ const loadHistory = async () => {
       }, 100)
     }
   } catch (error: any) {
-    console.error('Erro ao carregar histórico:', error)
     toast.error(error.response?.data?.message || 'Erro ao carregar histórico de localização')
   } finally {
     isLoading.value = false

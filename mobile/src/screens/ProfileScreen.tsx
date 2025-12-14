@@ -79,7 +79,6 @@ export default function ProfileScreen() {
         });
       }
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
     } finally {
       setIsLoading(false);
     }

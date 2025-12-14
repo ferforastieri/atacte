@@ -46,7 +46,6 @@ export class TOTPClient {
         period: this.TOTP_PERIOD
       }
     } catch (error) {
-      console.error('Erro ao gerar código TOTP:', error)
       throw new Error('Erro ao gerar código TOTP')
     }
   }
@@ -68,7 +67,6 @@ export class TOTPClient {
         delta: verified || undefined
       }
     } catch (error) {
-      console.error('Erro ao validar código TOTP:', error)
       return {
         isValid: false,
         delta: undefined
@@ -102,7 +100,6 @@ export class TOTPClient {
         })
       }
     } catch (error) {
-      console.error('Erro ao gerar códigos de teste:', error)
     }
 
     return codes

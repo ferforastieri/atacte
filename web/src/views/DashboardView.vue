@@ -405,7 +405,6 @@ const toggleFavorite = async (password: PasswordEntry) => {
     
     toast.success(newFavoriteStatus ? 'Adicionado aos favoritos' : 'Removido dos favoritos')
   } catch (error) {
-    console.error('Erro ao atualizar favorito:', error)
     toast.error('Erro ao atualizar favorito')
   }
 }
@@ -456,7 +455,6 @@ onMounted(async () => {
       await passwordsStore.fetchPasswords()
       await passwordsStore.fetchFolders()
     } catch (error) {
-      console.error('Erro ao carregar dados:', error)
       toast.error('Erro ao carregar dados')
     }
   }
@@ -465,7 +463,6 @@ onMounted(async () => {
     try {
       await passwordsStore.loadCompleteStats()
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error)
     }
   }
 })

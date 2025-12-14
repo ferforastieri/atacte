@@ -21,7 +21,6 @@ export async function copyToClipboard(text: string): Promise<CopyResult> {
       return await fallbackCopyToClipboard(text)
     }
   } catch (error) {
-    console.error('Erro ao copiar:', error)
     return {
       success: false,
       message: 'Erro ao copiar. Tente selecionar e copiar manualmente.'
@@ -58,7 +57,6 @@ async function fallbackCopyToClipboard(text: string): Promise<CopyResult> {
       throw new Error('Falha ao copiar usando fallback')
     }
   } catch (error) {
-    console.error('Erro no fallback de cópia:', error)
     return {
       success: false,
       message: 'Erro ao copiar. Tente selecionar e copiar manualmente.'

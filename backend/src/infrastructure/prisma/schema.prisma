@@ -36,8 +36,22 @@ model User {
   receivedNotifications Notification[] @relation("NotificationReceiver")
   geofenceStates       UserGeofenceState[]
   passwordResetTokens  PasswordResetToken[]
+  trustedDevices       TrustedDevice[]
   
   @@map("users")
+}
+
+model TrustedDevice {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  deviceName  String   @map("device_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+  lastUsed    DateTime @default(now()) @map("last_used")
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, deviceName])
+  @@map("trusted_devices")
 }
 
 model PasswordEntry {

@@ -17,8 +17,8 @@
         :placeholder="placeholder"
         :disabled="disabled"
         :readonly="readonly"
-        :step="step"
         :class="inputClasses"
+        :style="inputStyle"
         @input="handleInput"
         @blur="$emit('blur', $event)"
         @focus="$emit('focus', $event)"
@@ -116,10 +116,6 @@ const inputType = computed(() => {
 const inputClasses = computed(() => {
   const baseClasses = 'block w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
   
-  const sizeClasses = props.leftIcon || props.rightIcon || props.showPasswordToggle 
-    ? 'pl-8 pr-10' 
-    : 'px-3'
-  
   const errorClasses = props.error 
     ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' 
     : ''
@@ -130,11 +126,22 @@ const inputClasses = computed(() => {
   
   return [
     baseClasses,
-    sizeClasses,
     errorClasses,
     readonlyClasses,
     'py-1.5'
   ].join(' ')
+})
+
+const inputStyle = computed(() => {
+  if (props.leftIcon) {
+    if (props.rightIcon || props.showPasswordToggle) {
+      return { paddingLeft: '1.75rem', paddingRight: '2.5rem' }
+    }
+    return { paddingLeft: '1.75rem', paddingRight: '0.5rem' }
+  } else if (props.rightIcon || props.showPasswordToggle) {
+    return { paddingLeft: '0.5rem', paddingRight: '2.5rem' }
+  }
+  return { paddingLeft: '0.5rem', paddingRight: '0.5rem' }
 })
 
 const togglePasswordVisibility = () => {

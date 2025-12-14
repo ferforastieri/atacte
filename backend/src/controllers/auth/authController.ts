@@ -168,6 +168,31 @@ router.delete('/sessions/:sessionId', authenticateToken, async (req: any, res) =
   }
 });
 
+router.post('/untrust-device', authenticateToken, async (req: any, res) => {
+  try {
+    const { deviceName } = req.body;
+    if (!deviceName) {
+      res.status(400).json({
+        success: false,
+        message: 'Nome do dispositivo é obrigatório'
+      });
+      return;
+    }
+
+    await authService.untrustDevice(req.user.id, deviceName);
+
+    res.json({
+      success: true,
+      message: 'Confiança removida do dispositivo com sucesso'
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;

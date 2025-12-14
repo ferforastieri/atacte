@@ -68,7 +68,6 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
       }
       throw new Error(response.message || 'Erro ao buscar notas')
     } catch (error) {
-      console.error('Erro ao buscar notas:', error)
       throw error
     } finally {
       isLoading.value = false
@@ -153,7 +152,6 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
       }
       return []
     } catch (error) {
-      console.error('Erro ao buscar pastas:', error)
       return []
     }
   }
@@ -165,7 +163,6 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
     try {
       await updateNote(id, { isFavorite: !note.isFavorite })
     } catch (error) {
-      console.error('Erro ao atualizar favorito:', error)
       throw error
     }
   }

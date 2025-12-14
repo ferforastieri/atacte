@@ -105,6 +105,46 @@ export class UserRepository {
     });
   }
 
+  async hasTrustedDevice(userId: string, deviceName: string): Promise<boolean> {
+    const trustedDevice = await prisma.trustedDevice.findUnique({
+      where: {
+        userId_deviceName: {
+          userId,
+          deviceName,
+        },
+      },
+    });
+    return !!trustedDevice;
+  }
+
+  async addTrustedDevice(userId: string, deviceName: string): Promise<void> {
+    await prisma.trustedDevice.upsert({
+      where: {
+        userId_deviceName: {
+          userId,
+          deviceName,
+        },
+      },
+      update: {
+        lastUsed: new Date(),
+      },
+      create: {
+        userId,
+        deviceName,
+        lastUsed: new Date(),
+      },
+    });
+  }
+
+  async removeTrustedDevice(userId: string, deviceName: string): Promise<void> {
+    await prisma.trustedDevice.deleteMany({
+      where: {
+        userId,
+        deviceName,
+      },
+    });
+  }
+
   async updateSession(id: string, data: UpdateUserSessionData): Promise<UserSession> {
     return await prisma.userSession.update({
       where: { id },

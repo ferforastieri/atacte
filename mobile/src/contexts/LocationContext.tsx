@@ -55,7 +55,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
           await checkAndStartTracking();
         }
       } catch (error) {
-        console.error('Erro ao verificar status do tracking:', error);
       }
     };
 
@@ -81,7 +80,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
       await refreshLocation();
     } catch (error) {
-      console.error('Erro ao inicializar localização:', error);
     }
   };
 
@@ -122,7 +120,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
         setIsTrackingActive(false);
       }
     } catch (error) {
-      console.error('Erro ao verificar/iniciar rastreamento:', error);
       setIsTrackingActive(false);
     }
   };
@@ -143,7 +140,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar localização:', error);
     } finally {
       setIsLoading(false);
     }
@@ -184,7 +180,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
       activeZones.current = currentlyInZones;
     } catch (error) {
-      console.error('Erro ao verificar zonas:', error);
     }
   };
 
@@ -193,7 +188,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
      
       await notifyFamilyAboutGeofence(zone, type);
     } catch (error) {
-      console.error('Erro ao enviar notificação de zona:', error);
     }
   };
 
@@ -206,7 +200,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
         zoneId: zone.id,
       });
     } catch (error) {
-      console.error('Erro ao notificar família sobre zona:', error);
     }
   };
 
@@ -227,7 +220,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
       
       return success;
     } catch (error) {
-      console.error('Erro ao iniciar rastreamento:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -245,7 +237,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
       await backgroundFunctions.stopBackgroundLocation();
       setIsTrackingActive(false);
     } catch (error) {
-      console.error('Erro ao parar rastreamento:', error);
     } finally {
       setIsLoading(false);
     }
@@ -261,7 +252,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
       
       return success;
     } catch (error) {
-      console.error('Erro ao enviar localização:', error);
       return false;
     }
   };
@@ -276,7 +266,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
       
       return null;
     } catch (error) {
-      console.error('Erro ao obter localizações da família:', error);
       return null;
     }
   };

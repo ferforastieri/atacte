@@ -82,7 +82,6 @@ const generateTotpCode = () => {
     currentTimeRemaining.value = totpData.timeRemaining
     currentPeriod.value = totpData.period
   } catch (error) {
-    console.error('Erro ao gerar código TOTP:', error)
     currentCode.value = '------'
   }
 }

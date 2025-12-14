@@ -42,7 +42,6 @@ export const useAuthStore = defineStore('auth', () => {
         return response.data
       }
     } catch (error) {
-      console.error('Erro ao carregar preferências:', error)
     }
     
     return null
@@ -63,10 +62,13 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
     try {
       const response = await authApi.login(credentials)
-      if (response.success) {
-        setAuth(response.data.token, response.data.user)
-        
-        await loadUserPreferences()
+      if (response.success && response.data) {
+        if (response.data.token && response.data.user) {
+          setAuth(response.data.token, response.data.user)
+          if (!response.data.requiresTrust) {
+            await loadUserPreferences()
+          }
+        }
         return response
       }
       throw new Error(response.message || 'Erro no login')

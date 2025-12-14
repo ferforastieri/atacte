@@ -60,7 +60,6 @@ export default function FamilyDetailScreen({ route }: any) {
         loadFamilyInviteCode()
       ]);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
       showError('Erro ao carregar dados da família');
     } finally {
       setIsLoading(false);
@@ -77,7 +76,6 @@ export default function FamilyDetailScreen({ route }: any) {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar código de convite:', error);
     }
   };
 
@@ -86,7 +84,6 @@ export default function FamilyDetailScreen({ route }: any) {
       const familyData = await locationService.getFamilyLocations(familyId);
       setLocations(familyData.data?.members || []);
     } catch (error) {
-      console.error('Erro ao carregar localizações:', error);
       showError('Erro ao carregar localizações da família');
     }
   };
@@ -96,7 +93,6 @@ export default function FamilyDetailScreen({ route }: any) {
       const zonesData = await geofenceService.getUserZones(false, familyId);
       setZones(zonesData.data || []);
     } catch (error) {
-      console.error('Erro ao carregar zonas:', error);
       showError('Erro ao carregar zonas');
     }
   };
@@ -120,7 +116,6 @@ export default function FamilyDetailScreen({ route }: any) {
         setIsRefreshing(false);
       }, 2000);
     } catch (error) {
-      console.error('Erro ao atualizar:', error);
       await loadData();
       setIsRefreshing(false);
     }

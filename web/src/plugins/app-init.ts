@@ -26,7 +26,6 @@ export default {
         return true
         
       } catch (error) {
-        console.error('Erro ao inicializar aplicação:', error)
         throw error
       }
     }

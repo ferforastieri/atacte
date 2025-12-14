@@ -93,6 +93,11 @@ const authApi = {
   async trustDevice(sessionId: string) {
     const response = await api.post('/auth/trust-device', { sessionId })
     return response.data
+  },
+
+  async untrustDevice(deviceName: string) {
+    const response = await api.post('/auth/untrust-device', { deviceName })
+    return response.data
   }
 }
 

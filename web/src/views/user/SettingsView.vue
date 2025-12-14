@@ -204,7 +204,6 @@ const loadSettings = async () => {
   try {
     theme.value = themeStore.isDarkMode ? 'dark' : 'light'
   } catch (error) {
-    console.error('Erro ao carregar configurações:', error)
   }
 }
 
