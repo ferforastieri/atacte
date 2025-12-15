@@ -1,17 +1,17 @@
 <template>
-  <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+  <div class="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 sm:px-6">
     <div class="flex justify-between flex-1 sm:hidden">
       <button
         @click="$emit('previous')"
         :disabled="currentPage === 1"
-        class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Anterior
       </button>
       <button
         @click="$emit('next')"
         :disabled="currentPage === totalPages"
-        class="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Próximo
       </button>
@@ -19,7 +19,7 @@
     
     <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
       <div>
-        <p class="text-sm text-gray-700">
+        <p class="text-sm text-gray-700 dark:text-gray-300">
           Mostrando
           <span class="font-medium">{{ startItem }}</span>
           até
@@ -36,7 +36,7 @@
           <button
             @click="$emit('previous')"
             :disabled="currentPage === 1"
-            class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-l-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronLeftIcon class="w-5 h-5" />
           </button>
@@ -49,7 +49,7 @@
               :class="[
                 page === currentPage
                   ? 'z-10 bg-primary-50 border-primary-500 text-primary-600'
-                  : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
+                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
                 'relative inline-flex items-center px-4 py-2 text-sm font-medium border'
               ]"
             >
@@ -57,7 +57,7 @@
             </button>
             <span
               v-else
-              class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300"
+              class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
             >
               ...
             </span>
@@ -67,7 +67,7 @@
           <button
             @click="$emit('next')"
             :disabled="currentPage === totalPages"
-            class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-r-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronRightIcon class="w-5 h-5" />
           </button>

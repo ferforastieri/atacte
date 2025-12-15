@@ -68,8 +68,12 @@ const authApi = {
   },
 
   
-  async getSessions() {
-    const response = await api.get('/auth/sessions')
+  async getSessions(limit = 10, offset = 0) {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString()
+    })
+    const response = await api.get(`/auth/sessions?${params.toString()}`)
     return response.data
   },
 

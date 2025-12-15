@@ -48,12 +48,12 @@
                     data-datepicker-month
                     v-model="selectedMonth"
                     class="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer transition-all hover:border-gray-400 dark:hover:border-gray-500"
-                    style="appearance: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; background-image: none !important; background-color: white !important; padding-right: 0.75rem !important;"
+                    :style="{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none', paddingRight: '0.75rem' }"
                     @change="updateCalendar"
                     @mousedown.stop
                     @click.stop
                   >
-                    <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                    <option v-for="(month, index) in months" :key="index" :value="index + 1" class="bg-white dark:bg-gray-800">
                       {{ month }}
                     </option>
                   </select>
@@ -64,12 +64,12 @@
                     data-datepicker-year
                     v-model="selectedYear"
                     class="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer transition-all hover:border-gray-400 dark:hover:border-gray-500"
-                    style="appearance: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; background-image: none !important; background-color: white !important; padding-right: 0.75rem !important;"
+                    :style="{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none', paddingRight: '0.75rem' }"
                     @change="updateCalendar"
                     @mousedown.stop
                     @click.stop
                   >
-                    <option v-for="year in years" :key="year" :value="year">
+                    <option v-for="year in years" :key="year" :value="year" class="bg-white dark:bg-gray-800">
                       {{ year }}
                     </option>
                   </select>

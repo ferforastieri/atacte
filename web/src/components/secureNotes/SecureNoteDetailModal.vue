@@ -18,9 +18,9 @@
       <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-8 shadow-inner border-2 border-amber-200 dark:border-amber-800">
         <div class="max-w-3xl mx-auto">
           <!-- Book Header -->
-          <div class="text-center mb-8 pb-6 border-b-2 border-amber-300 dark:border-amber-700">
+          <div class="text-left mb-8 pb-6 border-b-2 border-amber-300 dark:border-amber-700">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{{ note.title }}</h1>
-            <div class="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <div class="flex items-center justify-start gap-4 text-sm text-gray-600 dark:text-gray-400">
               <span v-if="note.folder" class="flex items-center gap-1">
                 <FolderIcon class="h-4 w-4" />
                 {{ note.folder }}

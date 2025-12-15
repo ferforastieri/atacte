@@ -6,16 +6,6 @@
     />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="mb-6 flex justify-end">
-        <BaseButton
-          variant="danger"
-          @click="openRevokeAllModal"
-          :loading="isRevokingAll"
-        >
-          <TrashIcon class="w-4 h-4 mr-2" />
-          Revogar Todas
-        </BaseButton>
-      </div>
       <BaseCard class="mb-6 dark:bg-gray-800 dark:border-gray-700">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
@@ -40,6 +30,17 @@
         </div>
 
         <div v-else-if="sessions.length > 0" class="overflow-x-auto">
+          <div class="mb-4 flex justify-end">
+            <BaseButton
+              variant="danger"
+              size="sm"
+              @click="openRevokeAllModal"
+              :loading="isRevokingAll"
+            >
+              <TrashIcon class="w-4 h-4 mr-2" />
+              Revogar Todas
+            </BaseButton>
+          </div>
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -142,6 +143,17 @@
               </tr>
             </tbody>
           </table>
+
+          <Pagination
+            v-if="!isLoading && sessions.length > 0"
+            :current-page="pagination.currentPage"
+            :total-pages="pagination.totalPages"
+            :total="pagination.total"
+            :limit="pagination.limit"
+            @previous="previousPage"
+            @next="nextPage"
+            @go-to-page="goToPage"
+          />
         </div>
 
         <div v-else class="text-center py-12">
@@ -190,7 +202,7 @@ import {
   ComputerDesktopIcon,
   ShieldExclamationIcon
 } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseButton, BaseCard, ConfirmModal } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, ConfirmModal, Pagination } from '@/components/ui'
 import authApi, { type Session } from '@/api/auth'
 
 const router = useRouter()
@@ -203,6 +215,12 @@ const showUntrustModal = ref(false)
 const showRevokeAllModal = ref(false)
 const untrustingDeviceName = ref<string>('')
 const isUntrusting = ref(false)
+const pagination = ref({
+  currentPage: 1,
+  totalPages: 1,
+  total: 0,
+  limit: 10
+})
 
 const untrustDeviceMessage = computed(() => {
   return `Tem certeza que deseja remover a confiança do dispositivo "${untrustingDeviceName.value}"? Na próxima vez que você fizer login neste dispositivo, será necessário confiar novamente.`
@@ -289,17 +307,45 @@ const confirmRevokeAllSessions = async () => {
 const fetchSessions = async () => {
   isLoading.value = true
   try {
-    const response = await authApi.getSessions()
+    const offset = (pagination.value.currentPage - 1) * pagination.value.limit
+    const response = await authApi.getSessions(pagination.value.limit, offset)
     if (response.success && response.data) {
       sessions.value = response.data
+      if (response.pagination) {
+        pagination.value.total = response.pagination.total
+        pagination.value.totalPages = Math.ceil(response.pagination.total / pagination.value.limit)
+      }
     } else {
       sessions.value = []
+      pagination.value.total = 0
+      pagination.value.totalPages = 1
     }
   } catch (error: any) {
     toast.error('Erro ao carregar sessões')
     sessions.value = []
+    pagination.value.total = 0
+    pagination.value.totalPages = 1
   } finally {
     isLoading.value = false
+  }
+}
+
+const goToPage = (page: number) => {
+  pagination.value.currentPage = page
+  fetchSessions()
+}
+
+const nextPage = () => {
+  if (pagination.value.currentPage < pagination.value.totalPages) {
+    pagination.value.currentPage++
+    fetchSessions()
+  }
+}
+
+const previousPage = () => {
+  if (pagination.value.currentPage > 1) {
+    pagination.value.currentPage--
+    fetchSessions()
   }
 }
 

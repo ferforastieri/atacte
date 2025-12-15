@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, BackHandler } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, BackHandler, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,6 +51,13 @@ export default function AuditLogsScreen() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+    limit: 10,
+    hasMore: true
+  });
   
   const getDefaultStartDate = () => {
     const date = new Date();
@@ -93,28 +100,46 @@ export default function AuditLogsScreen() {
     }
   };
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (page = 1) => {
     setIsLoading(true);
     try {
+      const offset = (page - 1) * pagination.limit;
       const response = await userService.getAuditLogs({
         query: filters.query || undefined,
         userId: filters.userId || undefined,
         action: filters.action || undefined,
         startDate: filters.startDate.toISOString().split('T')[0],
         endDate: filters.endDate.toISOString().split('T')[0],
-        limit: 100,
-        offset: 0,
+        limit: pagination.limit,
+        offset,
       });
       if (response.success && response.data) {
         setLogs(response.data);
+        if (response.pagination) {
+          setPagination(prev => ({
+            ...prev,
+            currentPage: page,
+            total: response.pagination.total,
+            totalPages: Math.ceil(response.pagination.total / prev.limit),
+            hasMore: page < Math.ceil(response.pagination.total / prev.limit)
+          }));
+        }
       } else {
         setLogs([]);
+        setPagination(prev => ({ ...prev, hasMore: false, totalPages: 1 }));
       }
     } catch (error) {
       showError('Erro ao carregar logs de auditoria');
       setLogs([]);
+      setPagination(prev => ({ ...prev, hasMore: false }));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      fetchLogs(page);
     }
   };
 
@@ -224,6 +249,7 @@ export default function AuditLogsScreen() {
     },
     content: {
       flexGrow: 1,
+      paddingBottom: 100,
     },
     filterCard: {
       marginBottom: 20,
@@ -298,6 +324,41 @@ export default function AuditLogsScreen() {
       fontSize: 14,
       color: isDark ? '#9ca3af' : '#6b7280',
       textAlign: 'center',
+    },
+    paginationContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: isDark ? '#374151' : '#e5e7eb',
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+    },
+    paginationButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+    },
+    paginationButtonDisabled: {
+      opacity: 0.5,
+    },
+    paginationButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: isDark ? '#d1d5db' : '#374151',
+      marginHorizontal: 4,
+    },
+    paginationButtonTextDisabled: {
+      color: isDark ? '#4b5563' : '#9ca3af',
+    },
+    paginationInfo: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: isDark ? '#d1d5db' : '#374151',
     },
   });
 
@@ -430,6 +491,36 @@ export default function AuditLogsScreen() {
               </Card>
             );
           })
+        )}
+
+        {!isLoading && logs.length > 0 && pagination.totalPages > 1 && (
+          <View style={styles.paginationContainer}>
+            <TouchableOpacity
+              style={[styles.paginationButton, pagination.currentPage === 1 && styles.paginationButtonDisabled]}
+              onPress={() => goToPage(pagination.currentPage - 1)}
+              disabled={pagination.currentPage === 1}
+            >
+              <Ionicons name="chevron-back" size={20} color={pagination.currentPage === 1 ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
+              <Text style={[styles.paginationButtonText, pagination.currentPage === 1 && styles.paginationButtonTextDisabled]}>
+                Anterior
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.paginationInfo}>
+              Página {pagination.currentPage} de {pagination.totalPages}
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.paginationButton, pagination.currentPage === pagination.totalPages && styles.paginationButtonDisabled]}
+              onPress={() => goToPage(pagination.currentPage + 1)}
+              disabled={pagination.currentPage === pagination.totalPages}
+            >
+              <Text style={[styles.paginationButtonText, pagination.currentPage === pagination.totalPages && styles.paginationButtonTextDisabled]}>
+                Próxima
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color={pagination.currentPage === pagination.totalPages ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
     </View>

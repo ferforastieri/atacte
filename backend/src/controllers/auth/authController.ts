@@ -110,13 +110,22 @@ router.get('/me', authenticateToken, async (req: any, res) => {
 
 router.get('/sessions', authenticateToken, async (req: any, res) => {
   try {
+    const queryParams = req.query;
+    const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
+    const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
+    
     const token = req.headers.authorization?.split(' ')[1];
     const tokenHash = token ? crypto.SHA256(token).toString() : undefined;
-    const sessions = await authService.getUserSessions(req.user.id, tokenHash);
+    const result = await authService.getUserSessions(req.user.id, tokenHash, limit, offset);
 
     res.json({
       success: true,
-      data: sessions
+      data: result.sessions,
+      pagination: {
+        total: result.total,
+        limit,
+        offset
+      }
     });
   } catch (error: any) {
     res.status(400).json({

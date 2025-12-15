@@ -136,6 +136,17 @@
             {{ logs.length === 0 ? 'Você ainda não possui logs de auditoria.' : 'Tente ajustar os filtros de busca.' }}
           </p>
         </div>
+
+        <Pagination
+          v-if="!isLoading && logs.length > 0"
+          :current-page="pagination.currentPage"
+          :total-pages="pagination.totalPages"
+          :total="pagination.total"
+          :limit="pagination.limit"
+          @previous="previousPage"
+          @next="nextPage"
+          @go-to-page="goToPage"
+        />
       </BaseCard>
     </div>
   </div>
@@ -147,7 +158,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from '@/hooks/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { DocumentTextIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseInput, BaseCard, BaseSelect, DatePicker } from '@/components/ui'
+import { AppHeader, BaseInput, BaseCard, BaseSelect, DatePicker, Pagination } from '@/components/ui'
 import usersApi, { type AuditLog, type AdminUser } from '@/api/users'
 
 const router = useRouter()
@@ -157,6 +168,12 @@ const authStore = useAuthStore()
 const logs = ref<AuditLog[]>([])
 const isLoading = ref(false)
 const users = ref<AdminUser[]>([])
+const pagination = ref({
+  currentPage: 1,
+  totalPages: 1,
+  total: 0,
+  limit: 10
+})
 
 const getDefaultStartDate = () => {
   const date = new Date()
@@ -273,11 +290,18 @@ const fetchLogs = async () => {
     if (filters.value.startDate) filterParams.startDate = filters.value.startDate
     if (filters.value.endDate) filterParams.endDate = filters.value.endDate
     
-    const response = await usersApi.getAuditLogs(100, 0, filterParams)
+    const offset = (pagination.value.currentPage - 1) * pagination.value.limit
+    const response = await usersApi.getAuditLogs(pagination.value.limit, offset, filterParams)
     if (response.success && response.data) {
       logs.value = response.data
+      if (response.pagination) {
+        pagination.value.total = response.pagination.total
+        pagination.value.totalPages = Math.ceil(response.pagination.total / pagination.value.limit)
+      }
     } else {
       logs.value = []
+      pagination.value.total = 0
+      pagination.value.totalPages = 1
     }
   } catch (error: any) {
     toast.error('Erro ao carregar logs de auditoria')
@@ -299,10 +323,30 @@ const fetchUsers = async () => {
   }
 }
 
+const goToPage = (page: number) => {
+  pagination.value.currentPage = page
+  fetchLogs()
+}
+
+const nextPage = () => {
+  if (pagination.value.currentPage < pagination.value.totalPages) {
+    pagination.value.currentPage++
+    fetchLogs()
+  }
+}
+
+const previousPage = () => {
+  if (pagination.value.currentPage > 1) {
+    pagination.value.currentPage--
+    fetchLogs()
+  }
+}
+
 watch(
   () => filters.value.action,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
+      pagination.value.currentPage = 1
       fetchLogs()
     }
   }
@@ -311,6 +355,7 @@ watch(
 watch(
   () => filters.value.query,
   () => {
+    pagination.value.currentPage = 1
     fetchLogs()
   }
 )
@@ -318,6 +363,7 @@ watch(
 watch(
   () => filters.value.startDate,
   () => {
+    pagination.value.currentPage = 1
     fetchLogs()
   }
 )
@@ -325,6 +371,7 @@ watch(
 watch(
   () => filters.value.endDate,
   () => {
+    pagination.value.currentPage = 1
     fetchLogs()
   }
 )
@@ -332,6 +379,7 @@ watch(
 watch(
   () => filters.value.userId,
   () => {
+    pagination.value.currentPage = 1
     fetchLogs()
   }
 )

@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     marginBottom: 24,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   confirmActions: {
     flexDirection: 'row',

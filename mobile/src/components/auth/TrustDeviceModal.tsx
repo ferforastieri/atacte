@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   header: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 24,
   },
   iconContainer: {
@@ -151,16 +151,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    alignSelf: 'flex-start',
   },
   title: {
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   subtitle: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 20,
   },
   infoContainer: {

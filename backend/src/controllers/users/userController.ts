@@ -228,12 +228,21 @@ router.patch(
   })
 );
 
-router.get('/admin/users', requireAdmin, asAuthenticatedHandler(async (_req, res) => {
+router.get('/admin/users', requireAdmin, asAuthenticatedHandler(async (req, res) => {
   try {
-    const users = await userService.getAllUsers();
+    const queryParams = req.query;
+    const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
+    const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
+    
+    const result = await userService.getAllUsers(limit, offset);
     res.json({
       success: true,
-      data: users
+      data: result.users,
+      pagination: {
+        total: result.total,
+        limit,
+        offset
+      }
     });
   } catch (error: any) {
     res.status(500).json({

@@ -115,8 +115,12 @@ class AuthService {
     });
   }
 
-  async getSessions(): Promise<any> {
-    return this.makeRequest('/auth/sessions');
+  async getSessions(limit = 10, offset = 0): Promise<any> {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString()
+    });
+    return this.makeRequest(`/auth/sessions?${params.toString()}`);
   }
 
   async revokeSession(sessionId: string): Promise<any> {

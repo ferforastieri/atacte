@@ -299,19 +299,22 @@ export class UserService {
     );
   }
 
-  async getAllUsers(): Promise<AdminUserDto[]> {
-    const users = await this.userRepository.findAll();
-    return users.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name || undefined,
-      phoneNumber: user.phoneNumber || undefined,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      lastLogin: user.lastLogin || undefined,
-      isActive: user.isActive,
-      role: (user as any).role || 'USER'
-    }));
+  async getAllUsers(limit?: number, offset?: number): Promise<{ users: AdminUserDto[]; total: number }> {
+    const result = await this.userRepository.findAll(limit, offset);
+    return {
+      users: result.users.map(user => ({
+        id: user.id,
+        email: user.email,
+        name: user.name || undefined,
+        phoneNumber: user.phoneNumber || undefined,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        lastLogin: user.lastLogin || undefined,
+        isActive: user.isActive,
+        role: (user as any).role || 'USER'
+      })),
+      total: result.total
+    };
   }
 
   async updateUserByAdmin(

@@ -85,7 +85,7 @@ const usersApi = {
   },
 
   
-  async getAuditLogs(limit = 50, offset = 0, filters?: {
+  async getAuditLogs(limit = 10, offset = 0, filters?: {
     query?: string;
     userId?: string;
     action?: string;
@@ -129,8 +129,12 @@ const usersApi = {
     return response.data
   },
 
-  async getAllUsers() {
-    const response = await api.get('/users/admin/users')
+  async getAllUsers(limit = 10, offset = 0) {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString()
+    })
+    const response = await api.get(`/users/admin/users?${params.toString()}`)
     return response.data
   },
 

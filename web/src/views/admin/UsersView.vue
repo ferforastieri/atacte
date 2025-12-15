@@ -109,6 +109,17 @@
               </tr>
             </tbody>
           </table>
+
+          <Pagination
+            v-if="!isLoading && users.length > 0"
+            :current-page="pagination.currentPage"
+            :total-pages="pagination.totalPages"
+            :total="pagination.total"
+            :limit="pagination.limit"
+            @previous="previousPage"
+            @next="nextPage"
+            @go-to-page="goToPage"
+          />
         </div>
 
         <div v-else class="text-center py-12">
@@ -247,7 +258,7 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from '@/hooks/useToast'
 import { UserGroupIcon, PencilIcon, KeyIcon, EnvelopeIcon, UserIcon, PhoneIcon, LockClosedIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseCard, BaseButton, BaseModal, BaseInput, BaseSelect, ConfirmModal } from '@/components/ui'
+import { AppHeader, BaseCard, BaseButton, BaseModal, BaseInput, BaseSelect, ConfirmModal, Pagination } from '@/components/ui'
 import usersApi, { type AdminUser } from '@/api/users'
 
 const toast = useToast()
@@ -256,6 +267,12 @@ const users = ref<AdminUser[]>([])
 const isLoading = ref(false)
 const isSaving = ref(false)
 const isChangingPassword = ref(false)
+const pagination = ref({
+  currentPage: 1,
+  totalPages: 1,
+  total: 0,
+  limit: 10
+})
 
 const showEditModal = ref(false)
 const showPasswordModal = ref(false)
@@ -278,14 +295,38 @@ const editingUserPassword = ref('')
 const fetchUsers = async () => {
   isLoading.value = true
   try {
-    const response = await usersApi.getAllUsers()
+    const offset = (pagination.value.currentPage - 1) * pagination.value.limit
+    const response = await usersApi.getAllUsers(pagination.value.limit, offset)
     if (response.success && response.data) {
       users.value = response.data
+      if (response.pagination) {
+        pagination.value.total = response.pagination.total
+        pagination.value.totalPages = Math.ceil(response.pagination.total / pagination.value.limit)
+      }
     }
   } catch (error: any) {
     toast.error('Erro ao carregar usuários')
   } finally {
     isLoading.value = false
+  }
+}
+
+const goToPage = (page: number) => {
+  pagination.value.currentPage = page
+  fetchUsers()
+}
+
+const nextPage = () => {
+  if (pagination.value.currentPage < pagination.value.totalPages) {
+    pagination.value.currentPage++
+    fetchUsers()
+  }
+}
+
+const previousPage = () => {
+  if (pagination.value.currentPage > 1) {
+    pagination.value.currentPage--
+    fetchUsers()
   }
 }
 

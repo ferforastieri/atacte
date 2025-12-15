@@ -99,11 +99,23 @@ export class UserRepository {
     });
   }
 
-  async findUserSessions(userId: string): Promise<UserSession[]> {
-    return await prisma.userSession.findMany({
-      where: { userId },
-      orderBy: { lastUsed: 'desc' },
-    });
+  async findUserSessions(userId: string, limit?: number, offset?: number): Promise<{ sessions: UserSession[]; total: number }> {
+    const take = limit || undefined;
+    const skip = offset || undefined;
+    
+    const [sessions, total] = await Promise.all([
+      prisma.userSession.findMany({
+        where: { userId },
+        orderBy: { lastUsed: 'desc' },
+        take,
+        skip,
+      }),
+      prisma.userSession.count({
+        where: { userId },
+      }),
+    ]);
+    
+    return { sessions, total };
   }
 
   async hasTrustedDevice(userId: string, deviceName: string): Promise<boolean> {

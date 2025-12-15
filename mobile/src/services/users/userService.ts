@@ -69,8 +69,12 @@ class UserService {
     return this.makeRequest(`/users/audit-logs?${params.toString()}`);
   }
 
-  async getAllUsers(): Promise<any> {
-    return this.makeRequest('/users/admin/users');
+  async getAllUsers(limit = 10, offset = 0): Promise<any> {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString()
+    });
+    return this.makeRequest(`/users/admin/users?${params.toString()}`);
   }
 
   async updateUser(userId: string, data: {

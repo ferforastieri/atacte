@@ -199,25 +199,28 @@ export class AuthService {
       encryptionKeyHash: encryptionKey,
     });
 
-    const sessions = await this.userRepository.findUserSessions(userId);
-    for (const session of sessions) {
+    const result = await this.userRepository.findUserSessions(userId);
+    for (const session of result.sessions) {
       await this.userRepository.deleteSession(session.id);
     }
   }
 
-  async getUserSessions(userId: string, currentTokenHash?: string): Promise<any[]> {
-    const sessions = await this.userRepository.findUserSessions(userId);
-    return sessions.map(session => ({
-      id: session.id,
-      deviceName: session.deviceName,
-      ipAddress: session.ipAddress,
-      userAgent: session.userAgent,
-      createdAt: session.createdAt,
-      lastUsed: session.lastUsed,
-      expiresAt: session.expiresAt,
-      isCurrent: currentTokenHash ? session.tokenHash === currentTokenHash : false,
-      isTrusted: (session as any).isTrusted ?? false,
-    }));
+  async getUserSessions(userId: string, currentTokenHash?: string, limit?: number, offset?: number): Promise<{ sessions: any[]; total: number }> {
+    const result = await this.userRepository.findUserSessions(userId, limit, offset);
+    return {
+      sessions: result.sessions.map(session => ({
+        id: session.id,
+        deviceName: session.deviceName,
+        ipAddress: session.ipAddress,
+        userAgent: session.userAgent,
+        createdAt: session.createdAt,
+        lastUsed: session.lastUsed,
+        expiresAt: session.expiresAt,
+        isCurrent: currentTokenHash ? session.tokenHash === currentTokenHash : false,
+        isTrusted: (session as any).isTrusted ?? false,
+      })),
+      total: result.total
+    };
   }
 
   async trustDevice(userId: string, sessionId: string): Promise<void> {
@@ -234,8 +237,8 @@ export class AuthService {
   }
 
   async revokeSession(userId: string, sessionId: string): Promise<void> {
-    const sessions = await this.userRepository.findUserSessions(userId);
-    const session = sessions.find(s => s.id === sessionId);
+    const result = await this.userRepository.findUserSessions(userId);
+    const session = result.sessions.find(s => s.id === sessionId);
     
     if (!session) {
       throw new Error('Sessão não encontrada');
@@ -247,8 +250,8 @@ export class AuthService {
   async untrustDevice(userId: string, deviceName: string): Promise<void> {
     await this.userRepository.removeTrustedDevice(userId, deviceName);
     
-    const sessions = await this.userRepository.findUserSessions(userId);
-    const sessionsToUpdate = sessions.filter(s => s.deviceName === deviceName && s.isTrusted);
+    const result = await this.userRepository.findUserSessions(userId);
+    const sessionsToUpdate = result.sessions.filter((s: any) => s.deviceName === deviceName && (s as any).isTrusted);
     
     for (const session of sessionsToUpdate) {
       await this.userRepository.updateSession(session.id, { isTrusted: false });
@@ -310,8 +313,8 @@ export class AuthService {
     });
 
     await this.passwordResetRepository.markAsUsed(token);
-    const sessions = await this.userRepository.findUserSessions(user.id);
-    for (const session of sessions) {
+    const result = await this.userRepository.findUserSessions(user.id);
+    for (const session of result.sessions) {
       await this.userRepository.deleteSession(session.id);
     }
   }

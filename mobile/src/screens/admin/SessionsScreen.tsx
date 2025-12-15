@@ -59,20 +59,44 @@ export default function SessionsScreen() {
     }
   }, []);
 
-  const fetchSessions = async () => {
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+    limit: 10
+  });
+
+  const fetchSessions = async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await authService.getSessions();
+      const offset = (page - 1) * pagination.limit;
+      const response = await authService.getSessions(pagination.limit, offset);
       if (response.success && response.data) {
         setSessions(response.data);
+        if (response.pagination) {
+          setPagination(prev => ({
+            ...prev,
+            currentPage: page,
+            total: response.pagination.total,
+            totalPages: Math.ceil(response.pagination.total / prev.limit)
+          }));
+        }
       } else {
         setSessions([]);
+        setPagination(prev => ({ ...prev, totalPages: 1 }));
       }
     } catch (error) {
       showError('Erro ao carregar sessões');
       setSessions([]);
+      setPagination(prev => ({ ...prev, totalPages: 1 }));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      fetchSessions(page);
     }
   };
 
@@ -83,7 +107,7 @@ export default function SessionsScreen() {
       const response = await authService.revokeSession(sessionId);
       if (response.success) {
         showSuccess('Sessão revogada com sucesso!');
-        await fetchSessions();
+        await fetchSessions(pagination.currentPage);
       } else {
         showError(response.message || 'Erro ao revogar sessão');
       }
@@ -97,7 +121,7 @@ export default function SessionsScreen() {
       const response = await authService.untrustDevice(deviceName);
       if (response.success) {
         showSuccess('Confiança removida do dispositivo com sucesso!');
-        await fetchSessions();
+        await fetchSessions(pagination.currentPage);
       } else {
         showError(response.message || 'Erro ao remover confiança');
       }
@@ -141,10 +165,46 @@ export default function SessionsScreen() {
     },
     content: {
       padding: 20,
-      paddingBottom: Math.max(24, insets.bottom + 20),
+      paddingBottom: Math.max(100, insets.bottom + 100),
     },
     revokeAllButton: {
       marginBottom: 20,
+      marginTop: 20,
+    },
+    paginationContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: isDark ? '#374151' : '#e5e7eb',
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+    },
+    paginationButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+    },
+    paginationButtonDisabled: {
+      opacity: 0.5,
+    },
+    paginationButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: isDark ? '#d1d5db' : '#374151',
+      marginHorizontal: 4,
+    },
+    paginationButtonTextDisabled: {
+      color: isDark ? '#4b5563' : '#9ca3af',
+    },
+    paginationInfo: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: isDark ? '#d1d5db' : '#374151',
     },
     currentSessionCard: {
       marginTop: 0,
@@ -297,15 +357,6 @@ export default function SessionsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.revokeAllButton}>
-          <Button
-            title="Revogar Todas"
-            onPress={() => setShowRevokeModal(true)}
-            variant="danger"
-            loading={isRevokingAll}
-          />
-        </View>
-
         {currentSession && (
           <Card style={styles.currentSessionCard}>
             <View style={styles.currentSessionHeader}>
@@ -416,6 +467,47 @@ export default function SessionsScreen() {
               </View>
             </Card>
           ))
+        )}
+
+        {!isLoading && sessions.length > 0 && (
+          <View style={styles.revokeAllButton}>
+            <Button
+              title="Revogar Todas"
+              onPress={() => setShowRevokeModal(true)}
+              variant="danger"
+              loading={isRevokingAll}
+            />
+          </View>
+        )}
+
+        {!isLoading && sessions.length > 0 && pagination.totalPages > 1 && (
+          <View style={styles.paginationContainer}>
+            <TouchableOpacity
+              style={[styles.paginationButton, pagination.currentPage === 1 && styles.paginationButtonDisabled]}
+              onPress={() => goToPage(pagination.currentPage - 1)}
+              disabled={pagination.currentPage === 1}
+            >
+              <Ionicons name="chevron-back" size={20} color={pagination.currentPage === 1 ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
+              <Text style={[styles.paginationButtonText, pagination.currentPage === 1 && styles.paginationButtonTextDisabled]}>
+                Anterior
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.paginationInfo}>
+              Página {pagination.currentPage} de {pagination.totalPages}
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.paginationButton, pagination.currentPage === pagination.totalPages && styles.paginationButtonDisabled]}
+              onPress={() => goToPage(pagination.currentPage + 1)}
+              disabled={pagination.currentPage === pagination.totalPages}
+            >
+              <Text style={[styles.paginationButtonText, pagination.currentPage === pagination.totalPages && styles.paginationButtonTextDisabled]}>
+                Próxima
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color={pagination.currentPage === pagination.totalPages ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
 

@@ -55,10 +55,20 @@ export class UserRepository {
     });
   }
 
-  async findAll(): Promise<User[]> {
-    return await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(limit?: number, offset?: number): Promise<{ users: User[]; total: number }> {
+    const take = limit || undefined;
+    const skip = offset || undefined;
+    
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+      }),
+      prisma.user.count(),
+    ]);
+    
+    return { users, total };
   }
 
   
