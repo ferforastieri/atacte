@@ -158,7 +158,7 @@
     <ConfirmModal
       :show="showUntrustModal"
       title="Remover Confiança do Dispositivo"
-      :message="`Tem certeza que deseja remover a confiança do dispositivo \"${untrustingDeviceName}\"? Na próxima vez que você fizer login neste dispositivo, será necessário confiar novamente.`"
+      :message="untrustDeviceMessage"
       confirm-text="Remover Confiança"
       cancel-text="Cancelar"
       :loading="isUntrusting"
@@ -203,6 +203,10 @@ const showUntrustModal = ref(false)
 const showRevokeAllModal = ref(false)
 const untrustingDeviceName = ref<string>('')
 const isUntrusting = ref(false)
+
+const untrustDeviceMessage = computed(() => {
+  return `Tem certeza que deseja remover a confiança do dispositivo "${untrustingDeviceName.value}"? Na próxima vez que você fizer login neste dispositivo, será necessário confiar novamente.`
+})
 
 const currentSession = computed(() => {
   return sessions.value.find(s => s.isCurrent)
