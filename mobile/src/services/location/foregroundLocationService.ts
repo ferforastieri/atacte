@@ -18,15 +18,18 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
       try {
         const batteryLevel = await locationService.getBatteryLevel();
         
+        const speed = location.coords.speed ?? 0;
+        const isMoving = speed > 0.5 || (location.coords.heading !== null && location.coords.heading !== undefined);
+        
         const payload: UpdateLocationRequest = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           accuracy: location.coords.accuracy && location.coords.accuracy > 0 ? location.coords.accuracy : undefined,
           altitude: location.coords.altitude ?? undefined,
-          speed: location.coords.speed ?? undefined,
+          speed: speed > 0 ? speed : undefined,
           heading: location.coords.heading ?? undefined,
           batteryLevel: batteryLevel >= 0 ? batteryLevel : undefined,
-          isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
+          isMoving: isMoving,
         };
 
         const result = await locationService.updateLocation(payload);
@@ -35,8 +38,8 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
         } else {
           console.error('Erro ao enviar localização:', result.message);
         }
-      } catch (error) {
-        console.error('Erro ao enviar localização em background:', error);
+      } catch (error: any) {
+        console.error('Erro ao enviar localização em background:', error?.message || error);
       }
     }
   }
@@ -48,7 +51,11 @@ class ForegroundLocationService {
   async start(): Promise<boolean> {
     try {
       if (this.isActiveRef) {
-        return true;
+        const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        if (hasStarted) {
+          return true;
+        }
+        this.isActiveRef = false;
       }
 
       const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
@@ -69,23 +76,32 @@ class ForegroundLocationService {
         return false;
       }
 
+      const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (hasStarted) {
+        this.isActiveRef = true;
+        return true;
+      }
+
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.Highest, 
         timeInterval: 30000, 
-        distanceInterval: 0, 
+        distanceInterval: 10, 
         foregroundService: {
           notificationTitle: 'Atacte',
           notificationBody: 'Rastreando localização',
           notificationColor: '#16a34a', 
         },
         pausesUpdatesAutomatically: false, 
-        showsBackgroundLocationIndicator: true, 
+        showsBackgroundLocationIndicator: true,
+        deferredUpdatesInterval: 30000,
+        deferredUpdatesDistance: 10,
+        activityType: Location.ActivityType.OtherNavigation,
       });
 
       this.isActiveRef = true;
       return true;
-    } catch (error) {
-      console.error('Erro ao iniciar rastreamento:', error);
+    } catch (error: any) {
+      console.error('Erro ao iniciar rastreamento:', error?.message || error);
       this.isActiveRef = false;
       return false;
     }
@@ -93,10 +109,6 @@ class ForegroundLocationService {
 
   async stop(): Promise<void> {
     try {
-      if (!this.isActiveRef) {
-        return;
-      }
-
       const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
       if (isTaskDefined) {
         const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
@@ -106,8 +118,8 @@ class ForegroundLocationService {
       }
 
       this.isActiveRef = false;
-    } catch (error) {
-      console.error('Erro ao parar rastreamento:', error);
+    } catch (error: any) {
+      console.error('Erro ao parar rastreamento:', error?.message || error);
       this.isActiveRef = false;
     }
   }
@@ -116,14 +128,16 @@ class ForegroundLocationService {
     try {
       const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
       if (!isTaskDefined) {
+        this.isActiveRef = false;
         return false;
       }
 
       const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
       this.isActiveRef = hasStarted;
       return hasStarted;
-    } catch (error) {
-      console.error('Erro ao verificar status:', error);
+    } catch (error: any) {
+      console.error('Erro ao verificar status:', error?.message || error);
+      this.isActiveRef = false;
       return false;
     }
   }

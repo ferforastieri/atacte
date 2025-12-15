@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../shared';
 import { FamilyMemberLocation } from '../../services/location/locationService';
 import { useTheme } from '../../contexts/ThemeContext';
-import { geocodingService } from '../../services/geocoding/geocodingService';
 
 interface FamilyMembersListProps {
   members: FamilyMemberLocation[];
@@ -13,30 +12,7 @@ interface FamilyMembersListProps {
 }
 
 export default function FamilyMembersList({ members, onMemberPress, compact = false }: FamilyMembersListProps) {
-  const [addresses, setAddresses] = useState<Record<string, string>>({});
   const { isDark } = useTheme();
-
-  useEffect(() => {
-    const loadAddresses = async () => {
-      const addressPromises = members.map(async (member) => {
-        const address = await geocodingService.reverseGeocode(member.latitude, member.longitude);
-        return { userId: member.userId, address };
-      });
-
-      const results = await Promise.all(addressPromises);
-      const addressMap: Record<string, string> = {};
-      results.forEach(({ userId, address }) => {
-        if (address) {
-          addressMap[userId] = address;
-        }
-      });
-      setAddresses(addressMap);
-    };
-
-    if (members.length > 0) {
-      loadAddresses();
-    }
-  }, [members]);
 
   const formatLastUpdate = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -152,9 +128,9 @@ export default function FamilyMembersList({ members, onMemberPress, compact = fa
               <Text style={[styles.memberStatus, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
                 {formatLastUpdate(member.timestamp)}
               </Text>
-              {addresses[member.userId] && (
+              {member.address && (
                 <Text style={[styles.memberAddress, { color: isDark ? '#6b7280' : '#9ca3af' }]}>
-                  {addresses[member.userId]}
+                  {member.address}
                 </Text>
               )}
             </View>

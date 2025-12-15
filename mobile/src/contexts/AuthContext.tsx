@@ -8,12 +8,14 @@ interface User {
   name?: string;
   phoneNumber?: string;
   profilePicture?: string;
+  role?: 'USER' | 'ADMIN';
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   register: (email: string, password: string, name?: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
@@ -102,12 +104,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const login = async (email: string, masterPassword: string): Promise<{ success: boolean; message?: string }> => {
+  const login = async (email: string, masterPassword: string, deviceName?: string): Promise<{ success: boolean; message?: string; requiresTrust?: boolean; sessionId?: string }> => {
     try {
-      const response = await authService.login({ email, masterPassword });
+      const response = await authService.login({ email, masterPassword, deviceName });
       if (response.success && response.data) {
-        setUser(response.data.user);
-        setIsAuthenticated(true);
+        if (response.data.token && response.data.user) {
+          setUser(response.data.user);
+          setIsAuthenticated(true);
+        }
+        
+        if (response.data.requiresTrust) {
+          return { 
+            success: true, 
+            requiresTrust: true, 
+            sessionId: response.data.sessionId,
+            message: 'Dispositivo não confiável. Por favor, confirme este dispositivo.'
+          };
+        }
+        
         return { success: true };
       } else {
         return { success: false, message: response.message || 'Erro no login' };
@@ -151,10 +165,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const isAdmin = user?.role === 'ADMIN';
+
   const value: AuthContextType = {
     user,
     isAuthenticated,
     isLoading,
+    isAdmin,
     login,
     register,
     logout,

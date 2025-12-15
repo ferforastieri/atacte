@@ -53,12 +53,15 @@ export function LocationProvider({ children }: LocationProviderProps) {
         const isActive = await backgroundFunctions.isBackgroundLocationActive();
         if (!isActive && isTrackingActive) {
           await checkAndStartTracking();
+        } else if (isActive && !isTrackingActive) {
+          setIsTrackingActive(true);
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Erro ao verificar status de rastreamento:', error?.message || error);
       }
     };
 
-   
+    checkTrackingStatus();
     const interval = setInterval(checkTrackingStatus, 30000);
     
     return () => clearInterval(interval);
@@ -85,7 +88,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const checkAndStartTracking = async () => {
     try {
-     
       const permissionsGranted = await locationService.requestPermissions();
       
       if (!permissionsGranted) {
@@ -96,11 +98,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
       const response = await familyService.getFamilies();
       
       if (!response.success || !response.data || response.data.length === 0) {
+        setIsTrackingActive(false);
         return;
       }
       
       const backgroundFunctions = (global as any).backgroundLocationFunctions;
       if (!backgroundFunctions) {
+        setIsTrackingActive(false);
         return;
       }
       
@@ -115,11 +119,16 @@ export function LocationProvider({ children }: LocationProviderProps) {
       
       if (started) {
         setIsTrackingActive(true);
-        await locationService.sendCurrentLocation();
+        try {
+          await locationService.sendCurrentLocation();
+        } catch (error: any) {
+          console.error('Erro ao enviar localização inicial:', error?.message || error);
+        }
       } else {
         setIsTrackingActive(false);
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro ao verificar e iniciar rastreamento:', error?.message || error);
       setIsTrackingActive(false);
     }
   };
@@ -132,14 +141,18 @@ export function LocationProvider({ children }: LocationProviderProps) {
       if (response.success && response.data) {
         setCurrentLocation(response.data);
         
-       
         const now = Date.now();
         if (now - lastCheckTime.current >= 30000) {
-          await checkGeofenceZones(response.data);
-          lastCheckTime.current = now;
+          try {
+            await checkGeofenceZones(response.data);
+            lastCheckTime.current = now;
+          } catch (error: any) {
+            console.error('Erro ao verificar zonas de geofence:', error?.message || error);
+          }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro ao atualizar localização:', error?.message || error);
     } finally {
       setIsLoading(false);
     }

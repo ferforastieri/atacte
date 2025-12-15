@@ -153,6 +153,16 @@ class LocationService {
     });
   }
 
+  async getMemberLocationHistory(userId: string, startDate: Date, endDate: Date, limit?: number): Promise<{ success: boolean; data?: LocationData[]; message?: string }> {
+    return this.makeRequest(`/location/history/${userId}`, {
+      params: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        limit,
+      },
+    });
+  }
+
   async getFamilyLocations(familyId: string): Promise<{ success: boolean; data?: FamilyMapData; message?: string }> {
     return this.makeRequest(`/location/family/${familyId}`);
   }

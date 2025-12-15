@@ -16,6 +16,7 @@ interface InputProps {
   numberOfLines?: number;
   style?: ViewStyle;
   inputStyle?: TextStyle;
+  leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
 
@@ -32,6 +33,7 @@ export const Input: React.FC<InputProps> = ({
   numberOfLines = 1,
   style,
   inputStyle,
+  leftIcon,
   rightIcon,
 }) => {
   const { isDark } = useTheme();
@@ -59,13 +61,24 @@ export const Input: React.FC<InputProps> = ({
         flexDirection: 'row',
         alignItems: 'center',
       }}>
+        {leftIcon && (
+          <View style={{
+            position: 'absolute',
+            left: 12,
+            zIndex: 1,
+            padding: 4,
+          }}>
+            {leftIcon}
+          </View>
+        )}
         <TextInput
           style={[{
             flex: 1,
             borderWidth: 1,
             borderColor: error ? '#dc2626' : (isDark ? '#4b5563' : '#d1d5db'),
             borderRadius: 12,
-            paddingHorizontal: 12,
+            paddingHorizontal: leftIcon ? 40 : 12,
+            paddingRight: (secureTextEntry && !rightIcon) || rightIcon ? 40 : 12,
             paddingVertical: 10,
             fontSize: 14,
             color: isDark ? '#f9fafb' : '#111827',

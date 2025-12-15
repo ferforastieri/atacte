@@ -119,8 +119,7 @@ export const Modal: React.FC<ModalProps> = ({
         style={styles.content} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ 
-          flexGrow: 1,
-          paddingBottom: 40
+          paddingBottom: 20
         }}
         keyboardShouldPersistTaps="handled"
         bounces={false}

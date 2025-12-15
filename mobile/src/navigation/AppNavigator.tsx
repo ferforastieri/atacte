@@ -17,8 +17,12 @@ import ProfileScreen from '../screens/ProfileScreen';
 import PasswordDetailScreen from '../screens/PasswordDetailScreen';
 import FamilyScreen from '../screens/FamilyScreen';
 import FamilyDetailScreen from '../screens/FamilyDetailScreen';
+import MemberHistoryScreen from '../screens/MemberHistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SecureNoteDetailScreen from '../screens/SecureNoteDetailScreen';
+import AuditLogsScreen from '../screens/admin/AuditLogsScreen';
+import SessionsScreen from '../screens/admin/SessionsScreen';
+import UsersScreen from '../screens/admin/UsersScreen';
 
 
 export type RootStackParamList = {
@@ -27,7 +31,11 @@ export type RootStackParamList = {
   PasswordDetail: { passwordId: string };
   FamilyDetail: { familyId: string; familyName: string };
   FamilyDetails: { familyId: string };
+  MemberHistory: { userId: string; userName: string };
   SecureNoteDetail: { noteId: string };
+  AuditLogs: undefined;
+  Sessions: undefined;
+  Users: undefined;
 };
 
 export type AuthStackParamList = {
@@ -42,6 +50,12 @@ export type MainTabParamList = {
   SecureNotes: undefined;
   Profile: undefined;
   Settings: undefined;
+  PasswordDetail: { passwordId: string };
+  SecureNoteDetail: { noteId: string };
+  MemberHistory: { userId: string; userName: string };
+  AuditLogs: undefined;
+  Sessions: undefined;
+  Users: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -127,6 +141,54 @@ function MainTabNavigator() {
           tabBarItemStyle: { display: 'none' }
         }}
       />
+      <Tab.Screen 
+        name="PasswordDetail" 
+        component={PasswordDetailScreen}
+        options={{ 
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
+      />
+      <Tab.Screen 
+        name="SecureNoteDetail" 
+        component={SecureNoteDetailScreen}
+        options={{ 
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
+      />
+      <Tab.Screen 
+        name="MemberHistory" 
+        component={MemberHistoryScreen}
+        options={{ 
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
+      />
+      <Tab.Screen 
+        name="AuditLogs" 
+        component={AuditLogsScreen}
+        options={{ 
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
+      />
+      <Tab.Screen 
+        name="Sessions" 
+        component={SessionsScreen}
+        options={{ 
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
+      />
+      <Tab.Screen 
+        name="Users" 
+        component={UsersScreen}
+        options={{ 
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -136,7 +198,7 @@ export default function AppNavigator() {
   const { isDark } = useTheme();
 
   if (isLoading) {
-    return <SkeletonLoader variant="app" />;
+    return <SkeletonLoader variant="default" />;
   }
 
   return (
@@ -193,6 +255,34 @@ export default function AppNavigator() {
             <Stack.Screen 
               name="SecureNoteDetail" 
               component={SecureNoteDetailScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="MemberHistory" 
+              component={MemberHistoryScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="AuditLogs" 
+              component={AuditLogsScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="Sessions" 
+              component={SessionsScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="Users" 
+              component={UsersScreen}
               options={{
                 headerShown: false,
               }}

@@ -18,6 +18,8 @@ interface HeaderProps {
   showNotificationsButton?: boolean;
   onNotificationsPress?: () => void;
   notificationCount?: number;
+  showSettingsButton?: boolean;
+  onSettingsPress?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -31,7 +33,9 @@ export const Header: React.FC<HeaderProps> = ({
   isRefreshing = false,
   showNotificationsButton = false,
   onNotificationsPress,
-  notificationCount = 0
+  notificationCount = 0,
+  showSettingsButton = false,
+  onSettingsPress
 }) => {
   const { isDark } = useTheme();
   const navigation = useNavigation();
@@ -164,6 +168,18 @@ export const Header: React.FC<HeaderProps> = ({
         </View>
         
         <View style={styles.rightSection}>
+          {showSettingsButton && (
+            <TouchableOpacity 
+              style={styles.refreshButton}
+              onPress={onSettingsPress}
+            >
+              <Ionicons 
+                name="settings-outline" 
+                size={20} 
+                color={isDark ? '#f9fafb' : '#111827'} 
+              />
+            </TouchableOpacity>
+          )}
           {showRefreshButton && (
             <TouchableOpacity 
               style={styles.refreshButton}

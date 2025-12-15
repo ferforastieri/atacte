@@ -45,7 +45,9 @@ export default {
         "VIBRATE",
         "WAKE_LOCK",
         "RECEIVE_BOOT_COMPLETED",
-        "SYSTEM_ALERT_WINDOW"
+        "SYSTEM_ALERT_WINDOW",
+        "ACTIVITY_RECOGNITION",
+        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
       ],
       usesCleartextTraffic: true,
       compileSdkVersion: 34,

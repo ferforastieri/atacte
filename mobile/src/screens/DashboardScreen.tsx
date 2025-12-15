@@ -652,6 +652,7 @@ export default function DashboardScreen() {
             value={formData.website}
             onChangeText={(text) => setFormData({ ...formData, website: text })}
             keyboardType="url"
+            leftIcon={<Ionicons name="globe-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           <Input
@@ -659,6 +660,7 @@ export default function DashboardScreen() {
             placeholder="Nome de usuário"
             value={formData.username}
             onChangeText={(text) => setFormData({ ...formData, username: text })}
+            leftIcon={<Ionicons name="person-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           <View style={styles.passwordSection}>
@@ -692,6 +694,7 @@ export default function DashboardScreen() {
             placeholder="Pasta (opcional)"
             value={formData.folder}
             onChangeText={(text) => setFormData({ ...formData, folder: text })}
+            leftIcon={<Ionicons name="folder-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           <Input
@@ -701,6 +704,7 @@ export default function DashboardScreen() {
             onChangeText={(text) => setFormData({ ...formData, notes: text })}
             multiline
             numberOfLines={3}
+            leftIcon={<Ionicons name="document-text-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           {}

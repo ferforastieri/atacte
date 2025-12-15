@@ -8,6 +8,7 @@ import {
   Dimensions,
   ScrollView,
   Alert,
+  BackHandler,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, Header, SkeletonLoader, Modal, Input } from '../components/shared';
@@ -18,7 +19,7 @@ import { familyService } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocation } from '../contexts/LocationContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 
 const { width, height } = Dimensions.get('window');
@@ -26,11 +27,28 @@ const { width, height } = Dimensions.get('window');
 export default function FamilyDetailScreen({ route }: any) {
   const navigation = useNavigation();
   const { familyId, familyName } = route.params;
+
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        handleBack();
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
+
   const [locations, setLocations] = useState<FamilyMemberLocation[]>([]);
   const [zones, setZones] = useState<GeofenceZone[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'map' | 'members' | 'zones' | 'settings'>('map');
+  const [activeTab, setActiveTab] = useState<'map' | 'zones' | 'settings'>('map');
   const [isCreatingZone, setIsCreatingZone] = useState(false);
   const [isSavingZone, setIsSavingZone] = useState(false);
   const [focusOnMember, setFocusOnMember] = useState<{ latitude: number; longitude: number } | undefined>();
@@ -289,7 +307,7 @@ export default function FamilyDetailScreen({ route }: any) {
         <Header 
           title={familyName} 
           showBackButton={true} 
-          onBack={navigation.goBack}
+          onBack={handleBack}
           showThemeToggle={true}
           onThemeToggle={toggleTheme}
         />
@@ -331,22 +349,6 @@ export default function FamilyDetailScreen({ route }: any) {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'members' && [styles.activeTab, { backgroundColor: isDark ? '#374151' : '#f0fdf4' }]]}
-          onPress={() => setActiveTab('members')}
-        >
-          <Ionicons 
-            name="people" 
-            size={20} 
-            color={activeTab === 'members' ? '#16a34a' : (isDark ? '#9ca3af' : '#6b7280')} 
-          />
-          <Text style={[
-            styles.tabText, 
-            { color: activeTab === 'members' ? '#16a34a' : (isDark ? '#9ca3af' : '#6b7280') }
-          ]}>
-            Membros
-          </Text>
-        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === 'zones' && [styles.activeTab, { backgroundColor: isDark ? '#374151' : '#f0fdf4' }]]}
@@ -410,12 +412,6 @@ export default function FamilyDetailScreen({ route }: any) {
           </View>
         )}
 
-        {activeTab === 'members' && (
-          <FamilyMembersList
-            members={locations}
-            onMemberPress={handleMemberPress}
-          />
-        )}
 
         {activeTab === 'zones' && (
           <ZoneManager

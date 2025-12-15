@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput, Alert, BackHandler } from 'react-native';
 import Constants from 'expo-constants';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Header } from '../components/shared';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { userService } from '../services/users/userService';
 import { useToast } from '../hooks/useToast';
 import axios from '../lib/axios';
@@ -14,8 +14,23 @@ const SettingsScreen: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
   const { user, refreshUser } = useAuth();
   const { showError, showSuccess } = useToast();
+
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        handleBack();
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
   
- 
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [profilePicture, setProfilePicture] = useState('');

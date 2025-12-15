@@ -132,10 +132,10 @@ const isLoading = ref(false)
 const locations = ref<LocationData[]>([])
 
 const today = new Date()
-const lastWeek = new Date(today)
-lastWeek.setDate(lastWeek.getDate() - 7)
+const yesterday = new Date(today)
+yesterday.setDate(yesterday.getDate() - 1)
 
-const startDate = ref(lastWeek.toISOString().split('T')[0])
+const startDate = ref(yesterday.toISOString().split('T')[0])
 const endDate = ref(today.toISOString().split('T')[0])
 
 let map: L.Map | null = null

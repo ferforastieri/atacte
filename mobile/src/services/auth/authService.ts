@@ -22,7 +22,10 @@ interface AuthResponse {
       email: string;
       phoneNumber?: string;
       profilePicture?: string;
+      role?: 'USER' | 'ADMIN';
     };
+    requiresTrust?: boolean;
+    sessionId?: string;
   };
   message?: string;
   isAuthError?: boolean;
@@ -51,7 +54,7 @@ class AuthService {
       data: credentials,
     });
 
-    if (response.success && response.data?.token) {
+    if (response.success && response.data?.token && response.data?.user) {
       await AsyncStorage.setItem('auth_token', response.data.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
     }
@@ -102,6 +105,30 @@ class AuthService {
     return this.makeRequest('/auth/reset-password', {
       method: 'POST',
       data: { token, newPassword },
+    });
+  }
+
+  async trustDevice(sessionId: string): Promise<AuthResponse> {
+    return this.makeRequest('/auth/trust-device', {
+      method: 'POST',
+      data: { sessionId },
+    });
+  }
+
+  async getSessions(): Promise<any> {
+    return this.makeRequest('/auth/sessions');
+  }
+
+  async revokeSession(sessionId: string): Promise<any> {
+    return this.makeRequest(`/auth/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async untrustDevice(deviceName: string): Promise<any> {
+    return this.makeRequest('/auth/untrust-device', {
+      method: 'POST',
+      data: { deviceName },
     });
   }
 }

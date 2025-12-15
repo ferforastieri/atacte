@@ -3,6 +3,8 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainTabParamList } from '../navigation/AppNavigator';
 import { Card, Header, Button, SkeletonLoader, Modal } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { passwordService } from '../services/passwords/passwordService';
@@ -24,9 +26,11 @@ interface ProfileStats {
   totpPasswords: number;
 }
 
+type ProfileScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Profile'>;
+
 export default function ProfileScreen() {
-  const { user, logout, refreshUser } = useAuth();
-  const navigation = useNavigation();
+  const { user, logout, refreshUser, isAdmin } = useAuth();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const [profileData, setProfileData] = useState<User | null>(null);
   const [stats, setStats] = useState<ProfileStats>({
     totalPasswords: 0,
@@ -182,7 +186,7 @@ export default function ProfileScreen() {
       textAlign: 'center',
     },
     actionsCard: {
-      marginBottom: 0,
+      marginBottom: 20,
     },
     actionButton: {
       flexDirection: 'row',
@@ -192,6 +196,7 @@ export default function ProfileScreen() {
       borderRadius: 12,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
       marginBottom: 12,
+      minHeight: 56,
     },
     actionButtonText: {
       fontSize: 16,
@@ -284,21 +289,55 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
-        {}
+        {isAdmin && (
+          <Card style={styles.actionsCard}>
+            <Text style={styles.sectionTitle}>Administração</Text>
+            
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('AuditLogs')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="document-text-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
+              <Text style={styles.actionButtonText}>Logs de Auditoria</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('Sessions')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="desktop-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
+              <Text style={styles.actionButtonText}>Sessões</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('Users')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="people-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
+              <Text style={styles.actionButtonText}>Usuários</Text>
+            </TouchableOpacity>
+          </Card>
+        )}
+
         <Card style={styles.actionsCard}>
           <Text style={styles.sectionTitle}>Ações</Text>
           
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={() => navigation.navigate('Settings' as never)}
+            onPress={() => navigation.navigate('Settings')}
+            activeOpacity={0.7}
           >
             <Ionicons name="settings-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
             <Text style={styles.actionButtonText}>Configurações</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.actionButton, styles.logoutButton]}
+            style={[styles.actionButton, styles.logoutButton, { marginBottom: 0 }]}
             onPress={handleLogout}
+            activeOpacity={0.7}
           >
             <Ionicons name="exit-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
             <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Sair</Text>

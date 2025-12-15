@@ -378,7 +378,7 @@ export default function SecureNotesScreen() {
   const renderNoteItem = ({ item }: { item: SecureNote }) => (
     <SecureNoteCard
       note={item}
-      onPress={() => handleEditNote(item)}
+      onPress={() => handleViewNote(item)}
       onEdit={() => handleEditNote(item)}
       onDelete={() => handleDeleteNote(item)}
       onToggleFavorite={() => handleToggleFavorite(item)}

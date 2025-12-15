@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Card, Logo } from '../components/shared';
 import { authService } from '../services/auth/authService';
 import { useToast } from '../hooks/useToast';
@@ -143,6 +144,7 @@ export default function ForgotPasswordScreen() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                leftIcon={<Ionicons name="mail-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
               />
 
               <Button
@@ -172,6 +174,7 @@ export default function ForgotPasswordScreen() {
                 value={token}
                 onChangeText={setToken}
                 autoCapitalize="none"
+                leftIcon={<Ionicons name="key-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
               />
 
               <Input
@@ -180,6 +183,7 @@ export default function ForgotPasswordScreen() {
                 value={newPassword}
                 onChangeText={setNewPassword}
                 secureTextEntry
+                leftIcon={<Ionicons name="lock-closed-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
               />
 
               <Input
@@ -188,6 +192,7 @@ export default function ForgotPasswordScreen() {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
+                leftIcon={<Ionicons name="lock-closed-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
               />
 
               <Button

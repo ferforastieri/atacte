@@ -8,3 +8,5 @@ export { SearchInput } from './SearchInput';
 export { TotpCode } from '../totp/TotpCode';
 export { PasswordGeneratorModal } from './PasswordGeneratorModal';
 export { Skeleton, SkeletonLoader } from './Skeleton';
+export { BaseSelect } from './BaseSelect';
+export { DatePicker } from './DatePicker';

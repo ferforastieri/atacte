@@ -17,6 +17,24 @@ import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function GeofenceScreen() {
+  const navigation = useNavigation();
+
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        handleBack();
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
+
   const [zones, setZones] = useState<GeofenceZone[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -359,6 +377,7 @@ export default function GeofenceScreen() {
         showThemeToggle={true} 
         onThemeToggle={toggleTheme}
         showBackButton={true}
+        onBack={handleBack}
       />
       
       <View style={styles.content}>
@@ -473,6 +492,7 @@ export default function GeofenceScreen() {
             placeholder="Ex: Casa, Trabalho, Escola"
             value={formData.name}
             onChangeText={(text) => setFormData({ ...formData, name: text })}
+            leftIcon={<Ionicons name="location-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           <Input
@@ -480,6 +500,7 @@ export default function GeofenceScreen() {
             placeholder="Descrição da zona"
             value={formData.description}
             onChangeText={(text) => setFormData({ ...formData, description: text })}
+            leftIcon={<Ionicons name="document-text-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           <Input
@@ -488,6 +509,7 @@ export default function GeofenceScreen() {
             value={formData.latitude}
             onChangeText={(text) => setFormData({ ...formData, latitude: text })}
             keyboardType="numeric"
+            leftIcon={<Ionicons name="navigate-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           <Input
@@ -496,6 +518,7 @@ export default function GeofenceScreen() {
             value={formData.longitude}
             onChangeText={(text) => setFormData({ ...formData, longitude: text })}
             keyboardType="numeric"
+            leftIcon={<Ionicons name="navigate-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           <Input
@@ -504,6 +527,7 @@ export default function GeofenceScreen() {
             value={formData.radius}
             onChangeText={(text) => setFormData({ ...formData, radius: text })}
             keyboardType="numeric"
+            leftIcon={<Ionicons name="resize-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
           />
 
           <View style={styles.checkboxRow}>

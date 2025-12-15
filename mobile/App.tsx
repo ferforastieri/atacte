@@ -8,6 +8,7 @@ import { ThemeProvider } from './src/contexts/ThemeContext';
 import { ToastProvider } from './src/contexts/ToastContext';
 import { LocationProvider } from './src/contexts/LocationContext';
 import { NotificationProvider } from './src/contexts/NotificationContext';
+import { TrustDeviceProvider } from './src/contexts/TrustDeviceContext';
 import AppNavigator from './src/navigation/AppNavigator';
 // Importar o serviço para registrar a tarefa em background (a definição da tarefa é executada no import)
 import './src/services/location/foregroundLocationService';
@@ -73,6 +74,7 @@ function PermissionsInitializer() {
   return null;
 }
 
+
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -80,15 +82,17 @@ export default function App() {
         <ThemeProvider>
           <ToastProvider>
             <AuthProvider>
-              <PermissionsInitializer />
-              <NotificationProvider>
-                <LocationProvider>
-                  <View style={styles.container}>
-                    <StatusBar style="auto" />
-                    <AppNavigator />
-                  </View>
-                </LocationProvider>
-              </NotificationProvider>
+              <TrustDeviceProvider>
+                <PermissionsInitializer />
+                <NotificationProvider>
+                  <LocationProvider>
+                    <View style={styles.container}>
+                      <StatusBar style="auto" />
+                      <AppNavigator />
+                    </View>
+                  </LocationProvider>
+                </NotificationProvider>
+              </TrustDeviceProvider>
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>

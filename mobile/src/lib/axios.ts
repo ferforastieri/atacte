@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.15.8:3001/api';
 
@@ -34,12 +35,32 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    
-    if (error.response?.status === 401) {
-      try {
-        await AsyncStorage.removeItem('auth_token');
-        await AsyncStorage.removeItem('user');
-      } catch (storageError) {
+    if (error.response) {
+      const { status, data } = error.response;
+      
+      // Verificar se é erro de dispositivo não confiável (401 ou 403)
+      if ((status === 401 || status === 403) && data?.requiresTrust && data?.sessionId) {
+        DeviceEventEmitter.emit('device-trust-required', {
+          sessionId: data.sessionId,
+          deviceName: data.deviceName || 'Desconhecido',
+          ipAddress: data.ipAddress || 'Desconhecido',
+        });
+        return Promise.reject(error);
+      }
+      
+      // Tratar erro 401 (não autorizado) - outros casos
+      if (status === 401) {
+        const allowedPaths = ['/auth/me', '/auth/trust-device', '/auth/logout'];
+        const path = error.config?.url || '';
+        const isAllowedPath = allowedPaths.some(allowed => path.includes(allowed));
+        
+        if (!isAllowedPath) {
+          try {
+            await AsyncStorage.removeItem('auth_token');
+            await AsyncStorage.removeItem('user');
+          } catch (storageError) {
+          }
+        }
       }
     }
     return Promise.reject(error);

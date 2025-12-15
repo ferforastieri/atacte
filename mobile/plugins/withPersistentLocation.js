@@ -29,6 +29,46 @@ const withPersistentLocation = (config) => {
       });
     }
 
+    if (!permissions.find(p => p.$?.['android:name'] === 'com.google.android.gms.permission.ACTIVITY_RECOGNITION')) {
+      permissions.push({
+        $: {
+          'android:name': 'com.google.android.gms.permission.ACTIVITY_RECOGNITION',
+        },
+      });
+    }
+
+    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.ACTIVITY_RECOGNITION')) {
+      permissions.push({
+        $: {
+          'android:name': 'android.permission.ACTIVITY_RECOGNITION',
+        },
+      });
+    }
+
+    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.WAKE_LOCK')) {
+      permissions.push({
+        $: {
+          'android:name': 'android.permission.WAKE_LOCK',
+        },
+      });
+    }
+
+    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.FOREGROUND_SERVICE')) {
+      permissions.push({
+        $: {
+          'android:name': 'android.permission.FOREGROUND_SERVICE',
+        },
+      });
+    }
+
+    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.FOREGROUND_SERVICE_LOCATION')) {
+      permissions.push({
+        $: {
+          'android:name': 'android.permission.FOREGROUND_SERVICE_LOCATION',
+        },
+      });
+    }
+
     if (!manifest.application) {
       manifest.application = [{}];
     }
@@ -171,38 +211,52 @@ class ForegroundTrackingService : Service() {
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    when (intent?.action) {
-      ACTION_START -> {
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: "Atacte"
-        val body = intent.getStringExtra(EXTRA_BODY) ?: "Rastreamento de localização ativo"
-        val notification = buildNotification(title, body)
-        startForeground(NOTIFICATION_ID, notification)
-        isRunning = true
-        saveTrackingState(this, true, title, body)
-      }
-      ACTION_STOP -> {
-        releaseWakeLock()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
-        isRunning = false
-        clearTrackingState(this)
-      }
-      ACTION_RESTART -> {
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: "Atacte"
-        val body = intent.getStringExtra(EXTRA_BODY) ?: "Rastreamento de localização ativo"
-        val notification = buildNotification(title, body)
-        startForeground(NOTIFICATION_ID, notification)
-        isRunning = true
-      }
-      else -> {
-        if (!isRunning) {
-          val notification = buildNotification(
-            "Atacte",
-            "Rastreamento de localização ativo"
-          )
+    try {
+      when (intent?.action) {
+        ACTION_START -> {
+          val title = intent.getStringExtra(EXTRA_TITLE) ?: "Atacte"
+          val body = intent.getStringExtra(EXTRA_BODY) ?: "Rastreamento de localização ativo"
+          val notification = buildNotification(title, body)
           startForeground(NOTIFICATION_ID, notification)
           isRunning = true
+          saveTrackingState(this, true, title, body)
+          acquireWakeLock()
         }
+        ACTION_STOP -> {
+          releaseWakeLock()
+          stopForeground(STOP_FOREGROUND_REMOVE)
+          stopSelf()
+          isRunning = false
+          clearTrackingState(this)
+        }
+        ACTION_RESTART -> {
+          val title = intent.getStringExtra(EXTRA_TITLE) ?: "Atacte"
+          val body = intent.getStringExtra(EXTRA_BODY) ?: "Rastreamento de localização ativo"
+          val notification = buildNotification(title, body)
+          startForeground(NOTIFICATION_ID, notification)
+          isRunning = true
+          acquireWakeLock()
+        }
+        else -> {
+          if (!isRunning) {
+            val prefs = getSharedPreferences("atacte_tracking_prefs", Context.MODE_PRIVATE)
+            val title = prefs.getString("notification_title", "Atacte") ?: "Atacte"
+            val body = prefs.getString("notification_body", "Rastreamento de localização ativo") 
+              ?: "Rastreamento de localização ativo"
+            val notification = buildNotification(title, body)
+            startForeground(NOTIFICATION_ID, notification)
+            isRunning = true
+            acquireWakeLock()
+          }
+        }
+      }
+    } catch (e: Exception) {
+      try {
+        val notification = buildNotification("Atacte", "Rastreamento de localização ativo")
+        startForeground(NOTIFICATION_ID, notification)
+        isRunning = true
+        acquireWakeLock()
+      } catch (ex: Exception) {
       }
     }
 
@@ -211,15 +265,26 @@ class ForegroundTrackingService : Service() {
 
   override fun onDestroy() {
     super.onDestroy()
-    releaseWakeLock()
     isRunning = false
     
     try {
-      val restartIntent = Intent(this, ForegroundTrackingService::class.java).apply {
-        action = ACTION_RESTART
+      val prefs = getSharedPreferences("atacte_tracking_prefs", Context.MODE_PRIVATE)
+      val wasTrackingActive = prefs.getBoolean("tracking_active", false)
+      
+      if (wasTrackingActive) {
+        val restartIntent = Intent(this, ForegroundTrackingService::class.java).apply {
+          action = ACTION_RESTART
+          val title = prefs.getString("notification_title", "Atacte")
+          val body = prefs.getString("notification_body", "Rastreamento de localização ativo")
+          putExtra(EXTRA_TITLE, title)
+          putExtra(EXTRA_BODY, body)
+        }
+        ContextCompat.startForegroundService(this, restartIntent)
+      } else {
+        releaseWakeLock()
       }
-      ContextCompat.startForegroundService(this, restartIntent)
     } catch (e: Exception) {
+      releaseWakeLock()
     }
   }
 
@@ -227,9 +292,10 @@ class ForegroundTrackingService : Service() {
 
   private fun acquireWakeLock() {
     try {
+      releaseWakeLock()
       val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
       wakeLock = powerManager.newWakeLock(
-        PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+        PowerManager.PARTIAL_WAKE_LOCK,
         "Atacte::LocationWakeLock"
       ).apply {
         acquire(10 * 60 * 60 * 1000L)
@@ -307,6 +373,19 @@ class ForegroundTrackingService : Service() {
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
+    val restartIntent = Intent(this, ForegroundTrackingService::class.java).apply {
+      action = ACTION_RESTART
+      putExtra(EXTRA_TITLE, title)
+      putExtra(EXTRA_BODY, body)
+    }
+
+    val restartPendingIntent = PendingIntent.getService(
+      this,
+      1,
+      restartIntent,
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
     return NotificationCompat.Builder(this, CHANNEL_ID)
       .setContentTitle(title)
       .setContentText(body)
@@ -321,7 +400,7 @@ class ForegroundTrackingService : Service() {
       .setShowWhen(false)
       .setAutoCancel(false)
       .setSilent(true)
-      .setDeleteIntent(null)
+      .setDeleteIntent(restartPendingIntent)
       .build()
   }
 

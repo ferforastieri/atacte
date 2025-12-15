@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Alert, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Device from 'expo-device';
+import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Card, Logo } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
+import { useTrustDevice } from '../contexts/TrustDeviceContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -16,6 +19,13 @@ export default function LoginScreen() {
   const { login, register } = useAuth();
   const { isDark } = useTheme();
   const navigation = useNavigation();
+  const { showTrustModal } = useTrustDevice();
+
+  const getDeviceName = (): string => {
+    const os = Platform.OS === 'ios' ? 'iOS' : 'Android';
+    const deviceName = Device.deviceName || Device.modelName || 'Dispositivo';
+    return `${os} - ${deviceName}`;
+  };
 
   const handleLogin = async () => {
     if (!email || !masterPassword) {
@@ -25,7 +35,14 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      const result = await login(email, masterPassword);
+      const deviceName = getDeviceName();
+      const result = await login(email, masterPassword, deviceName);
+      
+      if (result.requiresTrust && result.sessionId) {
+        showTrustModal(result.sessionId, deviceName, 'Desconhecido');
+        setIsLoading(false);
+        return;
+      }
       
       if (result.success) {
         showSuccess('Login realizado com sucesso!');
@@ -120,6 +137,7 @@ export default function LoginScreen() {
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
+          leftIcon={<Ionicons name="mail-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
         />
 
         <Input
@@ -128,6 +146,7 @@ export default function LoginScreen() {
           value={masterPassword}
           onChangeText={setMasterPassword}
           secureTextEntry
+          leftIcon={<Ionicons name="lock-closed-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
         />
 
         <Button

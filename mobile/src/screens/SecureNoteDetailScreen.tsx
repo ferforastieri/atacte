@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { View, Text, ScrollView, StyleSheet, BackHandler } from 'react-native';
+import { RouteProp, useRoute, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { Header, Card, SkeletonLoader } from '../components/shared';
@@ -29,6 +29,23 @@ export default function SecureNoteDetailScreen() {
   const { noteId } = route.params;
   const { isDark, toggleTheme } = useTheme();
   const { showError } = useToast();
+
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        handleBack();
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
+
   const [note, setNote] = useState<SecureNote | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -115,6 +132,7 @@ export default function SecureNoteDetailScreen() {
           title="Visualizar Nota" 
           onThemeToggle={toggleTheme}
           showBackButton={true}
+          onBack={handleBack}
         />
         <View style={styles.content}>
           <Card style={styles.card}>
