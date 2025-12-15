@@ -148,13 +148,6 @@ export class UserRepository {
     logs: any[];
     total: number;
   }> {
-    console.log('[AUDIT LOGS] getUserAuditLogs called with:', {
-      userId,
-      limit,
-      offset,
-      filters
-    });
-
     const where: any = {
       userId
     };
@@ -162,15 +155,10 @@ export class UserRepository {
     const andConditions: any[] = [];
 
     if (filters?.action) {
-      console.log('[AUDIT LOGS] Adding action filter:', filters.action);
       where.action = filters.action;
     }
 
     if (filters?.startDate || filters?.endDate) {
-      console.log('[AUDIT LOGS] Adding date filters:', {
-        startDate: filters.startDate,
-        endDate: filters.endDate
-      });
       where.createdAt = {};
       if (filters.startDate) {
         where.createdAt.gte = filters.startDate;
@@ -181,7 +169,6 @@ export class UserRepository {
     }
 
     if (filters?.query) {
-      console.log('[AUDIT LOGS] Adding query filter:', filters.query);
       const query = filters.query;
       const queryOrConditions = [
         { action: { contains: query, mode: 'insensitive' } },
@@ -192,7 +179,6 @@ export class UserRepository {
     }
 
     if (andConditions.length > 0) {
-      console.log('[AUDIT LOGS] Building AND conditions');
       const baseWhere: any = { userId };
       if (filters?.action) {
         baseWhere.action = filters.action;
@@ -216,8 +202,6 @@ export class UserRepository {
       delete where.createdAt;
     }
 
-    console.log('[AUDIT LOGS] Final where clause:', JSON.stringify(where, null, 2));
-
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
         where,
@@ -229,11 +213,6 @@ export class UserRepository {
         where,
       }),
     ]);
-
-    console.log('[AUDIT LOGS] Results:', {
-      logsCount: logs.length,
-      total
-    });
 
     return { logs, total };
   }

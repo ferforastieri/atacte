@@ -25,7 +25,7 @@
 - **Autenticação JWT** com refresh tokens
 - **Rate limiting** para proteção contra ataques de força bruta
 - **Auditoria completa** de todas as ações do usuário
-- **Sessões gerenciadas** com controle de dispositivos
+- **Sessões gerenciadas** com controle de dispositivos confiáveis
 
 ### 🎯 Funcionalidades
 
@@ -50,7 +50,9 @@
 - **Geofences personalizáveis** para alertas de zona
 - **Histórico de localizações** com visualização em mapa
 - **Notificações de chegada/saída** de zonas configuradas
-- **Localização em background** mesmo com app fechado
+- **Localização em background** mesmo com app fechado ou bloqueado
+- **Detecção de movimento** usando Activity Recognition
+- **Notificação persistente** para rastreamento contínuo
 - **Controle de permissões** granular por membro da família
 
 ### 🎨 Interface
@@ -149,13 +151,12 @@ Atacte/
 - **TypeScript** - Tipagem estática
 - **NativeWind** - Tailwind CSS para React Native
 - **React Navigation** - Navegação mobile
-- **React Native Paper** - Componentes Material Design
 - **AsyncStorage** - Armazenamento local
 - **Expo SecureStore** - Armazenamento seguro
 - **React Native Flash Message** - Notificações
 - **Expo Location** - Rastreamento de localização
 - **Expo TaskManager** - Tarefas em background
-- **React Native Maps** - Visualização de mapas
+- **React Native WebView** - Visualização de mapas (Leaflet)
 - **Expo Clipboard** - Funcionalidade de copiar/colar
 
 ### DevOps
@@ -276,17 +277,26 @@ O frontend web se conecta automaticamente ao backend via proxy configurado no Vi
 
 O app mobile precisa ser configurado para se conectar ao backend e ter permissões de localização:
 
-1. **Configurar URL do backend** - Edite o arquivo `mobile/src/lib/env.ts`:
+1. **Configurar URL do backend** - Configure a variável de ambiente `EXPO_PUBLIC_API_BASE_URL` ou edite `mobile/src/lib/axios.ts`:
    ```typescript
-   export const API_BASE_URL = 'http://seu-servidor:3001/api';
+   const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://seu-servidor:3001/api';
    ```
 
-2. **Configurar permissões de localização** - O arquivo `mobile/app.config.js` já está configurado com:
+2. **Executar prebuild** - Antes do primeiro build, execute:
+   ```bash
+   cd mobile
+   npx expo prebuild --clean
+   ```
+   Isso aplica as configurações nativas do plugin de localização persistente.
+
+3. **Configurar permissões de localização** - O arquivo `mobile/app.config.js` já está configurado com:
    - `ACCESS_FINE_LOCATION` - Localização precisa
    - `ACCESS_BACKGROUND_LOCATION` - Localização em background
    - `FOREGROUND_SERVICE_LOCATION` - Serviço em primeiro plano
+   - `ACTIVITY_RECOGNITION` - Detecção de movimento
+   - `WAKE_LOCK` - Manter dispositivo ativo
 
-3. **Configurar EAS Build** - Para builds de produção, edite `mobile/eas.json`:
+4. **Configurar EAS Build** - Para builds de produção, edite `mobile/eas.json`:
    ```json
    {
      "build": {
@@ -303,24 +313,20 @@ O app mobile precisa ser configurado para se conectar ao backend e ter permissõ
 
 ### Desenvolvimento Mobile
 
-Para desenvolvimento do app mobile, você precisará:
+Para desenvolvimento do app mobile:
 
-1. **Instalar o Expo CLI**:
-   ```bash
-   npm install -g @expo/cli
-   ```
-
-2. **Configurar ambiente**:
-   - **Android**: Instale o Android Studio e configure o emulador
-   - **iOS**: Instale o Xcode (apenas no macOS)
-
-3. **Executar o app**:
+1. **Executar prebuild** (primeira vez):
    ```bash
    cd mobile
+   npx expo prebuild --clean
+   ```
+
+2. **Iniciar desenvolvimento**:
+   ```bash
    npm start
    ```
 
-4. **Testar no dispositivo**:
+3. **Testar no dispositivo**:
    - Instale o app **Expo Go** no seu smartphone
    - Escaneie o QR code que aparece no terminal
    - Ou use um emulador Android/iOS
@@ -355,12 +361,12 @@ npm run build
 cd ../web
 npm run build
 
-# Build do app mobile (Android)
+# Build do app mobile (requer prebuild primeiro)
 cd ../mobile
+npx expo prebuild --clean
 npx eas build --platform android --profile production
-
-# Build do app mobile (iOS)
-npx eas build --platform ios --profile production
+# ou para iOS:
+# npx eas build --platform ios --profile production
 
 # Iniciar backend
 cd ../backend
@@ -400,9 +406,25 @@ Fazer login.
 ```json
 {
   "email": "usuario@exemplo.com", 
-  "masterPassword": "senha_mestra_segura"
+  "masterPassword": "senha_mestra_segura",
+  "deviceName": "Android - Samsung Galaxy"
 }
 ```
+
+#### POST `/api/auth/trust-device`
+Confiar em um dispositivo (requer autenticação).
+
+```json
+{
+  "sessionId": "id_da_sessao"
+}
+```
+
+#### GET `/api/auth/me`
+Obter informações do usuário autenticado.
+
+#### GET `/api/auth/sessions`
+Listar todas as sessões ativas do usuário.
 
 ### Senhas
 
@@ -476,11 +498,17 @@ Listar famílias do usuário.
 #### GET `/api/families/:id/members`
 Listar membros de uma família.
 
-#### POST `/api/location/update`
+#### POST `/api/location`
 Atualizar localização do usuário.
+
+#### GET `/api/location/latest`
+Obter última localização do usuário.
 
 #### GET `/api/location/family/:familyId`
 Obter localizações dos membros da família.
+
+#### GET `/api/location/history/:userId`
+Obter histórico de localizações de um membro.
 
 #### POST `/api/zones`
 Criar nova zona geográfica.

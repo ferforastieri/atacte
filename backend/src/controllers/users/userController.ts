@@ -66,7 +66,6 @@ router.get('/folders', asAuthenticatedHandler(async (req, res) => {
 router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
   try {
     const queryParams = req.query;
-    console.log('[AUDIT LOGS CONTROLLER] Request query params:', queryParams);
     
     const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
     const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
@@ -80,26 +79,14 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
     if (queryParams['startDate']) {
       startDate = new Date(queryParams['startDate'] as string);
       startDate.setHours(0, 0, 0, 0);
-      console.log('[AUDIT LOGS CONTROLLER] Parsed startDate:', startDate);
     }
     
     if (queryParams['endDate']) {
       endDate = new Date(queryParams['endDate'] as string);
       endDate.setHours(23, 59, 59, 999);
-      console.log('[AUDIT LOGS CONTROLLER] Parsed endDate:', endDate);
     }
     
     const targetUserId = filterUserId && req.user.role === 'ADMIN' ? filterUserId : req.user.id;
-    
-    console.log('[AUDIT LOGS CONTROLLER] Calling getUserAuditLogs with:', {
-      userId: targetUserId,
-      limit,
-      offset,
-      query,
-      action,
-      startDate,
-      endDate
-    });
     
     const auditLogs = await userService.getUserAuditLogs(targetUserId, { 
       limit, 
@@ -108,11 +95,6 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
       action,
       startDate,
       endDate
-    });
-
-    console.log('[AUDIT LOGS CONTROLLER] Response:', {
-      logsCount: auditLogs.logs.length,
-      total: auditLogs.total
     });
 
     res.json({
