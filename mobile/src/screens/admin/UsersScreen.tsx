@@ -49,7 +49,10 @@ export default function UsersScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editingUser, setEditingUser] = useState<Partial<AdminUser> & { isActive: boolean }>({
     id: '',
     email: '',
@@ -182,6 +185,38 @@ export default function UsersScreen() {
       showError(error.response?.data?.message || 'Erro ao alterar senha');
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const openDeleteModal = (user: AdminUser) => {
+    setDeletingUserId(user.id);
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeletingUserId(null);
+    setSelectedUser(null);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!deletingUserId) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await userService.deleteUser(deletingUserId);
+      if (response.success) {
+        showSuccess('Usuário deletado com sucesso');
+        closeDeleteModal();
+        await fetchUsers();
+      } else {
+        showError(response.message || 'Erro ao deletar usuário');
+      }
+    } catch (error: any) {
+      showError(error.response?.data?.message || 'Erro ao deletar usuário');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -426,6 +461,13 @@ export default function UsersScreen() {
                   <Ionicons name="key-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
                   <Text style={styles.actionButtonText}>Senha</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, { flex: 1 }]}
+                  onPress={() => openDeleteModal(user)}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                  <Text style={[styles.actionButtonText, { color: '#ef4444' }]}>Deletar</Text>
+                </TouchableOpacity>
               </View>
             </Card>
           ))
@@ -555,6 +597,19 @@ export default function UsersScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={showDeleteModal}
+        onClose={closeDeleteModal}
+        type="confirm"
+        title="Deletar Usuário"
+        message={`Tem certeza que deseja deletar o usuário ${selectedUser?.email}? Esta ação não pode ser desfeita.`}
+        confirmText="Deletar"
+        cancelText="Cancelar"
+        confirmVariant="danger"
+        onConfirm={confirmDeleteUser}
+        loading={isDeleting}
+      />
     </View>
   );
 }

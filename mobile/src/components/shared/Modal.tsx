@@ -19,6 +19,7 @@ interface ModalProps {
   cancelText?: string;
   onConfirm?: () => void;
   confirmVariant?: 'primary' | 'danger' | 'secondary' | 'ghost';
+  loading?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -34,6 +35,7 @@ export const Modal: React.FC<ModalProps> = ({
   cancelText = 'Cancelar',
   onConfirm,
   confirmVariant = 'primary',
+  loading = false,
 }) => {
   const { isDark } = useTheme();
   const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
@@ -87,8 +89,9 @@ export const Modal: React.FC<ModalProps> = ({
   });
 
   const handleConfirm = () => {
-    onConfirm?.();
-    onClose();
+    if (!loading) {
+      onConfirm?.();
+    }
   };
 
   const renderContent = () => {
@@ -108,6 +111,8 @@ export const Modal: React.FC<ModalProps> = ({
               onPress={handleConfirm}
               variant={confirmVariant}
               style={styles.confirmButton}
+              loading={loading}
+              disabled={loading}
             />
           </View>
         </View>

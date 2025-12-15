@@ -54,7 +54,7 @@ export default function AuditLogsScreen() {
   
   const getDefaultStartDate = () => {
     const date = new Date();
-    date.setDate(date.getDate() - 7);
+    date.setDate(date.getDate() - 1);
     return date;
   };
 

@@ -9,7 +9,7 @@
       <div class="mb-6 flex justify-end">
         <BaseButton
           variant="danger"
-          @click="revokeAllSessions"
+          @click="openRevokeAllModal"
           :loading="isRevokingAll"
         >
           <TrashIcon class="w-4 h-4 mr-2" />
@@ -122,7 +122,7 @@
                       v-if="session.isTrusted && session.deviceName"
                       variant="ghost"
                       size="sm"
-                      @click="untrustDevice(session.deviceName)"
+                      @click="openUntrustModal(session.deviceName)"
                       class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300 p-1.5"
                       title="Remover confiança do dispositivo"
                     >
@@ -153,6 +153,30 @@
         </div>
       </BaseCard>
     </div>
+
+    <!-- Untrust Device Confirmation Modal -->
+    <ConfirmModal
+      :show="showUntrustModal"
+      title="Remover Confiança do Dispositivo"
+      :message="`Tem certeza que deseja remover a confiança do dispositivo \"${untrustingDeviceName}\"? Na próxima vez que você fizer login neste dispositivo, será necessário confiar novamente.`"
+      confirm-text="Remover Confiança"
+      cancel-text="Cancelar"
+      :loading="isUntrusting"
+      @confirm="confirmUntrustDevice"
+      @cancel="closeUntrustModal"
+    />
+
+    <!-- Revoke All Sessions Confirmation Modal -->
+    <ConfirmModal
+      :show="showRevokeAllModal"
+      title="Revogar Todas as Sessões"
+      message="Tem certeza que deseja revogar todas as sessões? Você será deslogado."
+      confirm-text="Revogar Todas"
+      cancel-text="Cancelar"
+      :loading="isRevokingAll"
+      @confirm="confirmRevokeAllSessions"
+      @cancel="closeRevokeAllModal"
+    />
   </div>
 </template>
 
@@ -166,7 +190,7 @@ import {
   ComputerDesktopIcon,
   ShieldExclamationIcon
 } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, ConfirmModal } from '@/components/ui'
 import authApi, { type Session } from '@/api/auth'
 
 const router = useRouter()
@@ -175,6 +199,10 @@ const toast = useToast()
 const sessions = ref<Session[]>([])
 const isLoading = ref(false)
 const isRevokingAll = ref(false)
+const showUntrustModal = ref(false)
+const showRevokeAllModal = ref(false)
+const untrustingDeviceName = ref<string>('')
+const isUntrusting = ref(false)
 
 const currentSession = computed(() => {
   return sessions.value.find(s => s.isCurrent)
@@ -201,26 +229,42 @@ const revokeSession = async (sessionId: string) => {
   }
 }
 
-const untrustDevice = async (deviceName: string) => {
-  if (!confirm(`Tem certeza que deseja remover a confiança do dispositivo "${deviceName}"? Na próxima vez que você fizer login neste dispositivo, será necessário confiar novamente.`)) {
-    return
-  }
+const openUntrustModal = (deviceName: string) => {
+  untrustingDeviceName.value = deviceName
+  showUntrustModal.value = true
+}
 
+const closeUntrustModal = () => {
+  showUntrustModal.value = false
+  untrustingDeviceName.value = ''
+}
+
+const confirmUntrustDevice = async () => {
+  if (!untrustingDeviceName.value) return
+
+  isUntrusting.value = true
   try {
-    await authApi.untrustDevice(deviceName)
+    await authApi.untrustDevice(untrustingDeviceName.value)
     toast.success('Confiança removida do dispositivo com sucesso!')
+    closeUntrustModal()
     await fetchSessions()
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || 'Erro ao remover confiança do dispositivo'
     toast.error(errorMessage)
+  } finally {
+    isUntrusting.value = false
   }
 }
 
-const revokeAllSessions = async () => {
-  if (!confirm('Tem certeza que deseja revogar todas as sessões? Você será deslogado.')) {
-    return
-  }
+const openRevokeAllModal = () => {
+  showRevokeAllModal.value = true
+}
 
+const closeRevokeAllModal = () => {
+  showRevokeAllModal.value = false
+}
+
+const confirmRevokeAllSessions = async () => {
   isRevokingAll.value = true
   try {
     const sessionsToRevoke = sessions.value.filter(s => !s.isCurrent)
@@ -228,6 +272,7 @@ const revokeAllSessions = async () => {
     await Promise.all(sessionsToRevoke.map(session => authApi.revokeSession(session.id)))
     
     toast.success('Todas as sessões foram revogadas!')
+    closeRevokeAllModal()
     await fetchSessions()
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || 'Erro ao revogar sessões'
@@ -258,4 +303,5 @@ onMounted(() => {
   fetchSessions()
 })
 </script>
+
 

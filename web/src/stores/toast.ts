@@ -70,7 +70,6 @@ export const useToastStore = defineStore('toast', () => {
   const getDefaultDuration = (type: ToastData['type']): number => {
     switch (type) {
       case 'error': return 5000
-      case 'warning': return 4500
       default: return 4000
     }
   }

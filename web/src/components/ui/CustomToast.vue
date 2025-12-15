@@ -9,24 +9,25 @@
   >
     <div
       v-if="show"
-      class="fixed top-4 right-4 z-50 max-w-sm w-full bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-l-4 p-4 flex items-start space-x-3"
+      class="relative max-w-sm w-full bg-white dark:bg-gray-800 rounded-[20px] shadow-sm border-l-[3px] py-2.5 px-4 flex items-center space-x-2.5"
       :class="borderColorClass"
+      style="box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);"
     >
       <!-- Icon -->
       <div class="flex-shrink-0">
         <component
           :is="iconComponent"
           :class="iconColorClass"
-          class="h-6 w-6"
+          class="h-5 w-5"
         />
       </div>
       
       <!-- Content -->
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
           {{ title }}
         </p>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <p class="text-xs text-gray-600 dark:text-gray-400 leading-4">
           {{ message }}
         </p>
       </div>
@@ -35,7 +36,7 @@
       <div class="flex-shrink-0">
         <button
           @click="$emit('close')"
-          class="inline-flex text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-md p-1"
+          class="inline-flex text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 dark:text-gray-400 focus:outline-none p-1"
         >
           <XMarkIcon class="h-5 w-5" />
         </button>
@@ -85,30 +86,30 @@ const iconComponent = computed(() => {
 const borderColorClass = computed(() => {
   switch (props.type) {
     case 'success':
-      return 'border-l-green-500'
+      return 'border-l-[#10b981]'
     case 'error':
-      return 'border-l-red-500'
+      return 'border-l-[#ef4444]'
     case 'info':
-      return 'border-l-blue-500'
+      return 'border-l-[#3b82f6]'
     case 'warning':
-      return 'border-l-yellow-500'
+      return 'border-l-[#f59e0b]'
     default:
-      return 'border-l-blue-500'
+      return 'border-l-[#3b82f6]'
   }
 })
 
 const iconColorClass = computed(() => {
   switch (props.type) {
     case 'success':
-      return 'text-green-500'
+      return 'text-[#10b981]'
     case 'error':
-      return 'text-red-500'
+      return 'text-[#ef4444]'
     case 'info':
-      return 'text-blue-500'
+      return 'text-[#3b82f6]'
     case 'warning':
-      return 'text-yellow-500'
+      return 'text-[#f59e0b]'
     default:
-      return 'text-blue-500'
+      return 'text-[#3b82f6]'
   }
 })
 </script>

@@ -148,6 +148,11 @@ const usersApi = {
   async changeUserPassword(userId: string, newPassword: string) {
     const response = await api.post(`/users/admin/users/${userId}/change-password`, { newPassword })
     return response.data
+  },
+
+  async deleteUser(userId: string) {
+    const response = await api.delete(`/users/admin/users/${userId}`)
+    return response.data
   }
 }
 

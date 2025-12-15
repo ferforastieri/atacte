@@ -15,7 +15,7 @@ app.use(router)
 app.use(appInit)
 app.use(Toast, {
   position: 'top-right',
-  timeout: 5000,
+  timeout: 4000,
   closeOnClick: true,
   pauseOnFocusLoss: true,
   pauseOnHover: true,

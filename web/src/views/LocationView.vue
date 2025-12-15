@@ -163,7 +163,7 @@
                     <BaseButton
                       variant="ghost"
                       size="sm"
-                      @click="deleteZone(zone.id)"
+                      @click="openDeleteZoneModal(zone.id)"
                       class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,6 +298,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete Zone Confirmation Modal -->
+    <ConfirmModal
+      :show="showDeleteZoneModal"
+      title="Deletar Zona"
+      message="Tem certeza que deseja deletar esta zona? Esta ação não pode ser desfeita."
+      confirm-text="Deletar"
+      cancel-text="Cancelar"
+      :loading="isDeletingZone"
+      @confirm="confirmDeleteZone"
+      @cancel="closeDeleteZoneModal"
+    />
   </div>
 </template>
 
@@ -309,7 +321,7 @@ import { useAuthStore } from '@/stores/auth'
 import { locationApi, type FamilyMember, type GeofenceZone, type CreateZoneData } from '@/api/location'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { AppHeader, BaseButton, BaseCard, BaseInput, BaseSelect, BaseTextarea } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard, BaseInput, BaseSelect, BaseTextarea, ConfirmModal } from '@/components/ui'
 import { ArrowPathIcon, MapPinIcon } from '@heroicons/vue/24/outline'
 
 interface NewZone {
@@ -326,6 +338,9 @@ const isLoading = ref(false)
 const zonesLoading = ref(false)
 const isCreatingZone = ref(false)
 const showCreateZoneModal = ref(false)
+const showDeleteZoneModal = ref(false)
+const deletingZoneId = ref<string | null>(null)
+const isDeletingZone = ref(false)
 const familyMembers = ref<FamilyMember[]>([])
 const zones = ref<GeofenceZone[]>([])
 
@@ -638,15 +653,30 @@ const createZone = async () => {
   }
 }
 
-const deleteZone = async (zoneId: string) => {
-  if (!confirm('Tem certeza que deseja deletar esta zona?')) return
+const openDeleteZoneModal = (zoneId: string) => {
+  deletingZoneId.value = zoneId
+  showDeleteZoneModal.value = true
+}
+
+const closeDeleteZoneModal = () => {
+  showDeleteZoneModal.value = false
+  deletingZoneId.value = null
+}
+
+const confirmDeleteZone = async () => {
+  if (!deletingZoneId.value) return
   
+  isDeletingZone.value = true
   try {
-    await locationApi.deleteZone(zoneId)
+    await locationApi.deleteZone(deletingZoneId.value)
     
     toast.success('Zona deletada com sucesso!')
+    closeDeleteZoneModal()
     await loadZones()
   } catch (error) {
+    toast.error('Erro ao deletar zona')
+  } finally {
+    isDeletingZone.value = false
   }
 }
 

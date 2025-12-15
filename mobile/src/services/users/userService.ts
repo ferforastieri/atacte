@@ -92,6 +92,12 @@ class UserService {
       data: { newPassword },
     });
   }
+
+  async deleteUser(userId: string): Promise<any> {
+    return this.makeRequest(`/users/admin/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const userService = new UserService();

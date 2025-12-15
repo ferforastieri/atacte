@@ -332,4 +332,34 @@ router.post(
   })
 );
 
+router.delete(
+  '/admin/users/:userId',
+  requireAdmin,
+  asAuthenticatedHandler(async (req, res) => {
+    try {
+      const userId = req.params['userId'];
+      if (!userId) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do usuário é obrigatório'
+        });
+        return;
+      }
+
+      await userService.deleteUserByAdmin(req.user.id, userId, req);
+
+      res.json({
+        success: true,
+        message: 'Usuário deletado com sucesso'
+      });
+    } catch (error: any) {
+      const statusCode = error.message === 'Usuário não encontrado' ? 404 : 500;
+      res.status(statusCode).json({
+        success: false,
+        message: error.message || 'Erro interno do servidor'
+      });
+    }
+  })
+);
+
 export default router;

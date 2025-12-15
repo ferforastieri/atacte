@@ -384,4 +384,26 @@ export class UserService {
       req
     );
   }
+
+  async deleteUserByAdmin(
+    adminUserId: string,
+    userId: string,
+    req?: Request
+  ): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    await this.userRepository.delete(userId);
+
+    await AuditUtil.log(
+      adminUserId,
+      'ACCOUNT_DELETED',
+      'USER',
+      userId,
+      { deletedBy: adminUserId, email: user.email },
+      req
+    );
+  }
 }

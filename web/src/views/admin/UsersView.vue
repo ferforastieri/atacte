@@ -95,6 +95,15 @@
                       <KeyIcon class="h-4 w-4" />
                       Senha
                     </BaseButton>
+                    <BaseButton
+                      variant="ghost"
+                      size="sm"
+                      @click="openDeleteModal(user)"
+                      class="flex items-center gap-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      <TrashIcon class="h-4 w-4" />
+                      Deletar
+                    </BaseButton>
                   </div>
                 </td>
               </tr>
@@ -220,14 +229,25 @@
         </div>
       </form>
     </BaseModal>
+
+    <ConfirmModal
+      :show="showDeleteModal"
+      title="Deletar Usuário"
+      :message="`Tem certeza que deseja deletar o usuário ${deletingUserEmail}? Esta ação não pode ser desfeita.`"
+      confirm-text="Deletar"
+      cancel-text="Cancelar"
+      :loading="isDeleting"
+      @confirm="confirmDeleteUser"
+      @cancel="closeDeleteModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from '@/hooks/useToast'
-import { UserGroupIcon, PencilIcon, KeyIcon, EnvelopeIcon, UserIcon, PhoneIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseCard, BaseButton, BaseModal, BaseInput, BaseSelect } from '@/components/ui'
+import { UserGroupIcon, PencilIcon, KeyIcon, EnvelopeIcon, UserIcon, PhoneIcon, LockClosedIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { AppHeader, BaseCard, BaseButton, BaseModal, BaseInput, BaseSelect, ConfirmModal } from '@/components/ui'
 import usersApi, { type AdminUser } from '@/api/users'
 
 const toast = useToast()
@@ -239,6 +259,7 @@ const isChangingPassword = ref(false)
 
 const showEditModal = ref(false)
 const showPasswordModal = ref(false)
+const showDeleteModal = ref(false)
 const editingUser = ref<Partial<AdminUser> & { isActive: boolean }>({
   id: '',
   email: '',
@@ -248,6 +269,9 @@ const editingUser = ref<Partial<AdminUser> & { isActive: boolean }>({
   isActive: true
 })
 const selectedUserId = ref<string>('')
+const deletingUserId = ref<string>('')
+const deletingUserEmail = ref<string>('')
+const isDeleting = ref(false)
 const newPassword = ref('')
 const editingUserPassword = ref('')
 
@@ -352,6 +376,34 @@ const changePassword = async () => {
     toast.error(error.response?.data?.message || 'Erro ao alterar senha')
   } finally {
     isChangingPassword.value = false
+  }
+}
+
+const openDeleteModal = (user: AdminUser) => {
+  deletingUserId.value = user.id
+  deletingUserEmail.value = user.email
+  showDeleteModal.value = true
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  deletingUserId.value = ''
+  deletingUserEmail.value = ''
+}
+
+const confirmDeleteUser = async () => {
+  if (!deletingUserId.value) return
+
+  isDeleting.value = true
+  try {
+    await usersApi.deleteUser(deletingUserId.value)
+    toast.success('Usuário deletado com sucesso')
+    closeDeleteModal()
+    await fetchUsers()
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || 'Erro ao deletar usuário')
+  } finally {
+    isDeleting.value = false
   }
 }
 
