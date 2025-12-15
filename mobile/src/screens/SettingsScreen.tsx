@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput, Alert, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput, BackHandler, Image } from 'react-native';
 import Constants from 'expo-constants';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Header } from '../components/shared';
+import { Header, Modal } from '../components/shared';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { userService } from '../services/users/userService';
 import { useToast } from '../hooks/useToast';
+import { Ionicons } from '@expo/vector-icons';
 import axios from '../lib/axios';
 
 const SettingsScreen: React.FC = () => {
@@ -15,8 +18,15 @@ const SettingsScreen: React.FC = () => {
   const { user, refreshUser } = useAuth();
   const { showError, showSuccess } = useToast();
 
+  const [name, setName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [profilePicture, setProfilePicture] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
+
   const handleBack = () => {
-    navigation.goBack();
+    (navigation as any).jumpTo('Profile');
   };
 
   useFocusEffect(
@@ -30,12 +40,6 @@ const SettingsScreen: React.FC = () => {
       return () => subscription.remove();
     }, [navigation])
   );
-  
-  const [name, setName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
  
   useEffect(() => {
@@ -64,7 +68,7 @@ const SettingsScreen: React.FC = () => {
 
   const handleSaveProfile = async () => {
     if (!name.trim()) {
-      Alert.alert('Erro', 'Nome é obrigatório');
+      showError('Nome é obrigatório');
       return;
     }
 
@@ -78,8 +82,6 @@ const SettingsScreen: React.FC = () => {
 
       if (response.success) {
         showSuccess('Perfil atualizado com sucesso!');
-        setIsEditing(false);
-       
         await refreshUser();
       } else {
         showError(response.message || 'Erro ao atualizar perfil');
@@ -91,11 +93,99 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
-  const handleCancelEdit = () => {
-    setName(user?.name || '');
-    setPhoneNumber('');
+  const requestImagePickerPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showError('Precisamos de permissão para acessar suas fotos.');
+      return false;
+    }
+    return true;
+  };
+
+  const handlePickImage = () => {
+    setShowImagePickerModal(true);
+  };
+
+  const handleCameraPick = async () => {
+    setShowImagePickerModal(false);
+    const hasPermission = await requestImagePickerPermissions();
+    if (!hasPermission) return;
+
+    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+    if (cameraPermission.status !== 'granted') {
+      showError('Precisamos de permissão para acessar a câmera.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await handleImageSelected(result.assets[0].uri);
+    }
+  };
+
+  const handleGalleryPick = async () => {
+    setShowImagePickerModal(false);
+    const hasPermission = await requestImagePickerPermissions();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await handleImageSelected(result.assets[0].uri);
+    }
+  };
+
+  const handleImageSelected = async (uri: string) => {
+    setIsUploadingImage(true);
+    try {
+      // Verificar se o arquivo existe
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      if (!fileInfo.exists) {
+        showError('Arquivo de imagem não encontrado');
+        setIsUploadingImage(false);
+        return;
+      }
+
+      // Ler o arquivo como base64
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: 'base64',
+      });
+      
+      // Determinar o tipo MIME baseado na extensão do arquivo
+      const extension = uri.split('.').pop()?.toLowerCase();
+      let mimeType = 'image/jpeg';
+      if (extension === 'png') {
+        mimeType = 'image/png';
+      } else if (extension === 'gif') {
+        mimeType = 'image/gif';
+      } else if (extension === 'webp') {
+        mimeType = 'image/webp';
+      }
+      
+      const base64data = `data:${mimeType};base64,${base64}`;
+      setProfilePicture(base64data);
+      setIsUploadingImage(false);
+      showSuccess('Imagem selecionada com sucesso');
+    } catch (error: any) {
+      console.error('Erro ao processar imagem:', error);
+      showError(`Erro ao processar imagem: ${error.message || 'Erro desconhecido'}`);
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
     setProfilePicture('');
-    setIsEditing(false);
   };
 
   const settingsSections = [
@@ -118,24 +208,19 @@ const SettingsScreen: React.FC = () => {
           keyboardType: 'phone-pad',
         },
         {
-          label: 'Foto de Perfil (URL)',
-          type: 'input',
+          label: 'Foto de Perfil',
+          type: 'image',
           value: profilePicture,
-          onChangeText: setProfilePicture,
-          placeholder: 'URL da foto de perfil',
+          onPickImage: handlePickImage,
+          onRemoveImage: handleRemoveImage,
+          isUploading: isUploadingImage,
         },
         {
-          label: isEditing ? 'Salvar' : 'Editar Perfil',
+          label: 'Salvar',
           type: 'button',
-          onPress: isEditing ? handleSaveProfile : () => setIsEditing(true),
+          onPress: handleSaveProfile,
           isLoading: isLoading,
         },
-        ...(isEditing ? [{
-          label: 'Cancelar',
-          type: 'button',
-          onPress: handleCancelEdit,
-          isDestructive: true,
-        }] : []),
       ],
     },
     {
@@ -167,11 +252,14 @@ const SettingsScreen: React.FC = () => {
       <View key={index} style={[
         styles.settingItem, 
         isDark && styles.settingItemDark,
-        isLastItem && styles.settingItemLast
+        isLastItem && styles.settingItemLast,
+        item.type === 'image' && styles.settingItemImage
       ]}>
-        <Text style={[styles.settingLabel, isDark && styles.settingLabelDark]}>
-          {item.label}
-        </Text>
+        {item.type !== 'image' && (
+          <Text style={[styles.settingLabel, isDark && styles.settingLabelDark]}>
+            {item.label}
+          </Text>
+        )}
         
         {item.type === 'switch' && (
           <Switch
@@ -197,18 +285,78 @@ const SettingsScreen: React.FC = () => {
             style={[
               styles.input,
               isDark && styles.inputDark,
-              !isEditing && {
-                backgroundColor: isDark ? '#1f2937' : '#f9fafb',
-                color: isDark ? '#6b7280' : '#9ca3af',
-              }
             ]}
             value={item.value}
             onChangeText={item.onChangeText}
             placeholder={item.placeholder}
             placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
             keyboardType={item.keyboardType || 'default'}
-            editable={isEditing}
+            editable={true}
           />
+        )}
+        
+        {item.type === 'image' && (
+          <View style={styles.imageRow}>
+            <Text style={[styles.settingLabel, isDark && styles.settingLabelDark]}>
+              {item.label}
+            </Text>
+            <View style={styles.imageContainer}>
+              {item.value ? (
+                <TouchableOpacity 
+                  onPress={item.onPickImage}
+                  disabled={item.isUploading}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.imagePreviewContainer}>
+                    <Image 
+                      source={{ uri: item.value }} 
+                      style={styles.imagePreview}
+                    />
+                    <View style={styles.imageOverlay}>
+                      <Ionicons name="camera" size={24} color="#ffffff" />
+                      <Text style={styles.imageOverlayText}>Trocar foto</Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.removeImageButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        item.onRemoveImage();
+                      }}
+                    >
+                      <Ionicons name="close-circle" size={24} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity 
+                  style={[
+                    styles.imagePickerButton,
+                    isDark && styles.imagePickerButtonDark,
+                    item.isUploading && styles.imagePickerButtonDisabled
+                  ]}
+                  onPress={item.onPickImage}
+                  disabled={item.isUploading}
+                >
+                  {item.isUploading ? (
+                    <Text style={[styles.imagePickerButtonText, isDark && styles.imagePickerButtonTextDark]}>
+                      Processando...
+                    </Text>
+                  ) : (
+                    <>
+                      <Ionicons 
+                        name="camera-outline" 
+                        size={24} 
+                        color={isDark ? '#9ca3af' : '#6b7280'} 
+                      />
+                      <Text style={[styles.imagePickerButtonText, isDark && styles.imagePickerButtonTextDark]}>
+                        Selecionar Foto
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         )}
         
         {item.type === 'button' && (
@@ -240,7 +388,7 @@ const SettingsScreen: React.FC = () => {
       <Header 
         title="Configurações" 
         showBackButton={true}
-        onBack={navigation.goBack}
+        onBack={handleBack}
         showThemeToggle={true}
         onThemeToggle={toggleTheme}
       />
@@ -258,6 +406,36 @@ const SettingsScreen: React.FC = () => {
           </View>
         ))}
       </ScrollView>
+
+      <Modal
+        visible={showImagePickerModal}
+        onClose={() => setShowImagePickerModal(false)}
+        type="default"
+        title="Selecionar Foto"
+        size="sm"
+      >
+        <View style={styles.imagePickerModalContent}>
+          <TouchableOpacity 
+            style={[styles.imagePickerOption, isDark && styles.imagePickerOptionDark]}
+            onPress={handleCameraPick}
+          >
+            <Ionicons name="camera-outline" size={24} color={isDark ? '#22c55e' : '#22c55e'} />
+            <Text style={[styles.imagePickerOptionText, isDark && styles.imagePickerOptionTextDark]}>
+              Câmera
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.imagePickerOption, isDark && styles.imagePickerOptionDark]}
+            onPress={handleGalleryPick}
+          >
+            <Ionicons name="images-outline" size={24} color={isDark ? '#22c55e' : '#22c55e'} />
+            <Text style={[styles.imagePickerOptionText, isDark && styles.imagePickerOptionTextDark]}>
+              Galeria
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -374,6 +552,108 @@ const styles = StyleSheet.create({
   },
   buttonTextDisabled: {
     color: '#fff',
+  },
+  settingItemImage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  imageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  imageContainer: {
+    alignItems: 'flex-end',
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingVertical: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageOverlayText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    zIndex: 10,
+  },
+  imagePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#d1d5db',
+    backgroundColor: '#f9fafb',
+    gap: 8,
+  },
+  imagePickerButtonDark: {
+    backgroundColor: '#1f2937',
+    borderColor: '#374151',
+  },
+  imagePickerButtonDisabled: {
+    opacity: 0.5,
+  },
+  imagePickerButtonText: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  imagePickerButtonTextDark: {
+    color: '#9ca3af',
+  },
+  imagePickerModalContent: {
+    gap: 12,
+  },
+  imagePickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#f9fafb',
+    gap: 12,
+  },
+  imagePickerOptionDark: {
+    backgroundColor: '#374151',
+  },
+  imagePickerOptionText: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  imagePickerOptionTextDark: {
+    color: '#f9fafb',
   },
 });
 

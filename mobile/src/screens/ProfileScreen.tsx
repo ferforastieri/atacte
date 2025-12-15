@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -18,6 +18,11 @@ interface User {
   name?: string;
   phoneNumber?: string;
   profilePicture?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLogin?: string;
+  isActive?: boolean;
+  role?: 'USER' | 'ADMIN';
 }
 
 interface ProfileStats {
@@ -113,8 +118,13 @@ export default function ProfileScreen() {
       marginBottom: 20,
     },
     profileHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 20,
+    },
+    profileHeaderLeft: {
+      flex: 1,
     },
     avatar: {
       width: 80,
@@ -123,12 +133,26 @@ export default function ProfileScreen() {
       backgroundColor: '#22c55e',
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 12,
+    },
+    avatarImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
     },
     avatarText: {
       fontSize: 32,
       fontWeight: 'bold',
       color: '#ffffff',
+    },
+    statusContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    statusDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      marginRight: 6,
     },
     userName: {
       fontSize: 20,
@@ -204,6 +228,22 @@ export default function ProfileScreen() {
       color: isDark ? '#f9fafb' : '#111827',
       marginLeft: 12,
     },
+    editButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#22c55e',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      marginTop: 20,
+      gap: 8,
+    },
+    editButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#ffffff',
+    },
     logoutButton: {
     },
     logoutButtonText: {
@@ -245,29 +285,111 @@ export default function ProfileScreen() {
         {}
         <Card style={styles.profileCard}>
           <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {profileData?.name ? getInitials(profileData.name) : (profileData?.email ? getInitials(profileData.email) : 'U')}
+            <View style={styles.profileHeaderLeft}>
+              <Text style={styles.userName}>
+                {profileData?.name || profileData?.email?.split('@')[0] || 'Usuário'}
+              </Text>
+              <Text style={styles.userEmail}>
+                {profileData?.email || 'N/A'}
               </Text>
             </View>
-            <Text style={styles.userName}>
-              {profileData?.name || profileData?.email?.split('@')[0] || 'Usuário'}
-            </Text>
-            <Text style={styles.userEmail}>
-              {profileData?.email || 'N/A'}
-            </Text>
+            {profileData?.profilePicture ? (
+              <Image 
+                source={{ uri: profileData.profilePicture }} 
+                style={styles.avatarImage}
+                defaultSource={require('../../assets/logo.png')}
+              />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {profileData?.name ? getInitials(profileData.name) : (profileData?.email ? getInitials(profileData.email) : 'U')}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>ID</Text>
+              <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="middle">{profileData?.id || 'N/A'}</Text>
+            </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Email</Text>
               <Text style={styles.infoValue}>{profileData?.email || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Nome</Text>
+              <Text style={styles.infoValue}>{profileData?.name || 'Não informado'}</Text>
+            </View>
+            <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Telefone</Text>
               <Text style={styles.infoValue}>{profileData?.phoneNumber || 'Não informado'}</Text>
             </View>
+            {profileData?.role && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Função</Text>
+                <Text style={styles.infoValue}>{profileData.role === 'ADMIN' ? 'Administrador' : 'Usuário'}</Text>
+              </View>
+            )}
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Status</Text>
+              <View style={styles.statusContainer}>
+                <View style={[styles.statusDot, { backgroundColor: profileData?.isActive ? '#22c55e' : '#ef4444' }]} />
+                <Text style={styles.infoValue}>{profileData?.isActive ? 'Ativo' : 'Inativo'}</Text>
+              </View>
+            </View>
+            {profileData?.createdAt && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Data de Criação</Text>
+                <Text style={styles.infoValue}>
+                  {new Date(profileData.createdAt).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Text>
+              </View>
+            )}
+            {profileData?.lastLogin && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Último Login</Text>
+                <Text style={styles.infoValue}>
+                  {new Date(profileData.lastLogin).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Text>
+              </View>
+            )}
+            {profileData?.updatedAt && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Última Atualização</Text>
+                <Text style={styles.infoValue}>
+                  {new Date(profileData.updatedAt).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Text>
+              </View>
+            )}
           </View>
+
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={() => navigation.navigate('Settings')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={20} color="#ffffff" />
+            <Text style={styles.editButtonText}>Editar Perfil</Text>
+          </TouchableOpacity>
         </Card>
 
         {}

@@ -1,6 +1,7 @@
 import express from 'express';
 import crypto from 'crypto-js';
 import { AuthService } from '../../services/auth/authService';
+import { UserService } from '../../services/users/userService';
 import { authenticateToken } from '../../middleware/auth';
 
 const router = express.Router();
@@ -93,11 +94,14 @@ router.post('/refresh', authenticateToken, async (req: any, res) => {
 
 router.get('/me', authenticateToken, async (req: any, res) => {
   try {
-    const user = await authService.getUserProfile(req.user.id);
+    const userService = new UserService();
+    const user = await userService.getUserProfile(req.user.id);
 
     res.json({
       success: true,
-      data: user
+      data: {
+        user: user
+      }
     });
   } catch (error: any) {
     res.status(404).json({

@@ -166,7 +166,13 @@ router.patch(
   [
     body('name').optional().trim().isLength({ max: 255 }).withMessage('Nome deve ter até 255 caracteres'),
     body('phoneNumber').optional().trim().isMobilePhone('any').withMessage('Número de telefone inválido'),
-    body('profilePicture').optional().isURL().withMessage('URL da foto inválida'),
+    body('profilePicture').optional().custom((value) => {
+      if (!value) return true;
+      if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:image/'))) {
+        return true;
+      }
+      throw new Error('URL da foto inválida');
+    }),
   ],
   asAuthenticatedHandler(async (req, res) => {
     try {

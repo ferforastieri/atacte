@@ -11,6 +11,7 @@ import {
   Animated,
   PanResponder,
   Dimensions,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -600,13 +601,20 @@ export default function FamilyScreen({ navigation }: any) {
                   activeOpacity={0.7}
                 >
                   <View style={styles.memberHeader}>
-                    <View style={[styles.memberAvatar, { 
-                      backgroundColor: getMemberStatusColor(member)
-                    }]}>
-                      <Text style={styles.memberAvatarText}>
-                        {(member.nickname || member.userName || '?')[0].toUpperCase()}
-                      </Text>
-                    </View>
+                    {member.profilePicture ? (
+                      <Image 
+                        source={{ uri: member.profilePicture }} 
+                        style={styles.memberAvatarImage}
+                      />
+                    ) : (
+                      <View style={[styles.memberAvatar, { 
+                        backgroundColor: getMemberStatusColor(member)
+                      }]}>
+                        <Text style={styles.memberAvatarText}>
+                          {(member.nickname || member.userName || '?')[0].toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
                     <View style={styles.memberInfo}>
                       <Text style={[styles.memberName, { color: isDark ? '#f9fafb' : '#111827' }]}>
                         {member.nickname || member.userName}
@@ -1016,6 +1024,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+  },
+  memberAvatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#22c55e',
   },
   memberAvatarText: {
     color: 'white',

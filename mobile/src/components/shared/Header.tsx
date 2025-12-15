@@ -155,9 +155,9 @@ export const Header: React.FC<HeaderProps> = ({
             style={styles.logoContainer}
             onPress={() => {
               try {
-                navigation.navigate('Main', { screen: 'Dashboard' });
+                (navigation as any).navigate('Main', { screen: 'Dashboard' });
               } catch (e) {
-                navigation.navigate('Dashboard');
+                (navigation as any).navigate('Dashboard');
               }
             }}
             activeOpacity={0.7}

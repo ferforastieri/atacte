@@ -19,6 +19,7 @@ export interface FamilyMember {
   id: string
   name: string
   email: string
+  profilePicture?: string | null
   lastSeen: string | null
   batteryLevel: number | null
   latitude?: number
@@ -74,6 +75,7 @@ export const locationApi = {
               id: member.userId,
               name: member.userName || member.nickname || 'Membro',
               email: '', 
+              profilePicture: member.profilePicture || null,
               lastSeen: member.timestamp,
               batteryLevel: member.batteryLevel,
               latitude: member.latitude,

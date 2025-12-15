@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { View, Image } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SkeletonLoader } from '../components/shared/Skeleton';
@@ -73,35 +73,54 @@ function AuthNavigator() {
 
 function MainTabNavigator() {
   const { isDark } = useTheme();
+  const { user } = useAuth();
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
+      key={user?.profilePicture || 'default'}
+      screenOptions={({ route }) => {
+        return {
+          tabBarIcon: ({ focused, color, size }) => {
+            if (route.name === 'Profile' && user?.profilePicture) {
+              return (
+                <Image 
+                  source={{ uri: user.profilePicture }} 
+                  style={{ 
+                    width: size, 
+                    height: size, 
+                    borderRadius: size / 2,
+                    borderWidth: focused ? 2 : 0,
+                    borderColor: '#22c55e',
+                  }} 
+                />
+              );
+            }
 
-          if (route.name === 'Dashboard') {
-            iconName = focused ? 'key' : 'key-outline';
-          } else if (route.name === 'Family') {
-            iconName = focused ? 'people' : 'people-outline';
-          } else if (route.name === 'SecureNotes') {
-            iconName = focused ? 'document-text' : 'document-text-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
-          } else {
-            iconName = 'help-outline';
-          }
+            let iconName: keyof typeof Ionicons.glyphMap;
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#22c55e',
-        tabBarInactiveTintColor: isDark ? '#9ca3af' : '#6b7280',
-        tabBarStyle: {
-          backgroundColor: isDark ? '#1f2937' : '#ffffff',
-          borderTopColor: isDark ? '#374151' : '#e5e7eb',
-        },
-        headerShown: false,
-      })}
+            if (route.name === 'Dashboard') {
+              iconName = focused ? 'key' : 'key-outline';
+            } else if (route.name === 'Family') {
+              iconName = focused ? 'people' : 'people-outline';
+            } else if (route.name === 'SecureNotes') {
+              iconName = focused ? 'document-text' : 'document-text-outline';
+            } else if (route.name === 'Profile') {
+              iconName = focused ? 'person' : 'person-outline';
+            } else {
+              iconName = 'help-outline';
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: '#22c55e',
+          tabBarInactiveTintColor: isDark ? '#9ca3af' : '#6b7280',
+          tabBarStyle: {
+            backgroundColor: isDark ? '#1f2937' : '#ffffff',
+            borderTopColor: isDark ? '#374151' : '#e5e7eb',
+          },
+          headerShown: false,
+        };
+      }}
     >
       <Tab.Screen 
         name="Dashboard" 

@@ -36,7 +36,7 @@
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
-              <KeyIcon class="w-4 h-4" />
+              <LockClosedIcon class="w-4 h-4" />
               Dashboard
               <div v-if="isActive('/dashboard')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
             </router-link>
@@ -60,7 +60,7 @@
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
-              <DocumentTextIcon class="w-4 h-4" />
+              <ClipboardDocumentListIcon class="w-4 h-4" />
               Notas Seguras
               <div v-if="isActive('/secure-notes')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
             </router-link>
@@ -73,7 +73,7 @@
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
-              <DocumentTextIcon class="w-4 h-4" />
+              <ShieldCheckIcon class="w-4 h-4" />
               Auditoria
               <div v-if="isActive('/audit')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
             </router-link>
@@ -114,8 +114,13 @@
               @click="showUserMenuDropdown = !showUserMenuDropdown"
               class="flex items-center space-x-1 sm:space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                <UserIcon class="h-5 w-5 text-primary-600 dark:text-primary-400" />
+              <div v-if="authStore.user?.profilePicture" class="h-8 w-8 rounded-full overflow-hidden border-2 border-primary-500 dark:border-primary-400">
+                <img :src="authStore.user.profilePicture" :alt="userEmail" class="h-full w-full object-cover" />
+              </div>
+              <div v-else class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                <span class="text-sm font-semibold text-primary-600 dark:text-primary-400">
+                  {{ userInitials }}
+                </span>
               </div>
               <span class="text-gray-700 dark:text-gray-300 hidden sm:inline">{{ userEmail }}</span>
               <ChevronDownIcon class="h-4 w-4 text-gray-400 dark:text-gray-500" />
@@ -192,7 +197,7 @@
                   ? 'text-gray-900 dark:text-gray-100 bg-primary-100 dark:bg-primary-900 shadow-sm'
                   : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
               >
-                <KeyIcon class="h-5 w-5 flex-shrink-0" />
+                <LockClosedIcon class="h-5 w-5 flex-shrink-0" />
                 <span class="text-sm font-medium">Dashboard</span>
                 <div v-if="isActive('/dashboard')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
               </router-link>
@@ -218,7 +223,7 @@
                   ? 'text-gray-900 dark:text-gray-100 bg-primary-100 dark:bg-primary-900 shadow-sm'
                   : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
               >
-                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" />
+                <ClipboardDocumentListIcon class="h-5 w-5 flex-shrink-0" />
                 <span class="text-sm font-medium">Notas Seguras</span>
                 <div v-if="isActive('/secure-notes')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
               </router-link>
@@ -232,7 +237,7 @@
                   ? 'text-gray-900 dark:text-gray-100 bg-primary-100 dark:bg-primary-900 shadow-sm'
                   : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
               >
-                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" />
+                <ShieldCheckIcon class="h-5 w-5 flex-shrink-0" />
                 <span class="text-sm font-medium">Auditoria</span>
                 <div v-if="isActive('/audit')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
               </router-link>
@@ -290,7 +295,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Logo, ThemeToggle } from '@/components/ui'
-import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, KeyIcon, MapPinIcon, ComputerDesktopIcon, UserGroupIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, LockClosedIcon, MapPinIcon, ComputerDesktopIcon, UserGroupIcon, ClipboardDocumentListIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
   showLogo?: boolean
@@ -315,6 +320,17 @@ const showUserMenuDropdown = ref(false)
 const mobileMenuOpen = ref(false)
 
 const userEmail = computed(() => authStore.userEmail || '')
+const userInitials = computed(() => {
+  const name = authStore.user?.name || authStore.userEmail || ''
+  if (name.includes('@')) {
+    return name.charAt(0).toUpperCase()
+  }
+  const parts = name.split(' ')
+  if (parts.length >= 2) {
+    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase()
+  }
+  return name.charAt(0).toUpperCase()
+})
 
 const isActive = (path: string) => {
   return route.path === path

@@ -111,7 +111,8 @@ export class UserService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastLogin: user.lastLogin || undefined,
-      isActive: user.isActive
+      isActive: user.isActive,
+      role: user.role
     };
   }
 

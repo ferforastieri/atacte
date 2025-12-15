@@ -50,7 +50,19 @@
                   @click="goToMemberLocation(member)"
                 >
                   <div class="flex-shrink-0">
+                    <img
+                      v-if="member.profilePicture"
+                      :src="member.profilePicture"
+                      :alt="member.name || 'Membro'"
+                      class="w-10 h-10 rounded-full object-cover border-2"
+                      :class="
+                        member.id === authStore.userId
+                          ? 'border-green-500 dark:border-green-400'
+                          : 'border-green-200 dark:border-green-800'
+                      "
+                    />
                     <div
+                      v-else
                       class="w-10 h-10 rounded-full flex items-center justify-center"
                       :class="
                         member.id === authStore.userId

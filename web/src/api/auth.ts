@@ -11,6 +11,7 @@ export interface User {
   isActive?: boolean
   name?: string
   phoneNumber?: string
+  profilePicture?: string
 }
 
 export interface LoginRequest {
