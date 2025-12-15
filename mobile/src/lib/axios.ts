@@ -12,7 +12,6 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
-
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
@@ -29,7 +28,6 @@ apiClient.interceptors.request.use(
   }
 );
 
-
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
@@ -38,7 +36,6 @@ apiClient.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
       
-      // Verificar se é erro de dispositivo não confiável (401 ou 403)
       if ((status === 401 || status === 403) && data?.requiresTrust && data?.sessionId) {
         DeviceEventEmitter.emit('device-trust-required', {
           sessionId: data.sessionId,
@@ -48,7 +45,6 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
       }
       
-      // Tratar erro 401 (não autorizado) - outros casos
       if (status === 401) {
         const allowedPaths = ['/auth/me', '/auth/trust-device', '/auth/logout'];
         const path = error.config?.url || '';

@@ -5,20 +5,17 @@ import authApi, { type User, type LoginRequest, type RegisterRequest } from '@/a
 import preferencesApi from '@/api/preferences'
 
 export const useAuthStore = defineStore('auth', () => {
-  
   const user = ref<User | null>(null)
   const token = ref<string | null>(localStorage.getItem('auth_token'))
   const isLoading = ref(false)
   const userPreferences = ref<any>(null)
 
-  
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const userEmail = computed(() => user.value?.email || '')
   const userId = computed(() => user.value?.id || '')
   const userRole = computed(() => user.value?.role || 'USER')
   const isAdmin = computed(() => userRole.value === 'ADMIN')
 
-  
   const setAuth = (newToken: string, newUser: User) => {
     token.value = newToken
     user.value = newUser
@@ -97,21 +94,20 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await authApi.logout()
     } catch (error) {
-      
     } finally {
       clearAuth()
       isLoading.value = false
     }
   }
 
-  const verifyToken = async () => {
+  const refreshUser = async () => {
     if (!token.value) return false
     
     try {
       const response = await authApi.verifyToken()
-      if (response.success && response.data) {
-        user.value = response.data
-        localStorage.setItem('user', JSON.stringify(response.data))
+      if (response.success && response.data?.user) {
+        user.value = response.data.user
+        localStorage.setItem('user', JSON.stringify(response.data.user))
         return true
       }
     } catch (error) {
@@ -121,47 +117,34 @@ export const useAuthStore = defineStore('auth', () => {
     return false
   }
 
-  
   const initialize = async () => {
     loadUserFromStorage()
-    
-    
-    if (token.value) {
-      try {
-        const isValid = await verifyToken()
-        if (!isValid) {
-          clearAuth()
-        } else {
-          
-          await loadUserPreferences()
+
+    if (token.value && user.value) {
+      refreshUser().then(() => {
+        if (user.value) {
+          loadUserPreferences()
         }
-      } catch (error) {
-        clearAuth()
-      }
+      })
     }
   }
 
   return {
-    
     user,
     token,
     isLoading,
     userPreferences,
-    
-    
     isAuthenticated,
     userEmail,
     userId,
     userRole,
     isAdmin,
-    
-    
     setAuth,
     clearAuth,
     login,
     register,
     logout,
-    verifyToken,
+    refreshUser,
     loadUserPreferences,
     initialize
   }

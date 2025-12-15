@@ -40,67 +40,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkAuthStatus = async () => {
     try {
       const token = await authService.getStoredToken();
-      if (token) {
-        const cachedUser = await authService.getStoredUser();
-        if (cachedUser) {
-          setUser(cachedUser);
-          setIsAuthenticated(true);
-          setIsLoading(false); 
-          
-          validateTokenInBackground(token, cachedUser);
-        } else {
-          try {
-            const response = await authService.getMe();
-            if (response.success && response.data) {
-              setUser(response.data.user);
-              setIsAuthenticated(true);
-              if (response.data.user) {
-                await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-              }
-            } else {
-              if (response.isAuthError) {
-                await authService.logout();
-                setUser(null);
-                setIsAuthenticated(false);
-              }
-            }
-          } catch (error: any) {
-            await authService.logout();
-            setUser(null);
-            setIsAuthenticated(false);
-          } finally {
-            setIsLoading(false);
-          }
-        }
-      } else {
+      if (!token) {
         setUser(null);
         setIsAuthenticated(false);
         setIsLoading(false);
+        return;
       }
-    } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
-      setIsLoading(false);
-    }
-  };
 
-  const validateTokenInBackground = async (token: string, cachedUser: User) => {
-    try {
+      const cachedUser = await authService.getStoredUser();
+      if (cachedUser) {
+        setUser(cachedUser);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+      }
+
       const response = await authService.getMe();
-      if (response.success && response.data) {
+      if (response.success && response.data?.user) {
         setUser(response.data.user);
         setIsAuthenticated(true);
-        if (response.data.user) {
-          await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-        }
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       } else {
-        if (response.isAuthError) {
-          await authService.logout();
-          setUser(null);
-          setIsAuthenticated(false);
-        }
+        await authService.logout();
+        setUser(null);
+        setIsAuthenticated(false);
       }
-    } catch (error: any) {
+    } catch (error) {
+      await authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -158,8 +127,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshUser = async (): Promise<void> => {
     try {
       const response = await authService.getMe();
-      if (response.success && response.data) {
+      if (response.success && response.data?.user) {
         setUser(response.data.user);
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       }
     } catch (error) {
     }

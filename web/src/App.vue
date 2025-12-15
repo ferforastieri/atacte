@@ -64,10 +64,6 @@ onMounted(async () => {
   try {
     await authStore.initialize()
     
-    if (authStore.isAuthenticated) {
-      await authStore.verifyToken()
-    }
-    
     if (authStore.isAuthenticated && instance?.appContext.config.globalProperties.$initApp) {
       await instance.appContext.config.globalProperties.$initApp()
     }

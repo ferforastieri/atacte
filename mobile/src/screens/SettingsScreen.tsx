@@ -41,7 +41,6 @@ const SettingsScreen: React.FC = () => {
     }, [navigation])
   );
 
- 
   useEffect(() => {
     loadUserProfile();
   }, []);
@@ -57,7 +56,6 @@ const SettingsScreen: React.FC = () => {
       }
     } catch (error) {
       showError('Erro ao carregar dados do perfil');
-     
       if (user) {
         setName(user.name || '');
         setPhoneNumber(user.phoneNumber || '');
@@ -149,7 +147,6 @@ const SettingsScreen: React.FC = () => {
   const handleImageSelected = async (uri: string) => {
     setIsUploadingImage(true);
     try {
-      // Verificar se o arquivo existe
       const fileInfo = await FileSystem.getInfoAsync(uri);
       if (!fileInfo.exists) {
         showError('Arquivo de imagem não encontrado');
@@ -157,12 +154,10 @@ const SettingsScreen: React.FC = () => {
         return;
       }
 
-      // Ler o arquivo como base64
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: 'base64',
       });
       
-      // Determinar o tipo MIME baseado na extensão do arquivo
       const extension = uri.split('.').pop()?.toLowerCase();
       let mimeType = 'image/jpeg';
       if (extension === 'png') {

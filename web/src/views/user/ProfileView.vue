@@ -131,7 +131,7 @@ const formatDate = (dateString?: string) => {
 }
 
 onMounted(async () => {
-  await authStore.verifyToken()
+  await authStore.refreshUser()
   await passwordsStore.fetchPasswords()
   if (!passwordsStore.statsLoaded) {
     await passwordsStore.loadCompleteStats()
