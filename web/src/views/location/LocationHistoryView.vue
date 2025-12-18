@@ -301,9 +301,8 @@ const loadHistory = async () => {
 
   isLoading.value = true
   try {
-    const start = new Date(startDate.value)
-    const end = new Date(endDate.value)
-    end.setHours(23, 59, 59, 999)
+    const start = new Date(startDate.value + 'T00:00:00')
+    const end = new Date(endDate.value + 'T23:59:59')
 
     if (start > end) {
       toast.error('Data inicial deve ser anterior à data final')

@@ -149,7 +149,7 @@ export class LocationRepository {
     }
 
     const filteredLocations: Location[] = [];
-    const minDistanceMeters = 10;
+    const minDistanceMeters = 100;
 
     for (const location of allLocations) {
       if (location.latitude === null || location.longitude === null) {

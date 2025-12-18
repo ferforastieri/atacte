@@ -2,7 +2,10 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.15.8:3001/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+if (!API_BASE_URL) {
+  throw new Error('EXPO_PUBLIC_API_BASE_URL não está definido. Configure a variável de ambiente EXPO_PUBLIC_API_BASE_URL.');
+}
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
