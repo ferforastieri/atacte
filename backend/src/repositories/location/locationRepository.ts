@@ -140,7 +140,7 @@ export class LocationRepository {
           lte: endDate,
         },
       },
-      orderBy: { timestamp: 'asc' },
+      orderBy: { timestamp: 'desc' },
       take: limit ? limit * 10 : 10000,
     });
 

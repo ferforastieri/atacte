@@ -145,6 +145,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { parse, format } from 'date-fns'
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
 const dropdownRef = ref<HTMLElement | null>(null)
@@ -185,7 +186,7 @@ const months = [
 
 const currentDate = computed(() => {
   if (props.modelValue) {
-    const date = new Date(props.modelValue)
+    const date = parse(props.modelValue, 'yyyy-MM-dd', new Date())
     if (!isNaN(date.getTime())) {
       return date
     }
@@ -216,7 +217,7 @@ const today = computed(() => {
 
 const selectedDate = computed(() => {
   if (props.modelValue) {
-    const date = new Date(props.modelValue)
+    const date = parse(props.modelValue, 'yyyy-MM-dd', new Date())
     if (!isNaN(date.getTime())) {
       return {
         year: date.getFullYear(),
@@ -313,14 +314,10 @@ const isDateDisabled = (date: Date): boolean => {
 const displayValue = computed(() => {
   if (!props.modelValue) return props.placeholder
   
-  const date = new Date(props.modelValue)
+  const date = parse(props.modelValue, 'yyyy-MM-dd', new Date())
   if (isNaN(date.getTime())) return props.placeholder
-  
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
+
+  return format(date, 'dd/MM/yyyy')
 })
 
 const displayValueClasses = computed(() => {
@@ -345,11 +342,7 @@ const buttonClasses = computed(() => {
 const selectDate = (day: { day: number; isCurrentMonth: boolean; isDisabled: boolean; date: Date }) => {
   if (!day.isCurrentMonth || day.isDisabled) return
   
-  const year = selectedYear.value
-  const month = String(selectedMonth.value).padStart(2, '0')
-  const dayStr = String(day.day).padStart(2, '0')
-  const dateString = `${year}-${month}-${dayStr}`
-  
+  const dateString = format(new Date(selectedYear.value, selectedMonth.value - 1, day.day), 'yyyy-MM-dd')
   emit('update:modelValue', dateString)
   isOpen.value = false
 }
@@ -394,7 +387,7 @@ const toggleDropdown = () => {
   isOpen.value = !isOpen.value
   
   if (isOpen.value && props.modelValue) {
-    const date = new Date(props.modelValue)
+    const date = parse(props.modelValue, 'yyyy-MM-dd', new Date())
     if (!isNaN(date.getTime())) {
       selectedMonth.value = date.getMonth() + 1
       selectedYear.value = date.getFullYear()
@@ -439,7 +432,7 @@ onUnmounted(() => {
 
 watch(() => props.modelValue, (newValue) => {
   if (newValue) {
-    const date = new Date(newValue)
+    const date = parse(newValue, 'yyyy-MM-dd', new Date())
     if (!isNaN(date.getTime())) {
       selectedMonth.value = date.getMonth() + 1
       selectedYear.value = date.getFullYear()
@@ -449,7 +442,7 @@ watch(() => props.modelValue, (newValue) => {
 
 onMounted(() => {
   if (props.modelValue) {
-    const date = new Date(props.modelValue)
+    const date = parse(props.modelValue, 'yyyy-MM-dd', new Date())
     if (!isNaN(date.getTime())) {
       selectedMonth.value = date.getMonth() + 1
       selectedYear.value = date.getFullYear()

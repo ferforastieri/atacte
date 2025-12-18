@@ -126,13 +126,9 @@ export const locationApi = {
     endDate: Date,
     limit?: number
   ): Promise<LocationData[]> {
-    const formatDateForAPI = (date: Date): string => {
-      return formatISO(date)
-    }
-
     const params = new URLSearchParams({
-      startDate: formatDateForAPI(startDate),
-      endDate: formatDateForAPI(endDate),
+      startDate: formatISO(startDate),
+      endDate: formatISO(endDate),
     })
     if (limit) {
       params.append('limit', limit.toString())

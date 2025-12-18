@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
-import { startOfDay, endOfDay } from 'date-fns';
+import { startOfDay, endOfDay, subDays } from 'date-fns';
 import { Header, Button } from '../components/shared';
 import { locationService, LocationData } from '../services/location/locationService';
 import { useToast } from '../hooks/useToast';
@@ -48,9 +48,8 @@ export default function MemberHistoryScreen({ route }: any) {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const today = startOfDay(new Date());
+  const yesterday = subDays(today, 1);
   
   const [startDate, setStartDate] = useState(yesterday);
   const [endDate, setEndDate] = useState(today);

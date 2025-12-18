@@ -119,7 +119,7 @@ import { useToast } from 'vue-toastification'
 import { locationApi, type LocationData } from '@/api/location'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { startOfDay, endOfDay } from 'date-fns'
+import { startOfDay, endOfDay, parse, format, subDays } from 'date-fns'
 import { AppHeader, BaseButton, BaseCard, DatePicker } from '@/components/ui'
 
 const route = useRoute()
@@ -132,12 +132,11 @@ const memberName = computed(() => (route.query.name as string) || 'Membro')
 const isLoading = ref(false)
 const locations = ref<LocationData[]>([])
 
-const today = new Date()
-const yesterday = new Date(today)
-yesterday.setDate(yesterday.getDate() - 1)
+const today = startOfDay(new Date())
+const yesterday = subDays(today, 1)
 
-const startDate = ref(yesterday.toISOString().split('T')[0])
-const endDate = ref(today.toISOString().split('T')[0])
+const startDate = ref(format(yesterday, 'yyyy-MM-dd'))
+const endDate = ref(format(today, 'yyyy-MM-dd'))
 
 let map: L.Map | null = null
 let markers: L.Marker[] = []
@@ -302,11 +301,8 @@ const loadHistory = async () => {
 
   isLoading.value = true
   try {
-    const startDateObj = new Date(startDate.value + 'T00:00:00')
-    const start = startOfDay(startDateObj)
-    
-    const endDateObj = new Date(endDate.value + 'T00:00:00')
-    const end = endOfDay(endDateObj)
+    const start = startOfDay(parse(startDate.value, 'yyyy-MM-dd', new Date()))
+    const end = endOfDay(parse(endDate.value, 'yyyy-MM-dd', new Date()))
 
     if (start > end) {
       toast.error('Data inicial deve ser anterior à data final')
