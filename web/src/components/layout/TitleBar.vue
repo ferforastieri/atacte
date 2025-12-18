@@ -1,7 +1,7 @@
 <template>
   <div 
     v-if="isElectron"
-    class="title-bar fixed top-0 left-0 right-0 z-50 flex items-center justify-between text-white h-8 select-none drag-region"
+    class="title-bar fixed top-0 left-0 right-0 z-[100] flex items-center justify-between text-white h-8 select-none drag-region"
     style="-webkit-app-region: drag;"
   >
     <div class="flex items-center space-x-2 px-3 flex-1 min-w-0">

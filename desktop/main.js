@@ -2,23 +2,37 @@ const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron')
 const path = require('path');
 const fs = require('fs');
 
-const envPath = path.join(__dirname, '.env');
+let envPath = path.join(__dirname, '.env');
+if (!fs.existsSync(envPath) && app.isPackaged) {
+  const resourcesPath = process.resourcesPath || path.dirname(process.execPath);
+  envPath = path.join(resourcesPath, 'app', '.env');
+  if (!fs.existsSync(envPath)) {
+    envPath = path.join(path.dirname(process.execPath), '.env');
+  }
+}
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
   envContent.split('\n').forEach(line => {
     const [key, ...valueParts] = line.split('=');
     if (key && valueParts.length > 0) {
+      const keyTrimmed = key.trim();
       const value = valueParts.join('=').trim();
-      if (value && !process.env[key.trim()]) {
-        process.env[key.trim()] = value;
+      if (value && (!process.env[keyTrimmed] || keyTrimmed === 'BACKEND_URL')) {
+        if (keyTrimmed === 'NODE_ENV' && require('electron').app.isPackaged) {
+          return;
+        }
+        process.env[keyTrimmed] = value;
       }
     }
   });
 }
 
-const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
-const BACKEND_URL = process.env.BACKEND_URL || 'http://100.93.53.97:3000';
-const API_URL = `${BACKEND_URL}/api`;
+const isDev = !require('electron').app.isPackaged && (process.env.NODE_ENV === 'development' || process.argv.includes('--dev'));
+const BACKEND_URL = process.env.BACKEND_URL;
+if (!BACKEND_URL) {
+  console.error('BACKEND_URL não está definido. Configure BACKEND_URL no arquivo .env ou variável de ambiente.');
+}
+const API_URL = BACKEND_URL ? `${BACKEND_URL}/api` : null;
 
 let mainWindow;
 
@@ -35,7 +49,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      webSecurity: true
+      webSecurity: false
     },
     icon: path.join(__dirname, 'build', 'icon.png'),
     show: false,
@@ -52,13 +66,13 @@ function createWindow() {
     if (app.isPackaged) {
       const resourcesPath = process.resourcesPath || path.dirname(process.execPath);
       indexPath = path.join(resourcesPath, 'web-dist', 'index.html');
-      if (!fs.existsSync(indexPath)) {
-        indexPath = path.join(__dirname, '..', 'web-dist', 'index.html');
-      }
     } else {
       indexPath = path.join(__dirname, '..', 'web', 'dist', 'index.html');
     }
-    mainWindow.loadFile(indexPath);
+    
+    if (fs.existsSync(indexPath)) {
+      mainWindow.loadFile(indexPath);
+    }
   }
 
   mainWindow.webContents.on('dom-ready', () => {
@@ -103,7 +117,16 @@ function createWindow() {
 
   mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
-    if (parsedUrl.origin !== BACKEND_URL && parsedUrl.origin !== 'http://localhost:3000') {
+    const allowedOrigins = ['http://localhost:3000'];
+    if (BACKEND_URL) {
+      try {
+        const backendUrlObj = new URL(BACKEND_URL);
+        allowedOrigins.push(backendUrlObj.origin);
+      } catch (e) {
+        console.error('BACKEND_URL inválido:', BACKEND_URL);
+      }
+    }
+    if (!allowedOrigins.includes(parsedUrl.origin)) {
       event.preventDefault();
       shell.openExternal(navigationUrl);
     }

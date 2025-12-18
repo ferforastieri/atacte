@@ -37,7 +37,8 @@
     "files": [
       "main.js",
       "preload.js",
-      "package.json"
+      "package.json",
+      ".env"
     ],
     "extraResources": [
       {

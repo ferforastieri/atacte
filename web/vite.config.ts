@@ -3,13 +3,11 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(({ mode }) => {
-  // Carregar variáveis de ambiente
   const env = loadEnv(mode, process.cwd(), '')
-  
-  // URL da API do backend (sempre usar localhost para proxy)
   const apiUrl = 'http://localhost:3001'
   
   return {
+    base: './',
     plugins: [vue()],
     resolve: {
       alias: {
