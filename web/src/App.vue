@@ -1,6 +1,9 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
-    <router-view />
+  <div id="app" class="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden">
+    <TitleBar />
+    <div class="flex-1 overflow-x-hidden">
+      <router-view />
+    </div>
     
     <ToastContainer />
 
@@ -21,6 +24,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ToastContainer from '@/components/layout/ToastContainer.vue'
 import TrustDeviceModal from '@/components/auth/TrustDeviceModal.vue'
+import TitleBar from '@/components/layout/TitleBar.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()

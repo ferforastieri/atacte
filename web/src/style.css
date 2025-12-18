@@ -5,10 +5,19 @@
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
   }
   
   body {
     @apply bg-gray-50 text-gray-900;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #app {
+    overflow-x: hidden;
+    width: 100%;
   }
 }
 
