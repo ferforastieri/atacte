@@ -345,8 +345,8 @@ const buttonClasses = computed(() => {
 const selectDate = (day: { day: number; isCurrentMonth: boolean; isDisabled: boolean; date: Date }) => {
   if (!day.isCurrentMonth || day.isDisabled) return
   
-  const year = day.date.getFullYear()
-  const month = String(day.date.getMonth() + 1).padStart(2, '0')
+  const year = selectedYear.value
+  const month = String(selectedMonth.value).padStart(2, '0')
   const dayStr = String(day.day).padStart(2, '0')
   const dateString = `${year}-${month}-${dayStr}`
   

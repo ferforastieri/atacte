@@ -49,7 +49,19 @@ import Logo from '@/components/ui/Logo.vue'
 
 const isElectron = computed(() => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
-  return navigator.userAgent.includes('Electron') && !!(window as any).electronAPI
+  
+  const ua = navigator.userAgent.toLowerCase()
+  const hasElectronUA = ua.includes('electron/')
+  
+  if (!hasElectronUA) return false
+  
+  const electronAPI = (window as any).electronAPI
+  const hasElectronAPI = electronAPI && 
+                         typeof electronAPI.minimizeWindow === 'function' &&
+                         typeof electronAPI.maximizeWindow === 'function' &&
+                         typeof electronAPI.closeWindow === 'function'
+  
+  return hasElectronAPI === true
 })
 
 const minimize = async () => {

@@ -68,10 +68,8 @@ export default function MemberHistoryScreen({ route }: any) {
 
     setIsLoading(true);
     try {
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
+      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0);
+      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
 
       if (start > end) {
         showError('Data inicial deve ser anterior à data final');
