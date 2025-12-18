@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import * as Battery from 'expo-battery';
 import { Platform } from 'react-native';
+import { formatISO } from 'date-fns';
 import apiClient from '../../lib/axios';
 
 export interface LocationData {
@@ -145,13 +146,7 @@ class LocationService {
 
   async getLocationHistory(startDate: Date, endDate: Date, limit?: number): Promise<{ success: boolean; data?: LocationData[]; message?: string }> {
     const formatDateForAPI = (date: Date): string => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const seconds = String(date.getSeconds()).padStart(2, '0')
-      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
+      return formatISO(date)
     }
 
     return this.makeRequest('/location/history', {
@@ -165,13 +160,7 @@ class LocationService {
 
   async getMemberLocationHistory(userId: string, startDate: Date, endDate: Date, limit?: number): Promise<{ success: boolean; data?: LocationData[]; message?: string }> {
     const formatDateForAPI = (date: Date): string => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const seconds = String(date.getSeconds()).padStart(2, '0')
-      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
+      return formatISO(date)
     }
 
     return this.makeRequest(`/location/history/${userId}`, {

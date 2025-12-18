@@ -119,6 +119,7 @@ import { useToast } from 'vue-toastification'
 import { locationApi, type LocationData } from '@/api/location'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { startOfDay, endOfDay } from 'date-fns'
 import { AppHeader, BaseButton, BaseCard, DatePicker } from '@/components/ui'
 
 const route = useRoute()
@@ -301,11 +302,11 @@ const loadHistory = async () => {
 
   isLoading.value = true
   try {
-    const [startYear, startMonth, startDay] = startDate.value.split('-').map(Number)
-    const start = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0)
+    const startDateObj = new Date(startDate.value + 'T00:00:00')
+    const start = startOfDay(startDateObj)
     
-    const [endYear, endMonth, endDay] = endDate.value.split('-').map(Number)
-    const end = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999)
+    const endDateObj = new Date(endDate.value + 'T00:00:00')
+    const end = endOfDay(endDateObj)
 
     if (start > end) {
       toast.error('Data inicial deve ser anterior à data final')

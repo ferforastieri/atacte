@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
+import { startOfDay, endOfDay } from 'date-fns';
 import { Header, Button } from '../components/shared';
 import { locationService, LocationData } from '../services/location/locationService';
 import { useToast } from '../hooks/useToast';
@@ -68,8 +69,8 @@ export default function MemberHistoryScreen({ route }: any) {
 
     setIsLoading(true);
     try {
-      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0);
-      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+      const start = startOfDay(startDate);
+      const end = endOfDay(endDate);
 
       if (start > end) {
         showError('Data inicial deve ser anterior à data final');
