@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 sticky top-8 z-40" style="top: 2rem;">
+  <header :class="['bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 sticky z-40', isElectron ? 'top-8' : 'top-0']">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <div class="flex items-center space-x-4">
@@ -296,6 +296,17 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Logo, ThemeToggle } from '@/components/ui'
 import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, LockClosedIcon, MapPinIcon, ComputerDesktopIcon, UserGroupIcon, ClipboardDocumentListIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
+
+const isElectron = computed(() => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent.toLowerCase()
+  if (!ua.includes('electron/')) return false
+  const electronAPI = (window as any).electronAPI
+  if (!electronAPI) return false
+  return typeof electronAPI.minimizeWindow === 'function' &&
+         typeof electronAPI.maximizeWindow === 'function' &&
+         typeof electronAPI.closeWindow === 'function'
+})
 
 interface Props {
   showLogo?: boolean
