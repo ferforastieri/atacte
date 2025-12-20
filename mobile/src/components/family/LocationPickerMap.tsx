@@ -155,9 +155,9 @@ export default function LocationPickerMap({
   `;
 
  
-  const handleMessage = (event: any) => {
+  const handleMessage = (event: { nativeEvent: { data: string } }) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data);
+      const data = JSON.parse(event.nativeEvent.data) as { type?: string; latitude?: number; longitude?: number };
       
       if (data.type === 'locationSelect') {
         onLocationSelect(data.latitude, data.longitude);

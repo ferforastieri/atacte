@@ -96,7 +96,7 @@ router.get('/:id', asAuthenticatedHandler(async (req, res) => {
       });
       return;
     }
-    const note = await secureNoteService.getNoteById(req.user.id, id, req);
+    const note = await secureNoteService.getNoteById(req.user.id, id);
 
     if (!note) {
       res.status(404).json({

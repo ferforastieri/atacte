@@ -54,7 +54,7 @@ export class NotificationService {
     
     await this.sendPushNotification(notification);
 
-    return this.mapNotificationToDto(notification as any);
+    return this.mapNotificationToDto(notification);
   }
 
   async getNotifications(
@@ -70,7 +70,14 @@ export class NotificationService {
     });
 
     return notifications.map((notification) =>
-      this.mapNotificationToDto(notification as any)
+      this.mapNotificationToDto(notification as Notification & {
+        sender?: {
+          id: string;
+          name: string | null;
+          email: string;
+          profilePicture: string | null;
+        };
+      })
     );
   }
 
@@ -87,7 +94,14 @@ export class NotificationService {
 
     const updated = await this.notificationRepository.markAsRead(notificationId);
 
-    return this.mapNotificationToDto(updated as any);
+    return this.mapNotificationToDto(updated as Notification & {
+      sender?: {
+        id: string;
+        name: string | null;
+        email: string;
+        profilePicture: string | null;
+      };
+    });
   }
 
   async markAllAsRead(userId: string): Promise<number> {
@@ -342,9 +356,9 @@ export class NotificationService {
         return;
       }
 
-      const payloadData: Record<string, any> = {
+      const payloadData: Record<string, unknown> = {
         ...(typeof notification.data === 'object' && notification.data !== null
-          ? (notification.data as Record<string, any>)
+          ? (notification.data as Record<string, unknown>)
           : {}),
         type: notification.type,
         notificationId: notification.id,

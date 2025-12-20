@@ -85,7 +85,7 @@ export const authenticateToken = async (
       originalUrl === allowed
     );
 
-    if (!(session as any).isTrusted && !isAllowedPath) {
+    if (!session.isTrusted && !isAllowedPath) {
       res.status(403).json({ 
         success: false, 
         message: 'Dispositivo não confiável. Por favor, confirme este dispositivo.',
@@ -181,7 +181,7 @@ export const requireAdmin = (
     return;
   }
 
-  if ((user as any).role !== 'ADMIN') {
+  if (user.role !== 'ADMIN') {
     res.status(403).json({
       success: false,
       message: 'Acesso negado. Apenas administradores podem acessar este recurso.'

@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import { prisma } from '../infrastructure/prisma';
+import { Prisma } from '@prisma/client';
 
 export type AuditAction = 
   | 'USER_REGISTERED'
@@ -9,8 +10,6 @@ export type AuditAction =
   | 'PASSWORD_CREATED'
   | 'PASSWORD_UPDATED'
   | 'PASSWORD_DELETED'
-  | 'PASSWORD_VIEWED'
-  | 'PASSWORD_COPIED'
   | 'BULK_DELETE'
   | 'EXPORT_DATA'
   | 'IMPORT_DATA'
@@ -29,10 +28,12 @@ export type AuditAction =
   | 'GEOFENCE_ZONE_CREATED'
   | 'GEOFENCE_ZONE_UPDATED'
   | 'GEOFENCE_ZONE_DELETED'
-  | 'NOTE_VIEWED'
   | 'NOTE_CREATED'
   | 'NOTE_UPDATED'
-  | 'NOTE_DELETED';
+  | 'NOTE_DELETED'
+  | 'CALENDAR_EVENT_CREATED'
+  | 'CALENDAR_EVENT_UPDATED'
+  | 'CALENDAR_EVENT_DELETED';
 
 export type ResourceType = 
   | 'USER'
@@ -43,7 +44,8 @@ export type ResourceType =
   | 'FAMILY_MEMBER'
   | 'LOCATION'
   | 'GEOFENCE_ZONE'
-  | 'SECURE_NOTE';
+  | 'SECURE_NOTE'
+  | 'CALENDAR_EVENT';
 
 export class AuditUtil {
   
@@ -52,7 +54,7 @@ export class AuditUtil {
     action: AuditAction,
     resourceType: ResourceType | null = null,
     resourceId: string | null = null,
-    details: any = null,
+    details: Record<string, unknown> | null = null,
     req?: Request
   ): Promise<void> {
     try {
@@ -64,7 +66,7 @@ export class AuditUtil {
           resourceId,
           ipAddress: req?.ip || null,
           userAgent: req?.get('User-Agent') || null,
-          details: details || {}
+          details: details ? (details as Prisma.InputJsonValue) : Prisma.JsonNull
         }
       });
     } catch (error) {

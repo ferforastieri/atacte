@@ -36,7 +36,7 @@ export default function DashboardScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email: string; name?: string } | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPasswordGeneratorModal, setShowPasswordGeneratorModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -447,7 +447,17 @@ export default function DashboardScreen() {
       let response;
       
       
-      const passwordData: any = {
+      const passwordData: {
+        name: string;
+        password: string;
+        totpEnabled: boolean;
+        isFavorite: boolean;
+        website?: string;
+        username?: string;
+        folder?: string;
+        notes?: string;
+        totpSecret?: string;
+      } = {
         name: formData.name.trim(),
         password: formData.password,
         totpEnabled: formData.totpEnabled,

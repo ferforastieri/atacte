@@ -1,4 +1,4 @@
-import { PrismaClient, PasswordEntry, CustomField } from '../../../node_modules/.prisma/client';
+import { PrismaClient, PasswordEntry, CustomField, Prisma } from '../../../node_modules/.prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -38,7 +38,12 @@ export class ImportExportRepository {
       return null;
     }
 
-    const where: any = { userId };
+    const where: {
+      userId: string;
+      AND?: Array<Record<string, unknown>>;
+      website?: string;
+      username?: string;
+    } = { userId };
 
     if (website && username) {
       where.AND = [
@@ -99,10 +104,13 @@ export class ImportExportRepository {
     resourceId?: string;
     ipAddress?: string;
     userAgent?: string;
-    details?: any;
+    details?: Record<string, unknown>;
   }): Promise<void> {
     await prisma.auditLog.create({
-      data,
+      data: {
+        ...data,
+        details: data.details ? (data.details as Prisma.InputJsonValue) : Prisma.JsonNull
+      },
     });
   }
 }

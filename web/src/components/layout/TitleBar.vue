@@ -53,7 +53,11 @@ const isElectron = computed(() => {
   const ua = navigator.userAgent.toLowerCase()
   if (!ua.includes('electron/')) return false
   
-  const electronAPI = (window as any).electronAPI
+  const electronAPI = (window as Window & { electronAPI?: {
+    minimizeWindow?: () => Promise<void>;
+    maximizeWindow?: () => Promise<void>;
+    closeWindow?: () => Promise<void>;
+  } }).electronAPI
   if (!electronAPI) return false
   
   return typeof electronAPI.minimizeWindow === 'function' &&
@@ -61,21 +65,27 @@ const isElectron = computed(() => {
          typeof electronAPI.closeWindow === 'function'
 })
 
+const electronWindow = window as Window & { electronAPI?: {
+  minimizeWindow?: () => Promise<void>;
+  maximizeWindow?: () => Promise<void>;
+  closeWindow?: () => Promise<void>;
+}}
+
 const minimize = async () => {
-  if ((window as any).electronAPI) {
-    await (window as any).electronAPI.minimizeWindow()
+  if (electronWindow.electronAPI?.minimizeWindow) {
+    await electronWindow.electronAPI.minimizeWindow()
   }
 }
 
 const maximize = async () => {
-  if ((window as any).electronAPI) {
-    await (window as any).electronAPI.maximizeWindow()
+  if (electronWindow.electronAPI?.maximizeWindow) {
+    await electronWindow.electronAPI.maximizeWindow()
   }
 }
 
 const close = async () => {
-  if ((window as any).electronAPI) {
-    await (window as any).electronAPI.closeWindow()
+  if (electronWindow.electronAPI?.closeWindow) {
+    await electronWindow.electronAPI.closeWindow()
   }
 }
 </script>

@@ -198,6 +198,7 @@ import { useToast } from '@/hooks/useToast'
 import { EyeIcon, EyeSlashIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon, KeyIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength } from '@/components/ui'
 import { usePasswordsStore } from '@/stores/passwords'
+import type { CreatePasswordRequest } from '@/api/passwords'
 
 interface Props {
   show: boolean
@@ -295,7 +296,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   
   try {
-    const passwordData: any = {
+    const passwordData: CreatePasswordRequest = {
       name: form.value.name.trim(),
       password: form.value.password,
       totpEnabled: form.value.totpEnabled,
@@ -329,8 +330,11 @@ const handleSubmit = async () => {
     
     
     resetForm()
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao criar senha')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao criar senha')
   } finally {
     isSubmitting.value = false
   }

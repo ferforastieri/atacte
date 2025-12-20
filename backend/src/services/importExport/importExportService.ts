@@ -1,5 +1,6 @@
 import { CryptoUtil } from '../../utils/cryptoUtil'
 import { ImportExportRepository } from '../../repositories/importExport/importExportRepository'
+import { PasswordEntry, CustomField } from '../../../node_modules/.prisma/client'
 
 export interface BitwardenItem {
   passwordHistory: Array<{
@@ -52,7 +53,11 @@ export interface ImportResult {
 }
 
 export interface ExportResult {
-  data: any
+  data: {
+    encrypted: boolean;
+    folders: Array<unknown>;
+    items: Array<unknown>;
+  } | string
   total: number
 }
 
@@ -122,8 +127,9 @@ class ImportExportService {
 
         imported++
 
-      } catch (itemError: any) {
-        errors.push(`Erro ao importar "${item.name || 'Item sem nome'}": ${itemError.message}`)
+      } catch (itemError: unknown) {
+        const errorMessage = itemError instanceof Error ? itemError.message : 'Erro desconhecido';
+        errors.push(`Erro ao importar "${item.name || 'Item sem nome'}": ${errorMessage}`)
       }
     }
 
@@ -153,9 +159,9 @@ class ImportExportService {
       name: password.name,
       notes: password.notes,
       favorite: password.isFavorite,
-      fields: (password as any).customFields?.map((field: any) => ({
+      fields: (password as PasswordEntry & { customFields?: CustomField[] }).customFields?.map((field) => ({
         name: field.fieldName,
-        value: field.value,
+        value: field.encryptedValue,
         type: 0 
       })) || [],
       login: {
@@ -226,7 +232,7 @@ class ImportExportService {
   }
 
   
-  validateImportData(data: any): { valid: boolean; errors: string[] } {
+  validateImportData(data: unknown): { valid: boolean; errors: string[] } {
     const errors: string[] = []
 
     if (!data || typeof data !== 'object') {
@@ -234,15 +240,17 @@ class ImportExportService {
       return { valid: false, errors }
     }
 
-    if (typeof data.encrypted !== 'boolean') {
+    const dataObj = data as Record<string, unknown>;
+
+    if (typeof dataObj['encrypted'] !== 'boolean') {
       errors.push('Campo "encrypted" é obrigatório')
     }
 
-    if (!Array.isArray(data.items)) {
+    if (!Array.isArray(dataObj['items'])) {
       errors.push('Campo "items" deve ser um array')
     }
 
-    if (data.items && data.items.length === 0) {
+    if (Array.isArray(dataObj['items']) && dataObj['items'].length === 0) {
       errors.push('Nenhum item encontrado para importar')
     }
 

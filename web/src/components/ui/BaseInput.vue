@@ -74,8 +74,8 @@ interface Props {
   required?: boolean
   disabled?: boolean
   readonly?: boolean
-  leftIcon?: any
-  rightIcon?: any
+  leftIcon?: string | (() => unknown)
+  rightIcon?: string | (() => unknown)
   showPasswordToggle?: boolean
 }
 

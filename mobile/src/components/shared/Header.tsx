@@ -155,9 +155,13 @@ export const Header: React.FC<HeaderProps> = ({
             style={styles.logoContainer}
             onPress={() => {
               try {
-                (navigation as any).navigate('Main', { screen: 'Dashboard' });
+                if ('navigate' in navigation && typeof navigation.navigate === 'function') {
+                  (navigation as { navigate: (screen: string, params?: { screen: string }) => void }).navigate('Main', { screen: 'Dashboard' });
+                }
               } catch (e) {
-                (navigation as any).navigate('Dashboard');
+                if ('navigate' in navigation && typeof navigation.navigate === 'function') {
+                  (navigation as { navigate: (screen: string) => void }).navigate('Dashboard');
+                }
               }
             }}
             activeOpacity={0.7}

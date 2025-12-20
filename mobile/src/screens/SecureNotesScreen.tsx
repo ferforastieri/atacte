@@ -19,7 +19,7 @@ interface SecureNote {
 }
 
 export default function SecureNotesScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation();
   const [notes, setNotes] = useState<SecureNote[]>([]);
   const [allNotes, setAllNotes] = useState<SecureNote[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
@@ -64,7 +64,11 @@ export default function SecureNotesScreen() {
 
   const loadNotes = async () => {
     try {
-      const filters: any = {
+      const filters: {
+        limit?: number;
+        folder?: string;
+        query?: string;
+      } = {
         limit: 1000,
       };
       
@@ -175,7 +179,12 @@ export default function SecureNotesScreen() {
 
     setIsSaving(true);
     try {
-      const noteData: any = {
+      const noteData: {
+        title: string;
+        content: string;
+        isFavorite: boolean;
+        folder?: string;
+      } = {
         title: formData.title.trim(),
         content: formData.content.trim(),
         isFavorite: formData.isFavorite,

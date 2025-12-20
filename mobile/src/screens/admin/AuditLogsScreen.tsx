@@ -16,7 +16,7 @@ interface AuditLog {
   id: string;
   userId: string;
   action: string;
-  details: any;
+  details: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   createdAt: string;
@@ -34,7 +34,7 @@ export default function AuditLogsScreen() {
   const { showError } = useToast();
 
   const handleBack = () => {
-    (navigation as any).jumpTo('Profile');
+    navigation.jumpTo('Profile');
   };
 
   useFocusEffect(
@@ -49,7 +49,7 @@ export default function AuditLogsScreen() {
     }, [navigation])
   );
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<Array<{ id: string; email: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -151,8 +151,6 @@ export default function AuditLogsScreen() {
       PASSWORD_CREATED: { bg: '#3b82f6', text: '#ffffff' },
       PASSWORD_UPDATED: { bg: '#f59e0b', text: '#ffffff' },
       PASSWORD_DELETED: { bg: '#dc2626', text: '#ffffff' },
-      PASSWORD_VIEWED: { bg: '#8b5cf6', text: '#ffffff' },
-      PASSWORD_COPIED: { bg: '#6366f1', text: '#ffffff' },
       EXPORT_DATA: { bg: '#6366f1', text: '#ffffff' },
       IMPORT_DATA: { bg: '#06b6d4', text: '#ffffff' },
       NOTE_CREATED: { bg: '#3b82f6', text: '#ffffff' },
@@ -174,8 +172,6 @@ export default function AuditLogsScreen() {
       PASSWORD_CREATED: 'Criar Senha',
       PASSWORD_UPDATED: 'Atualizar Senha',
       PASSWORD_DELETED: 'Deletar Senha',
-      PASSWORD_VIEWED: 'Visualizar Senha',
-      PASSWORD_COPIED: 'Copiar Senha',
       EXPORT_DATA: 'Exportar Dados',
       IMPORT_DATA: 'Importar Dados',
       NOTE_CREATED: 'Criar Nota',
@@ -199,7 +195,7 @@ export default function AuditLogsScreen() {
     });
   };
 
-  const formatDetails = (details: any) => {
+  const formatDetails = (details: Record<string, unknown> | string | null | undefined) => {
     if (!details) return '-';
     if (typeof details === 'string') return details;
     if (typeof details === 'object') {
@@ -220,8 +216,6 @@ export default function AuditLogsScreen() {
     { value: 'PASSWORD_CREATED', label: 'Criar Senha' },
     { value: 'PASSWORD_UPDATED', label: 'Atualizar Senha' },
     { value: 'PASSWORD_DELETED', label: 'Deletar Senha' },
-    { value: 'PASSWORD_VIEWED', label: 'Visualizar Senha' },
-    { value: 'PASSWORD_COPIED', label: 'Copiar Senha' },
     { value: 'EXPORT_DATA', label: 'Exportar Dados' },
     { value: 'IMPORT_DATA', label: 'Importar Dados' },
     { value: 'NOTE_CREATED', label: 'Criar Nota' },

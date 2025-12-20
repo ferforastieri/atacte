@@ -24,7 +24,7 @@ interface Props {
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
   loading?: boolean
-  icon?: any
+  icon?: string | (() => unknown)
 }
 
 const props = withDefaults(defineProps<Props>(), {

@@ -149,7 +149,7 @@ router.get('/:id', asAuthenticatedHandler(async (req, res) => {
       });
       return;
     }
-    const password = await passwordService.getPasswordById(req.user.id, id, req);
+    const password = await passwordService.getPasswordById(req.user.id, id);
 
     if (!password) {
       res.status(404).json({

@@ -703,7 +703,7 @@ const formatTime = (dateString: string) => {
   return `${Math.floor(diff / 86400000)}d atrás`
 }
 
-;(window as any).cancelZoneCreation = cancelZoneCreation
+;(window as Window & { cancelZoneCreation?: () => void }).cancelZoneCreation = cancelZoneCreation
 
 onMounted(async () => {
   await refreshLocations()

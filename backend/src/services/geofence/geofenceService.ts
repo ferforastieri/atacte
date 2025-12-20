@@ -125,7 +125,7 @@ export class GeofenceService {
       'GEOFENCE_ZONE_UPDATED',
       'GEOFENCE_ZONE',
       updatedZone.id,
-      data,
+      data as Record<string, unknown>,
       req
     );
 

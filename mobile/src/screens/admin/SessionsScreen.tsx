@@ -32,7 +32,7 @@ export default function SessionsScreen() {
   const insets = useSafeAreaInsets();
 
   const handleBack = () => {
-    (navigation as any).jumpTo('Profile');
+    navigation.jumpTo('Profile');
   };
 
   useFocusEffect(

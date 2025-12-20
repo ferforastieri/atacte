@@ -74,8 +74,8 @@ let debounceTimer: number | null = null
 let searchTimeout: number | null = null
 
 
-const debounce = (func: Function, delay: number) => {
-  return (...args: any[]) => {
+const debounce = (func: (...args: unknown[]) => void, delay: number) => {
+  return (...args: unknown[]) => {
     if (debounceTimer) {
       clearTimeout(debounceTimer)
     }

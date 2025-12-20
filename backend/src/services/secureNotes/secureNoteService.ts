@@ -2,7 +2,7 @@ import { Request } from 'express';
 import { SecureNote } from '../../infrastructure/prisma';
 import { CryptoUtil } from '../../utils/cryptoUtil';
 import { AuditUtil } from '../../utils/auditUtil';
-import { SecureNoteRepository } from '../../repositories/secureNotes/secureNoteRepository';
+import { SecureNoteRepository, SearchFilters as RepositorySearchFilters, UpdateSecureNoteData as RepositoryUpdateSecureNoteData } from '../../repositories/secureNotes/secureNoteRepository';
 
 export interface SecureNoteDto {
   id: string;
@@ -56,7 +56,7 @@ export class SecureNoteService {
       sortOrder
     } = filters;
 
-    const searchFilters: any = {
+    const searchFilters: RepositorySearchFilters = {
       userId
     };
     
@@ -95,7 +95,7 @@ export class SecureNoteService {
     };
   }
 
-  async getNoteById(userId: string, noteId: string, req?: Request): Promise<SecureNoteDto | null> {
+  async getNoteById(userId: string, noteId: string): Promise<SecureNoteDto | null> {
     const note = await this.secureNoteRepository.findById(noteId, userId);
 
     if (!note) {
@@ -107,8 +107,6 @@ export class SecureNoteService {
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
-
-    await AuditUtil.log(userId, 'NOTE_VIEWED', 'SECURE_NOTE', noteId, null, req);
 
     return this.decryptSecureNote(note, user.encryptionKeyHash);
   }
@@ -160,7 +158,7 @@ export class SecureNoteService {
       throw new Error('Usuário não encontrado');
     }
 
-    const updateData: any = {};
+    const updateData: RepositoryUpdateSecureNoteData = {};
 
     if (data.title !== undefined) updateData.title = data.title;
     if (data.folder !== undefined) updateData.folder = data.folder;

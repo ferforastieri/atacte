@@ -48,6 +48,7 @@ import locationRoutes from './controllers/location/locationController';
 import notificationRoutes from './controllers/notification/notificationController';
 import geofenceRoutes from './controllers/geofence/geofenceController';
 import secureNoteRoutes from './controllers/secureNotes/secureNoteController';
+import calendarRoutes from './controllers/calendar/calendarController';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/passwords', passwordRoutes);
@@ -60,6 +61,7 @@ app.use('/api/location', locationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/geofence', geofenceRoutes);
 app.use('/api/secure-notes', secureNoteRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 
 app.use((_err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -79,7 +81,20 @@ app.use('*', (_req, res) => {
 
 
 if (require.main === module) {
-  app.listen(PORT, '0.0.0.0', () => {});
+  app.listen(PORT, '0.0.0.0', () => {
+    const { CalendarService } = require('./services/calendar/calendarService');
+    const calendarService = new CalendarService();
+    
+    calendarService.checkAndSendReminders().catch((err: Error) => {
+      console.error('Erro ao verificar lembretes do calendário:', err);
+    });
+    
+    setInterval(() => {
+      calendarService.checkAndSendReminders().catch((err: Error) => {
+        console.error('Erro ao verificar lembretes do calendário:', err);
+      });
+    }, 60 * 1000);
+  });
 }
 
 export default app;

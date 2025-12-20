@@ -43,7 +43,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 
   
   const debounce = useCallback((func: Function, delay: number) => {
-    return (...args: any[]) => {
+    return (...args: unknown[]) => {
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
       }

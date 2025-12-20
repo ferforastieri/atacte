@@ -307,7 +307,7 @@ export class TOTPService {
     const updatedEntry = await this.passwordRepository.update(passwordId, {
       totpSecret: undefined,
       totpEnabled: false
-    } as any);
+    });
 
     await AuditUtil.log(
       userId,
@@ -324,8 +324,7 @@ export class TOTPService {
   
   async getTotpCodeForEntry(
     userId: string, 
-    passwordId: string, 
-    req?: Request
+    passwordId: string
   ): Promise<TOTPCode | null> {
     const entry = await this.passwordRepository.findById(passwordId, userId);
     
@@ -344,16 +343,6 @@ export class TOTPService {
       
       const totpCode = TOTPService.generateCurrentCode(decryptedSecret);
 
-      
-      await AuditUtil.log(
-        userId,
-        'PASSWORD_VIEWED',
-        'PASSWORD_ENTRY',
-        passwordId,
-        { action: 'TOTP_CODE_ACCESSED' },
-        req
-      );
-
       return totpCode;
     } catch (error) {
       return null;
@@ -363,8 +352,7 @@ export class TOTPService {
   
   async getTotpSecretForEntry(
     userId: string, 
-    passwordId: string, 
-    req?: Request
+    passwordId: string
   ): Promise<{ secret: string } | null> {
     const entry = await this.passwordRepository.findById(passwordId, userId);
     
@@ -380,16 +368,6 @@ export class TOTPService {
 
     try {
       const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, user.encryptionKeyHash);
-      
-      
-      await AuditUtil.log(
-        userId,
-        'PASSWORD_VIEWED',
-        'PASSWORD_ENTRY',
-        passwordId,
-        { action: 'TOTP_SECRET_ACCESSED' },
-        req
-      );
 
       return { secret: decryptedSecret };
     } catch (error) {

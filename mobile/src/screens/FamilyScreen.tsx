@@ -27,7 +27,13 @@ import { geofenceService, GeofenceZone, CreateGeofenceZoneData, UpdateGeofenceZo
 import { useAuth } from '../contexts/AuthContext';
 import * as Clipboard from 'expo-clipboard';
 
-export default function FamilyScreen({ navigation }: any) {
+interface FamilyScreenProps {
+  navigation: {
+    navigate: (screen: string, params?: { userId: string; userName: string }) => void;
+  };
+}
+
+export default function FamilyScreen({ navigation }: FamilyScreenProps) {
   const [selectedFamily, setSelectedFamily] = useState<Family | null>(null);
   const [locations, setLocations] = useState<FamilyMemberLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);

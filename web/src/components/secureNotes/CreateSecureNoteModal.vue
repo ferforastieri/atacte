@@ -108,6 +108,7 @@
 import { ref, watch, computed } from 'vue'
 import { BaseModal, BaseInput, BaseButton } from '@/components/ui'
 import { useSecureNotesStore } from '@/stores/secureNotes'
+import type { CreateSecureNoteRequest } from '@/api/secureNotes'
 import { useToast } from '@/hooks/useToast'
 import { DocumentTextIcon, FolderIcon } from '@heroicons/vue/24/outline'
 
@@ -163,7 +164,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   
   try {
-    const noteData: any = {
+    const noteData: CreateSecureNoteRequest = {
       title: form.value.title.trim(),
       content: form.value.content.trim(),
       isFavorite: form.value.isFavorite
@@ -179,8 +180,11 @@ const handleSubmit = async () => {
     emit('created')
     
     resetForm()
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao criar nota')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao criar nota')
   } finally {
     isSubmitting.value = false
   }

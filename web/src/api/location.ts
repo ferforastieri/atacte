@@ -72,7 +72,16 @@ export const locationApi = {
           
           
           if (familyData && familyData.data && familyData.data.members) {
-            const members = familyData.data.members.map((member: any) => ({
+            const members = familyData.data.members.map((member: {
+              userId: string;
+              userName?: string;
+              nickname?: string;
+              profilePicture?: string | null;
+              timestamp?: string;
+              batteryLevel?: number | null;
+              latitude?: number;
+              longitude?: number;
+            }) => ({
               id: member.userId,
               name: member.userName || member.nickname || 'Membro',
               email: '', 

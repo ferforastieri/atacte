@@ -144,6 +144,15 @@ const router = createRouter({
       }
     },
     {
+      path: '/calendar',
+      name: 'Calendar',
+      component: () => import('@/views/calendar/CalendarView.vue'),
+      meta: { 
+        requiresAuth: true,
+        title: 'Calendário - Atacte'
+      }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('@/views/NotFoundView.vue'),

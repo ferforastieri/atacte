@@ -35,7 +35,11 @@ router.post('/import', asAuthenticatedHandler(async (req, res) => {
     await importExportRepository.createAuditLog({
       userId,
       action: 'IMPORT_PASSWORDS',
-      details: `Importação de ${result.imported} senhas, ${result.duplicates} duplicatas ignoradas`,
+      details: { 
+        imported: result.imported, 
+        duplicates: result.duplicates,
+        message: `Importação de ${result.imported} senhas, ${result.duplicates} duplicatas ignoradas`
+      },
       ipAddress: req.ip || 'unknown',
       userAgent: req.get('User-Agent') || 'unknown'
     })
@@ -69,7 +73,7 @@ router.get('/export/bitwarden', asAuthenticatedHandler(async (req, res) => {
     await importExportRepository.createAuditLog({
       userId,
       action: 'EXPORT_PASSWORDS',
-      details: `Exportação de ${result.total} senhas para formato Bitwarden`,
+      details: { message: `Exportação de ${result.total} senhas para formato Bitwarden` },
       ipAddress: req.ip || 'unknown',
       userAgent: req.get('User-Agent') || 'unknown'
     })
@@ -107,7 +111,7 @@ router.get('/export/csv', asAuthenticatedHandler(async (req, res) => {
     await importExportRepository.createAuditLog({
       userId,
       action: 'EXPORT_PASSWORDS',
-      details: `Exportação de ${result.total} senhas para formato CSV`,
+      details: { message: `Exportação de ${result.total} senhas para formato CSV` },
       ipAddress: req.ip || 'unknown',
       userAgent: req.get('User-Agent') || 'unknown'
     })

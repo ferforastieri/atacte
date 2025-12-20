@@ -29,10 +29,13 @@ export const preferencesApi = {
     try {
       const response = await api.get('/preferences')
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
       return {
         success: false,
-        message: error.response?.data?.message || 'Erro ao buscar preferências'
+        message: errorMessage || 'Erro ao buscar preferências'
       }
     }
   },
@@ -42,10 +45,13 @@ export const preferencesApi = {
     try {
       const response = await api.post('/preferences', data)
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
       return {
         success: false,
-        message: error.response?.data?.message || 'Erro ao criar preferências'
+        message: errorMessage || 'Erro ao criar preferências'
       }
     }
   },

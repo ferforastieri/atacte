@@ -68,15 +68,25 @@ interface GeolocationPosition {
 class LocationService {
   private watchSubscription: Location.LocationSubscription | null = null;
 
-  private async makeRequest(endpoint: string, options: any = {}): Promise<any> {
+  private async makeRequest<T = { success: boolean; data?: unknown; message?: string }>(
+    endpoint: string, 
+    options: {
+      method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+      data?: unknown;
+      params?: Record<string, string>;
+    } = {}
+  ): Promise<T> {
     try {
       const response = await apiClient({
         url: endpoint,
         ...options,
       });
-      return response.data;
-    } catch (error: any) {
-      return error.response?.data || { success: false, message: 'Erro de conexão' };
+      return response.data as T;
+    } catch (error: unknown) {
+      const errorData = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: T } }).response?.data
+        : undefined;
+      return (errorData || { success: false, message: 'Erro de conexão' }) as T;
     }
   }
 
@@ -211,7 +221,7 @@ class LocationService {
 
   startWatchingLocation(
     onLocationUpdate: (location: GeolocationPosition) => void,
-    onError?: (error: any) => void
+    onError?: (error: Error | unknown) => void
   ): void {
     if (this.watchSubscription) {
       this.stopWatchingLocation();

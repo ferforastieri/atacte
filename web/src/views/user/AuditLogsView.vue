@@ -40,8 +40,6 @@
             <option value="PASSWORD_CREATED">Criar Senha</option>
             <option value="PASSWORD_UPDATED">Atualizar Senha</option>
             <option value="PASSWORD_DELETED">Deletar Senha</option>
-            <option value="PASSWORD_VIEWED">Visualizar Senha</option>
-            <option value="PASSWORD_COPIED">Copiar Senha</option>
             <option value="EXPORT_DATA">Exportar Dados</option>
             <option value="IMPORT_DATA">Importar Dados</option>
             <option value="NOTE_CREATED">Criar Nota</option>
@@ -212,8 +210,6 @@ const getActionClass = (action: string) => {
     PASSWORD_CREATED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
     PASSWORD_UPDATED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
     PASSWORD_DELETED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    PASSWORD_VIEWED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-    PASSWORD_COPIED: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
     EXPORT_DATA: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
     IMPORT_DATA: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
     NOTE_CREATED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
@@ -235,8 +231,6 @@ const getActionLabel = (action: string) => {
     PASSWORD_CREATED: 'Criar Senha',
     PASSWORD_UPDATED: 'Atualizar Senha',
     PASSWORD_DELETED: 'Deletar Senha',
-    PASSWORD_VIEWED: 'Visualizar Senha',
-    PASSWORD_COPIED: 'Copiar Senha',
     EXPORT_DATA: 'Exportar Dados',
     IMPORT_DATA: 'Importar Dados',
     NOTE_CREATED: 'Criar Nota',
@@ -260,7 +254,7 @@ const formatDateTime = (dateString: string) => {
   })
 }
 
-const formatDetails = (details: any) => {
+const formatDetails = (details: unknown) => {
   if (!details) return '-'
   if (typeof details === 'string') return details
   if (typeof details === 'object') {
@@ -303,7 +297,7 @@ const fetchLogs = async () => {
       pagination.value.total = 0
       pagination.value.totalPages = 1
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.error('Erro ao carregar logs de auditoria')
     logs.value = []
   } finally {
@@ -318,7 +312,7 @@ const fetchUsers = async () => {
     if (response.success && response.data) {
       users.value = response.data
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao carregar usuários:', error)
   }
 }

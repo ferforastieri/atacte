@@ -60,7 +60,7 @@ export interface AuditLogDto {
   resourceId?: string;
   ipAddress?: string;
   userAgent?: string;
-  details: any;
+  details: Record<string, unknown>;
   createdAt: Date;
 }
 
@@ -134,7 +134,7 @@ export class UserService {
       'PROFILE_UPDATED',
       'USER',
       userId,
-      data,
+      data as Record<string, unknown>,
       req
     );
 
@@ -199,11 +199,11 @@ export class UserService {
     const auditLogs: AuditLogDto[] = result.logs.map(log => ({
       id: log.id,
       action: log.action,
-      resourceType: log.resourceType,
-      resourceId: log.resourceId,
-      ipAddress: log.ipAddress,
-      userAgent: log.userAgent,
-      details: log.details,
+      resourceType: log.resourceType ?? undefined,
+      resourceId: log.resourceId ?? undefined,
+      ipAddress: log.ipAddress ?? undefined,
+      userAgent: log.userAgent ?? undefined,
+      details: (log.details as Record<string, unknown>) || {},
       createdAt: log.createdAt
     }));
 
@@ -233,8 +233,28 @@ export class UserService {
     );
 
     return {
-      user: exportData.user,
-      passwords: exportData.passwords,
+      user: {
+        ...exportData.user,
+        lastLogin: exportData.user.lastLogin ?? undefined
+      },
+      passwords: exportData.passwords.map(p => ({
+        name: p.name,
+        website: p.website ?? undefined,
+        username: p.username ?? undefined,
+        password: p.encryptedPassword,
+        notes: p.notes ?? undefined,
+        folder: p.folder ?? undefined,
+        isFavorite: p.isFavorite,
+        customFields: p.customFields.map(f => ({
+          fieldName: f.fieldName,
+          value: f.encryptedValue,
+          fieldType: f.fieldType
+        })),
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        lastUsed: p.lastUsed ?? undefined,
+        totpEnabled: p.totpEnabled
+      })),
       exportedAt: new Date()
     };
   }
@@ -312,7 +332,7 @@ export class UserService {
         updatedAt: user.updatedAt,
         lastLogin: user.lastLogin || undefined,
         isActive: user.isActive,
-        role: (user as any).role || 'USER'
+        role: user.role
       })),
       total: result.total
     };
@@ -329,7 +349,13 @@ export class UserService {
       throw new Error('Usuário não encontrado');
     }
 
-    const updateData: any = {};
+    const updateData: {
+      email?: string;
+      name?: string;
+      phoneNumber?: string;
+      isActive?: boolean;
+      role?: 'USER' | 'ADMIN';
+    } = {};
     if (data.email !== undefined) updateData.email = data.email;
     if (data.name !== undefined) updateData.name = data.name;
     if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
@@ -356,7 +382,7 @@ export class UserService {
       updatedAt: updatedUser.updatedAt,
       lastLogin: updatedUser.lastLogin || undefined,
       isActive: updatedUser.isActive,
-      role: (updatedUser as any).role || 'USER'
+      role: updatedUser.role
     };
   }
 

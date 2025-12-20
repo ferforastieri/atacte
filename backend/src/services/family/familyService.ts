@@ -129,7 +129,7 @@ export class FamilyService {
       'FAMILY_UPDATED',
       'FAMILY',
       familyId,
-      data,
+      data as Record<string, unknown>,
       req
     );
 
@@ -326,7 +326,7 @@ export class FamilyService {
       'MEMBER_SETTINGS_UPDATED',
       'FAMILY_MEMBER',
       member.id,
-      data,
+      data as Record<string, unknown>,
       req
     );
 

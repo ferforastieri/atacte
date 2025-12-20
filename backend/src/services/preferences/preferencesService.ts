@@ -66,7 +66,7 @@ export class PreferencesService {
     }
   }
 
-  private mapToDto(preferences: any): UserPreferencesDto {
+  private mapToDto(preferences: { id: string; userId: string; theme: string; createdAt: Date; updatedAt: Date }): UserPreferencesDto {
     return {
       id: preferences.id,
       userId: preferences.userId,

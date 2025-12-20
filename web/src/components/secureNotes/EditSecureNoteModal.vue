@@ -109,7 +109,7 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { BaseModal, BaseInput, BaseButton } from '@/components/ui'
 import { useSecureNotesStore } from '@/stores/secureNotes'
 import { useToast } from '@/hooks/useToast'
-import type { SecureNote } from '@/api/secureNotes'
+import type { SecureNote, UpdateSecureNoteRequest } from '@/api/secureNotes'
 import { DocumentTextIcon, FolderIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
@@ -181,7 +181,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   
   try {
-    const updateData: any = {
+    const updateData: UpdateSecureNoteRequest = {
       title: form.value.title.trim(),
       content: form.value.content.trim(),
       isFavorite: form.value.isFavorite
@@ -196,8 +196,11 @@ const handleSubmit = async () => {
     toast.success('Nota atualizada com sucesso!')
     emit('updated')
     emit('close')
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao atualizar nota')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao atualizar nota')
   } finally {
     isSubmitting.value = false
   }

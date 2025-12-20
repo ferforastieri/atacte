@@ -43,6 +43,7 @@ model User {
   geofenceStates       UserGeofenceState[]
   passwordResetTokens  PasswordResetToken[]
   trustedDevices       TrustedDevice[]
+  calendarEvents       CalendarEvent[]
   
   @@map("users")
 }
@@ -289,4 +290,31 @@ model PasswordResetToken {
   @@index([token])
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+model CalendarEvent {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  title           String
+  description     String?
+  startDate       DateTime @map("start_date")
+  endDate         DateTime? @map("end_date")
+  isAllDay        Boolean  @default(false) @map("is_all_day")
+  reminderMinutes Int[]    @default([]) @map("reminder_minutes")
+  color           String   @default("#3b82f6")
+  location        String?
+  recurrenceType  String?  @map("recurrence_type") // NONE, DAILY, WEEKLY, MONTHLY, YEARLY, CUSTOM
+  recurrenceInterval Int?  @default(1) @map("recurrence_interval") // A cada X dias/semanas/meses/anos
+  recurrenceEndDate DateTime? @map("recurrence_end_date") // Data final da repetição
+  recurrenceDaysOfWeek Int[] @default([]) @map("recurrence_days_of_week") // Para WEEKLY: [0=Dom, 1=Seg, ...]
+  recurrenceDayOfMonth Int? @map("recurrence_day_of_month") // Para MONTHLY: dia do mês
+  recurrenceWeekOfMonth Int? @map("recurrence_week_of_month") // Para MONTHLY: semana do mês (1-4)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, startDate])
+  @@index([userId])
+  @@map("calendar_events")
 }

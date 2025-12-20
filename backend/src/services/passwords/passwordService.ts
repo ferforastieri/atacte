@@ -1,10 +1,10 @@
 import { Request } from 'express';
-import { PasswordEntry } from '../../infrastructure/prisma';
+import { PasswordEntry, CustomField } from '../../infrastructure/prisma';
 import { CryptoUtil } from '../../utils/cryptoUtil';
 import { AuditUtil } from '../../utils/auditUtil';
 import { PasswordUtil, PasswordGeneratorOptions } from '../../utils/passwordUtil';
 import { TOTPService, TOTPCode } from '../totp/totpService';
-import { PasswordRepository } from '../../repositories/passwords/passwordRepository';
+import { PasswordRepository, SearchFilters as RepositorySearchFilters, UpdatePasswordEntryData as RepositoryUpdatePasswordEntryData } from '../../repositories/passwords/passwordRepository';
 
 export interface PasswordEntryDto {
   id: string;
@@ -88,7 +88,7 @@ export class PasswordService {
     } = filters;
 
     
-    const searchFilters: any = {
+    const searchFilters: RepositorySearchFilters = {
       userId
     };
     
@@ -132,7 +132,7 @@ export class PasswordService {
   }
 
   
-  async getPasswordById(userId: string, passwordId: string, req?: Request): Promise<PasswordEntryDto | null> {
+  async getPasswordById(userId: string, passwordId: string): Promise<PasswordEntryDto | null> {
     const password = await this.passwordRepository.findById(passwordId, userId);
 
     if (!password) {
@@ -148,9 +148,6 @@ export class PasswordService {
 
     
     await this.passwordRepository.updateLastUsed(passwordId);
-
-    
-    await AuditUtil.log(userId, 'PASSWORD_VIEWED', 'PASSWORD_ENTRY', passwordId, null, req);
 
     return this.decryptPasswordEntry(password, user.encryptionKeyHash);
   }
@@ -193,7 +190,7 @@ export class PasswordService {
         encryptedValue: CryptoUtil.encrypt(field.value, user.encryptionKeyHash),
         fieldType: field.fieldType
       })) || undefined
-    } as any);
+    });
 
     
     await AuditUtil.log(
@@ -230,7 +227,7 @@ export class PasswordService {
     }
 
     
-    const updateData: any = {};
+    const updateData: RepositoryUpdatePasswordEntryData = {};
 
     if (data.name !== undefined) updateData.name = data.name;
     if (data.website !== undefined) updateData.website = data.website;
@@ -333,10 +330,10 @@ export class PasswordService {
 
 
   
-  private async decryptPasswordEntry(password: PasswordEntry, encryptionKey: string): Promise<PasswordEntryDto> {
+  private async decryptPasswordEntry(password: PasswordEntry & { customFields?: CustomField[] }, encryptionKey: string): Promise<PasswordEntryDto> {
     const decryptedPassword = CryptoUtil.decrypt(password.encryptedPassword, encryptionKey);
     
-    const decryptedCustomFields = (password as any).customFields?.map((field: any) => ({
+    const decryptedCustomFields = password.customFields?.map((field: CustomField) => ({
       id: field.id,
       fieldName: field.fieldName,
       value: CryptoUtil.decrypt(field.encryptedValue, encryptionKey),

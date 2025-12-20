@@ -82,8 +82,9 @@ api.interceptors.response.use(
         case 422:
           
           if (data.errors && Array.isArray(data.errors)) {
-            data.errors.forEach((err: any) => {
-              toast.error(err.message || err)
+            data.errors.forEach((err: { message?: string } | string) => {
+              const errorMessage = typeof err === 'string' ? err : err.message || 'Erro desconhecido';
+              toast.error(errorMessage);
             })
           } else {
             toast.error(data.message || 'Dados inválidos.')
@@ -120,3 +121,4 @@ export { default as authApi } from './auth'
 export { default as passwordsApi } from './passwords'
 export { default as totpApi } from './totp'
 export { default as usersApi } from './users'
+export { default as calendarApi } from './calendar'

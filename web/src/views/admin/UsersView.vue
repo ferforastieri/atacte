@@ -304,7 +304,7 @@ const fetchUsers = async () => {
         pagination.value.totalPages = Math.ceil(response.pagination.total / pagination.value.limit)
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.error('Erro ao carregar usuários')
   } finally {
     isLoading.value = false
@@ -393,8 +393,11 @@ const saveUser = async () => {
     toast.success('Usuário atualizado com sucesso')
     closeEditModal()
     await fetchUsers()
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao atualizar usuário')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao atualizar usuário')
   } finally {
     isSaving.value = false
   }
@@ -413,8 +416,11 @@ const changePassword = async () => {
     await usersApi.changeUserPassword(selectedUserId.value, newPassword.value)
     toast.success('Senha alterada com sucesso')
     closePasswordModal()
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao alterar senha')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao alterar senha')
   } finally {
     isChangingPassword.value = false
   }
@@ -441,8 +447,11 @@ const confirmDeleteUser = async () => {
     toast.success('Usuário deletado com sucesso')
     closeDeleteModal()
     await fetchUsers()
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao deletar usuário')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao deletar usuário')
   } finally {
     isDeleting.value = false
   }

@@ -245,9 +245,11 @@ const revokeSession = async (sessionId: string) => {
     await authApi.revokeSession(sessionId)
     toast.success('Sessão revogada com sucesso!')
     await fetchSessions()
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || 'Erro ao revogar sessão'
-    toast.error(errorMessage)
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao revogar sessão')
   }
 }
 
@@ -270,9 +272,11 @@ const confirmUntrustDevice = async () => {
     toast.success('Confiança removida do dispositivo com sucesso!')
     closeUntrustModal()
     await fetchSessions()
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || 'Erro ao remover confiança do dispositivo'
-    toast.error(errorMessage)
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao remover confiança do dispositivo')
   } finally {
     isUntrusting.value = false
   }
@@ -296,9 +300,11 @@ const confirmRevokeAllSessions = async () => {
     toast.success('Todas as sessões foram revogadas!')
     closeRevokeAllModal()
     await fetchSessions()
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || 'Erro ao revogar sessões'
-    toast.error(errorMessage)
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao revogar sessões')
   } finally {
     isRevokingAll.value = false
   }
@@ -320,7 +326,7 @@ const fetchSessions = async () => {
       pagination.value.total = 0
       pagination.value.totalPages = 1
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.error('Erro ao carregar sessões')
     sessions.value = []
     pagination.value.total = 0

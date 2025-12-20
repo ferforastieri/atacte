@@ -241,11 +241,12 @@ router.get(
         data: locations,
         count: locations.length,
       });
-    } catch (error: any) {
-      const statusCode = error.message.includes('permissão') ? 403 : 500;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const statusCode = errorMessage.includes('permissão') ? 403 : 500;
       res.status(statusCode).json({
         success: false,
-        message: error.message || 'Erro interno do servidor',
+        message: errorMessage,
       });
     }
   })

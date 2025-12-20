@@ -241,7 +241,7 @@ router.get('/passwords/:id', asAuthenticatedHandler(async (req, res) => {
       });
       return;
     }
-    const totpCode = await totpService.getTotpCodeForEntry(req.user.id, id, req);
+    const totpCode = await totpService.getTotpCodeForEntry(req.user.id, id);
 
     if (!totpCode) {
       res.status(404).json({
@@ -275,7 +275,7 @@ router.get('/passwords/:id/secret', asAuthenticatedHandler(async (req, res) => {
       });
       return;
     }
-    const totpSecret = await totpService.getTotpSecretForEntry(req.user.id, id, req);
+    const totpSecret = await totpService.getTotpSecretForEntry(req.user.id, id);
 
     if (!totpSecret) {
       res.status(404).json({

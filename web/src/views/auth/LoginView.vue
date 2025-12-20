@@ -146,14 +146,25 @@ const handleLogin = async () => {
     } else {
       toast.error(response?.message || 'Erro ao fazer login. Tente novamente.')
     }
-  } catch (error: any) {
-    if (error.response?.data?.errors) {
-      errors.value = error.response.data.errors.reduce((acc: any, err: any) => {
-        acc[err.field] = err.message
-        return acc
-      }, {})
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { errors?: Array<{ field?: string; message?: string }> } } };
+      if (axiosError.response?.data?.errors) {
+        errors.value = axiosError.response.data.errors.reduce((acc: Record<string, string>, err) => {
+          if (err.field && err.message) {
+            acc[err.field] = err.message;
+          }
+          return acc;
+        }, {});
+      } else {
+        const errorMessage = axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data
+          ? String(axiosError.response.data.message)
+          : error instanceof Error ? error.message : 'Erro ao fazer login';
+        toast.error(errorMessage);
+      }
     } else {
-      toast.error(error.message || 'Erro ao fazer login')
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login';
+      toast.error(errorMessage);
     }
   } finally {
     isLoading.value = false

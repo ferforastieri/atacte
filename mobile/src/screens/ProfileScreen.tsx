@@ -78,8 +78,8 @@ export default function ProfileScreen() {
       
       if (response.success && response.data) {
         const passwords = Array.isArray(response.data) ? response.data : [];
-        const favoritePasswords = passwords.filter((p: any) => p.isFavorite).length;
-        const totpPasswords = passwords.filter((p: any) => p.totpEnabled).length;
+        const favoritePasswords = passwords.filter((p: { isFavorite?: boolean }) => p.isFavorite).length;
+        const totpPasswords = passwords.filter((p: { totpEnabled?: boolean }) => p.totpEnabled).length;
         
         setStats({
           totalPasswords: passwords.length,

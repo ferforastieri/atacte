@@ -10,7 +10,7 @@ interface DatePickerProps {
   onChange: (date: Date) => void;
   label?: string;
   disabled?: boolean;
-  style?: any;
+  style?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 export const DatePicker: React.FC<DatePickerProps> = ({

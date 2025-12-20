@@ -81,8 +81,10 @@ const handleTrust = async () => {
     } else {
       toast.error(response.message || 'Erro ao confiar dispositivo')
     }
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || error.message || 'Erro ao confiar dispositivo'
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : error instanceof Error ? error.message : 'Erro ao confiar dispositivo';
     toast.error(errorMessage)
   } finally {
     isLoading.value = false

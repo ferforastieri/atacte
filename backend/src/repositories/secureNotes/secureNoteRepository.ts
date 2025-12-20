@@ -61,7 +61,12 @@ export class SecureNoteRepository {
   }
 
   async search(filters: SearchFilters): Promise<PaginationResult> {
-    const where: any = {
+    const where: {
+      userId: string;
+      OR?: Array<Record<string, unknown>>;
+      folder?: string;
+      isFavorite?: boolean;
+    } = {
       userId: filters.userId,
     };
 
@@ -85,7 +90,7 @@ export class SecureNoteRepository {
     const sortBy = filters.sortBy || 'title';
     const sortOrder = filters.sortOrder || 'asc';
     
-    const orderBy: any = {};
+    const orderBy: Record<string, 'asc' | 'desc'> = {};
     orderBy[sortBy] = sortOrder;
 
     const [items, total] = await Promise.all([

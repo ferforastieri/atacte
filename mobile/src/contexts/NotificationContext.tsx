@@ -51,7 +51,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   };
 
   const handleNotificationReceived = async (notification: Notifications.Notification) => {
-    const data = notification.request.content.data as any;
+    const data = notification.request.content.data as { type?: string } | undefined;
     
    
     if (data?.type === 'location_update_request') {

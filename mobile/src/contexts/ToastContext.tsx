@@ -73,7 +73,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     hideToast,
   };
 
-  const onGestureEvent = (event: any, toastId: string) => {
+  const onGestureEvent = (event: { nativeEvent: { translationX: number; state: number } }, toastId: string) => {
     const { translationX, state } = event.nativeEvent;
     
     if (state === State.END) {
@@ -90,8 +90,8 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
         {toasts.map((toast) => (
           <PanGestureHandler
             key={toast.id}
-            onGestureEvent={(event: any) => onGestureEvent(event, toast.id)}
-            onHandlerStateChange={(event: any) => onGestureEvent(event, toast.id)}
+            onGestureEvent={(event: { nativeEvent: { translationX: number; state: number } }) => onGestureEvent(event, toast.id)}
+            onHandlerStateChange={(event: { nativeEvent: { translationX: number; state: number } }) => onGestureEvent(event, toast.id)}
           >
             <View>
               <CustomToast

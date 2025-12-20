@@ -26,7 +26,9 @@ const SettingsScreen: React.FC = () => {
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
 
   const handleBack = () => {
-    (navigation as any).jumpTo('Profile');
+    if ('jumpTo' in navigation) {
+      (navigation as { jumpTo: (screen: string) => void }).jumpTo('Profile');
+    }
   };
 
   useFocusEffect(
@@ -84,7 +86,7 @@ const SettingsScreen: React.FC = () => {
       } else {
         showError(response.message || 'Erro ao atualizar perfil');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       showError('Erro ao atualizar perfil');
     } finally {
       setIsLoading(false);
@@ -172,9 +174,10 @@ const SettingsScreen: React.FC = () => {
       setProfilePicture(base64data);
       setIsUploadingImage(false);
       showSuccess('Imagem selecionada com sucesso');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao processar imagem:', error);
-      showError(`Erro ao processar imagem: ${error.message || 'Erro desconhecido'}`);
+      showError(`Erro ao processar imagem: ${errorMessage}`);
       setIsUploadingImage(false);
     }
   };
@@ -241,7 +244,23 @@ const SettingsScreen: React.FC = () => {
     },
   ];
 
-  const renderSettingItem = (item: any, index: number, sectionItems: any[]) => {
+  interface SettingItem {
+    label: string;
+    type: 'switch' | 'text' | 'input' | 'image' | 'button';
+    value?: boolean | string;
+    onChangeText?: (text: string) => void;
+    onToggle?: (value: boolean) => void;
+    placeholder?: string;
+    keyboardType?: 'default' | 'phone-pad';
+    onPickImage?: () => void;
+    onRemoveImage?: () => void;
+    isUploading?: boolean;
+    onPress?: () => void;
+    isLoading?: boolean;
+    isDestructive?: boolean;
+  }
+
+  const renderSettingItem = (item: SettingItem, index: number, sectionItems: SettingItem[]) => {
     const isLastItem = index === sectionItems.length - 1;
     return (
       <View key={index} style={[

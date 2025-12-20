@@ -272,8 +272,10 @@ const handleChangePassword = async () => {
       authStore.logout()
       router.push('/login')
     }, 2000)
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || error.message || 'Erro ao alterar senha'
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : error instanceof Error ? error.message : 'Erro ao alterar senha';
     
     if (errorMessage.includes('incorreta') || errorMessage.includes('atual')) {
       changePasswordErrors.value.currentPassword = errorMessage
@@ -304,8 +306,10 @@ const handleDeleteAccount = async () => {
       authStore.logout()
       router.push('/login')
     }, 2000)
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || error.message || 'Erro ao deletar conta'
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : error instanceof Error ? error.message : 'Erro ao deletar conta';
     
     if (errorMessage.includes('incorreta') || errorMessage.includes('Senha')) {
       deleteAccountErrors.value.password = errorMessage

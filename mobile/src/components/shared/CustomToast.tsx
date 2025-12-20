@@ -13,7 +13,7 @@ interface CustomToastProps {
 const CustomToast: React.FC<CustomToastProps> = ({ type, text1, text2, onHide }) => {
   const { isDark } = useTheme();
 
-  const getIconName = () => {
+  const getIconName = (): keyof typeof Ionicons.glyphMap => {
     switch (type) {
       case 'success':
         return 'checkmark-circle';
@@ -91,7 +91,7 @@ const CustomToast: React.FC<CustomToastProps> = ({ type, text1, text2, onHide })
     <View style={styles.container}>
       <View style={styles.iconContainer}>
         <Ionicons 
-          name={getIconName() as any} 
+          name={getIconName()} 
           size={20} 
           color={getIconColor()} 
         />

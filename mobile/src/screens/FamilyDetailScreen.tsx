@@ -24,7 +24,16 @@ import * as Clipboard from 'expo-clipboard';
 
 const { width, height } = Dimensions.get('window');
 
-export default function FamilyDetailScreen({ route }: any) {
+interface FamilyDetailScreenProps {
+  route: {
+    params: {
+      familyId: string;
+      familyName: string;
+    };
+  };
+}
+
+export default function FamilyDetailScreen({ route }: FamilyDetailScreenProps) {
   const navigation = useNavigation();
   const { familyId, familyName } = route.params;
 
@@ -88,7 +97,7 @@ export default function FamilyDetailScreen({ route }: any) {
     try {
       const response = await familyService.getFamilies();
       if (response.success && response.data) {
-        const currentFamily = response.data.find((f: any) => f.id === familyId);
+        const currentFamily = response.data.find((f: { id: string; inviteCode?: string }) => f.id === familyId);
         if (currentFamily) {
           setInviteCodeForFamily(currentFamily.inviteCode);
         }

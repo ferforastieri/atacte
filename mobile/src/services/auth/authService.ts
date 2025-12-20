@@ -33,18 +33,29 @@ interface AuthResponse {
 }
 
 class AuthService {
-  private async makeRequest(endpoint: string, options: any = {}): Promise<AuthResponse> {
+  private async makeRequest(
+    endpoint: string, 
+    options: {
+      method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+      data?: unknown;
+      params?: Record<string, string>;
+    } = {}
+  ): Promise<AuthResponse> {
     try {
       const response = await apiClient({
         url: endpoint,
         ...options,
       });
-      return response.data;
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        return { success: false, message: 'Não autorizado', isAuthError: true };
+      return response.data as AuthResponse;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number; data?: AuthResponse } };
+        if (axiosError.response?.status === 401) {
+          return { success: false, message: 'Não autorizado', isAuthError: true };
+        }
+        return axiosError.response?.data || { success: false, message: 'Erro de conexão', isNetworkError: true };
       }
-      return error.response?.data || { success: false, message: 'Erro de conexão', isNetworkError: true };
+      return { success: false, message: 'Erro de conexão', isNetworkError: true };
     }
   }
 

@@ -41,7 +41,7 @@ export interface AuditLog {
   resourceId?: string
   ipAddress?: string
   userAgent?: string
-  details: any
+  details: Record<string, unknown>
   createdAt: string
 }
 

@@ -38,7 +38,11 @@ const isElectron = computed(() => {
   
   if (!isElectronUA) return false
   
-  const electronAPI = (window as any).electronAPI
+  const electronAPI = (window as Window & { electronAPI?: {
+    minimizeWindow?: () => void;
+    maximizeWindow?: () => void;
+    closeWindow?: () => void;
+  } }).electronAPI
   if (!electronAPI) return false
   
   return typeof electronAPI.minimizeWindow === 'function' &&

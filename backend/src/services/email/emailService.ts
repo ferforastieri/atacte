@@ -59,8 +59,9 @@ export class EmailService {
       });
 
       return true;
-    } catch (error: any) {
-      throw new Error(`Erro ao enviar email: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      throw new Error(`Erro ao enviar email: ${errorMessage}`);
     }
   }
 

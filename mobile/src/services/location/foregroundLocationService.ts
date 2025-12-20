@@ -4,7 +4,21 @@ import { locationService, UpdateLocationRequest } from './locationService';
 
 const LOCATION_TASK_NAME = 'background-location-task';
 
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
+TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: {
+  data?: {
+    locations?: Array<{
+      coords: {
+        latitude: number;
+        longitude: number;
+        accuracy?: number | null;
+        altitude?: number | null;
+        speed?: number | null;
+        heading?: number | null;
+      };
+    }>;
+  };
+  error?: Error | unknown;
+}) => {
   if (error) {
     console.error('Erro na tarefa de localização:', error);
     return;
@@ -38,8 +52,9 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
         } else {
           console.error('Erro ao enviar localização:', result.message);
         }
-      } catch (error: any) {
-        console.error('Erro ao enviar localização em background:', error?.message || error);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('Erro ao enviar localização em background:', errorMessage);
       }
     }
   }
@@ -100,8 +115,9 @@ class ForegroundLocationService {
 
       this.isActiveRef = true;
       return true;
-    } catch (error: any) {
-      console.error('Erro ao iniciar rastreamento:', error?.message || error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Erro ao iniciar rastreamento:', errorMessage);
       this.isActiveRef = false;
       return false;
     }
@@ -118,8 +134,9 @@ class ForegroundLocationService {
       }
 
       this.isActiveRef = false;
-    } catch (error: any) {
-      console.error('Erro ao parar rastreamento:', error?.message || error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Erro ao parar rastreamento:', errorMessage);
       this.isActiveRef = false;
     }
   }
@@ -135,8 +152,9 @@ class ForegroundLocationService {
       const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
       this.isActiveRef = hasStarted;
       return hasStarted;
-    } catch (error: any) {
-      console.error('Erro ao verificar status:', error?.message || error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Erro ao verificar status:', errorMessage);
       this.isActiveRef = false;
       return false;
     }

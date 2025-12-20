@@ -142,8 +142,11 @@ const handleSubmit = async () => {
     } else {
       toast.error(response.message || 'Erro ao solicitar recuperação')
     }
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao solicitar recuperação')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao solicitar recuperação')
   } finally {
     isLoading.value = false
   }
@@ -183,8 +186,11 @@ const handleReset = async () => {
     } else {
       toast.error(response.message || 'Erro ao redefinir senha')
     }
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao redefinir senha')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao redefinir senha')
   } finally {
     isLoading.value = false
   }

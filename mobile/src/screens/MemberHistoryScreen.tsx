@@ -21,14 +21,25 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { width, height } = Dimensions.get('window');
 
-export default function MemberHistoryScreen({ route }: any) {
+interface MemberHistoryScreenProps {
+  route: {
+    params: {
+      userId: string;
+      userName: string;
+    };
+  };
+}
+
+export default function MemberHistoryScreen({ route }: MemberHistoryScreenProps) {
   const { userId, userName } = route.params;
   const navigation = useNavigation();
   const { isDark, toggleTheme } = useTheme();
   const { showSuccess, showError } = useToast();
 
   const handleBack = () => {
-    (navigation as any).jumpTo('Family');
+    if ('jumpTo' in navigation) {
+      (navigation as { jumpTo: (screen: string) => void }).jumpTo('Family');
+    }
   };
 
   useFocusEffect(
@@ -55,9 +66,6 @@ export default function MemberHistoryScreen({ route }: any) {
   const [endDate, setEndDate] = useState(today);
   
   const mapRef = useRef<WebView>(null);
-  let map: any = null;
-  let markers: any[] = [];
-  let polyline: any = null;
 
   useEffect(() => {
     loadHistory();
@@ -93,8 +101,11 @@ export default function MemberHistoryScreen({ route }: any) {
       } else {
         showError(response.message || 'Erro ao carregar histórico');
       }
-    } catch (error: any) {
-      showError(error.response?.data?.message || 'Erro ao carregar histórico de localização');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      showError(errorMessage || 'Erro ao carregar histórico de localização');
     } finally {
       setIsLoading(false);
     }

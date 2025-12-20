@@ -165,7 +165,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useToast } from '@/hooks/useToast'
 import { KeyIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength } from '@/components/ui'
-import { type PasswordEntry } from '@/api/passwords'
+import { type PasswordEntry, type UpdatePasswordRequest } from '@/api/passwords'
 import { usePasswordsStore } from '@/stores/passwords'
 
 interface Props {
@@ -265,7 +265,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   
   try {
-    const updateData: any = {
+    const updateData: UpdatePasswordRequest = {
       id: props.password.id,
       name: form.value.name.trim(),
       password: form.value.password,
@@ -298,8 +298,11 @@ const handleSubmit = async () => {
     toast.success('Senha atualizada com sucesso!')
     emit('updated')
     emit('close')
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Erro ao atualizar senha')
+  } catch (error: unknown) {
+    const errorMessage = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
+    toast.error(errorMessage || 'Erro ao atualizar senha')
   } finally {
     isSubmitting.value = false
   }

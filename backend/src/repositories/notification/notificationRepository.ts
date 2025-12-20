@@ -95,7 +95,11 @@ export class NotificationRepository {
     receiverId: string,
     filter?: NotificationFilter
   ): Promise<Notification[]> {
-    const where: any = { receiverId };
+    const where: {
+      receiverId: string;
+      isRead?: boolean;
+      type?: string;
+    } = { receiverId };
 
     if (filter?.isRead !== undefined) {
       where.isRead = filter.isRead;

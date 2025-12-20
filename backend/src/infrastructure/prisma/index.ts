@@ -7,6 +7,7 @@ export type {
   UserSession,
   AuditLog,
   SecureNote,
+  CalendarEvent,
   Prisma
 } from '@prisma/client';
 

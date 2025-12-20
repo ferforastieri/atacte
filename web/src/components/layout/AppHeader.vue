@@ -1,12 +1,12 @@
 <template>
   <header :class="['bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 sticky z-40', isElectron ? 'top-8' : 'top-0']">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center space-x-4">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center flex-shrink-0">
           <button
             v-if="showNavigation"
             @click="mobileMenuOpen = true"
-            class="md:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="md:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mr-4"
             aria-label="Open navigation menu"
           >
             <Bars3Icon class="h-5 w-5 text-gray-900 dark:text-gray-100" />
@@ -15,7 +15,7 @@
           <router-link
             v-if="showBackButton"
             :to="backRoute"
-            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mr-4"
           >
             <ArrowLeftIcon class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-gray-400" />
           </router-link>
@@ -27,92 +27,104 @@
           <h1 v-if="title" class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
             {{ title }}
           </h1>
+        </div>
 
-          <div v-if="showNavigation" class="hidden md:flex items-center space-x-2">
+        <div v-if="showNavigation" class="hidden md:flex items-center space-x-2 flex-1 ml-6">
             <router-link
               to="/dashboard"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
               :class="isActive('/dashboard') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
               <LockClosedIcon class="w-4 h-4" />
-              Dashboard
-              <div v-if="isActive('/dashboard')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              <span>Dashboard</span>
+              <div v-if="isActive('/dashboard')" class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 pointer-events-none" />
             </router-link>
             
             <router-link
               to="/location"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
               :class="isActive('/location') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
               <MapPinIcon class="w-4 h-4" />
-              Localização
-              <div v-if="isActive('/location')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              <span>Localização</span>
+              <div v-if="isActive('/location')" class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 pointer-events-none" />
             </router-link>
             
             <router-link
               to="/secure-notes"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
               :class="isActive('/secure-notes') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
               <ClipboardDocumentListIcon class="w-4 h-4" />
-              Notas Seguras
-              <div v-if="isActive('/secure-notes')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              <span>Notas Seguras</span>
+              <div v-if="isActive('/secure-notes')" class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 pointer-events-none" />
+            </router-link>
+            
+            <router-link
+              to="/calendar"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
+              :class="isActive('/calendar') 
+                ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            >
+              <CalendarIcon class="w-4 h-4" />
+              <span>Calendário</span>
+              <div v-if="isActive('/calendar')" class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 pointer-events-none" />
             </router-link>
             
             <router-link
               v-if="authStore.isAdmin"
               to="/audit"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
               :class="isActive('/audit') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
               <ShieldCheckIcon class="w-4 h-4" />
-              Auditoria
-              <div v-if="isActive('/audit')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              <span>Auditoria</span>
+              <div v-if="isActive('/audit')" class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 pointer-events-none" />
             </router-link>
             
             <router-link
               v-if="authStore.isAdmin"
               to="/sessions"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
               :class="isActive('/sessions') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
               <ComputerDesktopIcon class="w-4 h-4" />
-              Sessões
-              <div v-if="isActive('/sessions')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              <span>Sessões</span>
+              <div v-if="isActive('/sessions')" class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 pointer-events-none" />
             </router-link>
             
             <router-link
               v-if="authStore.isAdmin"
               to="/admin/users"
-              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
               :class="isActive('/admin/users') 
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
               <UserGroupIcon class="w-4 h-4" />
-              Usuários
-              <div v-if="isActive('/admin/users')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              <span>Usuários</span>
+              <div v-if="isActive('/admin/users')" class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 pointer-events-none" />
             </router-link>
           </div>
-        </div>
 
-        <div class="flex items-center space-x-2 sm:space-x-3">
+        <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 min-w-0">
           <ThemeToggle />
 
-          <div class="relative">
+          <div class="relative min-w-0">
             <button
               @click="showUserMenuDropdown = !showUserMenuDropdown"
-              class="flex items-center space-x-1 sm:space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500"
+              class="flex items-center space-x-1 sm:space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
             >
               <div v-if="authStore.user?.profilePicture" class="h-8 w-8 rounded-full overflow-hidden border-2 border-primary-500 dark:border-primary-400">
                 <img :src="authStore.user.profilePicture" :alt="userEmail" class="h-full w-full object-cover" />
@@ -122,7 +134,6 @@
                   {{ userInitials }}
                 </span>
               </div>
-              <span class="text-gray-700 dark:text-gray-300 hidden sm:inline">{{ userEmail }}</span>
               <ChevronDownIcon class="h-4 w-4 text-gray-400 dark:text-gray-500" />
             </button>
 
@@ -229,6 +240,19 @@
               </router-link>
 
               <router-link
+                to="/calendar"
+                @click="mobileMenuOpen = false"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
+                :class="isActive('/calendar')
+                  ? 'text-gray-900 dark:text-gray-100 bg-primary-100 dark:bg-primary-900 shadow-sm'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              >
+                <CalendarIcon class="h-5 w-5 flex-shrink-0" />
+                <span class="text-sm font-medium">Calendário</span>
+                <div v-if="isActive('/calendar')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              </router-link>
+
+              <router-link
                 v-if="authStore.isAdmin"
                 to="/audit"
                 @click="mobileMenuOpen = false"
@@ -295,13 +319,17 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Logo, ThemeToggle } from '@/components/ui'
-import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, LockClosedIcon, MapPinIcon, ComputerDesktopIcon, UserGroupIcon, ClipboardDocumentListIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, LockClosedIcon, MapPinIcon, ComputerDesktopIcon, UserGroupIcon, ClipboardDocumentListIcon, ShieldCheckIcon, CalendarIcon } from '@heroicons/vue/24/outline'
 
 const isElectron = computed(() => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
   const ua = navigator.userAgent.toLowerCase()
   if (!ua.includes('electron/')) return false
-  const electronAPI = (window as any).electronAPI
+  const electronAPI = (window as Window & { electronAPI?: {
+    minimizeWindow?: () => void;
+    maximizeWindow?: () => void;
+    closeWindow?: () => void;
+  } }).electronAPI
   if (!electronAPI) return false
   return typeof electronAPI.minimizeWindow === 'function' &&
          typeof electronAPI.maximizeWindow === 'function' &&

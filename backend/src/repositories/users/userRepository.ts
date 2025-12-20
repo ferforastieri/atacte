@@ -155,14 +155,32 @@ export class UserRepository {
       endDate?: Date;
     }
   ): Promise<{
-    logs: any[];
+    logs: Array<{
+      id: string;
+      userId: string | null;
+      action: string;
+      resourceType: string | null;
+      resourceId: string | null;
+      ipAddress: string | null;
+      userAgent: string | null;
+      details: unknown;
+      createdAt: Date;
+    }>;
     total: number;
   }> {
-    const where: any = {
+    const where: {
+      userId: string;
+      action?: string;
+      createdAt?: {
+        gte?: Date;
+        lte?: Date;
+      };
+      AND?: Array<Record<string, unknown>>;
+    } = {
       userId
     };
 
-    const andConditions: any[] = [];
+    const andConditions: Array<Record<string, unknown>> = [];
 
     if (filters?.action) {
       where.action = filters.action;
@@ -189,7 +207,14 @@ export class UserRepository {
     }
 
     if (andConditions.length > 0) {
-      const baseWhere: any = { userId };
+      const baseWhere: {
+        userId: string;
+        action?: string;
+        createdAt?: {
+          gte?: Date;
+          lte?: Date;
+        };
+      } = { userId };
       if (filters?.action) {
         baseWhere.action = filters.action;
       }
@@ -227,7 +252,34 @@ export class UserRepository {
     return { logs, total };
   }
 
-  async exportUserData(userId: string): Promise<any> {
+  async exportUserData(userId: string): Promise<{
+    user: {
+      id: string;
+      email: string;
+      createdAt: Date;
+      updatedAt: Date;
+      lastLogin: Date | null;
+      isActive: boolean;
+    };
+    passwords: Array<{
+      name: string;
+      website: string | null;
+      username: string | null;
+      encryptedPassword: string;
+      notes: string | null;
+      folder: string | null;
+      isFavorite: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+      lastUsed: Date | null;
+      totpEnabled: boolean;
+      customFields: Array<{
+        fieldName: string;
+        encryptedValue: string;
+        fieldType: string;
+      }>;
+    }>;
+  }> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {

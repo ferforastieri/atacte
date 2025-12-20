@@ -106,7 +106,7 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
         offset
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[AUDIT LOGS CONTROLLER] Error:', error);
     res.status(500).json({
       success: false,
@@ -152,11 +152,12 @@ router.delete('/account', asAuthenticatedHandler(async (req, res) => {
       success: true,
       message: 'Conta deletada com sucesso'
     });
-  } catch (error: any) {
-    const statusCode = error.message === 'Senha incorreta' ? 401 : 500;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+    const statusCode = errorMessage === 'Senha incorreta' ? 401 : 500;
     res.status(statusCode).json({
       success: false,
-      message: error.message || 'Erro interno do servidor'
+      message: errorMessage
     });
   }
 }));
@@ -250,10 +251,11 @@ router.get('/admin/users', requireAdmin, asAuthenticatedHandler(async (req, res)
         offset
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     res.status(500).json({
       success: false,
-      message: error.message || 'Erro interno do servidor'
+      message: errorMessage
     });
   }
 }));
@@ -295,11 +297,12 @@ router.patch(
         message: 'Usuário atualizado com sucesso',
         data: updatedUser
       });
-    } catch (error: any) {
-      const statusCode = error.message === 'Usuário não encontrado' ? 404 : 500;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const statusCode = errorMessage === 'Usuário não encontrado' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
-        message: error.message || 'Erro interno do servidor'
+        message: errorMessage
       });
     }
   })
@@ -337,11 +340,12 @@ router.post(
         success: true,
         message: 'Senha alterada com sucesso'
       });
-    } catch (error: any) {
-      const statusCode = error.message === 'Usuário não encontrado' ? 404 : 500;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const statusCode = errorMessage === 'Usuário não encontrado' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
-        message: error.message || 'Erro interno do servidor'
+        message: errorMessage
       });
     }
   })
@@ -367,11 +371,12 @@ router.delete(
         success: true,
         message: 'Usuário deletado com sucesso'
       });
-    } catch (error: any) {
-      const statusCode = error.message === 'Usuário não encontrado' ? 404 : 500;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const statusCode = errorMessage === 'Usuário não encontrado' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
-        message: error.message || 'Erro interno do servidor'
+        message: errorMessage
       });
     }
   })

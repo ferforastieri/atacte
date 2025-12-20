@@ -45,9 +45,13 @@ export default function TrustDeviceModal({
       } else {
         showError(response.message || 'Erro ao confiar dispositivo');
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Erro ao confiar dispositivo';
-      showError(errorMessage);
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : error instanceof Error
+        ? error.message
+        : 'Erro ao confiar dispositivo';
+      showError(errorMessage || 'Erro ao confiar dispositivo');
     } finally {
       setIsLoading(false);
     }

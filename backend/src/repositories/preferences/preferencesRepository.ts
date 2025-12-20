@@ -13,7 +13,7 @@ export interface UpdateUserPreferencesData {
 export class PreferencesRepository {
   async create(data: CreateUserPreferencesData): Promise<UserPreferences> {
     return await prisma.userPreferences.create({
-      data: data as any,
+      data,
     });
   }
 

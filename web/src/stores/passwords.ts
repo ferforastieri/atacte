@@ -184,7 +184,13 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
-  const generatePassword = async (options: any = {}) => {
+  const generatePassword = async (options: Partial<{
+    length: number;
+    includeUppercase: boolean;
+    includeLowercase: boolean;
+    includeNumbers: boolean;
+    includeSymbols: boolean;
+  }> = {}) => {
     try {
       const response = await passwordsApi.generatePassword(options)
       if (response.success) {
@@ -265,7 +271,11 @@ export const usePasswordsStore = defineStore('passwords', () => {
   }
 
   
-  const importPasswords = async (jsonData: any) => {
+  const importPasswords = async (jsonData: {
+    encrypted?: boolean;
+    folders?: Array<unknown>;
+    items?: Array<unknown>;
+  }) => {
     isLoading.value = true
     try {
       const response = await importExportApi.importPasswords(jsonData)

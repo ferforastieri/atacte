@@ -6,7 +6,7 @@ interface SkeletonProps {
   width?: number | string;
   height?: number;
   borderRadius?: number;
-  style?: any;
+  style?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({

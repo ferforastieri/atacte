@@ -436,9 +436,9 @@ export default function FamilyMap({
   };
 
  
-  const handleMessage = (event: any) => {
+  const handleMessage = (event: { nativeEvent: { data: string } }) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data);
+      const data = JSON.parse(event.nativeEvent.data) as { type?: string; latitude?: number; longitude?: number; [key: string]: unknown };
       
       switch (data.type) {
         case 'mapClick':

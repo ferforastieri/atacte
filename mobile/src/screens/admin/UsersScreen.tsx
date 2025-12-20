@@ -31,7 +31,7 @@ export default function UsersScreen() {
   const insets = useSafeAreaInsets();
 
   const handleBack = () => {
-    (navigation as any).jumpTo('Profile');
+    navigation.jumpTo('Profile');
   };
 
   useFocusEffect(
@@ -165,8 +165,11 @@ export default function UsersScreen() {
       showSuccess('Usuário atualizado com sucesso');
       closeEditModal();
       await fetchUsers();
-    } catch (error: any) {
-      showError(error.response?.data?.message || 'Erro ao atualizar usuário');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      showError(errorMessage || 'Erro ao atualizar usuário');
     } finally {
       setIsSaving(false);
     }
@@ -204,8 +207,11 @@ export default function UsersScreen() {
       } else {
         showError(response.message || 'Erro ao alterar senha');
       }
-    } catch (error: any) {
-      showError(error.response?.data?.message || 'Erro ao alterar senha');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      showError(errorMessage || 'Erro ao alterar senha');
     } finally {
       setIsChangingPassword(false);
     }
@@ -236,8 +242,11 @@ export default function UsersScreen() {
       } else {
         showError(response.message || 'Erro ao deletar usuário');
       }
-    } catch (error: any) {
-      showError(error.response?.data?.message || 'Erro ao deletar usuário');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      showError(errorMessage || 'Erro ao deletar usuário');
     } finally {
       setIsDeleting(false);
     }

@@ -165,7 +165,11 @@ export default function LoginScreen() {
 
         <Button
           title="Esqueci minha senha"
-          onPress={() => navigation.navigate('ForgotPassword' as any)}
+          onPress={() => {
+            if ('navigate' in navigation && typeof navigation.navigate === 'function') {
+              (navigation as { navigate: (screen: string) => void }).navigate('ForgotPassword');
+            }
+          }}
           variant="ghost"
           style={styles.toggleButton}
         />

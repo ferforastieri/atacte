@@ -4,7 +4,11 @@ import api from './index'
 const importExportApi = {
   
   
-  async importPasswords(jsonData: any) {
+  async importPasswords(jsonData: {
+    encrypted?: boolean;
+    folders?: Array<unknown>;
+    items?: Array<unknown>;
+  }) {
     const response = await api.post('/import-export/import', jsonData)
     return response.data
   },

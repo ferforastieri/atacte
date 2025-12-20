@@ -213,7 +213,7 @@ router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
       success: true,
       message: 'Notificação deletada',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Erro ao deletar notificação';
     res.status(400).json({
       success: false,

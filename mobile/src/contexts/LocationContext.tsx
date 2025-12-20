@@ -47,7 +47,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
     const checkTrackingStatus = async () => {
       try {
-        const backgroundFunctions = (global as any).backgroundLocationFunctions;
+        const backgroundFunctions = (global as typeof globalThis & {
+          backgroundLocationFunctions?: {
+            isBackgroundLocationActive: () => Promise<boolean>;
+            startBackgroundLocation: () => Promise<boolean>;
+            stopBackgroundLocation: () => Promise<void>;
+          };
+        }).backgroundLocationFunctions;
         if (!backgroundFunctions) return;
         
         const isActive = await backgroundFunctions.isBackgroundLocationActive();
@@ -56,8 +62,9 @@ export function LocationProvider({ children }: LocationProviderProps) {
         } else if (isActive && !isTrackingActive) {
           setIsTrackingActive(true);
         }
-      } catch (error: any) {
-        console.error('Erro ao verificar status de rastreamento:', error?.message || error);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('Erro ao verificar status de rastreamento:', errorMessage);
       }
     };
 
@@ -69,7 +76,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const initializeLocation = async () => {
     try {
-      const backgroundFunctions = (global as any).backgroundLocationFunctions;
+      const backgroundFunctions = (global as typeof globalThis & {
+        backgroundLocationFunctions?: {
+          isBackgroundLocationActive: () => Promise<boolean>;
+          startBackgroundLocation: () => Promise<boolean>;
+          stopBackgroundLocation: () => Promise<void>;
+        };
+      }).backgroundLocationFunctions;
       if (!backgroundFunctions) {
         return;
       }
@@ -102,7 +115,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
         return;
       }
       
-      const backgroundFunctions = (global as any).backgroundLocationFunctions;
+      const backgroundFunctions = (global as typeof globalThis & {
+        backgroundLocationFunctions?: {
+          isBackgroundLocationActive: () => Promise<boolean>;
+          startBackgroundLocation: () => Promise<boolean>;
+          stopBackgroundLocation: () => Promise<void>;
+        };
+      }).backgroundLocationFunctions;
       if (!backgroundFunctions) {
         setIsTrackingActive(false);
         return;
@@ -121,14 +140,16 @@ export function LocationProvider({ children }: LocationProviderProps) {
         setIsTrackingActive(true);
         try {
           await locationService.sendCurrentLocation();
-        } catch (error: any) {
-          console.error('Erro ao enviar localização inicial:', error?.message || error);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error('Erro ao enviar localização inicial:', errorMessage);
         }
       } else {
         setIsTrackingActive(false);
       }
-    } catch (error: any) {
-      console.error('Erro ao verificar e iniciar rastreamento:', error?.message || error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Erro ao verificar e iniciar rastreamento:', errorMessage);
       setIsTrackingActive(false);
     }
   };
@@ -146,13 +167,15 @@ export function LocationProvider({ children }: LocationProviderProps) {
           try {
             await checkGeofenceZones(response.data);
             lastCheckTime.current = now;
-          } catch (error: any) {
-            console.error('Erro ao verificar zonas de geofence:', error?.message || error);
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('Erro ao verificar zonas de geofence:', errorMessage);
           }
         }
       }
-    } catch (error: any) {
-      console.error('Erro ao atualizar localização:', error?.message || error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Erro ao atualizar localização:', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -219,7 +242,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const startTracking = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const backgroundFunctions = (global as any).backgroundLocationFunctions;
+      const backgroundFunctions = (global as typeof globalThis & {
+        backgroundLocationFunctions?: {
+          isBackgroundLocationActive: () => Promise<boolean>;
+          startBackgroundLocation: () => Promise<boolean>;
+          stopBackgroundLocation: () => Promise<void>;
+        };
+      }).backgroundLocationFunctions;
       if (!backgroundFunctions) {
         return false;
       }
@@ -242,7 +271,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const stopTracking = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      const backgroundFunctions = (global as any).backgroundLocationFunctions;
+      const backgroundFunctions = (global as typeof globalThis & {
+        backgroundLocationFunctions?: {
+          isBackgroundLocationActive: () => Promise<boolean>;
+          startBackgroundLocation: () => Promise<boolean>;
+          stopBackgroundLocation: () => Promise<void>;
+        };
+      }).backgroundLocationFunctions;
       if (!backgroundFunctions) {
         return;
       }

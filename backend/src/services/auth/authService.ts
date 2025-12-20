@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto-js';
 import { UserRepository, CreateUserData, CreateUserSessionData } from '../../repositories/auth/userRepository';
 import { PasswordResetRepository } from '../../repositories/auth/passwordResetRepository';
-import { JWT_SECRET, JWT_EXPIRES_IN, PASSWORD_RESET_URL } from '../../infrastructure/config';
+import { JWT_SECRET, PASSWORD_RESET_URL } from '../../infrastructure/config';
 import { emailService } from '../email/emailService';
 
 export interface UserDto {
@@ -97,8 +97,7 @@ export class AuthService {
         userId: user.id, 
         email: user.email
       },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN as any }
+      JWT_SECRET as jwt.Secret
     );
 
     
@@ -114,7 +113,7 @@ export class AuthService {
       deviceName: deviceName,
       ipAddress: ipAddress || 'unknown',
       userAgent: userAgent || 'unknown',
-      expiresAt: expiresAt as any,
+      expiresAt: expiresAt,
       isTrusted: hasTrustedDevice,
     };
 
@@ -124,7 +123,7 @@ export class AuthService {
       user: this.mapToDto(user),
       token,
       sessionId: session.id,
-      requiresTrust: !((session as any).isTrusted ?? false),
+      requiresTrust: !(session.isTrusted ?? false),
     };
   }
 
@@ -153,8 +152,7 @@ export class AuthService {
         userId: user.id, 
         email: user.email
       },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN as any }
+      JWT_SECRET as jwt.Secret
     );
 
     return { token };
@@ -205,7 +203,17 @@ export class AuthService {
     }
   }
 
-  async getUserSessions(userId: string, currentTokenHash?: string, limit?: number, offset?: number): Promise<{ sessions: any[]; total: number }> {
+  async getUserSessions(userId: string, currentTokenHash?: string, limit?: number, offset?: number): Promise<{ sessions: Array<{
+    id: string;
+    deviceName: string | null;
+    ipAddress: string | null;
+    userAgent: string | null;
+    createdAt: Date;
+    lastUsed: Date;
+    expiresAt: Date | null;
+    isCurrent: boolean;
+    isTrusted: boolean;
+  }>; total: number }> {
     const result = await this.userRepository.findUserSessions(userId, limit, offset);
     return {
       sessions: result.sessions.map(session => ({
@@ -217,7 +225,7 @@ export class AuthService {
         lastUsed: session.lastUsed,
         expiresAt: session.expiresAt,
         isCurrent: currentTokenHash ? session.tokenHash === currentTokenHash : false,
-        isTrusted: (session as any).isTrusted ?? false,
+        isTrusted: session.isTrusted ?? false,
       })),
       total: result.total
     };
@@ -251,7 +259,7 @@ export class AuthService {
     await this.userRepository.removeTrustedDevice(userId, deviceName);
     
     const result = await this.userRepository.findUserSessions(userId);
-    const sessionsToUpdate = result.sessions.filter((s: any) => s.deviceName === deviceName && (s as any).isTrusted);
+    const sessionsToUpdate = result.sessions.filter((s) => s.deviceName === deviceName && s.isTrusted);
     
     for (const session of sessionsToUpdate) {
       await this.userRepository.updateSession(session.id, { isTrusted: false });
@@ -319,7 +327,7 @@ export class AuthService {
     }
   }
 
-  private mapToDto(user: any): UserDto {
+  private mapToDto(user: { id: string; email: string; createdAt: Date; updatedAt: Date; lastLogin: Date | null; isActive: boolean; role: 'USER' | 'ADMIN'; name?: string | null; phoneNumber?: string | null }): UserDto {
     return {
       id: user.id,
       email: user.email,

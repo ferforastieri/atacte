@@ -52,7 +52,13 @@ export class LocationRepository {
   }
 
   async findByUserId(userId: string, filter?: LocationFilter): Promise<Location[]> {
-    const where: any = { userId };
+    const where: {
+      userId: string;
+      timestamp?: {
+        gte?: Date;
+        lte?: Date;
+      };
+    } = { userId };
 
     if (filter?.startDate || filter?.endDate) {
       where.timestamp = {};

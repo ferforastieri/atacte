@@ -103,7 +103,13 @@ export class PasswordRepository {
   }
 
   async search(filters: SearchFilters): Promise<PaginationResult> {
-    const where: any = {
+    const where: {
+      userId: string;
+      OR?: Array<Record<string, unknown>>;
+      folder?: string;
+      isFavorite?: boolean;
+      totpEnabled?: boolean;
+    } = {
       userId: filters.userId,
     };
 
@@ -136,7 +142,7 @@ export class PasswordRepository {
     const sortBy = filters.sortBy || 'name';
     const sortOrder = filters.sortOrder || 'asc';
     
-    const orderBy: any = {};
+    const orderBy: Record<string, 'asc' | 'desc'> = {};
     orderBy[sortBy] = sortOrder;
 
     const [items, total] = await Promise.all([
