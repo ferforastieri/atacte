@@ -69,12 +69,12 @@ export class UserRepository {
   async createSession(data: CreateUserSessionData): Promise<UserSession> {
     return await prisma.userSession.create({
       data: {
-        userId: data.userId,
-        tokenHash: data.tokenHash,
-        deviceName: data.deviceName,
-        ipAddress: data.ipAddress,
-        userAgent: data.userAgent,
-        isTrusted: data.isTrusted ?? false,
+      userId: data.userId,
+      tokenHash: data.tokenHash,
+      deviceName: data.deviceName,
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+      isTrusted: data.isTrusted ?? false,
         expiresAt: data.expiresAt,
       },
     });

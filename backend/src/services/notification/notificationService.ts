@@ -296,8 +296,8 @@ export class NotificationService {
           : `🚶 ${senderName} saiu de ${zoneName}`;
         
         const body = eventType === 'enter'
-          ? `${senderName} entrou na zona ${zoneName}`
-          : `${senderName} saiu da zona ${zoneName}`;
+          ? `${senderName} entrou em ${zoneName}`
+          : `${senderName} saiu de ${zoneName}`;
 
         notifications.push({
           senderId: userId,

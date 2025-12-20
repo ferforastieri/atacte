@@ -20,6 +20,7 @@ import FamilyDetailScreen from '../screens/FamilyDetailScreen';
 import MemberHistoryScreen from '../screens/MemberHistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SecureNoteDetailScreen from '../screens/SecureNoteDetailScreen';
+import CalendarScreen from '../screens/CalendarScreen';
 import AuditLogsScreen from '../screens/admin/AuditLogsScreen';
 import SessionsScreen from '../screens/admin/SessionsScreen';
 import UsersScreen from '../screens/admin/UsersScreen';
@@ -48,6 +49,7 @@ export type MainTabParamList = {
   Family: undefined;
   FamilyDetail: { familyId: string; familyName: string };
   SecureNotes: undefined;
+  Calendar: undefined;
   Profile: undefined;
   Settings: undefined;
   PasswordDetail: { passwordId: string };
@@ -102,8 +104,10 @@ function MainTabNavigator() {
               iconName = focused ? 'key' : 'key-outline';
             } else if (route.name === 'Family') {
               iconName = focused ? 'people' : 'people-outline';
-            } else if (route.name === 'SecureNotes') {
+            } else             if (route.name === 'SecureNotes') {
               iconName = focused ? 'document-text' : 'document-text-outline';
+            } else if (route.name === 'Calendar') {
+              iconName = focused ? 'calendar' : 'calendar-outline';
             } else if (route.name === 'Profile') {
               iconName = focused ? 'person' : 'person-outline';
             } else {
@@ -145,6 +149,11 @@ function MainTabNavigator() {
         name="SecureNotes" 
         component={SecureNotesScreen}
         options={{ title: 'Notas Seguras' }}
+      />
+      <Tab.Screen 
+        name="Calendar" 
+        component={CalendarScreen}
+        options={{ title: 'Calendário' }}
       />
       <Tab.Screen 
         name="Profile" 
