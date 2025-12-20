@@ -22,6 +22,7 @@ export interface FamilyMember {
   email: string
   profilePicture?: string | null
   lastSeen: string | null
+  lastInteraction?: string | null
   batteryLevel: number | null
   latitude?: number
   longitude?: number
@@ -78,6 +79,7 @@ export const locationApi = {
               nickname?: string;
               profilePicture?: string | null;
               timestamp?: string;
+              lastInteraction?: string | null;
               batteryLevel?: number | null;
               latitude?: number;
               longitude?: number;
@@ -87,6 +89,7 @@ export const locationApi = {
               email: '', 
               profilePicture: member.profilePicture || null,
               lastSeen: member.timestamp,
+              lastInteraction: member.lastInteraction || null,
               batteryLevel: member.batteryLevel,
               latitude: member.latitude,
               longitude: member.longitude,

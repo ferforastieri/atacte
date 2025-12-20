@@ -20,6 +20,7 @@ export interface LocationDto {
   timestamp: Date;
   batteryLevel?: number;
   isMoving: boolean;
+  triggerType?: string;
 }
 
 export interface CreateLocationData {
@@ -32,6 +33,7 @@ export interface CreateLocationData {
   address?: string;
   batteryLevel?: number;
   isMoving?: boolean;
+  triggerType?: string;
 }
 
 export interface FamilyMapData {
@@ -53,6 +55,7 @@ export interface FamilyMemberLocationDto {
   timestamp: Date;
   batteryLevel: number | null;
   isMoving: boolean;
+  lastInteraction?: Date | null;
 }
 
 export class LocationService {
@@ -243,6 +246,7 @@ export class LocationService {
           timestamp: loc.timestamp,
           batteryLevel: loc.batteryLevel,
           isMoving: loc.isMoving,
+          lastInteraction: loc.lastInteraction || null,
         })),
     };
   }
@@ -327,6 +331,7 @@ export class LocationService {
       timestamp: location.timestamp,
       batteryLevel: location.batteryLevel || undefined,
       isMoving: location.isMoving,
+      triggerType: location.triggerType || undefined,
     };
   }
 }

@@ -208,6 +208,7 @@ model Location {
   timestamp      DateTime @default(now())
   batteryLevel   Float?   @map("battery_level") 
   isMoving       Boolean  @default(false) @map("is_moving")
+  triggerType    String?  @default("MOVEMENT") @map("trigger_type")
   
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   

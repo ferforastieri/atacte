@@ -626,8 +626,13 @@ export default function FamilyScreen({ navigation }: FamilyScreenProps) {
                         {member.nickname || member.userName}
                       </Text>
                       <Text style={[styles.memberStatus, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-                        {formatLastUpdate(member.timestamp)}
+                        Última localização: {formatLastUpdate(member.timestamp)}
                       </Text>
+                      {member.lastInteraction && (
+                        <Text style={[styles.memberStatus, { color: isDark ? '#9ca3af' : '#6b7280', marginTop: 2 }]}>
+                          Última interação: {formatLastUpdate(member.lastInteraction)}
+                        </Text>
+                      )}
                       {member.address && (
                         <Text style={[styles.memberAddress, { color: isDark ? '#6b7280' : '#9ca3af' }]} numberOfLines={1}>
                           📍 {member.address}

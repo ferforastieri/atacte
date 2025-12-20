@@ -17,6 +17,7 @@ interface UpdateLocationRequest {
   address?: string;
   batteryLevel?: number;
   isMoving?: boolean;
+  triggerType?: string;
 }
 
 const updateLocationValidation = [
@@ -50,6 +51,10 @@ const updateLocationValidation = [
     .optional()
     .isBoolean()
     .withMessage('isMoving deve ser booleano'),
+  body('triggerType')
+    .optional()
+    .isIn(['MOVEMENT', 'UNLOCK', 'INTERACTION', 'SCHEDULED', 'MANUAL'])
+    .withMessage('triggerType deve ser MOVEMENT, UNLOCK, INTERACTION, SCHEDULED ou MANUAL'),
 ];
 
 const historyValidation = [

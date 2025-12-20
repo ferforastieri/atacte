@@ -64,6 +64,7 @@ export interface FamilyMemberLocation {
   timestamp: string;
   batteryLevel: number | null;
   isMoving: boolean;
+  lastInteraction?: string | null;
 }
 
 export interface UpdateLocationRequest {
@@ -76,6 +77,7 @@ export interface UpdateLocationRequest {
   address?: string;
   batteryLevel?: number;
   isMoving?: boolean;
+  triggerType?: string;
 }
 
 interface GeolocationPosition {

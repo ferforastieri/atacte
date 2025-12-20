@@ -95,7 +95,10 @@
                       </span>
                     </div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ member.lastSeen ? formatTime(member.lastSeen) : 'Nunca visto' }}
+                      Última localização: {{ member.lastSeen ? formatTime(member.lastSeen) : 'Nunca visto' }}
+                    </p>
+                    <p v-if="member.lastInteraction" class="text-xs text-gray-500 dark:text-gray-400">
+                      Última interação: {{ formatTime(member.lastInteraction) }}
                     </p>
                   </div>
                   <div class="flex items-center space-x-2">
@@ -535,6 +538,7 @@ const updateMapMarkers = () => {
           <div style="padding: 8px; min-width: 200px;">
             <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #1f2937;">${member.name}</h3>
             <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Última localização: ${formatTime(member.lastSeen || '')}</p>
+            ${member.lastInteraction ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Última interação: ${formatTime(member.lastInteraction)}</p>` : ''}
             ${member.batteryLevel !== null ? `<p style="margin: 0; font-size: 14px; color: #6b7280;">Bateria: ${Math.round(member.batteryLevel * 100)}%</p>` : ''}
           </div>
         `)

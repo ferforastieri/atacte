@@ -13,6 +13,7 @@ export interface CreateLocationData {
   address?: string;
   batteryLevel?: number;
   isMoving?: boolean;
+  triggerType?: string;
 }
 
 export interface LocationFilter {
@@ -35,6 +36,7 @@ export interface FamilyMemberLocation {
   timestamp: Date;
   batteryLevel: number | null;
   isMoving: boolean;
+  lastInteraction?: Date | null;
 }
 
 export class LocationRepository {
@@ -49,6 +51,16 @@ export class LocationRepository {
       where: { userId },
       orderBy: { timestamp: 'desc' },
     });
+  }
+
+  async findLatestInteractionByUserId(userId: string): Promise<Location | null> {
+    return await prisma.$queryRaw<Location[]>`
+      SELECT * FROM locations
+      WHERE user_id = ${userId}
+        AND trigger_type IN ('UNLOCK', 'INTERACTION')
+      ORDER BY timestamp DESC
+      LIMIT 1
+    `.then((results) => results[0] || null);
   }
 
   async findByUserId(userId: string, filter?: LocationFilter): Promise<Location[]> {
@@ -89,7 +101,7 @@ export class LocationRepository {
   }
 
   async getFamilyMembersLocations(familyId: string): Promise<FamilyMemberLocation[]> {
-    const result = await prisma.$queryRaw<FamilyMemberLocation[]>`
+    const result = await prisma.$queryRaw<Array<FamilyMemberLocation & { lastInteraction: Date | null }>>`
       SELECT DISTINCT ON (fm.user_id)
         fm.user_id as "userId",
         u.name as "userName",
@@ -102,10 +114,19 @@ export class LocationRepository {
         l.address,
         l.timestamp,
         l.battery_level as "batteryLevel",
-        l.is_moving as "isMoving"
+        l.is_moving as "isMoving",
+        li.timestamp as "lastInteraction"
       FROM family_members fm
       INNER JOIN users u ON fm.user_id = u.id
       LEFT JOIN locations l ON l.user_id = fm.user_id
+      LEFT JOIN LATERAL (
+        SELECT timestamp
+        FROM locations
+        WHERE user_id = fm.user_id
+          AND trigger_type IN ('UNLOCK', 'INTERACTION')
+        ORDER BY timestamp DESC
+        LIMIT 1
+      ) li ON true
       WHERE fm.family_id = ${familyId}
         AND fm.is_active = true
         AND fm.share_location = true
@@ -113,7 +134,21 @@ export class LocationRepository {
       ORDER BY fm.user_id, l.timestamp DESC NULLS LAST
     `;
 
-    return result;
+    return result.map((loc) => ({
+      userId: loc.userId,
+      userName: loc.userName,
+      nickname: loc.nickname,
+      profilePicture: loc.profilePicture,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+      accuracy: loc.accuracy,
+      speed: loc.speed,
+      address: loc.address,
+      timestamp: loc.timestamp,
+      batteryLevel: loc.batteryLevel,
+      isMoving: loc.isMoving,
+      lastInteraction: loc.lastInteraction,
+    }));
   }
 
   async deleteOldLocations(userId: string, daysToKeep: number): Promise<number> {

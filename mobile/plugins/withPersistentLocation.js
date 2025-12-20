@@ -83,28 +83,53 @@ const withPersistentLocation = (config) => {
       application.receiver = [];
     }
 
-    const existingReceiver = application.receiver.find(
-      (receiver) => receiver.$?.['android:name'] === '.BootReceiver'
-    );
+        const existingReceiver = application.receiver.find(
+          (receiver) => receiver.$?.['android:name'] === '.BootReceiver'
+        );
 
-    if (!existingReceiver) {
-      application.receiver.push({
-        $: {
-          'android:name': '.BootReceiver',
-          'android:enabled': 'true',
-          'android:exported': 'true',
-        },
-        'intent-filter': [{
-          action: [{
+        if (!existingReceiver) {
+          application.receiver.push({
             $: {
-              'android:name': 'android.intent.action.BOOT_COMPLETED',
+              'android:name': '.BootReceiver',
+              'android:enabled': 'true',
+              'android:exported': 'true',
             },
-          }],
-        }],
-      });
-    }
+            'intent-filter': [{
+              action: [{
+                $: {
+                  'android:name': 'android.intent.action.BOOT_COMPLETED',
+                },
+              }],
+            }],
+          });
+        }
 
-    return config;
+        const existingUnlockReceiver = application.receiver.find(
+          (receiver) => receiver.$?.['android:name'] === '.UnlockReceiver'
+        );
+
+        if (!existingUnlockReceiver) {
+          application.receiver.push({
+            $: {
+              'android:name': '.UnlockReceiver',
+              'android:enabled': 'true',
+              'android:exported': 'false',
+            },
+            'intent-filter': [{
+              action: [{
+                $: {
+                  'android:name': 'android.intent.action.USER_PRESENT',
+                },
+              }, {
+                $: {
+                  'android:name': 'android.intent.action.SCREEN_ON',
+                },
+              }],
+            }],
+          });
+        }
+
+        return config;
   });
 
   config = withDangerousMod(config, [
@@ -450,12 +475,13 @@ class ForegroundTrackingService : Service() {
         fs.mkdirSync(moduleDir, { recursive: true });
       }
 
-      const moduleContent = `package atacte.seguranca
+          const moduleContent = `package atacte.seguranca
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import android.content.SharedPreferences
 
 class ForegroundTrackingModule(reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
@@ -500,6 +526,41 @@ class ForegroundTrackingModule(reactContext: ReactApplicationContext) :
       promise.resolve(true)
     } catch (error: Exception) {
       promise.reject("FOREGROUND_RESTART_ERROR", error)
+    }
+  }
+
+  @ReactMethod
+  fun saveAuthToken(token: String, apiUrl: String, promise: Promise) {
+    try {
+      val prefs: SharedPreferences = appContext.getSharedPreferences(
+        "atacte_auth_prefs",
+        android.content.Context.MODE_PRIVATE
+      )
+      prefs.edit().apply {
+        putString("auth_token", token)
+        putString("api_url", apiUrl)
+        apply()
+      }
+      promise.resolve(true)
+    } catch (error: Exception) {
+      promise.reject("SAVE_TOKEN_ERROR", error)
+    }
+  }
+
+  @ReactMethod
+  fun clearAuthToken(promise: Promise) {
+    try {
+      val prefs: SharedPreferences = appContext.getSharedPreferences(
+        "atacte_auth_prefs",
+        android.content.Context.MODE_PRIVATE
+      )
+      prefs.edit().apply {
+        remove("auth_token")
+        apply()
+      }
+      promise.resolve(true)
+    } catch (error: Exception) {
+      promise.reject("CLEAR_TOKEN_ERROR", error)
     }
   }
 }
@@ -613,6 +674,200 @@ class BootReceiver : BroadcastReceiver() {
 `;
 
       fs.writeFileSync(receiverPath, receiverContent, 'utf8');
+
+      return config;
+    },
+  ]);
+
+  config = withDangerousMod(config, [
+    'android',
+    async (config) => {
+      const receiverDir = path.join(
+        config.modRequest.platformProjectRoot,
+        'app',
+        'src',
+        'main',
+        'java',
+        'atacte',
+        'seguranca'
+      );
+      
+      const unlockReceiverPath = path.join(receiverDir, 'UnlockReceiver.kt');
+
+      if (!fs.existsSync(receiverDir)) {
+        fs.mkdirSync(receiverDir, { recursive: true });
+      }
+
+      const unlockReceiverContent = `package atacte.seguranca
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.location.LocationManager
+import android.os.Build
+import androidx.core.content.ContextCompat
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.WritableMap
+import com.facebook.react.modules.core.DeviceEventManagerModule
+import java.net.HttpURLConnection
+import java.net.URL
+import java.io.OutputStream
+import org.json.JSONObject
+import android.util.Log
+
+class UnlockReceiver : BroadcastReceiver() {
+  override fun onReceive(context: Context, intent: Intent) {
+    try {
+      when (intent.action) {
+        Intent.ACTION_USER_PRESENT -> {
+          handleUnlock(context, "UNLOCK")
+        }
+        Intent.ACTION_SCREEN_ON -> {
+          handleUnlock(context, "INTERACTION")
+        }
+      }
+    } catch (e: Exception) {
+      Log.e("UnlockReceiver", "Erro ao processar evento", e)
+    }
+  }
+
+  private fun handleUnlock(context: Context, triggerType: String) {
+    try {
+      val prefs: SharedPreferences = context.getSharedPreferences(
+        "atacte_tracking_prefs",
+        Context.MODE_PRIVATE
+      )
+      
+      val isTrackingActive = prefs.getBoolean("tracking_active", false)
+      
+      if (!isTrackingActive) {
+        return
+      }
+
+      val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+      if (locationManager == null) {
+        return
+      }
+
+      val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+      val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+      
+      if (!isGpsEnabled && !isNetworkEnabled) {
+        return
+      }
+
+      val lastKnownLocation = if (isGpsEnabled) {
+        locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+      } else {
+        locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+      }
+
+      if (lastKnownLocation != null) {
+        sendLocationToBackend(context, lastKnownLocation, triggerType)
+      } else {
+        requestLocationUpdate(context, triggerType)
+      }
+    } catch (e: Exception) {
+      Log.e("UnlockReceiver", "Erro ao lidar com desbloqueio", e)
+    }
+  }
+
+  private fun requestLocationUpdate(context: Context, triggerType: String) {
+    try {
+      val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+      if (locationManager == null) {
+        return
+      }
+
+      val locationListener = object : android.location.LocationListener {
+        override fun onLocationChanged(location: android.location.Location) {
+          sendLocationToBackend(context, location, triggerType)
+          locationManager.removeUpdates(this)
+        }
+
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
+        override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
+      }
+
+      if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        locationManager.requestLocationUpdates(
+          LocationManager.GPS_PROVIDER,
+          0L,
+          0f,
+          locationListener
+        )
+      } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+        locationManager.requestLocationUpdates(
+          LocationManager.NETWORK_PROVIDER,
+          0L,
+          0f,
+          locationListener
+        )
+      }
+    } catch (e: Exception) {
+      Log.e("UnlockReceiver", "Erro ao solicitar atualização de localização", e)
+    }
+  }
+
+  private fun sendLocationToBackend(context: Context, location: android.location.Location, triggerType: String) {
+    try {
+      val prefs: SharedPreferences = context.getSharedPreferences(
+        "atacte_auth_prefs",
+        Context.MODE_PRIVATE
+      )
+      
+      val token = prefs.getString("auth_token", null)
+      if (token == null) {
+        return
+      }
+
+      val apiUrl = prefs.getString("api_url", null) ?: "http://localhost:3000"
+      val endpoint = "\$apiUrl/api/location"
+
+      val payload = JSONObject().apply {
+        put("latitude", location.latitude)
+        put("longitude", location.longitude)
+        put("accuracy", if (location.hasAccuracy()) location.accuracy else null)
+        put("altitude", if (location.hasAltitude()) location.altitude else null)
+        put("speed", if (location.hasSpeed()) location.speed else null)
+        put("heading", if (location.hasBearing()) location.bearing else null)
+        put("isMoving", false)
+        put("triggerType", triggerType)
+      }
+
+      Thread {
+        try {
+          val url = URL(endpoint)
+          val connection = url.openConnection() as HttpURLConnection
+          connection.requestMethod = "POST"
+          connection.setRequestProperty("Content-Type", "application/json")
+          connection.setRequestProperty("Authorization", "Bearer \$token")
+          connection.doOutput = true
+
+          val outputStream: OutputStream = connection.outputStream
+          outputStream.write(payload.toString().toByteArray())
+          outputStream.flush()
+          outputStream.close()
+
+          val responseCode = connection.responseCode
+          if (responseCode != HttpURLConnection.HTTP_CREATED && responseCode != HttpURLConnection.HTTP_OK) {
+            Log.e("UnlockReceiver", "Erro ao enviar localização: \$responseCode")
+          }
+        } catch (e: Exception) {
+          Log.e("UnlockReceiver", "Erro ao enviar localização para backend", e)
+        }
+      }.start()
+    } catch (e: Exception) {
+      Log.e("UnlockReceiver", "Erro ao preparar envio de localização", e)
+    }
+  }
+}
+`;
+
+      fs.writeFileSync(unlockReceiverPath, unlockReceiverContent, 'utf8');
 
       return config;
     },

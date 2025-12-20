@@ -1,5 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeModules, Platform } from 'react-native';
 import apiClient from '../../lib/axios';
+
+const { ForegroundTracking } = NativeModules;
 
 interface LoginRequest {
   email: string;
@@ -68,6 +71,13 @@ class AuthService {
     if (response.success && response.data?.token && response.data?.user) {
       await AsyncStorage.setItem('auth_token', response.data.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      if (Platform.OS === 'android' && ForegroundTracking) {
+        const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+        ForegroundTracking.saveAuthToken(response.data.token, apiUrl, () => {}, (error: Error) => {
+          console.error('Erro ao salvar token nativo:', error);
+        });
+      }
     }
 
     return response;
@@ -82,6 +92,13 @@ class AuthService {
     if (response.success && response.data?.token) {
       await AsyncStorage.setItem('auth_token', response.data.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      if (Platform.OS === 'android' && ForegroundTracking) {
+        const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+        ForegroundTracking.saveAuthToken(response.data.token, apiUrl, () => {}, (error: Error) => {
+          console.error('Erro ao salvar token nativo:', error);
+        });
+      }
     }
 
     return response;
@@ -94,6 +111,12 @@ class AuthService {
   async logout(): Promise<void> {
     await AsyncStorage.removeItem('auth_token');
     await AsyncStorage.removeItem('user');
+    
+    if (Platform.OS === 'android' && ForegroundTracking) {
+      ForegroundTracking.clearAuthToken(() => {}, (error: Error) => {
+        console.error('Erro ao limpar token nativo:', error);
+      });
+    }
   }
 
   async getStoredUser() {
