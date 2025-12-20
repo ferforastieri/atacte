@@ -231,23 +231,21 @@ export class LocationService {
     return {
       familyId: family.id,
       familyName: family.name,
-      members: locations
-        .filter((loc) => loc.latitude !== null && loc.longitude !== null)
-        .map((loc) => ({
-          userId: loc.userId,
-          userName: loc.userName || 'Usuário',
-          nickname: loc.nickname,
-          profilePicture: loc.profilePicture,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-          accuracy: loc.accuracy,
-          speed: loc.speed,
-          address: loc.address,
-          timestamp: loc.timestamp,
-          batteryLevel: loc.batteryLevel,
-          isMoving: loc.isMoving,
-          lastInteraction: loc.lastInteraction || null,
-        })),
+      members: locations.map((loc) => ({
+        userId: loc.userId,
+        userName: loc.userName || 'Usuário',
+        nickname: loc.nickname,
+        profilePicture: loc.profilePicture,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        accuracy: loc.accuracy,
+        speed: loc.speed,
+        address: loc.address,
+        timestamp: loc.timestamp,
+        batteryLevel: loc.batteryLevel,
+        isMoving: loc.isMoving,
+        lastInteraction: loc.lastInteraction || null,
+      })),
     };
   }
 

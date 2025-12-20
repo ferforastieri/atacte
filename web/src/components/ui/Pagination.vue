@@ -36,7 +36,7 @@
           <button
             @click="$emit('previous')"
             :disabled="currentPage === 1"
-            class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-l-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="relative inline-flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-l-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronLeftIcon class="w-5 h-5" />
           </button>
@@ -48,16 +48,16 @@
               @click="$emit('goToPage', page)"
               :class="[
                 page === currentPage
-                  ? 'z-10 bg-primary-50 border-primary-500 text-primary-600'
+                  ? 'z-10 bg-primary-50 dark:bg-primary-900/30 border-primary-500 dark:border-primary-500 text-primary-600 dark:text-primary-400'
                   : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
-                'relative inline-flex items-center px-4 py-2 text-sm font-medium border'
+                'relative inline-flex items-center justify-center min-w-[40px] h-10 px-3 text-sm font-medium border'
               ]"
             >
               {{ page }}
             </button>
             <span
               v-else
-              class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
+              class="relative inline-flex items-center justify-center min-w-[40px] h-10 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
             >
               ...
             </span>
@@ -67,7 +67,7 @@
           <button
             @click="$emit('next')"
             :disabled="currentPage === totalPages"
-            class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-r-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="relative inline-flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-r-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronRightIcon class="w-5 h-5" />
           </button>

@@ -16,10 +16,10 @@
           <div class="relative">
             <button
               @click.stop="showDatePicker = !showDatePicker"
-              class="px-4 py-2 text-lg font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2 min-w-[200px] justify-between"
+              class="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2 justify-between border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
             >
               <span>{{ getCurrentDateLabel() }}</span>
-              <ChevronDownIcon class="w-4 h-4 text-gray-500" />
+              <ChevronDownIcon class="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
             
             <!-- Mini Calendário (como Google Agenda) -->
@@ -27,28 +27,28 @@
               <div
                 v-if="showDatePicker"
                 @click.stop
-                class="absolute left-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-50"
+                class="absolute left-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-50"
               >
                 <div class="p-3">
                   <!-- Cabeçalho do Mini Calendário -->
                   <div class="flex items-center justify-between mb-3">
                     <button
                       @click="navigateDateInPicker(-1)"
-                      class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                      class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
                     >
-                      <ChevronLeftIcon class="w-4 h-4" />
+                      <ChevronLeftIcon class="w-4 h-4 text-gray-700 dark:text-gray-300" />
                     </button>
                     <button
                       @click="showMonthYearPicker = !showMonthYearPicker"
-                      class="px-3 py-1 text-sm font-semibold text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                      class="px-3 py-1 text-sm font-semibold text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
                     >
                       {{ format(currentDate, 'MMMM yyyy', { locale: ptBR }) }}
                     </button>
                     <button
                       @click="navigateDateInPicker(1)"
-                      class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                      class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
                     >
-                      <ChevronRightIcon class="w-4 h-4" />
+                      <ChevronRightIcon class="w-4 h-4 text-gray-700 dark:text-gray-300" />
                     </button>
                   </div>
                   
@@ -104,12 +104,12 @@
                         v-for="(day, index) in miniCalendarDays"
                         :key="index"
                         @click="selectDateFromPicker(day.date)"
-                        class="aspect-square flex items-center justify-center text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        class="aspect-square flex items-center justify-center text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border"
                         :class="{
-                          'text-gray-400 dark:text-gray-600': !day.isCurrentMonth,
-                          'bg-primary-600 text-white font-semibold': isToday(day.date),
-                          'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300': !isToday(day.date) && day.isSelected,
-                          'text-gray-900 dark:text-gray-100': day.isCurrentMonth && !isToday(day.date) && !day.isSelected,
+                          'text-gray-400 dark:text-gray-600 border-transparent': !day.isCurrentMonth,
+                          'bg-primary-600 text-white font-semibold border-primary-600': isToday(day.date),
+                          'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border-primary-300 dark:border-primary-700': !isToday(day.date) && day.isSelected,
+                          'text-gray-900 dark:text-gray-100 border-transparent': day.isCurrentMonth && !isToday(day.date) && !day.isSelected,
                         }"
                       >
                         {{ format(day.date, 'd') }}
@@ -117,7 +117,7 @@
                     </div>
                     <button
                       @click="goToToday"
-                      class="w-full mt-3 px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
+                      class="w-full mt-3 px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors border border-primary-200 dark:border-primary-800"
                     >
                       Hoje
                     </button>
@@ -128,25 +128,25 @@
           </div>
 
           <!-- Botões de Navegação -->
-          <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+          <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
             <button
               @click="navigateDate(-1)"
-              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-r border-gray-300 dark:border-gray-600"
             >
-              <ChevronLeftIcon class="w-5 h-5" />
+              <ChevronLeftIcon class="w-4 h-4 text-gray-700 dark:text-gray-300" />
             </button>
             <button
               @click="navigateDate(1)"
-              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-l border-gray-300 dark:border-gray-600"
+              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
-              <ChevronRightIcon class="w-5 h-5" />
+              <ChevronRightIcon class="w-4 h-4 text-gray-700 dark:text-gray-300" />
             </button>
           </div>
           
           <!-- Botão Hoje -->
           <button
             @click="goToToday"
-            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
           >
             Hoje
           </button>
@@ -158,10 +158,10 @@
             v-for="view in viewOptions"
             :key="view.value"
             @click="currentView = view.value"
-            class="px-4 py-1.5 text-sm font-medium rounded transition-colors"
+            class="px-4 py-1.5 text-sm font-medium rounded transition-colors border"
             :class="currentView === view.value
-              ? 'bg-primary-600 text-white'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              ? 'bg-primary-600 text-white border-primary-600'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-transparent'"
           >
             {{ view.label }}
           </button>

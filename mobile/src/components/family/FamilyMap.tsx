@@ -266,8 +266,8 @@ export default function FamilyMap({
             }).bindPopup(\`
               <div style="padding: 8px; min-width: 200px;">
                 <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #1f2937;">\${member.nickname || member.userName}</h3>
-                <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Última localização: \${formatTime(member.timestamp)}</p>
-                \${member.lastInteraction ? \`<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Última interação: \${formatTime(member.lastInteraction)}</p>\` : ''}
+                <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280; white-space: nowrap;">Última localização: \${formatTime(member.timestamp)}</p>
+                <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280; white-space: nowrap;">Última interação: \${member.lastInteraction ? formatTime(member.lastInteraction) : 'Nunca interagiu'}</p>
                 \${member.batteryLevel !== null ? \`<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Bateria: \${Math.round(member.batteryLevel * 100)}%</p>\` : ''}
                 \${member.isMoving ? '<p style="margin: 0; font-size: 14px; color: #16a34a;">🚶 Em movimento</p>' : ''}
                 \${member.accuracy ? \`<p style="margin: 0; font-size: 14px; color: #6b7280;">Precisão: ±\${Math.round(member.accuracy)}m</p>\` : ''}

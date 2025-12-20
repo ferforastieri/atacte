@@ -271,12 +271,15 @@ export default function SecureNotesScreen() {
       marginBottom: 20,
       flexDirection: 'row',
       gap: 12,
-      alignItems: 'flex-start',
+      alignItems: 'center',
     },
     clearFilterButton: {
-      padding: 8,
+      width: 40,
+      height: 40,
       borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     fab: {
       position: 'absolute',

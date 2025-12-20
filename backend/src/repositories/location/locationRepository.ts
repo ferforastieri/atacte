@@ -53,16 +53,6 @@ export class LocationRepository {
     });
   }
 
-  async findLatestInteractionByUserId(userId: string): Promise<Location | null> {
-    return await prisma.$queryRaw<Location[]>`
-      SELECT * FROM locations
-      WHERE user_id = ${userId}
-        AND trigger_type IN ('UNLOCK', 'INTERACTION')
-      ORDER BY timestamp DESC
-      LIMIT 1
-    `.then((results) => results[0] || null);
-  }
-
   async findByUserId(userId: string, filter?: LocationFilter): Promise<Location[]> {
     const where: {
       userId: string;
@@ -101,7 +91,20 @@ export class LocationRepository {
   }
 
   async getFamilyMembersLocations(familyId: string): Promise<FamilyMemberLocation[]> {
-    const result = await prisma.$queryRaw<Array<FamilyMemberLocation & { lastInteraction: Date | null }>>`
+    const result = await prisma.$queryRaw<Array<{
+      userId: string;
+      userName: string | null;
+      nickname: string | null;
+      profilePicture: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      accuracy: number | null;
+      speed: number | null;
+      address: string | null;
+      timestamp: Date | null;
+      batteryLevel: number | null;
+      isMoving: boolean | null;
+    }>>`
       SELECT DISTINCT ON (fm.user_id)
         fm.user_id as "userId",
         u.name as "userName",
@@ -114,19 +117,10 @@ export class LocationRepository {
         l.address,
         l.timestamp,
         l.battery_level as "batteryLevel",
-        l.is_moving as "isMoving",
-        li.timestamp as "lastInteraction"
+        l.is_moving as "isMoving"
       FROM family_members fm
       INNER JOIN users u ON fm.user_id = u.id
       LEFT JOIN locations l ON l.user_id = fm.user_id
-      LEFT JOIN LATERAL (
-        SELECT timestamp
-        FROM locations
-        WHERE user_id = fm.user_id
-          AND trigger_type IN ('UNLOCK', 'INTERACTION')
-        ORDER BY timestamp DESC
-        LIMIT 1
-      ) li ON true
       WHERE fm.family_id = ${familyId}
         AND fm.is_active = true
         AND fm.share_location = true
@@ -134,20 +128,42 @@ export class LocationRepository {
       ORDER BY fm.user_id, l.timestamp DESC NULLS LAST
     `;
 
-    return result.map((loc) => ({
+    const filtered = result.filter((loc) => loc.latitude !== null && loc.longitude !== null);
+
+    const userIds = filtered.map((loc) => loc.userId);
+
+    const interactions = userIds.length > 0 ? await prisma.$queryRaw<Array<{
+      user_id: string;
+      timestamp: Date;
+    }>>`
+      SELECT DISTINCT ON (user_id)
+        user_id,
+        timestamp
+      FROM locations
+      WHERE user_id = ANY(${userIds})
+        AND trigger_type IN ('UNLOCK', 'INTERACTION')
+      ORDER BY user_id, timestamp DESC
+    ` : [];
+
+    const interactionMap = new Map<string, Date>();
+    interactions.forEach((interaction) => {
+      interactionMap.set(interaction.user_id, interaction.timestamp);
+    });
+
+    return filtered.map((loc) => ({
       userId: loc.userId,
-      userName: loc.userName,
+      userName: loc.userName || 'Usuário',
       nickname: loc.nickname,
       profilePicture: loc.profilePicture,
-      latitude: loc.latitude,
-      longitude: loc.longitude,
+      latitude: loc.latitude!,
+      longitude: loc.longitude!,
       accuracy: loc.accuracy,
       speed: loc.speed,
       address: loc.address,
-      timestamp: loc.timestamp,
+      timestamp: loc.timestamp!,
       batteryLevel: loc.batteryLevel,
-      isMoving: loc.isMoving,
-      lastInteraction: loc.lastInteraction,
+      isMoving: loc.isMoving || false,
+      lastInteraction: interactionMap.get(loc.userId) || null,
     }));
   }
 

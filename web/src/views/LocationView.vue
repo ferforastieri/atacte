@@ -93,34 +93,33 @@
                       >
                         (Você)
                       </span>
+                      <div v-if="member.batteryLevel !== null" class="flex items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" :class="member.batteryLevel < 0.2 ? 'text-red-500' : 'text-green-500'">
+                          <rect x="2" y="7" width="16" height="10" rx="2" ry="2" fill="none" />
+                          <line x1="20" y1="10" x2="20" y2="14" stroke-linecap="round" />
+                          <rect x="4" y="9" :width="Math.max(0, 12 * member.batteryLevel)" height="6" rx="1" :fill="member.batteryLevel < 0.2 ? '#ef4444' : '#16a34a'" />
+                        </svg>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">{{ Math.round(member.batteryLevel * 100) }}%</span>
+                      </div>
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       Última localização: {{ member.lastSeen ? formatTime(member.lastSeen) : 'Nunca visto' }}
                     </p>
-                    <p v-if="member.lastInteraction" class="text-xs text-gray-500 dark:text-gray-400">
-                      Última interação: {{ formatTime(member.lastInteraction) }}
+                    <p class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      Última interação: {{ member.lastInteraction ? formatTime(member.lastInteraction) : 'Nunca interagiu' }}
                     </p>
                   </div>
-                  <div class="flex items-center space-x-2">
-                    <div v-if="member.batteryLevel !== null" class="flex items-center space-x-1">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" :class="member.batteryLevel < 0.2 ? 'text-red-500' : 'text-green-500'">
-                        <rect x="2" y="7" width="16" height="10" rx="2" ry="2" fill="none" />
-                        <line x1="20" y1="10" x2="20" y2="14" stroke-linecap="round" />
-                        <rect x="4" y="9" :width="Math.max(0, 12 * member.batteryLevel)" height="6" rx="1" :fill="member.batteryLevel < 0.2 ? '#ef4444' : '#16a34a'" />
-                      </svg>
-                      <span class="text-xs text-gray-500 dark:text-gray-400">{{ Math.round(member.batteryLevel * 100) }}%</span>
-                    </div>
-                    <BaseButton
-                      variant="ghost"
-                      size="sm"
-                      @click.stop="viewLocationHistory(member)"
-                      title="Ver histórico de localização"
-                    >
-                      <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m3 8H9m0 0l3-3m-3 3l3 3" />
-                      </svg>
-                    </BaseButton>
-                  </div>
+                  <BaseButton
+                    variant="ghost"
+                    size="sm"
+                    class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    @click.stop="viewLocationHistory(member)"
+                    title="Ver histórico de localização"
+                  >
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m3 8H9m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                  </BaseButton>
                 </div>
               </div>
             </div>
@@ -537,8 +536,8 @@ const updateMapMarkers = () => {
         .bindPopup(`
           <div style="padding: 8px; min-width: 200px;">
             <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #1f2937;">${member.name}</h3>
-            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Última localização: ${formatTime(member.lastSeen || '')}</p>
-            ${member.lastInteraction ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Última interação: ${formatTime(member.lastInteraction)}</p>` : ''}
+            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280; white-space: nowrap;">Última localização: ${formatTime(member.lastSeen || '')}</p>
+            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280; white-space: nowrap;">Última interação: ${member.lastInteraction ? formatTime(member.lastInteraction) : 'Nunca interagiu'}</p>
             ${member.batteryLevel !== null ? `<p style="margin: 0; font-size: 14px; color: #6b7280;">Bateria: ${Math.round(member.batteryLevel * 100)}%</p>` : ''}
           </div>
         `)

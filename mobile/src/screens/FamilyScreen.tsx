@@ -622,17 +622,29 @@ export default function FamilyScreen({ navigation }: FamilyScreenProps) {
                       </View>
                     )}
                     <View style={styles.memberInfo}>
-                      <Text style={[styles.memberName, { color: isDark ? '#f9fafb' : '#111827' }]}>
-                        {member.nickname || member.userName}
-                      </Text>
-                      <Text style={[styles.memberStatus, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                        <Text style={[styles.memberName, { color: isDark ? '#f9fafb' : '#111827' }]}>
+                          {member.nickname || member.userName}
+                        </Text>
+                        {member.batteryLevel !== null && member.batteryLevel !== undefined && (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+                            <Ionicons
+                              name="battery-charging"
+                              size={14}
+                              color={member.batteryLevel < 0.2 ? '#dc2626' : '#16a34a'}
+                            />
+                            <Text style={[styles.memberStatus, { color: isDark ? '#9ca3af' : '#6b7280', marginLeft: 4 }]}>
+                              {Math.round(member.batteryLevel * 100)}%
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={[styles.memberStatus, { color: isDark ? '#9ca3af' : '#6b7280' }]} numberOfLines={1}>
                         Última localização: {formatLastUpdate(member.timestamp)}
                       </Text>
-                      {member.lastInteraction && (
-                        <Text style={[styles.memberStatus, { color: isDark ? '#9ca3af' : '#6b7280', marginTop: 2 }]}>
-                          Última interação: {formatLastUpdate(member.lastInteraction)}
-                        </Text>
-                      )}
+                      <Text style={[styles.memberStatus, { color: isDark ? '#9ca3af' : '#6b7280', marginTop: 2 }]} numberOfLines={1}>
+                        Última interação: {member.lastInteraction ? formatLastUpdate(member.lastInteraction) : 'Nunca interagiu'}
+                      </Text>
                       {member.address && (
                         <Text style={[styles.memberAddress, { color: isDark ? '#6b7280' : '#9ca3af' }]} numberOfLines={1}>
                           📍 {member.address}
@@ -643,16 +655,24 @@ export default function FamilyScreen({ navigation }: FamilyScreenProps) {
                 </TouchableOpacity>
                 
                 <TouchableOpacity
-                  style={[styles.historyButton, { backgroundColor: isDark ? '#1f2937' : '#ffffff', borderColor: isDark ? '#374151' : '#e5e7eb' }]}
+                  style={[styles.historyButton, { 
+                    backgroundColor: isDark ? '#1f2937' : '#ffffff', 
+                    borderColor: isDark ? '#374151' : '#e5e7eb',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 3,
+                    elevation: 3,
+                  }]}
                   onPress={() => {
                     navigation.navigate('MemberHistory', {
                       userId: member.userId,
                       userName: member.nickname || member.userName,
                     });
                   }}
-                  activeOpacity={0.7}
+                  activeOpacity={0.6}
                 >
-                  <Ionicons name="time-outline" size={18} color="#16a34a" />
+                  <Ionicons name="time-outline" size={20} color="#16a34a" />
                 </TouchableOpacity>
               </View>
             ))}
