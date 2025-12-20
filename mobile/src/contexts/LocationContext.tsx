@@ -101,7 +101,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const checkAndStartTracking = async () => {
     try {
-      const permissionsGranted = await locationService.requestPermissions();
+      const permissionsGranted = await locationService.hasPermissions();
       
       if (!permissionsGranted) {
         setIsTrackingActive(false);
@@ -180,6 +180,16 @@ export function LocationProvider({ children }: LocationProviderProps) {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const refreshInterval = setInterval(() => {
+      refreshLocation();
+    }, 30000);
+
+    return () => clearInterval(refreshInterval);
+  }, [isAuthenticated]);
 
   const checkGeofenceZones = async (location: LocationData) => {
     try {

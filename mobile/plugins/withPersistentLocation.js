@@ -21,53 +21,34 @@ const withPersistentLocation = (config) => {
       });
     }
 
-    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS')) {
-      permissions.push({
-        $: {
-          'android:name': 'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
-        },
-      });
-    }
+    const requiredPermissions = [
+      'android.permission.RECEIVE_BOOT_COMPLETED',
+      'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+      'com.google.android.gms.permission.ACTIVITY_RECOGNITION',
+      'android.permission.ACTIVITY_RECOGNITION',
+      'android.permission.WAKE_LOCK',
+      'android.permission.FOREGROUND_SERVICE',
+      'android.permission.FOREGROUND_SERVICE_LOCATION',
+      'android.permission.ACCESS_WIFI_STATE',
+      'android.permission.CHANGE_WIFI_STATE',
+      'android.permission.BLUETOOTH',
+      'android.permission.BLUETOOTH_ADMIN',
+      'android.permission.ACCESS_NETWORK_STATE',
+      'android.permission.CHANGE_NETWORK_STATE',
+      'android.permission.VIBRATE',
+      'android.permission.POST_NOTIFICATIONS',
+      'android.permission.SYSTEM_ALERT_WINDOW',
+    ];
 
-    if (!permissions.find(p => p.$?.['android:name'] === 'com.google.android.gms.permission.ACTIVITY_RECOGNITION')) {
-      permissions.push({
-        $: {
-          'android:name': 'com.google.android.gms.permission.ACTIVITY_RECOGNITION',
-        },
-      });
-    }
-
-    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.ACTIVITY_RECOGNITION')) {
-      permissions.push({
-        $: {
-          'android:name': 'android.permission.ACTIVITY_RECOGNITION',
-        },
-      });
-    }
-
-    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.WAKE_LOCK')) {
-      permissions.push({
-        $: {
-          'android:name': 'android.permission.WAKE_LOCK',
-        },
-      });
-    }
-
-    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.FOREGROUND_SERVICE')) {
-      permissions.push({
-        $: {
-          'android:name': 'android.permission.FOREGROUND_SERVICE',
-        },
-      });
-    }
-
-    if (!permissions.find(p => p.$?.['android:name'] === 'android.permission.FOREGROUND_SERVICE_LOCATION')) {
-      permissions.push({
-        $: {
-          'android:name': 'android.permission.FOREGROUND_SERVICE_LOCATION',
-        },
-      });
-    }
+    requiredPermissions.forEach(permissionName => {
+      if (!permissions.find(p => p.$?.['android:name'] === permissionName)) {
+        permissions.push({
+          $: {
+            'android:name': permissionName,
+          },
+        });
+      }
+    });
 
     if (!manifest.application) {
       manifest.application = [{}];
@@ -294,10 +275,18 @@ class ForegroundTrackingService : Service() {
     try {
       releaseWakeLock()
       val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-      wakeLock = powerManager.newWakeLock(
-        PowerManager.PARTIAL_WAKE_LOCK,
-        "Atacte::LocationWakeLock"
-      ).apply {
+      wakeLock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        powerManager.newWakeLock(
+          PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+          "Atacte::LocationWakeLock"
+        )
+      } else {
+        powerManager.newWakeLock(
+          PowerManager.PARTIAL_WAKE_LOCK,
+          "Atacte::LocationWakeLock"
+        )
+      }
+      wakeLock?.apply {
         acquire(10 * 60 * 60 * 1000L)
       }
     } catch (e: Exception) {

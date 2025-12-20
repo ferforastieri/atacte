@@ -4,6 +4,32 @@ import { Platform } from 'react-native';
 import { formatISO } from 'date-fns';
 import apiClient from '../../lib/axios';
 
+const getBestLocationAccuracy = (): Location.Accuracy => {
+  try {
+    if (Location.Accuracy.BestForNavigation !== undefined) {
+      return Location.Accuracy.BestForNavigation;
+    }
+    if (Location.Accuracy.Highest !== undefined) {
+      return Location.Accuracy.Highest;
+    }
+    if (Location.Accuracy.High !== undefined) {
+      return Location.Accuracy.High;
+    }
+    if (Location.Accuracy.Balanced !== undefined) {
+      return Location.Accuracy.Balanced;
+    }
+    if (Location.Accuracy.Low !== undefined) {
+      return Location.Accuracy.Low;
+    }
+    if (Location.Accuracy.Lowest !== undefined) {
+      return Location.Accuracy.Lowest;
+    }
+    return Location.Accuracy.Balanced;
+  } catch {
+    return Location.Accuracy.Balanced;
+  }
+};
+
 export interface LocationData {
   id: string;
   userId: string;
@@ -90,21 +116,21 @@ class LocationService {
     }
   }
 
-  async requestPermissions(): Promise<boolean> {
+  async hasPermissions(): Promise<boolean> {
     try {
-      const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-      if (foregroundStatus !== 'granted') {
+      const foregroundStatus = await Location.getForegroundPermissionsAsync();
+      if (!foregroundStatus.granted) {
         return false;
       }
 
-      const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (backgroundStatus !== 'granted') {
+      const backgroundStatus = await Location.getBackgroundPermissionsAsync();
+      if (!backgroundStatus.granted) {
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Erro ao solicitar permissões de localização:', error);
+      console.error('Erro ao verificar permissões de localização:', error);
       return false;
     }
   }
@@ -112,7 +138,7 @@ class LocationService {
   async getCurrentLocation(): Promise<GeolocationPosition | null> {
     try {
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
+        accuracy: getBestLocationAccuracy(),
       });
 
       return {
@@ -159,12 +185,15 @@ class LocationService {
       return formatISO(date)
     }
 
+    const params: Record<string, string> = {
+      startDate: formatDateForAPI(startDate),
+      endDate: formatDateForAPI(endDate),
+    };
+    if (limit !== undefined) {
+      params.limit = String(limit);
+    }
     return this.makeRequest('/location/history', {
-      params: {
-        startDate: formatDateForAPI(startDate),
-        endDate: formatDateForAPI(endDate),
-        limit,
-      },
+      params,
     });
   }
 
@@ -173,12 +202,15 @@ class LocationService {
       return formatISO(date)
     }
 
+    const params: Record<string, string> = {
+      startDate: formatDateForAPI(startDate),
+      endDate: formatDateForAPI(endDate),
+    };
+    if (limit !== undefined) {
+      params.limit = String(limit);
+    }
     return this.makeRequest(`/location/history/${userId}`, {
-      params: {
-        startDate: formatDateForAPI(startDate),
-        endDate: formatDateForAPI(endDate),
-        limit,
-      },
+      params,
     });
   }
 
@@ -208,7 +240,7 @@ class LocationService {
         speed: location.coords.speed ?? undefined,
         heading: location.coords.heading ?? undefined,
         batteryLevel: batteryLevel >= 0 ? batteryLevel : undefined,
-        isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
+        isMoving: (location.coords.speed ?? 0) > 0.5 || (location.coords.heading !== null && location.coords.heading !== undefined),
       };
 
       const result = await this.updateLocation(payload);
@@ -229,9 +261,9 @@ class LocationService {
 
     Location.watchPositionAsync(
       {
-        accuracy: Location.Accuracy.Highest,
-        distanceInterval: 50,
-        timeInterval: 15000,
+        accuracy: getBestLocationAccuracy(),
+        distanceInterval: 10,
+        timeInterval: 30000,
       },
       (location) => {
         const position: GeolocationPosition = {
@@ -283,7 +315,7 @@ class LocationService {
         speed: location.coords.speed ?? undefined,
         heading: location.coords.heading ?? undefined,
         batteryLevel: batteryLevel >= 0 ? batteryLevel : undefined,
-        isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
+        isMoving: (location.coords.speed ?? 0) > 0.5 || (location.coords.heading !== null && location.coords.heading !== undefined),
       };
 
       return this.makeRequest(`/location/request-update/${familyId}`, {

@@ -2,6 +2,32 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { locationService, UpdateLocationRequest } from './locationService';
 
+const getBestLocationAccuracy = (): Location.Accuracy => {
+  try {
+    if (Location.Accuracy.BestForNavigation !== undefined) {
+      return Location.Accuracy.BestForNavigation;
+    }
+    if (Location.Accuracy.Highest !== undefined) {
+      return Location.Accuracy.Highest;
+    }
+    if (Location.Accuracy.High !== undefined) {
+      return Location.Accuracy.High;
+    }
+    if (Location.Accuracy.Balanced !== undefined) {
+      return Location.Accuracy.Balanced;
+    }
+    if (Location.Accuracy.Low !== undefined) {
+      return Location.Accuracy.Low;
+    }
+    if (Location.Accuracy.Lowest !== undefined) {
+      return Location.Accuracy.Lowest;
+    }
+    return Location.Accuracy.Balanced;
+  } catch {
+    return Location.Accuracy.Balanced;
+  }
+};
+
 const LOCATION_TASK_NAME = 'background-location-task';
 
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: {
@@ -24,7 +50,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: {
     return;
   }
 
-  if (data) {
+  if (data && data.locations) {
     const { locations } = data;
     const location = locations[0];
 
@@ -73,14 +99,14 @@ class ForegroundLocationService {
         this.isActiveRef = false;
       }
 
-      const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-      if (foregroundStatus !== 'granted') {
+      const foregroundStatus = await Location.getForegroundPermissionsAsync();
+      if (!foregroundStatus.granted) {
         console.error('Permissão de foreground não concedida');
         return false;
       }
 
-      const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (backgroundStatus !== 'granted') {
+      const backgroundStatus = await Location.getBackgroundPermissionsAsync();
+      if (!backgroundStatus.granted) {
         console.error('Permissão de background não concedida');
         return false;
       }
@@ -98,7 +124,7 @@ class ForegroundLocationService {
       }
 
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.Highest, 
+        accuracy: getBestLocationAccuracy(), 
         timeInterval: 30000, 
         distanceInterval: 10, 
         foregroundService: {
@@ -108,9 +134,7 @@ class ForegroundLocationService {
         },
         pausesUpdatesAutomatically: false, 
         showsBackgroundLocationIndicator: true,
-        deferredUpdatesInterval: 30000,
-        deferredUpdatesDistance: 10,
-        activityType: Location.ActivityType.OtherNavigation,
+        activityType: Location.ActivityType.AutomotiveNavigation,
       });
 
       this.isActiveRef = true;

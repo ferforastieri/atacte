@@ -13,7 +13,7 @@ interface NominatimResponse {
 
 export class GeocodingService {
   private cache: Map<string, { address: string; timestamp: number }> = new Map();
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas
+  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000;
 
   async reverseGeocode(latitude: number, longitude: number): Promise<string | null> {
     const cacheKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;

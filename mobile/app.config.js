@@ -47,7 +47,13 @@ export default {
         "RECEIVE_BOOT_COMPLETED",
         "SYSTEM_ALERT_WINDOW",
         "ACTIVITY_RECOGNITION",
-        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
+        "ACCESS_WIFI_STATE",
+        "CHANGE_WIFI_STATE",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "ACCESS_NETWORK_STATE",
+        "CHANGE_NETWORK_STATE"
       ],
       usesCleartextTraffic: true,
       compileSdkVersion: 34,

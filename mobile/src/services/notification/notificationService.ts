@@ -61,30 +61,19 @@ class NotificationService {
     }
   }
 
-  async requestPermissions(): Promise<boolean> {
+  async hasPermissions(): Promise<boolean> {
     try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        return false;
-      }
-
-      return true;
+      const { granted } = await Notifications.getPermissionsAsync();
+      return granted;
     } catch (error) {
-      console.error('Erro ao solicitar permissões de notificação:', error);
+      console.error('Erro ao verificar permissões de notificação:', error);
       return false;
     }
   }
 
   async registerForPushNotifications(): Promise<string | null> {
     try {
-      const hasPermission = await this.requestPermissions();
+      const hasPermission = await this.hasPermissions();
       
       if (!hasPermission) {
         return null;

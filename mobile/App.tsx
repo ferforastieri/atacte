@@ -10,11 +10,9 @@ import { LocationProvider } from './src/contexts/LocationContext';
 import { NotificationProvider } from './src/contexts/NotificationContext';
 import { TrustDeviceProvider } from './src/contexts/TrustDeviceContext';
 import AppNavigator from './src/navigation/AppNavigator';
-// Importar o serviço para registrar a tarefa em background (a definição da tarefa é executada no import)
 import './src/services/location/foregroundLocationService';
 import { foregroundLocationService } from './src/services/location/foregroundLocationService';
-import * as Location from 'expo-location';
-import { notificationService } from './src/services/notification/notificationService';
+import { permissionService } from './src/services/permissions/permissionService';
 
 const backgroundLocationFunctions = {
   startBackgroundLocation: async (): Promise<boolean> => {
@@ -46,29 +44,30 @@ const backgroundLocationFunctions = {
 
 (global as any).backgroundLocationFunctions = backgroundLocationFunctions;
 
-// Componente para solicitar permissões na inicialização
 function PermissionsInitializer() {
   useEffect(() => {
-    const requestAllPermissions = async () => {
+    const checkAndRequestPermissions = async () => {
       try {
+        const results = await permissionService.checkAllPermissions();
         
-        // Solicitar permissões de notificação
-        await notificationService.requestPermissions();
-        
-        // Solicitar permissões de localização (foreground e background)
-        const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-        
-        if (foregroundStatus === 'granted') {
-          const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
+        if (!results.notifications.granted) {
+          await permissionService.requestNotifications();
         }
         
+        if (!results.locationForeground.granted) {
+          const foregroundResult = await permissionService.requestLocationForeground();
+          if (foregroundResult.granted && !results.locationBackground.granted) {
+            await permissionService.requestLocationBackground();
+          }
+        } else if (!results.locationBackground.granted) {
+          await permissionService.requestLocationBackground();
+        }
       } catch (error) {
-        console.error('Erro ao solicitar permissões:', error);
+        console.error('Erro ao verificar/solicitar permissões:', error);
       }
     };
 
-    // Solicitar permissões assim que o app iniciar
-    requestAllPermissions();
+    checkAndRequestPermissions();
   }, []);
 
   return null;

@@ -489,7 +489,7 @@ export default function CalendarScreen() {
       fontWeight: '500',
     },
     eventsList: {
-      marginTop: 16,
+      marginTop: 0,
     },
     eventsListTitle: {
       fontSize: 18,

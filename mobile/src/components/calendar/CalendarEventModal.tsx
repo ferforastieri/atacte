@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Platform, PanResponder, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Input, Button } from '../shared';
 import { CalendarEvent, CreateCalendarEventRequest } from '../../services/calendar/calendarService';
@@ -8,6 +8,101 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BaseSelect } from '../shared/BaseSelect';
+
+const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 22, g: 163, b: 74 };
+};
+
+const rgbToHex = (r: number, g: number, b: number): string => {
+  return '#' + [r, g, b].map(x => {
+    const hex = x.toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('');
+};
+
+interface ColorSliderProps {
+  value: number;
+  onValueChange: (value: number) => void;
+  color: string;
+  label: string;
+  trackColor: string;
+  isDark: boolean;
+}
+
+const ColorSlider: React.FC<ColorSliderProps> = ({ value, onValueChange, color, label, trackColor, isDark }) => {
+  const [sliderWidth, setSliderWidth] = useState(300);
+  const thumbSize = 24;
+  const trackHeight = 8;
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (evt) => {
+      const newValue = Math.max(0, Math.min(255, (evt.nativeEvent.locationX / sliderWidth) * 255));
+      onValueChange(Math.round(newValue));
+    },
+    onPanResponderMove: (evt) => {
+      const newValue = Math.max(0, Math.min(255, (evt.nativeEvent.locationX / sliderWidth) * 255));
+      onValueChange(Math.round(newValue));
+    },
+  });
+
+  const thumbPosition = (value / 255) * (sliderWidth - thumbSize);
+
+  return (
+    <View style={{ marginBottom: 20 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={{ fontSize: 14, color: isDark ? '#f9fafb' : '#111827', fontWeight: '500' }}>{label}</Text>
+        <Text style={{ fontSize: 14, color: isDark ? '#9ca3af' : '#6b7280' }}>{value}</Text>
+      </View>
+      <View
+        style={{
+          height: trackHeight,
+          backgroundColor: isDark ? '#374151' : '#e5e7eb',
+          borderRadius: 4,
+          position: 'relative',
+        }}
+        onLayout={(e) => setSliderWidth(e.nativeEvent.layout.width)}
+        {...panResponder.panHandlers}
+      >
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: thumbPosition + thumbSize / 2,
+            height: trackHeight,
+            backgroundColor: trackColor,
+            borderRadius: 4,
+          }}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            left: thumbPosition,
+            top: -8,
+            width: thumbSize,
+            height: thumbSize,
+            borderRadius: thumbSize / 2,
+            backgroundColor: color,
+            borderWidth: 3,
+            borderColor: '#ffffff',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+          }}
+        />
+      </View>
+    </View>
+  );
+};
 
 interface CalendarEventModalProps {
   visible: boolean;
@@ -79,6 +174,7 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showRecurrenceEndDatePicker, setShowRecurrenceEndDatePicker] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [colorRgb, setColorRgb] = useState({ r: 22, g: 163, b: 74 });
 
   useEffect(() => {
     if (event && isEdit) {
@@ -163,6 +259,12 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
       setFormData(prev => ({ ...prev, recurrenceEndDate: null }));
     }
   }, [noRecurrenceEndDate]);
+
+  useEffect(() => {
+    if (showColorPicker && formData.color) {
+      setColorRgb(hexToRgb(formData.color));
+    }
+  }, [showColorPicker, formData.color]);
 
   useEffect(() => {
     if (monthlyRecurrenceMode === 'day') {
@@ -358,11 +460,11 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
       gap: 12,
       width: '100%',
     },
-    colorPreview: {
-      width: 50,
-      height: 50,
+    colorPreviewSmall: {
+      width: 40,
+      height: 40,
       borderRadius: 8,
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: isDark ? '#374151' : '#e5e7eb',
     },
     colorInput: {
@@ -381,6 +483,55 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
     },
     colorPickerModal: {
       padding: 20,
+      paddingBottom: 40,
+    },
+    colorPreviewContainer: {
+      alignItems: 'center',
+      marginBottom: 32,
+      paddingVertical: 20,
+      backgroundColor: isDark ? '#111827' : '#f9fafb',
+      borderRadius: 12,
+      paddingHorizontal: 20,
+    },
+    colorPreview: {
+      width: 120,
+      height: 120,
+      borderRadius: 12,
+      borderWidth: 3,
+      borderColor: isDark ? '#374151' : '#e5e7eb',
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    colorHexText: {
+      fontSize: 18,
+      fontWeight: '600',
+      fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    },
+    colorSlidersContainer: {
+      marginBottom: 32,
+    },
+    colorInputContainer: {
+      marginBottom: 32,
+    },
+    colorInputLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    colorHexInput: {
+      marginBottom: 0,
+    },
+    colorPresetsSection: {
+      marginBottom: 24,
+    },
+    colorPresetsLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 12,
     },
     colorPresets: {
       flexDirection: 'row',
@@ -389,8 +540,8 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
       width: '100%',
     },
     colorPreset: {
-      width: 60,
-      height: 60,
+      width: 50,
+      height: 50,
       borderRadius: 8,
       borderWidth: 2,
       borderColor: isDark ? '#374151' : '#e5e7eb',
@@ -400,6 +551,11 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
     colorPresetSelected: {
       borderColor: '#16a34a',
       borderWidth: 3,
+    },
+    colorPickerActions: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 20,
     },
     recurrenceSection: {
       marginTop: 16,
@@ -655,13 +811,14 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
           >
             <View
               style={[
-                styles.colorPreview,
-                { backgroundColor: formData.color },
+                styles.colorPreviewSmall,
+                { backgroundColor: formData.color || '#16a34a' },
               ]}
             />
             <View style={styles.colorInput}>
               <Text style={styles.colorInputText}>{formData.color || '#16a34a'}</Text>
             </View>
+            <Ionicons name="chevron-forward" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
           </TouchableOpacity>
         </View>
 
@@ -902,29 +1059,115 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
         visible={showColorPicker}
         onClose={() => setShowColorPicker(false)}
         title="Selecionar Cor"
+        size="lg"
       >
-        <View style={styles.colorPickerModal}>
-          <View style={styles.colorPresets}>
-            {['#16a34a', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#14b8a6', '#a855f7', '#e11d48'].map(color => (
-              <TouchableOpacity
-                key={color}
-                style={[
-                  styles.colorPreset,
-                  { backgroundColor: color },
-                  formData.color === color && styles.colorPresetSelected,
-                ]}
-                onPress={() => {
-                  setFormData(prev => ({ ...prev, color }));
-                  setShowColorPicker(false);
-                }}
-              >
-                {formData.color === color && (
-                  <Ionicons name="checkmark" size={20} color="#ffffff" />
-                )}
-              </TouchableOpacity>
-            ))}
+        <ScrollView style={styles.colorPickerModal} showsVerticalScrollIndicator={false}>
+          <View style={styles.colorPreviewContainer}>
+            <View style={[styles.colorPreview, { backgroundColor: formData.color || '#16a34a' }]} />
+            <Text style={[styles.colorHexText, { color: isDark ? '#f9fafb' : '#111827' }]}>
+              {(formData.color || '#16a34a').toUpperCase()}
+            </Text>
           </View>
-        </View>
+
+          <View style={styles.colorSlidersContainer}>
+            <ColorSlider
+              value={colorRgb.r}
+              onValueChange={(r) => {
+                const newRgb = { ...colorRgb, r };
+                setColorRgb(newRgb);
+                setFormData(prev => ({ ...prev, color: rgbToHex(newRgb.r, newRgb.g, newRgb.b) }));
+              }}
+              color="#ef4444"
+              label="Vermelho"
+              trackColor="#ef4444"
+              isDark={isDark}
+            />
+            <ColorSlider
+              value={colorRgb.g}
+              onValueChange={(g) => {
+                const newRgb = { ...colorRgb, g };
+                setColorRgb(newRgb);
+                setFormData(prev => ({ ...prev, color: rgbToHex(newRgb.r, newRgb.g, newRgb.b) }));
+              }}
+              color="#22c55e"
+              label="Verde"
+              trackColor="#22c55e"
+              isDark={isDark}
+            />
+            <ColorSlider
+              value={colorRgb.b}
+              onValueChange={(b) => {
+                const newRgb = { ...colorRgb, b };
+                setColorRgb(newRgb);
+                setFormData(prev => ({ ...prev, color: rgbToHex(newRgb.r, newRgb.g, newRgb.b) }));
+              }}
+              color="#3b82f6"
+              label="Azul"
+              trackColor="#3b82f6"
+              isDark={isDark}
+            />
+          </View>
+
+          <View style={styles.colorInputContainer}>
+            <Text style={[styles.colorInputLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
+              Código Hex
+            </Text>
+            <Input
+              value={formData.color || '#16a34a'}
+              onChangeText={(text) => {
+                if (/^#[0-9A-Fa-f]{0,6}$/.test(text)) {
+                  setFormData(prev => ({ ...prev, color: text }));
+                  if (text.length === 7) {
+                    setColorRgb(hexToRgb(text));
+                  }
+                }
+              }}
+              placeholder="#000000"
+              style={styles.colorHexInput}
+            />
+          </View>
+
+          <View style={styles.colorPresetsSection}>
+            <Text style={[styles.colorPresetsLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
+              Cores Rápidas
+            </Text>
+            <View style={styles.colorPresets}>
+              {['#16a34a', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#14b8a6', '#a855f7', '#e11d48'].map(color => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorPreset,
+                    { backgroundColor: color },
+                    (formData.color || '').toLowerCase() === color.toLowerCase() && styles.colorPresetSelected,
+                  ]}
+                  onPress={() => {
+                    setFormData(prev => ({ ...prev, color }));
+                    setColorRgb(hexToRgb(color));
+                  }}
+                >
+                  {(formData.color || '').toLowerCase() === color.toLowerCase() && (
+                    <Ionicons name="checkmark" size={20} color="#ffffff" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.colorPickerActions}>
+            <Button
+              variant="secondary"
+              onPress={() => setShowColorPicker(false)}
+              title="Cancelar"
+              style={{ flex: 1 }}
+            />
+            <Button
+              variant="primary"
+              onPress={() => setShowColorPicker(false)}
+              title="Confirmar"
+              style={{ flex: 1 }}
+            />
+          </View>
+        </ScrollView>
       </Modal>
     </Modal>
   );
