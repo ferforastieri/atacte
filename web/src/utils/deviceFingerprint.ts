@@ -1,3 +1,13 @@
+async function simpleHash(str: string): Promise<string> {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16).padStart(16, '0');
+}
+
 export async function getDeviceFingerprint(): Promise<string> {
   try {
     const fingerprintData = {
@@ -14,22 +24,25 @@ export async function getDeviceFingerprint(): Promise<string> {
 
     const fingerprintString = JSON.stringify(fingerprintData);
     
-    const encoder = new TextEncoder();
-    const data = encoder.encode(fingerprintString);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    return hashHex;
+    if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+      try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(fingerprintString);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+      } catch (cryptoError) {
+        console.warn('crypto.subtle não disponível, usando hash simples:', cryptoError);
+        return await simpleHash(fingerprintString);
+      }
+    } else {
+      return await simpleHash(fingerprintString);
+    }
   } catch (error) {
     console.error('Erro ao gerar device fingerprint:', error);
     const fallback = `${navigator.platform}-${navigator.userAgent}-${Date.now()}`;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(fallback);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
+    return await simpleHash(fallback);
   }
 }
 
