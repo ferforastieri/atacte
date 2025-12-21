@@ -79,9 +79,11 @@ class AuthService {
       const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
       
       if (Platform.OS === 'android' && ForegroundTracking) {
-        ForegroundTracking.saveAuthToken(token, apiUrl, () => {}, (error: Error) => {
-          console.error('Erro ao salvar token nativo:', error);
-        });
+        try {
+          await ForegroundTracking.saveAuthToken(token, apiUrl);
+        } catch (error) {
+          console.error('Erro ao salvar token nativo (Android):', error);
+        }
       } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
         try {
           await new Promise<void>((resolve, reject) => {
@@ -119,9 +121,11 @@ class AuthService {
       const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
       
       if (Platform.OS === 'android' && ForegroundTracking) {
-        ForegroundTracking.saveAuthToken(token, apiUrl, () => {}, (error: Error) => {
-          console.error('Erro ao salvar token nativo:', error);
-        });
+        try {
+          await ForegroundTracking.saveAuthToken(token, apiUrl);
+        } catch (error) {
+          console.error('Erro ao salvar token nativo (Android):', error);
+        }
       } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
         try {
           await new Promise<void>((resolve, reject) => {
@@ -153,13 +157,7 @@ class AuthService {
     
     if (Platform.OS === 'android' && ForegroundTracking) {
       try {
-        await new Promise<void>((resolve, reject) => {
-          ForegroundTracking.clearAuthToken(() => {
-            resolve();
-          }, (error: Error) => {
-            reject(error);
-          });
-        });
+        await ForegroundTracking.clearAuthToken();
       } catch (error) {
       }
     } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
