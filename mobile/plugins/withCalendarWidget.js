@@ -1,4 +1,10 @@
-const { withAndroidManifest, withDangerousMod, withInfoPlist, withEntitlements } = require('@expo/config-plugins');
+const {
+  withAndroidManifest,
+  withDangerousMod,
+  withInfoPlist,
+  withEntitlementsPlist
+} = require('@expo/config-plugins');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -428,14 +434,17 @@ class CalendarWidgetProvider : AppWidgetProvider() {
     },
   ]);
 
-  config = withEntitlements(config, (config) => {
+  config = withEntitlementsPlist(config, (config) => {
     if (!config.modResults['com.apple.security.application-groups']) {
       config.modResults['com.apple.security.application-groups'] = [];
     }
+  
     const appGroups = config.modResults['com.apple.security.application-groups'];
+  
     if (!appGroups.includes('group.com.atacte.mobile')) {
       appGroups.push('group.com.atacte.mobile');
     }
+  
     return config;
   });
 
