@@ -121,9 +121,15 @@ override fun onUpdate(
     appWidgetManager: AppWidgetManager,
     appWidgetId: Int
   ) {
-    val views = RemoteViews(context.packageName, R.layout.calendar_widget)
+    val views = RemoteViews(context.applicationContext.packageName, R.layout.calendar_widget)
     
-    FetchCalendarEventsTask(context, appWidgetManager, appWidgetId, views).execute()
+FetchCalendarEventsTask(
+  context,
+  appWidgetManager,
+  appWidgetId,
+  views,
+  context.applicationContext.packageName
+).execute()
   }
 
   private class FetchCalendarEventsTask(
