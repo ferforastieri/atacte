@@ -241,9 +241,9 @@ class PermissionService {
           };
         }
       } else {
-        results.activityRecognition = {
-          granted: foregroundStatus.granted,
-        };
+      results.activityRecognition = {
+        granted: foregroundStatus.granted,
+      };
       }
 
       if (Platform.OS === 'android') {

@@ -68,6 +68,7 @@ import { useToast } from '@/hooks/useToast'
 import { LockClosedIcon, EnvelopeIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { BaseButton, BaseInput, BaseCard, Logo } from '@/components/ui'
+import { getDeviceFingerprint, getDeviceName } from '@/utils/deviceFingerprint'
 
 const router = useRouter()
 const toast = useToast()
@@ -81,35 +82,6 @@ const form = reactive({
   masterPassword: ''
 })
 
-const getDeviceName = (): string => {
-  const ua = navigator.userAgent.toLowerCase()
-  let os = 'Dispositivo Web'
-  
-  if (ua.includes('win')) {
-    os = 'Windows'
-  } else if (ua.includes('mac')) {
-    os = 'macOS'
-  } else if (ua.includes('linux') && !ua.includes('android')) {
-    os = 'Linux'
-  } else if (ua.includes('android')) {
-    os = 'Android'
-  } else if (ua.includes('iphone') || ua.includes('ipad')) {
-    os = 'iOS'
-  }
-  
-  let browser = 'Browser'
-  if (ua.includes('edg')) {
-    browser = 'Edge'
-  } else if (ua.includes('chrome') && !ua.includes('edg')) {
-    browser = 'Chrome'
-  } else if (ua.includes('firefox')) {
-    browser = 'Firefox'
-  } else if (ua.includes('safari') && !ua.includes('chrome')) {
-    browser = 'Safari'
-  }
-  
-  return `${os} - ${browser}`
-}
 
 const handleLogin = async () => {
   errors.value = {}
@@ -117,10 +89,12 @@ const handleLogin = async () => {
 
   try {
     const deviceName = getDeviceName()
+    const deviceFingerprint = await getDeviceFingerprint()
     const response = await authStore.login({
       email: form.email,
       masterPassword: form.masterPassword,
-      deviceName: deviceName
+      deviceName: deviceName,
+      deviceFingerprint: deviceFingerprint
     })
 
     if (response?.data?.requiresTrust) {

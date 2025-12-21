@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Device from 'expo-device';
+import { getDeviceFingerprint, getDeviceName } from '../utils/deviceFingerprint';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Card, Logo } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,11 +22,6 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   const { showTrustModal } = useTrustDevice();
 
-  const getDeviceName = (): string => {
-    const os = Platform.OS === 'ios' ? 'iOS' : 'Android';
-    const deviceName = Device.deviceName || Device.modelName || 'Dispositivo';
-    return `${os} - ${deviceName}`;
-  };
 
   const handleLogin = async () => {
     if (!email || !masterPassword) {
@@ -35,8 +31,9 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      const deviceName = getDeviceName();
-      const result = await login(email, masterPassword, deviceName);
+      const deviceName = await getDeviceName();
+      const deviceFingerprint = await getDeviceFingerprint();
+      const result = await login(email, masterPassword, deviceName, deviceFingerprint);
       
       if (result.requiresTrust && result.sessionId) {
         showTrustModal(result.sessionId, deviceName, 'Desconhecido');

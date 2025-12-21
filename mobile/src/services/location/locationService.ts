@@ -4,30 +4,28 @@ import { Platform } from 'react-native';
 import { formatISO } from 'date-fns';
 import apiClient from '../../lib/axios';
 
-const getBestLocationAccuracy = (): Location.Accuracy => {
-  try {
-    if (Location.Accuracy.BestForNavigation !== undefined) {
-      return Location.Accuracy.BestForNavigation;
+const getCurrentLocationWithRetry = async (
+  options: Location.LocationOptions,
+  maxRetries: number = 3,
+  retryDelay: number = 1000
+): Promise<Location.LocationObject> => {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await Location.getCurrentPositionAsync({
+        ...options,
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
+      }
     }
-    if (Location.Accuracy.Highest !== undefined) {
-      return Location.Accuracy.Highest;
-    }
-    if (Location.Accuracy.High !== undefined) {
-      return Location.Accuracy.High;
-    }
-    if (Location.Accuracy.Balanced !== undefined) {
-      return Location.Accuracy.Balanced;
-    }
-    if (Location.Accuracy.Low !== undefined) {
-      return Location.Accuracy.Low;
-    }
-    if (Location.Accuracy.Lowest !== undefined) {
-      return Location.Accuracy.Lowest;
-    }
-    return Location.Accuracy.Balanced;
-  } catch {
-    return Location.Accuracy.Balanced;
   }
+  
+  throw lastError || new Error('Falha ao obter localização após múltiplas tentativas');
 };
 
 export interface LocationData {
@@ -139,9 +137,7 @@ class LocationService {
 
   async getCurrentLocation(): Promise<GeolocationPosition | null> {
     try {
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: getBestLocationAccuracy(),
-      });
+      const location = await getCurrentLocationWithRetry({});
 
       return {
         coords: {
@@ -261,35 +257,44 @@ class LocationService {
       this.stopWatchingLocation();
     }
 
-    Location.watchPositionAsync(
-      {
-        accuracy: getBestLocationAccuracy(),
-        distanceInterval: 10,
-        timeInterval: 30000,
-      },
-      (location) => {
-        const position: GeolocationPosition = {
-          coords: {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            accuracy: location.coords.accuracy || 0,
-            altitude: location.coords.altitude || null,
-            altitudeAccuracy: location.coords.altitudeAccuracy || null,
-            heading: location.coords.heading || null,
-            speed: location.coords.speed || null,
+    const startWatchWithRetry = async (attempt: number = 0, maxRetries: number = 3): Promise<void> => {
+      try {
+        const subscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.BestForNavigation,
+            distanceInterval: 10,
+            timeInterval: 30000,
           },
-          timestamp: location.timestamp,
-        };
-        onLocationUpdate(position);
+          (location) => {
+            const position: GeolocationPosition = {
+              coords: {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                accuracy: location.coords.accuracy || 0,
+                altitude: location.coords.altitude || null,
+                altitudeAccuracy: location.coords.altitudeAccuracy || null,
+                heading: location.coords.heading || null,
+                speed: location.coords.speed || null,
+              },
+              timestamp: location.timestamp,
+            };
+            onLocationUpdate(position);
+          }
+        );
+        this.watchSubscription = subscription;
+      } catch (error) {
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          return startWatchWithRetry(attempt + 1, maxRetries);
+        }
+        console.error('Erro ao observar localização:', error);
+        if (onError) {
+          onError(error);
+        }
       }
-    ).then((subscription) => {
-      this.watchSubscription = subscription;
-    }).catch((error) => {
-      console.error('Erro ao observar localização:', error);
-      if (onError) {
-        onError(error);
-      }
-    });
+    };
+
+    startWatchWithRetry();
   }
 
   stopWatchingLocation(): void {

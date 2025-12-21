@@ -4,30 +4,30 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { locationService, UpdateLocationRequest } from './locationService';
 import { localLocationStorage } from './localLocationStorage';
 
-const getBestLocationAccuracy = (): Location.Accuracy => {
-  try {
-    if (Location.Accuracy.BestForNavigation !== undefined) {
-      return Location.Accuracy.BestForNavigation;
+const startLocationUpdatesWithRetry = async (
+  taskName: string,
+  options: Location.LocationTaskOptions,
+  maxRetries: number = 3,
+  retryDelay: number = 1000
+): Promise<void> => {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      await Location.startLocationUpdatesAsync(taskName, {
+        ...options,
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
+      }
     }
-    if (Location.Accuracy.Highest !== undefined) {
-      return Location.Accuracy.Highest;
-    }
-    if (Location.Accuracy.High !== undefined) {
-      return Location.Accuracy.High;
-    }
-    if (Location.Accuracy.Balanced !== undefined) {
-      return Location.Accuracy.Balanced;
-    }
-    if (Location.Accuracy.Low !== undefined) {
-      return Location.Accuracy.Low;
-    }
-    if (Location.Accuracy.Lowest !== undefined) {
-      return Location.Accuracy.Lowest;
-    }
-    return Location.Accuracy.Balanced;
-  } catch {
-    return Location.Accuracy.Balanced;
   }
+  
+  throw lastError || new Error('Falha ao iniciar atualizações de localização após múltiplas tentativas');
 };
 
 const LOCATION_TASK_NAME = 'background-location-task';
@@ -79,7 +79,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: {
 
         if (isAuthenticated) {
           const result = await locationService.updateLocation(locationData);
-          
+        
           if (!result.success) {
             console.error('Erro ao enviar localização:', result.message);
             await localLocationStorage.saveLocation(locationData);
@@ -132,8 +132,7 @@ class ForegroundLocationService {
         return true;
       }
 
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: getBestLocationAccuracy(), 
+      await startLocationUpdatesWithRetry(LOCATION_TASK_NAME, {
         timeInterval: 30000, 
         distanceInterval: 10, 
         foregroundService: {

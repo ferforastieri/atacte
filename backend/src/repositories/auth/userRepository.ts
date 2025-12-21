@@ -14,6 +14,7 @@ export interface CreateUserSessionData {
   userId: string;
   tokenHash: string;
   deviceName?: string;
+  deviceFingerprint?: string;
   ipAddress?: string;
   userAgent?: string;
   expiresAt?: Date | null;
@@ -72,6 +73,7 @@ export class UserRepository {
       userId: data.userId,
       tokenHash: data.tokenHash,
       deviceName: data.deviceName,
+      deviceFingerprint: data.deviceFingerprint,
       ipAddress: data.ipAddress,
       userAgent: data.userAgent,
       isTrusted: data.isTrusted ?? false,
@@ -113,42 +115,50 @@ export class UserRepository {
     return { sessions, total };
   }
 
-  async hasTrustedDevice(userId: string, deviceName: string): Promise<boolean> {
+  async hasTrustedDevice(userId: string, deviceFingerprint: string): Promise<boolean> {
+    if (!deviceFingerprint) {
+      return false;
+    }
     const trustedDevice = await prisma.trustedDevice.findUnique({
       where: {
-        userId_deviceName: {
+        userId_deviceFingerprint: {
           userId,
-          deviceName,
+          deviceFingerprint,
         },
       },
     });
     return !!trustedDevice;
   }
 
-  async addTrustedDevice(userId: string, deviceName: string): Promise<void> {
+  async addTrustedDevice(userId: string, deviceName: string, deviceFingerprint: string | null | undefined): Promise<void> {
+    if (!deviceFingerprint) {
+      return;
+    }
     await prisma.trustedDevice.upsert({
       where: {
-        userId_deviceName: {
+        userId_deviceFingerprint: {
           userId,
-          deviceName,
+          deviceFingerprint,
         },
       },
       update: {
+        deviceName,
         lastUsed: new Date(),
       },
       create: {
         userId,
         deviceName,
+        deviceFingerprint,
         lastUsed: new Date(),
       },
     });
   }
 
-  async removeTrustedDevice(userId: string, deviceName: string): Promise<void> {
+  async removeTrustedDevice(userId: string, deviceFingerprint: string): Promise<void> {
     await prisma.trustedDevice.deleteMany({
       where: {
         userId,
-        deviceName,
+        deviceFingerprint,
       },
     });
   }

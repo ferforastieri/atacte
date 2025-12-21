@@ -18,6 +18,7 @@ export interface LoginRequest {
   email: string
   masterPassword: string
   deviceName?: string
+  deviceFingerprint?: string
 }
 
 export interface LoginResponse {

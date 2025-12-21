@@ -74,6 +74,17 @@ export const authenticateToken = async (
       return;
     }
 
+    if (session.expiresAt && new Date() > session.expiresAt) {
+      await prisma.userSession.delete({
+        where: { id: session.id }
+      });
+      res.status(401).json({ 
+        success: false, 
+        message: 'Sessão expirada. Por favor, faça login novamente.' 
+      });
+      return;
+    }
+
     const allowedPathsWithoutTrust = ['/api/auth/trust-device', '/api/auth/me', '/api/auth/logout', '/auth/trust-device', '/auth/me', '/auth/logout'];
     const path = req.path;
     const originalUrl = req.originalUrl || req.url;
@@ -155,8 +166,14 @@ export const optionalAuth = async (
     });
 
     if (session && session.user.isActive) {
+      if (session.expiresAt && new Date() > session.expiresAt) {
+        await prisma.userSession.delete({
+          where: { id: session.id }
+        });
+      } else {
       (req as AuthenticatedRequest).user = session.user;
       (req as AuthenticatedRequest).sessionId = session.id;
+      }
     }
     
     next();

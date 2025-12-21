@@ -22,6 +22,7 @@ export interface LoginRequest {
   email: string;
   masterPassword: string;
   deviceName?: string;
+  deviceFingerprint?: string;
 }
 
 export interface RegisterRequest {
@@ -101,20 +102,26 @@ export class AuthService {
     );
 
     
-    const expiresAt = null;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
     const tokenHash = crypto.SHA256(token).toString();
     const deviceName = data.deviceName || 'Dispositivo Web';
-    
-    const hasTrustedDevice = await this.userRepository.hasTrustedDevice(user.id, deviceName);
+    const deviceFingerprint = data.deviceFingerprint || undefined;
+
+    let isTrusted = false;
+    if (deviceFingerprint) {
+      isTrusted = await this.userRepository.hasTrustedDevice(user.id, deviceFingerprint);
+    }
 
     const sessionData: CreateUserSessionData = {
       userId: user.id,
       tokenHash: tokenHash,
       deviceName: deviceName,
+      deviceFingerprint: deviceFingerprint,
       ipAddress: ipAddress || 'unknown',
       userAgent: userAgent || 'unknown',
       expiresAt: expiresAt,
-      isTrusted: hasTrustedDevice,
+      isTrusted: isTrusted,
     };
 
     const session = await this.userRepository.createSession(sessionData);
@@ -238,8 +245,8 @@ export class AuthService {
     }
     await this.userRepository.updateSession(sessionId, { isTrusted: true });
     
-    if (session.deviceName) {
-      await this.userRepository.addTrustedDevice(userId, session.deviceName);
+    if (session.deviceFingerprint && session.deviceName) {
+      await this.userRepository.addTrustedDevice(userId, session.deviceName, session.deviceFingerprint);
     }
     
   }

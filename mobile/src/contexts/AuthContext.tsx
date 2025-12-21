@@ -16,8 +16,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  register: (email: string, password: string, name?: string) => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, masterPassword: string, deviceName?: string, deviceFingerprint?: string) => Promise<{ success: boolean; message?: string; requiresTrust?: boolean; sessionId?: string }>;
+  register: (email: string, masterPassword: string, name?: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -64,27 +64,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null);
         setIsAuthenticated(false);
       } else {
-        await authService.logout();
-        setUser(null);
-        setIsAuthenticated(false);
+      await authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email: string, masterPassword: string, deviceName?: string): Promise<{ success: boolean; message?: string; requiresTrust?: boolean; sessionId?: string }> => {
+  const login = async (email: string, masterPassword: string, deviceName?: string, deviceFingerprint?: string): Promise<{ success: boolean; message?: string; requiresTrust?: boolean; sessionId?: string }> => {
     try {
       await authService.logout();
       
-      const response = await authService.login({ email, masterPassword, deviceName });
+      const response = await authService.login({ email, masterPassword, deviceName, deviceFingerprint });
       if (response.success && response.data) {
         if (response.data.token && response.data.user) {
           setUser(response.data.user);
           setIsAuthenticated(true);
         }
         
-        if (response.data.requiresTrust) {
+        if (response.data.requiresTrust && response.data.sessionId) {
           return { 
             success: true, 
             requiresTrust: true, 

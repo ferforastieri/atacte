@@ -8,6 +8,7 @@ interface LoginRequest {
   email: string;
   masterPassword: string;
   deviceName?: string;
+  deviceFingerprint?: string;
 }
 
 interface RegisterRequest {

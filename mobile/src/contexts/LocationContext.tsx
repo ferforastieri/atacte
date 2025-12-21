@@ -109,11 +109,11 @@ export function LocationProvider({ children }: LocationProviderProps) {
       }
       
       if (isAuthenticated) {
-        const response = await familyService.getFamilies();
-        
-        if (!response.success || !response.data || response.data.length === 0) {
-          setIsTrackingActive(false);
-          return;
+      const response = await familyService.getFamilies();
+      
+      if (!response.success || !response.data || response.data.length === 0) {
+        setIsTrackingActive(false);
+        return;
         }
       }
       
@@ -141,11 +141,11 @@ export function LocationProvider({ children }: LocationProviderProps) {
       if (started) {
         setIsTrackingActive(true);
         if (isAuthenticated) {
-          try {
-            await locationService.sendCurrentLocation();
-          } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error('Erro ao enviar localização inicial:', errorMessage);
+        try {
+          await locationService.sendCurrentLocation();
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error('Erro ao enviar localização inicial:', errorMessage);
           }
         }
       } else {
@@ -219,7 +219,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
   useEffect(() => {
     const refreshInterval = setInterval(() => {
       if (isAuthenticated) {
-        refreshLocation();
+      refreshLocation();
       }
     }, 30000);
 
