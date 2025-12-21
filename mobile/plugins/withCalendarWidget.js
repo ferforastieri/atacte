@@ -90,15 +90,20 @@ import java.util.*
 
 class CalendarWidgetProvider : AppWidgetProvider() {
 
-  override fun onUpdate(
-    context: Context,
-    appWidgetManager: AppWidgetManager,
-    appWidgetIds: IntArray
-  ) {
-    for (appWidgetId in appWidgetIds) {
-      updateAppWidget(context, appWidgetManager, appWidgetId)
-    }
+override fun onUpdate(
+  context: Context,
+  appWidgetManager: AppWidgetManager,
+  appWidgetIds: IntArray
+) {
+  val packageName = context.applicationContext.packageName
+
+  for (id in appWidgetIds) {
+    val views = RemoteViews(packageName, R.layout.calendar_widget)
+    views.setTextViewText(R.id.widget_month, "Calendário")
+    appWidgetManager.updateAppWidget(id, views)
   }
+}
+
 
   override fun onReceive(context: Context, intent: Intent) {
     super.onReceive(context, intent)
