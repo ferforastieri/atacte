@@ -113,9 +113,16 @@ class AuthService {
     await AsyncStorage.removeItem('user');
     
     if (Platform.OS === 'android' && ForegroundTracking) {
-      ForegroundTracking.clearAuthToken(() => {}, (error: Error) => {
-        console.error('Erro ao limpar token nativo:', error);
-      });
+      try {
+        await new Promise<void>((resolve, reject) => {
+          ForegroundTracking.clearAuthToken(() => {
+            resolve();
+          }, (error: Error) => {
+            reject(error);
+          });
+        });
+      } catch (error) {
+      }
     }
   }
 
@@ -125,7 +132,20 @@ class AuthService {
   }
 
   async getStoredToken() {
-    return AsyncStorage.getItem('auth_token');
+    const token = await AsyncStorage.getItem('auth_token');
+    if (!token && Platform.OS === 'android' && ForegroundTracking) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          ForegroundTracking.clearAuthToken(() => {
+            resolve();
+          }, (error: Error) => {
+            reject(error);
+          });
+        });
+      } catch (error) {
+      }
+    }
+    return token;
   }
 
   async requestPasswordReset(email: string): Promise<AuthResponse> {

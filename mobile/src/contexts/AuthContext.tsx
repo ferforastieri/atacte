@@ -41,17 +41,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const token = await authService.getStoredToken();
       if (!token) {
+        await authService.logout();
         setUser(null);
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
-      }
-
-      const cachedUser = await authService.getStoredUser();
-      if (cachedUser) {
-        setUser(cachedUser);
-        setIsAuthenticated(true);
-        setIsLoading(false);
       }
 
       const response = await authService.getMe();
