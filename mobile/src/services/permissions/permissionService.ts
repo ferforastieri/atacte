@@ -1,9 +1,11 @@
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import { Platform, Linking, Alert } from 'react-native';
+import { Platform, Linking, Alert, NativeModules } from 'react-native';
 import * as Battery from 'expo-battery';
 import { locationService } from '../location/locationService';
 import { notificationService } from '../notification/notificationService';
+
+const { ForegroundTracking } = NativeModules;
 
 export interface PermissionResult {
   granted: boolean;
@@ -118,10 +120,33 @@ class PermissionService {
   async requestActivityRecognition(): Promise<PermissionResult> {
     try {
       if (Platform.OS === 'android') {
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (ForegroundTracking && ForegroundTracking.requestActivityRecognition) {
+          try {
+            const granted = await new Promise<boolean>((resolve, reject) => {
+              ForegroundTracking.requestActivityRecognition(
+                (result: boolean) => resolve(result),
+                (error: Error) => reject(error)
+              );
+            });
+            
+            if (!granted && Platform.Version >= 29) {
+              try {
+                await Linking.openSettings();
+              } catch {
+              }
+            }
+            
+            return {
+              granted: granted,
+              message: granted ? undefined : 'Permissão de reconhecimento de atividade negada. Por favor, conceda nas configurações.',
+            };
+          } catch {
+          }
+        }
+        
         return {
-          granted: status === 'granted',
-          message: status === 'granted' ? undefined : 'Permissão de reconhecimento de atividade negada',
+          granted: true,
+          message: undefined,
         };
       } else {
         return { granted: true };
@@ -199,9 +224,27 @@ class PermissionService {
         granted: notificationStatus.granted,
       };
 
-      results.activityRecognition = {
-        granted: foregroundStatus.granted,
-      };
+      if (Platform.OS === 'android' && ForegroundTracking && ForegroundTracking.requestActivityRecognition) {
+        try {
+          const granted = await new Promise<boolean>((resolve, reject) => {
+            ForegroundTracking.requestActivityRecognition(
+              (result: boolean) => resolve(result),
+              (error: Error) => reject(error)
+            );
+          });
+          results.activityRecognition = {
+            granted: granted,
+          };
+        } catch {
+          results.activityRecognition = {
+            granted: foregroundStatus.granted,
+          };
+        }
+      } else {
+        results.activityRecognition = {
+          granted: foregroundStatus.granted,
+        };
+      }
 
       if (Platform.OS === 'android') {
         try {

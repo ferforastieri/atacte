@@ -3,6 +3,7 @@ import { locationService, LocationData, FamilyMapData } from '../services/locati
 import { familyService } from '../services/family/familyService';
 import { geofenceService, GeofenceZone } from '../services/geofence/geofenceService';
 import { notificationService } from '../services/notification/notificationService';
+import { localLocationStorage } from '../services/location/localLocationStorage';
 import * as Notifications from 'expo-notifications';
 import { useAuth as useAuthContext } from './AuthContext';
 
@@ -33,18 +34,17 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const lastCheckTime = useRef<number>(Date.now());
 
   useEffect(() => {
+    initializeLocation();
+  }, []);
+
+  useEffect(() => {
     if (isAuthenticated) {
-      initializeLocation();
-    } else {
-     
-      stopTracking();
+      sendPendingLocations();
     }
   }, [isAuthenticated]);
 
  
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     const checkTrackingStatus = async () => {
       try {
         const backgroundFunctions = (global as typeof globalThis & {
@@ -72,7 +72,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     const interval = setInterval(checkTrackingStatus, 30000);
     
     return () => clearInterval(interval);
-  }, [isAuthenticated, isTrackingActive]);
+  }, [isTrackingActive]);
 
   const initializeLocation = async () => {
     try {
@@ -108,11 +108,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
         return;
       }
       
-      const response = await familyService.getFamilies();
-      
-      if (!response.success || !response.data || response.data.length === 0) {
-        setIsTrackingActive(false);
-        return;
+      if (isAuthenticated) {
+        const response = await familyService.getFamilies();
+        
+        if (!response.success || !response.data || response.data.length === 0) {
+          setIsTrackingActive(false);
+          return;
+        }
       }
       
       const backgroundFunctions = (global as typeof globalThis & {
@@ -138,11 +140,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
       
       if (started) {
         setIsTrackingActive(true);
-        try {
-          await locationService.sendCurrentLocation();
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.error('Erro ao enviar localização inicial:', errorMessage);
+        if (isAuthenticated) {
+          try {
+            await locationService.sendCurrentLocation();
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('Erro ao enviar localização inicial:', errorMessage);
+          }
         }
       } else {
         setIsTrackingActive(false);
@@ -151,6 +155,37 @@ export function LocationProvider({ children }: LocationProviderProps) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('Erro ao verificar e iniciar rastreamento:', errorMessage);
       setIsTrackingActive(false);
+    }
+  };
+
+  const sendPendingLocations = async () => {
+    try {
+      const pendingLocations = await localLocationStorage.getStoredLocations();
+      
+      if (pendingLocations.length === 0) {
+        return;
+      }
+
+      for (const location of pendingLocations) {
+        try {
+          await locationService.updateLocation({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            accuracy: location.accuracy,
+            altitude: location.altitude,
+            speed: location.speed,
+            heading: location.heading,
+            batteryLevel: location.batteryLevel,
+            isMoving: location.isMoving,
+          });
+        } catch (error) {
+          console.error('Erro ao enviar localização pendente:', error);
+        }
+      }
+
+      await localLocationStorage.clearStoredLocations();
+    } catch (error) {
+      console.error('Erro ao enviar localizações pendentes:', error);
     }
   };
 
@@ -182,10 +217,10 @@ export function LocationProvider({ children }: LocationProviderProps) {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     const refreshInterval = setInterval(() => {
-      refreshLocation();
+      if (isAuthenticated) {
+        refreshLocation();
+      }
     }, 30000);
 
     return () => clearInterval(refreshInterval);

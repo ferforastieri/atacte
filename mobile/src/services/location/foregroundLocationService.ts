@@ -1,6 +1,8 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { locationService, UpdateLocationRequest } from './locationService';
+import { localLocationStorage } from './localLocationStorage';
 
 const getBestLocationAccuracy = (): Location.Accuracy => {
   try {
@@ -61,7 +63,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: {
         const speed = location.coords.speed ?? 0;
         const isMoving = speed > 0.5 || (location.coords.heading !== null && location.coords.heading !== undefined);
         
-        const payload: UpdateLocationRequest = {
+        const locationData = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           accuracy: location.coords.accuracy && location.coords.accuracy > 0 ? location.coords.accuracy : undefined,
@@ -72,15 +74,22 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: {
           isMoving: isMoving,
         };
 
-        const result = await locationService.updateLocation(payload);
-        
-        if (result.success) {
+        const token = await AsyncStorage.getItem('auth_token');
+        const isAuthenticated = !!token;
+
+        if (isAuthenticated) {
+          const result = await locationService.updateLocation(locationData);
+          
+          if (!result.success) {
+            console.error('Erro ao enviar localização:', result.message);
+            await localLocationStorage.saveLocation(locationData);
+          }
         } else {
-          console.error('Erro ao enviar localização:', result.message);
+          await localLocationStorage.saveLocation(locationData);
         }
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('Erro ao enviar localização em background:', errorMessage);
+        console.error('Erro ao processar localização em background:', errorMessage);
       }
     }
   }

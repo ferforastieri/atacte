@@ -48,20 +48,7 @@ function PermissionsInitializer() {
   useEffect(() => {
     const checkAndRequestPermissions = async () => {
       try {
-        const results = await permissionService.checkAllPermissions();
-        
-        if (!results.notifications.granted) {
-          await permissionService.requestNotifications();
-        }
-        
-        if (!results.locationForeground.granted) {
-          const foregroundResult = await permissionService.requestLocationForeground();
-          if (foregroundResult.granted && !results.locationBackground.granted) {
-            await permissionService.requestLocationBackground();
-          }
-        } else if (!results.locationBackground.granted) {
-          await permissionService.requestLocationBackground();
-        }
+        const results = await permissionService.requestAllPermissions();
       } catch (error) {
         console.error('Erro ao verificar/solicitar permissões:', error);
       }

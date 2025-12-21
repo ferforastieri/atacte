@@ -482,6 +482,8 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import android.content.SharedPreferences
+import androidx.core.content.ContextCompat
+import androidx.core.app.ActivityCompat
 
 class ForegroundTrackingModule(reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
@@ -561,6 +563,39 @@ class ForegroundTrackingModule(reactContext: ReactApplicationContext) :
       promise.resolve(true)
     } catch (error: Exception) {
       promise.reject("CLEAR_TOKEN_ERROR", error)
+    }
+  }
+
+  @ReactMethod
+  fun requestActivityRecognition(promise: Promise) {
+    try {
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        val permission = "android.permission.ACTIVITY_RECOGNITION"
+        val granted = ContextCompat.checkSelfPermission(
+          appContext,
+          permission
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        
+        if (granted) {
+          promise.resolve(true)
+        } else {
+          val activity = reactApplicationContext.currentActivity
+          if (activity != null) {
+            androidx.core.app.ActivityCompat.requestPermissions(
+              activity,
+              arrayOf(permission),
+              1001
+            )
+            promise.resolve(false)
+          } else {
+            promise.resolve(false)
+          }
+        }
+      } else {
+        promise.resolve(true)
+      }
+    } catch (error: Exception) {
+      promise.reject("ACTIVITY_RECOGNITION_ERROR", error)
     }
   }
 }
