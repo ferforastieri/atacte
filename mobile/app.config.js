@@ -97,7 +97,8 @@ export default {
           }
         }
       ],
-      "./plugins/withPersistentLocation"
+      "./plugins/withPersistentLocation",
+      "./plugins/withCalendarWidget"
     ]
   }
 };

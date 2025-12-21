@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeModules, Platform } from 'react-native';
 import apiClient from '../../lib/axios';
 
-const { ForegroundTracking } = NativeModules;
+const { ForegroundTracking, CalendarWidgetModule } = NativeModules;
 
 interface LoginRequest {
   email: string;
@@ -71,14 +71,29 @@ class AuthService {
     });
 
     if (response.success && response.data?.token && response.data?.user) {
-      await AsyncStorage.setItem('auth_token', response.data.token);
+      const token = response.data.token;
+      await AsyncStorage.setItem('auth_token', token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       
+      const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+      
       if (Platform.OS === 'android' && ForegroundTracking) {
-        const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-        ForegroundTracking.saveAuthToken(response.data.token, apiUrl, () => {}, (error: Error) => {
+        ForegroundTracking.saveAuthToken(token, apiUrl, () => {}, (error: Error) => {
           console.error('Erro ao salvar token nativo:', error);
         });
+      } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            CalendarWidgetModule.saveAuthToken(
+              token,
+              apiUrl,
+              () => resolve(),
+              (error: Error) => reject(error)
+            );
+          });
+        } catch (error) {
+          console.error('Erro ao salvar token no UserDefaults compartilhado:', error);
+        }
       }
     } else {
       await this.logout();
@@ -96,14 +111,29 @@ class AuthService {
     });
 
     if (response.success && response.data?.token) {
-      await AsyncStorage.setItem('auth_token', response.data.token);
+      const token = response.data.token;
+      await AsyncStorage.setItem('auth_token', token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       
+      const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+      
       if (Platform.OS === 'android' && ForegroundTracking) {
-        const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-        ForegroundTracking.saveAuthToken(response.data.token, apiUrl, () => {}, (error: Error) => {
+        ForegroundTracking.saveAuthToken(token, apiUrl, () => {}, (error: Error) => {
           console.error('Erro ao salvar token nativo:', error);
         });
+      } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            CalendarWidgetModule.saveAuthToken(
+              token,
+              apiUrl,
+              () => resolve(),
+              (error: Error) => reject(error)
+            );
+          });
+        } catch (error) {
+          console.error('Erro ao salvar token no UserDefaults compartilhado:', error);
+        }
       }
     } else {
       await this.logout();
@@ -128,6 +158,16 @@ class AuthService {
           }, (error: Error) => {
             reject(error);
           });
+        });
+      } catch (error) {
+      }
+    } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          CalendarWidgetModule.clearAuthToken(
+            () => resolve(),
+            (error: Error) => reject(error)
+          );
         });
       } catch (error) {
       }
