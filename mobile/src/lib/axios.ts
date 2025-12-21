@@ -49,11 +49,10 @@ apiClient.interceptors.response.use(
       }
       
       if (status === 401) {
-        const allowedPaths = ['/auth/me', '/auth/trust-device', '/auth/logout'];
         const path = error.config?.url || '';
-        const isAllowedPath = allowedPaths.some(allowed => path.includes(allowed));
+        const isLogout = path.includes('/auth/logout');
         
-        if (!isAllowedPath) {
+        if (!isLogout) {
           try {
             await AsyncStorage.removeItem('auth_token');
             await AsyncStorage.removeItem('user');

@@ -58,10 +58,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null);
         setIsAuthenticated(false);
       }
-    } catch (error) {
-      await authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
+    } catch (error: any) {
+      if (error?.response?.status === 401 || error?.isAuthError) {
+        await authService.logout();
+        setUser(null);
+        setIsAuthenticated(false);
+      } else {
+        await authService.logout();
+        setUser(null);
+        setIsAuthenticated(false);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -69,6 +75,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, masterPassword: string, deviceName?: string): Promise<{ success: boolean; message?: string; requiresTrust?: boolean; sessionId?: string }> => {
     try {
+      await authService.logout();
+      
       const response = await authService.login({ email, masterPassword, deviceName });
       if (response.success && response.data) {
         if (response.data.token && response.data.user) {
@@ -87,10 +95,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         return { success: true };
       } else {
+        await authService.logout();
         return { success: false, message: response.message || 'Erro no login' };
       }
-    } catch (error) {
-      return { success: false, message: 'Erro no login' };
+    } catch (error: any) {
+      await authService.logout();
+      const errorMessage = error?.response?.data?.message || error?.message || 'Erro no login. Verifique suas credenciais.';
+      return { success: false, message: errorMessage };
     }
   };
 
@@ -124,8 +135,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (response.success && response.data?.user) {
         setUser(response.data.user);
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+      } else {
+        await authService.logout();
+        setUser(null);
+        setIsAuthenticated(false);
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response?.status === 401 || error?.isAuthError) {
+        await authService.logout();
+        setUser(null);
+        setIsAuthenticated(false);
+      }
     }
   };
 

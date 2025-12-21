@@ -63,6 +63,8 @@ class AuthService {
   }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
+    await this.logout();
+    
     const response = await this.makeRequest('/auth/login', {
       method: 'POST',
       data: credentials,
@@ -78,12 +80,16 @@ class AuthService {
           console.error('Erro ao salvar token nativo:', error);
         });
       }
+    } else {
+      await this.logout();
     }
 
     return response;
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
+    await this.logout();
+    
     const response = await this.makeRequest('/auth/register', {
       method: 'POST',
       data: userData,
@@ -99,6 +105,8 @@ class AuthService {
           console.error('Erro ao salvar token nativo:', error);
         });
       }
+    } else {
+      await this.logout();
     }
 
     return response;
