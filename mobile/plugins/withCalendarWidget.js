@@ -95,12 +95,8 @@ override fun onUpdate(
   appWidgetManager: AppWidgetManager,
   appWidgetIds: IntArray
 ) {
-  val packageName = context.applicationContext.packageName
-
   for (id in appWidgetIds) {
-    val views = RemoteViews(packageName, R.layout.calendar_widget)
-    views.setTextViewText(R.id.widget_month, "Calendário")
-    appWidgetManager.updateAppWidget(id, views)
+    updateAppWidget(context, appWidgetManager, id)
   }
 }
 
@@ -176,6 +172,8 @@ FetchCalendarEventsTask(
         val url = URL("\$apiUrl/api/calendar?startDate=\$startDateStr&endDate=\$endDateStr")
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
+        connection.connectTimeout = 5000
+        connection.readTimeout = 5000
         connection.setRequestProperty("Authorization", "Bearer \$token")
         connection.setRequestProperty("Content-Type", "application/json")
 
