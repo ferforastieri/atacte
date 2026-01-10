@@ -14,9 +14,21 @@ export default {
     assetBundlePatterns: [
       "**/*"
     ],
+    updates: {
+      url: "https://u.expo.dev/4ed359d6-b000-4308-84c0-18c93f60b0c6"
+    },
+    runtimeVersion: {
+      policy: "appVersion"
+    },
     ios: {
       bundleIdentifier: "com.atacte.mobile",
       supportsTablet: true,
+      buildNumber: "1",
+      usesAppleSignIn: false,
+      usesIcloudStorage: false,
+      config: {
+        usesNonExemptEncryption: false
+      },
       infoPlist: {
         NSAppTransportSecurity: {
           NSAllowsArbitraryLoads: true
@@ -24,7 +36,13 @@ export default {
         NSLocationWhenInUseUsageDescription: "Este app precisa da sua localização para compartilhar com sua família.",
         NSLocationAlwaysUsageDescription: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
         NSLocationAlwaysAndWhenInUseUsageDescription: "Este app precisa da sua localização para compartilhar com sua família.",
+        NSContactsUsageDescription: "Este app precisa acessar seus contatos para que você possa importá-los e gerenciá-los.",
         UIBackgroundModes: ["location", "remote-notification"]
+      },
+      entitlements: {
+        "com.apple.security.application-groups": [
+          "group.com.atacte.mobile"
+        ]
       }
     },
     android: {
@@ -53,7 +71,9 @@ export default {
         "BLUETOOTH",
         "BLUETOOTH_ADMIN",
         "ACCESS_NETWORK_STATE",
-        "CHANGE_NETWORK_STATE"
+        "CHANGE_NETWORK_STATE",
+        "READ_CONTACTS",
+        "WRITE_CONTACTS"
       ],
       usesCleartextTraffic: true,
       compileSdkVersion: 34,
@@ -69,24 +89,17 @@ export default {
       }
     },
     plugins: [
+      "@bacons/apple-targets",
       "expo-router",
       "expo-font",
+      "expo-secure-store",
+      "expo-updates",
       [
         "expo-notifications",
         {
           icon: "./assets/logo.png",
           color: "#16a34a",
           defaultChannel: "default"
-        }
-      ],
-      [
-        "expo-location",
-        {
-          locationAlwaysAndWhenInUsePermission: "Este app precisa da sua localização para compartilhar com sua família.",
-          locationAlwaysPermission: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
-          locationWhenInUsePermission: "Este app precisa da sua localização para compartilhar com sua família.",
-          isIosBackgroundLocationEnabled: true,
-          isAndroidBackgroundLocationEnabled: true
         }
       ],
       [
@@ -97,7 +110,7 @@ export default {
           }
         }
       ],
-      "./plugins/withPersistentLocation",
+      "./plugins/location",
       "./plugins/withCalendarWidget"
     ]
   }

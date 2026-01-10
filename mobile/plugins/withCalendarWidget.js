@@ -76,30 +76,22 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
-import android.os.AsyncTask
 import android.widget.RemoteViews
 import org.json.JSONArray
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
 class CalendarWidgetProvider : AppWidgetProvider() {
 
-override fun onUpdate(
-  context: Context,
-  appWidgetManager: AppWidgetManager,
-  appWidgetIds: IntArray
-) {
-  for (id in appWidgetIds) {
-    updateAppWidget(context, appWidgetManager, id)
+  override fun onUpdate(
+    context: Context,
+    appWidgetManager: AppWidgetManager,
+    appWidgetIds: IntArray
+  ) {
+    for (id in appWidgetIds) {
+      updateAppWidget(context, appWidgetManager, id)
+    }
   }
-}
-
 
   override fun onReceive(context: Context, intent: Intent) {
     super.onReceive(context, intent)
@@ -117,128 +109,56 @@ override fun onUpdate(
     appWidgetManager: AppWidgetManager,
     appWidgetId: Int
   ) {
-    val views = RemoteViews(context.applicationContext.packageName, R.layout.calendar_widget)
+    val views = RemoteViews(context.packageName, R.layout.calendar_widget)
     
-FetchCalendarEventsTask(
-  context,
-  appWidgetManager,
-  appWidgetId,
-  views,
-  context.applicationContext.packageName
-).execute()
+    val events = loadEventsFromStorage(context)
+    
+    val calendar = Calendar.getInstance()
+    val currentMonth = calendar.get(Calendar.MONTH)
+    val currentYear = calendar.get(Calendar.YEAR)
+    
+    val monthNames = arrayOf("Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro")
+    
+    views.setTextViewText(
+      context.resources.getIdentifier("widget_month", "id", context.packageName),
+      "\${monthNames[currentMonth]} \${currentYear}"
+    )
+
+    val calendarText = buildCalendarView(calendar, events)
+    views.setTextViewText(
+      context.resources.getIdentifier("widget_calendar", "id", context.packageName),
+      calendarText
+    )
+
+    appWidgetManager.updateAppWidget(appWidgetId, views)
   }
-
-  private class FetchCalendarEventsTask(
-    private val context: Context,
-    private val appWidgetManager: AppWidgetManager,
-    private val appWidgetId: Int,
-    private val views: RemoteViews,
-    private val packageName: String
-  ) : AsyncTask<Void, Void, List<CalendarEvent>>() {
-
-    override fun doInBackground(vararg params: Void?): List<CalendarEvent> {
-      try {
-        val prefs: SharedPreferences = context.getSharedPreferences(
-          "atacte_auth_prefs",
-          Context.MODE_PRIVATE
-        )
-        val token = prefs.getString("auth_token", null)
-        val apiUrl = prefs.getString("api_url", "http://localhost:3000")
-
-        if (token == null || apiUrl == null) {
-          return emptyList()
-        }
-
-        val today = Calendar.getInstance()
-        today.set(Calendar.DAY_OF_MONTH, 1)
-        today.set(Calendar.HOUR_OF_DAY, 0)
-        today.set(Calendar.MINUTE, 0)
-        today.set(Calendar.SECOND, 0)
-        today.set(Calendar.MILLISECOND, 0)
-
-        val endDate = today.clone() as Calendar
-        endDate.add(Calendar.MONTH, 1)
-        endDate.add(Calendar.DAY_OF_MONTH, -1)
-        endDate.set(Calendar.HOUR_OF_DAY, 23)
-        endDate.set(Calendar.MINUTE, 59)
-        endDate.set(Calendar.SECOND, 59)
-
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-
-        val startDateStr = dateFormat.format(today.time)
-        val endDateStr = dateFormat.format(endDate.time)
-
-        val url = URL("\$apiUrl/api/calendar?startDate=\$startDateStr&endDate=\$endDateStr")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        connection.connectTimeout = 5000
-        connection.readTimeout = 5000
-        connection.setRequestProperty("Authorization", "Bearer \$token")
-        connection.setRequestProperty("Content-Type", "application/json")
-
-        val responseCode = connection.responseCode
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-          val reader = BufferedReader(InputStreamReader(connection.inputStream))
-          val response = StringBuilder()
-          var line: String?
-          while (reader.readLine().also { line = it } != null) {
-            response.append(line)
-          }
-          reader.close()
-
-          val jsonResponse = JSONObject(response.toString())
-          if (jsonResponse.getBoolean("success")) {
-            val eventsArray = jsonResponse.getJSONArray("data")
-            val events = mutableListOf<CalendarEvent>()
-
-            for (i in 0 until eventsArray.length()) {
-              val eventObj = eventsArray.getJSONObject(i)
-              val event = CalendarEvent(
-                id = eventObj.getString("id"),
-                title = eventObj.getString("title"),
-                startDate = eventObj.getString("startDate"),
-                endDate = eventObj.optString("endDate", null),
-                color = eventObj.optString("color", "#3b82f6"),
-                isAllDay = eventObj.optBoolean("isAllDay", false)
-              )
-              events.add(event)
-            }
-
-            return events.sortedBy { it.startDate }
-          }
-        }
-      } catch (e: Exception) {
-        e.printStackTrace()
+  
+  private fun loadEventsFromStorage(context: Context): List<CalendarEvent> {
+    try {
+      val prefs = context.getSharedPreferences("atacte_calendar_prefs", Context.MODE_PRIVATE)
+      val eventsJson = prefs.getString("calendar_events", null) ?: return emptyList()
+      
+      val eventsArray = JSONArray(eventsJson)
+      val events = mutableListOf<CalendarEvent>()
+      
+      for (i in 0 until eventsArray.length()) {
+        val eventObj = eventsArray.getJSONObject(i)
+        events.add(CalendarEvent(
+          id = eventObj.getString("id"),
+          title = eventObj.getString("title"),
+          startDate = eventObj.getString("startDate"),
+          color = eventObj.optString("color", "#3b82f6")
+        ))
       }
-
+      
+      return events
+    } catch (e: Exception) {
       return emptyList()
     }
+  }
 
-    override fun onPostExecute(events: List<CalendarEvent>) {
-      try {
-        val monthId = context.resources.getIdentifier("widget_month", "id", packageName)
-        val calendarId = context.resources.getIdentifier("widget_calendar", "id", packageName)
-
-        val calendar = Calendar.getInstance()
-        val currentMonth = calendar.get(Calendar.MONTH)
-        val currentYear = calendar.get(Calendar.YEAR)
-        
-        val monthNames = arrayOf("Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-          "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro")
-        
-        views.setTextViewText(monthId, "\${monthNames[currentMonth]} \${currentYear}")
-
-        val calendarText = buildCalendarView(calendar, events)
-        views.setTextViewText(calendarId, calendarText)
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-      } catch (e: Exception) {
-        e.printStackTrace()
-      }
-    }
-
-    private fun buildCalendarView(calendar: Calendar, events: List<CalendarEvent>): String {
+  private fun buildCalendarView(calendar: Calendar, events: List<CalendarEvent>): String {
       val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
       dateFormat.timeZone = TimeZone.getTimeZone("UTC")
       
@@ -305,9 +225,7 @@ FetchCalendarEventsTask(
     val id: String,
     val title: String,
     val startDate: String,
-    val endDate: String?,
-    val color: String,
-    val isAllDay: Boolean
+    val color: String
   )
 }
 `;

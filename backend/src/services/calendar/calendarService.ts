@@ -127,7 +127,6 @@ export class CalendarService {
     const recurrenceEnd = event.recurrenceEndDate ? new Date(event.recurrenceEndDate) : null;
     const interval = event.recurrenceInterval || 1;
 
-    let currentDate = new Date(Math.max(originalStart.getTime(), searchStart.getTime()));
     const maxDate = recurrenceEnd 
       ? new Date(Math.min(recurrenceEnd.getTime(), searchEnd.getTime()))
       : searchEnd;
@@ -140,21 +139,25 @@ export class CalendarService {
 
     switch (event.recurrenceType) {
       case 'DAILY': {
-        while (currentDate <= maxDate && occurrenceCount < maxOccurrences) {
-          const occurrenceEnd = originalEnd 
-            ? new Date(currentDate.getTime() + eventDuration)
-            : null;
+        let iterDate = new Date(originalStart);
+        
+        while (iterDate <= maxDate && occurrenceCount < maxOccurrences) {
+          if (iterDate >= searchStart && iterDate >= originalStart) {
+            const occurrenceEnd = originalEnd 
+              ? new Date(iterDate.getTime() + eventDuration)
+              : null;
 
-          occurrences.push({
-            ...event,
-            id: `${event.id}_${occurrenceCount}`,
-            startDate: new Date(currentDate),
-            endDate: occurrenceEnd || undefined,
-          });
+            occurrences.push({
+              ...event,
+              id: `${event.id}_${occurrenceCount}`,
+              startDate: new Date(iterDate),
+              endDate: occurrenceEnd || undefined,
+            });
+            occurrenceCount++;
+          }
 
-          currentDate = new Date(currentDate);
-          currentDate.setDate(currentDate.getDate() + interval);
-          occurrenceCount++;
+          iterDate = new Date(iterDate);
+          iterDate.setDate(iterDate.getDate() + interval);
         }
         break;
       }
@@ -164,7 +167,7 @@ export class CalendarService {
           ? event.recurrenceDaysOfWeek
           : [originalStart.getDay()];
         
-        const startOfWeek = new Date(currentDate);
+        const startOfWeek = new Date(originalStart);
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
         startOfWeek.setHours(0, 0, 0, 0);
 
@@ -183,7 +186,7 @@ export class CalendarService {
             occurrenceDate.setMinutes(originalStart.getMinutes());
             occurrenceDate.setSeconds(originalStart.getSeconds());
 
-            if (occurrenceDate >= searchStart && occurrenceDate <= maxDate) {
+            if (occurrenceDate >= searchStart && occurrenceDate <= maxDate && occurrenceDate >= originalStart) {
               const occurrenceEnd = originalEnd 
                 ? new Date(occurrenceDate.getTime() + eventDuration)
                 : null;
@@ -208,14 +211,22 @@ export class CalendarService {
 
       case 'MONTHLY': {
         if (event.recurrenceDayOfMonth) {
-          while (currentDate <= maxDate && occurrenceCount < maxOccurrences) {
-            const occurrenceDate = new Date(currentDate);
-            occurrenceDate.setDate(event.recurrenceDayOfMonth!);
-            occurrenceDate.setHours(originalStart.getHours());
-            occurrenceDate.setMinutes(originalStart.getMinutes());
-            occurrenceDate.setSeconds(originalStart.getSeconds());
+          let year = originalStart.getFullYear();
+          let month = originalStart.getMonth();
+          
+          while (occurrenceCount < maxOccurrences) {
+            const occurrenceDate = new Date(
+              year,
+              month,
+              event.recurrenceDayOfMonth,
+              originalStart.getHours(),
+              originalStart.getMinutes(),
+              originalStart.getSeconds()
+            );
 
-            if (occurrenceDate >= searchStart && occurrenceDate <= maxDate) {
+            if (occurrenceDate > maxDate) break;
+
+            if (occurrenceDate >= searchStart && occurrenceDate >= originalStart) {
               const occurrenceEnd = originalEnd 
                 ? new Date(occurrenceDate.getTime() + eventDuration)
                 : null;
@@ -229,21 +240,27 @@ export class CalendarService {
               occurrenceCount++;
             }
 
-            currentDate = new Date(currentDate);
-            currentDate.setMonth(currentDate.getMonth() + interval);
+            month += interval;
+            while (month >= 12) {
+              month -= 12;
+              year++;
+            }
           }
         } else if (event.recurrenceWeekOfMonth && event.recurrenceDaysOfWeek && event.recurrenceDaysOfWeek.length > 0) {
           const weekOfMonth = event.recurrenceWeekOfMonth;
           const dayOfWeek = event.recurrenceDaysOfWeek[0];
 
           if (dayOfWeek !== undefined) {
-            while (currentDate <= maxDate && occurrenceCount < maxOccurrences) {
-              const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            let year = originalStart.getFullYear();
+            let month = originalStart.getMonth();
+            
+            while (occurrenceCount < maxOccurrences) {
+              const firstDayOfMonth = new Date(year, month, 1);
               const firstDayOfWeek = firstDayOfMonth.getDay();
               
               let targetDate: Date;
               if (weekOfMonth === -1) {
-                const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                const lastDayOfMonth = new Date(year, month + 1, 0);
                 const lastDayOfWeek = lastDayOfMonth.getDay();
                 targetDate = new Date(lastDayOfMonth);
                 targetDate.setDate(targetDate.getDate() - ((lastDayOfWeek - dayOfWeek + 7) % 7));
@@ -257,7 +274,9 @@ export class CalendarService {
               targetDate.setMinutes(originalStart.getMinutes());
               targetDate.setSeconds(originalStart.getSeconds());
 
-              if (targetDate >= searchStart && targetDate <= maxDate && targetDate.getMonth() === currentDate.getMonth()) {
+              if (targetDate > maxDate) break;
+
+              if (targetDate >= searchStart && targetDate >= originalStart && targetDate.getMonth() === month) {
                 const occurrenceEnd = originalEnd 
                   ? new Date(targetDate.getTime() + eventDuration)
                   : null;
@@ -271,8 +290,11 @@ export class CalendarService {
                 occurrenceCount++;
               }
 
-              currentDate = new Date(currentDate);
-              currentDate.setMonth(currentDate.getMonth() + interval);
+              month += interval;
+              while (month >= 12) {
+                month -= 12;
+                year++;
+              }
             }
           }
         }
@@ -280,13 +302,22 @@ export class CalendarService {
       }
 
       case 'YEARLY': {
-        while (currentDate <= maxDate && occurrenceCount < maxOccurrences) {
-          const occurrenceDate = new Date(currentDate);
-          occurrenceDate.setHours(originalStart.getHours());
-          occurrenceDate.setMinutes(originalStart.getMinutes());
-          occurrenceDate.setSeconds(originalStart.getSeconds());
+        const startYear = searchStart.getFullYear();
+        const endYear = maxDate.getFullYear();
+        const originalMonth = originalStart.getMonth();
+        const originalDay = originalStart.getDate();
+        
+        for (let year = startYear; year <= endYear && occurrenceCount < maxOccurrences; year += interval) {
+          const occurrenceDate = new Date(
+            year,
+            originalMonth,
+            originalDay,
+            originalStart.getHours(),
+            originalStart.getMinutes(),
+            originalStart.getSeconds()
+          );
 
-          if (occurrenceDate >= searchStart && occurrenceDate <= maxDate) {
+          if (occurrenceDate >= searchStart && occurrenceDate <= maxDate && occurrenceDate >= originalStart) {
             const occurrenceEnd = originalEnd 
               ? new Date(occurrenceDate.getTime() + eventDuration)
               : null;
@@ -299,9 +330,6 @@ export class CalendarService {
             });
             occurrenceCount++;
           }
-
-          currentDate = new Date(currentDate);
-          currentDate.setFullYear(currentDate.getFullYear() + interval);
         }
         break;
       }

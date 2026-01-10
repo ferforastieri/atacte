@@ -44,6 +44,7 @@ model User {
   passwordResetTokens  PasswordResetToken[]
   trustedDevices       TrustedDevice[]
   calendarEvents       CalendarEvent[]
+  contacts             Contact[]
   
   @@map("users")
 }
@@ -320,4 +321,34 @@ model CalendarEvent {
   @@index([userId, startDate])
   @@index([userId])
   @@map("calendar_events")
+}
+
+model Contact {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  
+  firstName       String   @map("first_name")
+  lastName        String?  @map("last_name")
+  nickname        String?
+  company         String?
+  jobTitle        String?  @map("job_title")
+  
+  phoneNumbers    Json     @default("[]") @map("phone_numbers")
+  emails          Json     @default("[]")
+  addresses       Json     @default("[]")
+  
+  birthday        DateTime?
+  notes           String?
+  imageUrl        String?  @map("image_url")
+  
+  isFavorite      Boolean  @default(false) @map("is_favorite")
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([userId, isFavorite])
+  @@map("contacts")
 }

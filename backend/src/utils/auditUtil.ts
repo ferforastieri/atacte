@@ -33,7 +33,10 @@ export type AuditAction =
   | 'NOTE_DELETED'
   | 'CALENDAR_EVENT_CREATED'
   | 'CALENDAR_EVENT_UPDATED'
-  | 'CALENDAR_EVENT_DELETED';
+  | 'CALENDAR_EVENT_DELETED'
+  | 'CONTACT_CREATED'
+  | 'CONTACT_UPDATED'
+  | 'CONTACT_DELETED';
 
 export type ResourceType = 
   | 'USER'
@@ -45,7 +48,8 @@ export type ResourceType =
   | 'LOCATION'
   | 'GEOFENCE_ZONE'
   | 'SECURE_NOTE'
-  | 'CALENDAR_EVENT';
+  | 'CALENDAR_EVENT'
+  | 'CONTACT';
 
 export class AuditUtil {
   

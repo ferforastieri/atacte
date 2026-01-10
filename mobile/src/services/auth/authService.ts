@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules } from 'react-native';
 import apiClient from '../../lib/axios';
+import { nativeLocationService } from '../location/nativeLocationService';
 
-const { ForegroundTracking, CalendarWidgetModule } = NativeModules;
+const { CalendarWidgetModule } = NativeModules;
 
 interface LoginRequest {
   email: string;
@@ -78,13 +79,13 @@ class AuthService {
       
       const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
       
-      if (Platform.OS === 'android' && ForegroundTracking) {
-        try {
-          await ForegroundTracking.saveAuthToken(token, apiUrl);
-        } catch (error) {
-          console.error('Erro ao salvar token nativo (Android):', error);
-        }
-      } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
+      try {
+        await nativeLocationService.saveAuthToken(token, apiUrl);
+      } catch (error) {
+        console.error('Erro ao salvar token no módulo nativo:', error);
+      }
+
+      if (Platform.OS === 'ios' && CalendarWidgetModule) {
         try {
           await new Promise<void>((resolve, reject) => {
             CalendarWidgetModule.saveAuthToken(
@@ -120,13 +121,13 @@ class AuthService {
       
       const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
       
-      if (Platform.OS === 'android' && ForegroundTracking) {
-        try {
-          await ForegroundTracking.saveAuthToken(token, apiUrl);
-        } catch (error) {
-          console.error('Erro ao salvar token nativo (Android):', error);
-        }
-      } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
+      try {
+        await nativeLocationService.saveAuthToken(token, apiUrl);
+      } catch (error) {
+        console.error('Erro ao salvar token no módulo nativo:', error);
+      }
+
+      if (Platform.OS === 'ios' && CalendarWidgetModule) {
         try {
           await new Promise<void>((resolve, reject) => {
             CalendarWidgetModule.saveAuthToken(
@@ -155,12 +156,13 @@ class AuthService {
     await AsyncStorage.removeItem('auth_token');
     await AsyncStorage.removeItem('user');
     
-    if (Platform.OS === 'android' && ForegroundTracking) {
-      try {
-        await ForegroundTracking.clearAuthToken();
-      } catch (error) {
-      }
-    } else if (Platform.OS === 'ios' && CalendarWidgetModule) {
+    try {
+      await nativeLocationService.clearAuthToken();
+    } catch (error) {
+      console.error('Erro ao limpar token do módulo nativo:', error);
+    }
+
+    if (Platform.OS === 'ios' && CalendarWidgetModule) {
       try {
         await new Promise<void>((resolve, reject) => {
           CalendarWidgetModule.clearAuthToken(
@@ -180,16 +182,11 @@ class AuthService {
 
   async getStoredToken() {
     const token = await AsyncStorage.getItem('auth_token');
-    if (!token && Platform.OS === 'android' && ForegroundTracking) {
+    if (!token) {
       try {
-        await new Promise<void>((resolve, reject) => {
-          ForegroundTracking.clearAuthToken(() => {
-            resolve();
-          }, (error: Error) => {
-            reject(error);
-          });
-        });
+        await nativeLocationService.clearAuthToken();
       } catch (error) {
+        console.error('Erro ao limpar token:', error);
       }
     }
     return token;

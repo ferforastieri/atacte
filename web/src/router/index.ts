@@ -153,6 +153,15 @@ const router = createRouter({
       }
     },
     {
+      path: '/contacts',
+      name: 'Contacts',
+      component: () => import('@/views/ContactsView.vue'),
+      meta: { 
+        requiresAuth: true,
+        title: 'Contatos - Atacte'
+      }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('@/views/NotFoundView.vue'),

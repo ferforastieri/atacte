@@ -8,6 +8,7 @@ export type {
   AuditLog,
   SecureNote,
   CalendarEvent,
+  Contact,
   Prisma
 } from '@prisma/client';
 

@@ -1,99 +1,4 @@
-import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { locationService, UpdateLocationRequest } from './locationService';
-import { localLocationStorage } from './localLocationStorage';
-
-const startLocationUpdatesWithRetry = async (
-  taskName: string,
-  options: Location.LocationTaskOptions,
-  maxRetries: number = 3,
-  retryDelay: number = 1000
-): Promise<void> => {
-  let lastError: Error | null = null;
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      await Location.startLocationUpdatesAsync(taskName, {
-        ...options,
-        accuracy: Location.Accuracy.BestForNavigation,
-      });
-      return;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
-      }
-    }
-  }
-  
-  throw lastError || new Error('Falha ao iniciar atualizações de localização após múltiplas tentativas');
-};
-
-const LOCATION_TASK_NAME = 'background-location-task';
-
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: {
-  data?: {
-    locations?: Array<{
-      coords: {
-        latitude: number;
-        longitude: number;
-        accuracy?: number | null;
-        altitude?: number | null;
-        speed?: number | null;
-        heading?: number | null;
-      };
-    }>;
-  };
-  error?: Error | unknown;
-}) => {
-  if (error) {
-    console.error('Erro na tarefa de localização:', error);
-    return;
-  }
-
-  if (data && data.locations) {
-    const { locations } = data;
-    const location = locations[0];
-
-    if (location) {
-      try {
-        const batteryLevel = await locationService.getBatteryLevel();
-        
-        const speed = location.coords.speed ?? 0;
-        const isMoving = speed > 0.5 || (location.coords.heading !== null && location.coords.heading !== undefined);
-        
-        const locationData = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          accuracy: location.coords.accuracy && location.coords.accuracy > 0 ? location.coords.accuracy : undefined,
-          altitude: location.coords.altitude ?? undefined,
-          speed: speed > 0 ? speed : undefined,
-          heading: location.coords.heading ?? undefined,
-          batteryLevel: batteryLevel >= 0 ? batteryLevel : undefined,
-          isMoving: isMoving,
-        };
-
-        const token = await AsyncStorage.getItem('auth_token');
-        const isAuthenticated = !!token;
-
-        if (isAuthenticated) {
-          const result = await locationService.updateLocation(locationData);
-        
-          if (!result.success) {
-            console.error('Erro ao enviar localização:', result.message);
-            await localLocationStorage.saveLocation(locationData);
-          }
-        } else {
-          await localLocationStorage.saveLocation(locationData);
-        }
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('Erro ao processar localização em background:', errorMessage);
-      }
-    }
-  }
-});
+import { nativeLocationService } from './nativeLocationService';
 
 class ForegroundLocationService {
   private isActiveRef = false;
@@ -101,52 +6,24 @@ class ForegroundLocationService {
   async start(): Promise<boolean> {
     try {
       if (this.isActiveRef) {
-        const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-        if (hasStarted) {
+        const isActive = await nativeLocationService.isTrackingActive();
+        if (isActive) {
           return true;
         }
         this.isActiveRef = false;
       }
 
-      const foregroundStatus = await Location.getForegroundPermissionsAsync();
-      if (!foregroundStatus.granted) {
-        console.error('Permissão de foreground não concedida');
+      // Verificar permissões
+      const hasPermissions = await nativeLocationService.checkLocationPermissions();
+      if (!hasPermissions) {
+        console.error('Permissões de localização não concedidas');
         return false;
       }
 
-      const backgroundStatus = await Location.getBackgroundPermissionsAsync();
-      if (!backgroundStatus.granted) {
-        console.error('Permissão de background não concedida');
-        return false;
-      }
-
-      const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
-      if (!isTaskDefined) {
-        console.error('Tarefa não está definida');
-        return false;
-      }
-
-      const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-      if (hasStarted) {
-        this.isActiveRef = true;
-        return true;
-      }
-
-      await startLocationUpdatesWithRetry(LOCATION_TASK_NAME, {
-        timeInterval: 30000, 
-        distanceInterval: 10, 
-        foregroundService: {
-          notificationTitle: 'Atacte',
-          notificationBody: 'Rastreando localização',
-          notificationColor: '#16a34a', 
-        },
-        pausesUpdatesAutomatically: false, 
-        showsBackgroundLocationIndicator: true,
-        activityType: Location.ActivityType.AutomotiveNavigation,
-      });
-
-      this.isActiveRef = true;
-      return true;
+      // Iniciar rastreamento
+      const success = await nativeLocationService.startTracking();
+      this.isActiveRef = success;
+      return success;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('Erro ao iniciar rastreamento:', errorMessage);
@@ -157,14 +34,7 @@ class ForegroundLocationService {
 
   async stop(): Promise<void> {
     try {
-      const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
-      if (isTaskDefined) {
-        const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-        if (hasStarted) {
-          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        }
-      }
-
+      await nativeLocationService.stopTracking();
       this.isActiveRef = false;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -175,15 +45,9 @@ class ForegroundLocationService {
 
   async isActive(): Promise<boolean> {
     try {
-      const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
-      if (!isTaskDefined) {
-        this.isActiveRef = false;
-        return false;
-      }
-
-      const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-      this.isActiveRef = hasStarted;
-      return hasStarted;
+      const isActive = await nativeLocationService.isTrackingActive();
+      this.isActiveRef = isActive;
+      return isActive;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('Erro ao verificar status:', errorMessage);
@@ -194,4 +58,3 @@ class ForegroundLocationService {
 }
 
 export const foregroundLocationService = new ForegroundLocationService();
-

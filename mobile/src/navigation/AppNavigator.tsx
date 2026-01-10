@@ -21,6 +21,9 @@ import MemberHistoryScreen from '../screens/MemberHistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SecureNoteDetailScreen from '../screens/SecureNoteDetailScreen';
 import CalendarScreen from '../screens/CalendarScreen';
+import ContactsScreen from '../screens/ContactsScreen';
+import ContactDetailScreen from '../screens/ContactDetailScreen';
+import ContactFormScreen from '../screens/ContactFormScreen';
 import AuditLogsScreen from '../screens/admin/AuditLogsScreen';
 import SessionsScreen from '../screens/admin/SessionsScreen';
 import UsersScreen from '../screens/admin/UsersScreen';
@@ -50,6 +53,9 @@ export type MainTabParamList = {
   FamilyDetail: { familyId: string; familyName: string };
   SecureNotes: undefined;
   Calendar: undefined;
+  Contacts: undefined;
+  ContactDetail: { contactId: string };
+  ContactForm: { contactId?: string };
   Profile: undefined;
   Settings: undefined;
   PasswordDetail: { passwordId: string };
@@ -108,6 +114,8 @@ function MainTabNavigator() {
               iconName = focused ? 'document-text' : 'document-text-outline';
             } else if (route.name === 'Calendar') {
               iconName = focused ? 'calendar' : 'calendar-outline';
+            } else if (route.name === 'Contacts') {
+              iconName = focused ? 'person-circle' : 'person-circle-outline';
             } else if (route.name === 'Profile') {
               iconName = focused ? 'person' : 'person-outline';
             } else {
@@ -154,6 +162,29 @@ function MainTabNavigator() {
         name="Calendar" 
         component={CalendarScreen}
         options={{ title: 'Calendário' }}
+      />
+      <Tab.Screen 
+        name="Contacts" 
+        component={ContactsScreen}
+        options={{ title: 'Contatos' }}
+      />
+      <Tab.Screen 
+        name="ContactDetail" 
+        component={ContactDetailScreen}
+        options={{ 
+          title: 'Detalhes do Contato',
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
+      />
+      <Tab.Screen 
+        name="ContactForm" 
+        component={ContactFormScreen}
+        options={{ 
+          title: 'Editar Contato',
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
       />
       <Tab.Screen 
         name="Profile" 

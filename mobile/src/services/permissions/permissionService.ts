@@ -1,11 +1,7 @@
-import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import { Platform, Linking, Alert, NativeModules } from 'react-native';
+import { Platform, Linking, Alert } from 'react-native';
 import * as Battery from 'expo-battery';
-import { locationService } from '../location/locationService';
-import { notificationService } from '../notification/notificationService';
-
-const { ForegroundTracking } = NativeModules;
+import { nativeLocationService } from '../location/nativeLocationService';
 
 export interface PermissionResult {
   granted: boolean;
@@ -65,10 +61,11 @@ class PermissionService {
 
   async requestLocationForeground(): Promise<PermissionResult> {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      await nativeLocationService.requestLocationPermissions();
+      const granted = await nativeLocationService.checkLocationPermissions();
       return {
-        granted: status === 'granted',
-        message: status === 'granted' ? undefined : 'Permissão de localização negada',
+        granted: granted,
+        message: granted ? undefined : 'Permissão de localização negada',
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao solicitar permissão de localização';
@@ -81,10 +78,11 @@ class PermissionService {
 
   async requestLocationBackground(): Promise<PermissionResult> {
     try {
-      const { status } = await Location.requestBackgroundPermissionsAsync();
+      await nativeLocationService.requestLocationPermissions();
+      const granted = await nativeLocationService.checkLocationPermissions();
       return {
-        granted: status === 'granted',
-        message: status === 'granted' ? undefined : 'Permissão de localização em segundo plano negada',
+        granted: granted,
+        message: granted ? undefined : 'Permissão de localização em segundo plano negada',
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao solicitar permissão de localização em segundo plano';
@@ -119,38 +117,7 @@ class PermissionService {
 
   async requestActivityRecognition(): Promise<PermissionResult> {
     try {
-      if (Platform.OS === 'android') {
-        if (ForegroundTracking && ForegroundTracking.requestActivityRecognition) {
-          try {
-            const granted = await new Promise<boolean>((resolve, reject) => {
-              ForegroundTracking.requestActivityRecognition(
-                (result: boolean) => resolve(result),
-                (error: Error) => reject(error)
-              );
-            });
-            
-            if (!granted && Platform.Version >= 29) {
-              try {
-                await Linking.openSettings();
-              } catch {
-              }
-            }
-            
-            return {
-              granted: granted,
-              message: granted ? undefined : 'Permissão de reconhecimento de atividade negada. Por favor, conceda nas configurações.',
-            };
-          } catch {
-          }
-        }
-        
-        return {
-          granted: true,
-          message: undefined,
-        };
-      } else {
-        return { granted: true };
-      }
+      return { granted: true };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao solicitar permissão de reconhecimento de atividade';
       return {
@@ -162,10 +129,6 @@ class PermissionService {
 
   async requestBatteryOptimization(): Promise<PermissionResult> {
     try {
-      if (Platform.OS !== 'android') {
-        return { granted: true };
-      }
-
       const batteryLevel = await Battery.getBatteryLevelAsync();
       if (batteryLevel < 0) {
         return {
@@ -188,13 +151,11 @@ class PermissionService {
   }
 
   async openBatterySettings(): Promise<void> {
-    if (Platform.OS === 'android') {
-      try {
-        await Linking.openSettings();
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Erro ao abrir configurações';
-        Alert.alert('Erro', errorMessage);
-      }
+    try {
+      await Linking.openSettings();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao abrir configurações';
+      Alert.alert('Erro', errorMessage);
     }
   }
 
@@ -209,14 +170,13 @@ class PermissionService {
     };
 
     try {
-      const foregroundStatus = await Location.getForegroundPermissionsAsync();
+      const locationGranted = await nativeLocationService.checkLocationPermissions();
       results.locationForeground = {
-        granted: foregroundStatus.granted,
+        granted: locationGranted,
       };
 
-      const backgroundStatus = await Location.getBackgroundPermissionsAsync();
       results.locationBackground = {
-        granted: backgroundStatus.granted,
+        granted: locationGranted,
       };
 
       const notificationStatus = await Notifications.getPermissionsAsync();
@@ -224,39 +184,17 @@ class PermissionService {
         granted: notificationStatus.granted,
       };
 
-      if (Platform.OS === 'android' && ForegroundTracking && ForegroundTracking.requestActivityRecognition) {
-        try {
-          const granted = await new Promise<boolean>((resolve, reject) => {
-            ForegroundTracking.requestActivityRecognition(
-              (result: boolean) => resolve(result),
-              (error: Error) => reject(error)
-            );
-          });
-          results.activityRecognition = {
-            granted: granted,
-          };
-        } catch {
-          results.activityRecognition = {
-            granted: foregroundStatus.granted,
-          };
-        }
-      } else {
       results.activityRecognition = {
-        granted: foregroundStatus.granted,
+        granted: true,
       };
-      }
 
-      if (Platform.OS === 'android') {
-        try {
-          const batteryLevel = await Battery.getBatteryLevelAsync();
-          results.batteryOptimization = {
-            granted: batteryLevel >= 0,
-          };
-        } catch {
-          results.batteryOptimization = { granted: false };
-        }
-      } else {
-        results.batteryOptimization = { granted: true };
+      try {
+        const batteryLevel = await Battery.getBatteryLevelAsync();
+        results.batteryOptimization = {
+          granted: batteryLevel >= 0,
+        };
+      } catch {
+        results.batteryOptimization = { granted: false };
       }
 
       results.allGranted = 

@@ -49,6 +49,7 @@ import notificationRoutes from './controllers/notification/notificationControlle
 import geofenceRoutes from './controllers/geofence/geofenceController';
 import secureNoteRoutes from './controllers/secureNotes/secureNoteController';
 import calendarRoutes from './controllers/calendar/calendarController';
+import contactRoutes from './controllers/contacts/contactController';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/passwords', passwordRoutes);
@@ -62,6 +63,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/geofence', geofenceRoutes);
 app.use('/api/secure-notes', secureNoteRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/contacts', contactRoutes);
 
 
 app.use((_err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
