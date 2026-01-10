@@ -271,7 +271,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { contactsApi, Contact, CreateContactRequest } from '../api/contacts';
-import { AppHeader } from '@/components/layout';
+import { AppHeader } from '@/components/ui';
 
 const contacts = ref<Contact[]>([]);
 const loading = ref(false);
