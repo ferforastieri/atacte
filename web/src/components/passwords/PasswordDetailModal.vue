@@ -80,24 +80,20 @@
     </div>
 
     <template #footer>
-      <div class="flex justify-between">
-        <div>
-          <BaseButton
-            variant="danger"
-            @click="handleDelete"
-            :loading="isDeleting"
-          >
-            Excluir
-          </BaseButton>
-        </div>
-        <div class="flex space-x-3">
-          <BaseButton variant="ghost" @click="$emit('close')">
-            Fechar
-          </BaseButton>
-          <BaseButton variant="primary" @click="handleEdit">
-            Editar
-          </BaseButton>
-        </div>
+      <div class="flex justify-end gap-3">
+        <BaseButton
+          variant="danger"
+          @click="handleDelete"
+          :loading="isDeleting"
+        >
+          Excluir
+        </BaseButton>
+        <BaseButton variant="ghost" @click="$emit('close')">
+          Fechar
+        </BaseButton>
+        <BaseButton variant="primary" @click="handleEdit">
+          Editar
+        </BaseButton>
       </div>
     </template>
   </BaseModal>
