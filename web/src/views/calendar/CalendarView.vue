@@ -9,17 +9,17 @@
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
       <!-- Header do Calendário - Estilo Google Agenda -->
-      <div class="mb-6 flex items-center justify-between gap-4">
+      <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <!-- Lado Esquerdo: Botão de Data + Navegação -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           <!-- Botão de Data (Grande, Clicável) -->
-          <div class="relative">
+          <div class="relative flex-shrink-0">
             <button
               @click.stop="showDatePicker = !showDatePicker"
-              class="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2 justify-between border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+              class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2 justify-between border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 min-w-0"
             >
-              <span>{{ getCurrentDateLabel() }}</span>
-              <ChevronDownIcon class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span class="truncate">{{ getCurrentDateLabel() }}</span>
+              <ChevronDownIcon class="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
             </button>
             
             <!-- Mini Calendário (como Google Agenda) -->
@@ -128,16 +128,16 @@
           </div>
 
           <!-- Botões de Navegação -->
-          <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+          <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800 flex-shrink-0">
             <button
               @click="navigateDate(-1)"
-              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-r border-gray-300 dark:border-gray-600"
+              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-r border-gray-300 dark:border-gray-600 touch-manipulation"
             >
               <ChevronLeftIcon class="w-4 h-4 text-gray-700 dark:text-gray-300" />
             </button>
             <button
               @click="navigateDate(1)"
-              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-manipulation"
             >
               <ChevronRightIcon class="w-4 h-4 text-gray-700 dark:text-gray-300" />
             </button>
@@ -146,19 +146,19 @@
           <!-- Botão Hoje -->
           <button
             @click="goToToday"
-            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+            class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 flex-shrink-0 touch-manipulation"
           >
             Hoje
           </button>
         </div>
 
         <!-- Lado Direito: Seletor de Visualização -->
-        <div class="flex items-center space-x-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
+        <div class="flex items-center space-x-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1 w-full sm:w-auto">
           <button
             v-for="view in viewOptions"
             :key="view.value"
             @click="currentView = view.value"
-            class="px-4 py-1.5 text-sm font-medium rounded transition-colors border"
+            class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded transition-colors border touch-manipulation"
             :class="currentView === view.value
               ? 'bg-primary-600 text-white border-primary-600'
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-transparent'"
@@ -188,7 +188,7 @@
             v-for="(day, index) in calendarDays"
             :key="index"
             @click="openCreateModalForDay(day.date)"
-            class="min-h-[80px] sm:min-h-[100px] border-r border-b border-gray-200 dark:border-gray-700 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+            class="min-h-[80px] sm:min-h-[100px] md:min-h-[120px] border-r border-b border-gray-200 dark:border-gray-700 p-1 sm:p-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer touch-manipulation active:bg-gray-100 dark:active:bg-gray-600"
             :class="{
               'bg-gray-100 dark:bg-gray-900': !day.isCurrentMonth,
               'bg-blue-50 dark:bg-blue-900/20': isToday(day.date),
@@ -196,7 +196,7 @@
           >
             <div class="flex items-center justify-between mb-1">
               <span
-                class="text-sm font-medium"
+                class="text-xs sm:text-sm font-medium"
                 :class="{
                   'text-gray-400 dark:text-gray-600': !day.isCurrentMonth,
                   'text-blue-600 dark:text-blue-400 font-bold': isToday(day.date),
@@ -206,16 +206,16 @@
                 {{ format(day.date, 'd') }}
               </span>
             </div>
-            <div class="space-y-1">
+            <div class="space-y-1 overflow-hidden">
               <div
                 v-for="event in getEventsForDay(day.date)"
                 :key="event.id"
                 @click.stop="openEventModal(event)"
-                class="text-xs px-2 py-1 rounded cursor-pointer truncate"
-                :style="{ backgroundColor: event.color + '20', color: event.color, borderLeft: `3px solid ${event.color}` }"
+                class="text-[10px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded cursor-pointer truncate touch-manipulation active:opacity-80 transition-opacity"
+                :style="{ backgroundColor: event.color + '20', color: event.color, borderLeft: `2px solid ${event.color}` }"
                 :title="event.title"
               >
-                {{ event.title }}
+                <span class="line-clamp-1">{{ event.title }}</span>
               </div>
             </div>
           </div>
@@ -270,17 +270,17 @@
                 v-for="event in getEventsForDay(day.date)"
                 :key="event.id"
                 @click.stop="openEventModal(event)"
-                class="absolute left-1 right-1 rounded px-2 py-1 text-xs cursor-pointer truncate"
+                class="absolute left-1 right-1 rounded px-1 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs cursor-pointer truncate touch-manipulation active:opacity-80 transition-opacity"
                 :style="{
                   backgroundColor: event.color + '20',
                   color: event.color,
-                  borderLeft: `3px solid ${event.color}`,
+                  borderLeft: `2px solid ${event.color}`,
                   top: getEventPosition(event),
                   height: getEventHeight(event),
                 }"
                 :title="event.title"
               >
-                {{ event.title }}
+                <span class="line-clamp-1">{{ event.title }}</span>
               </div>
             </div>
           </div>
@@ -317,7 +317,7 @@
                 v-for="event in getEventsForDay(currentDate)"
                 :key="event.id"
                 @click.stop="openEventModal(event)"
-                class="absolute left-1 right-1 rounded px-2 py-1 text-xs cursor-pointer truncate"
+                class="absolute left-1 right-1 rounded px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm cursor-pointer truncate touch-manipulation active:opacity-80 transition-opacity"
                 :style="{
                   backgroundColor: event.color + '20',
                   color: event.color,
@@ -327,7 +327,7 @@
                 }"
                 :title="event.title"
               >
-                {{ event.title }}
+                <span class="line-clamp-2">{{ event.title }}</span>
               </div>
             </div>
           </div>
@@ -345,7 +345,7 @@
             v-for="event in monthEvents"
             :key="event.id"
             @click="openEventModal(event)"
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:shadow-md transition-shadow"
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 cursor-pointer hover:shadow-md transition-shadow touch-manipulation active:bg-gray-50 dark:active:bg-gray-700"
           >
             <div class="flex items-start">
               <div
@@ -399,6 +399,25 @@
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 </style>
 
