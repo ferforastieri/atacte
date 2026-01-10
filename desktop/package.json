@@ -37,8 +37,16 @@
     "files": [
       "main.js",
       "preload.js",
-      "package.json",
+      "package.json"
+    ],
+    "asarUnpack": [
       ".env"
+    ],
+    "extraFiles": [
+      {
+        "from": ".env",
+        "to": ".env"
+      }
     ],
     "extraResources": [
       {
@@ -105,14 +113,19 @@
           ]
         }
       ],
-      "icon": "build/icon.png",
+      "icon": "build/icons",
       "category": "Utility",
-      "maintainer": "Fernando <fernando@example.com>",
+      "maintainer": "Fernando <fernandoforastierineto@gmail.com>",
+      "synopsis": "Gerenciador de Senhas e Segurança Familiar",
+      "description": "Aplicativo de gerenciamento de senhas, autenticação 2FA e segurança familiar com localização em tempo real",
       "desktop": {
         "Name": "Atacte",
+        "GenericName": "Password Manager",
         "Comment": "Gerenciador de Senhas e Segurança Familiar",
-        "Categories": "Utility;Security;",
-        "StartupWMClass": "atacte"
+        "Categories": "Utility;Security;Office;",
+        "StartupWMClass": "Atacte",
+        "MimeType": "x-scheme-handler/atacte;",
+        "Keywords": "password;security;2fa;family;"
       }
     },
     "nsis": {

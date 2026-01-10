@@ -2,13 +2,22 @@ const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron')
 const path = require('path');
 const fs = require('fs');
 
-let envPath = path.join(__dirname, '.env');
-if (!fs.existsSync(envPath) && app.isPackaged) {
-  const resourcesPath = process.resourcesPath || path.dirname(process.execPath);
-  envPath = path.join(resourcesPath, 'app', '.env');
+let envPath;
+if (app.isPackaged) {
+  // Em produção, .env está na raiz junto com o executável
+  envPath = path.join(path.dirname(process.execPath), '.env');
   if (!fs.existsSync(envPath)) {
-    envPath = path.join(path.dirname(process.execPath), '.env');
+    // Tenta no resources
+    const resourcesPath = process.resourcesPath || path.dirname(process.execPath);
+    envPath = path.join(resourcesPath, '.env');
   }
+  if (!fs.existsSync(envPath)) {
+    // Tenta no app.asar.unpacked
+    envPath = path.join(__dirname, '.env');
+  }
+} else {
+  // Em desenvolvimento
+  envPath = path.join(__dirname, '.env');
 }
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
@@ -29,9 +38,6 @@ if (fs.existsSync(envPath)) {
 
 const isDev = !require('electron').app.isPackaged && (process.env.NODE_ENV === 'development' || process.argv.includes('--dev'));
 const BACKEND_URL = process.env.BACKEND_URL;
-if (!BACKEND_URL) {
-  console.error('BACKEND_URL não está definido. Configure BACKEND_URL no arquivo .env ou variável de ambiente.');
-}
 const API_URL = BACKEND_URL ? `${BACKEND_URL}/api` : null;
 
 let mainWindow;
@@ -75,30 +81,32 @@ function createWindow() {
     }
   }
 
-  mainWindow.webContents.on('dom-ready', () => {
+  mainWindow.webContents.on('frame-created', (event, details) => {
     if (!isDev && BACKEND_URL) {
-      const script = `
+      details.frame.executeJavaScript(`
         (function() {
+          if (window.__ATACTE_INTERCEPTOR_INSTALLED__) return;
+          window.__ATACTE_INTERCEPTOR_INSTALLED__ = true;
+          
           const BACKEND_URL = '${BACKEND_URL}';
+          
           const originalFetch = window.fetch;
           window.fetch = function(url, options) {
             if (typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/health'))) {
-              url = BACKEND_URL + url;
+              return originalFetch.call(this, BACKEND_URL + url, options);
             }
             return originalFetch.call(this, url, options);
           };
+          
           const originalOpen = XMLHttpRequest.prototype.open;
           XMLHttpRequest.prototype.open = function(method, url, ...args) {
             if (typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/health'))) {
-              url = BACKEND_URL + url;
+              return originalOpen.call(this, method, BACKEND_URL + url, ...args);
             }
             return originalOpen.call(this, method, url, ...args);
           };
         })();
-      `;
-      mainWindow.webContents.executeJavaScript(script).catch(err => {
-        console.error('Erro ao injetar script:', err);
-      });
+      `);
     }
   });
 

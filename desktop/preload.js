@@ -1,8 +1,14 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+const BACKEND_URL = process.env.BACKEND_URL;
+if (BACKEND_URL) {
+  contextBridge.exposeInMainWorld('ATACTE_BACKEND_URL', BACKEND_URL);
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   getPlatform: () => ipcRenderer.invoke('get-platform'),
+  getBackendUrl: () => BACKEND_URL,
   showMessageBox: (options) => ipcRenderer.invoke('show-message-box', options),
   showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
   showSaveDialog: (options) => ipcRenderer.invoke('show-save-dialog', options),
