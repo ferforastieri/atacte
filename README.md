@@ -2,6 +2,8 @@
 
 **Atacte** é um aplicativo de segurança familiar desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA), rastreamento de localização familiar e interfaces modernas para web e mobile.
 
+A historia do projeto é simples, comprei uma maquina para rodar um homelab, e o vaultwarden nao me servia tão bem, portanto fiz o meu proprio. Acredito que tenhas varias falhas, mas tentei ao maximo fingir que um dia lançaria ele usando tudo que sei.
+
 ## 📋 Índice
 
 - [Características](#-características)
@@ -43,6 +45,14 @@
 - **Organização por pastas** para melhor gerenciamento
 - **Sistema de favoritos** para acesso rápido
 - **Busca avançada** por título e conteúdo
+
+#### 📇 Contatos
+- **Gerenciamento de contatos** com informações e favoritos
+- **Sincronização com dispositivo** (mobile)
+
+#### 📅 Calendário
+- **Eventos e lembretes** com notificações
+- **Widget iOS nativo** desenvolvido em Swift
 
 #### 👨‍👩‍👧‍👦 Segurança Familiar
 - **Rastreamento de localização** em tempo real
@@ -158,6 +168,10 @@ Atacte/
 - **Expo TaskManager** - Tarefas em background
 - **React Native WebView** - Visualização de mapas (Leaflet)
 - **Expo Clipboard** - Funcionalidade de copiar/colar
+- **Expo Contacts** - Sincronização de contatos
+- **Expo Calendar** - Integração com calendário
+- **Expo Notifications** - Notificações push e locais
+- **Plugin Nativo Swift** - Widget iOS para calendário
 
 ### DevOps
 - **Docker** - Containerização
