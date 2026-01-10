@@ -1,194 +1,268 @@
 <template>
-  <div class="contacts-view">
-    <div class="header">
-      <h1>Contatos</h1>
-      <div class="header-actions">
-        <button
-          class="icon-button"
-          :class="{ active: showFavoritesOnly }"
-          @click="toggleFavorites"
-          title="Mostrar favoritos"
-        >
-          <i :class="showFavoritesOnly ? 'fas fa-star' : 'far fa-star'"></i>
-        </button>
-        <button class="btn-primary" @click="openCreateModal">
-          <i class="fas fa-plus"></i>
-          Novo Contato
-        </button>
-      </div>
-    </div>
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <AppHeader :show-logo="true" :show-navigation="true" />
 
-    <div class="search-container">
-      <i class="fas fa-search search-icon"></i>
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Buscar contatos..."
-        class="search-input"
-        @input="handleSearch"
-      />
-    </div>
-
-    <div v-if="loading" class="loading">
-      <i class="fas fa-spinner fa-spin"></i>
-      Carregando...
-    </div>
-
-    <div v-else-if="contacts.length === 0" class="empty-state">
-      <i class="fas fa-address-book"></i>
-      <p>Nenhum contato encontrado</p>
-      <button class="btn-primary" @click="openCreateModal">
-        Criar Primeiro Contato
-      </button>
-    </div>
-
-    <div v-else class="contacts-grid">
-      <div
-        v-for="contact in contacts"
-        :key="contact.id"
-        class="contact-card"
-        @click="viewContact(contact)"
-      >
-        <div class="contact-header">
-          <div class="contact-avatar">
-            <img v-if="contact.imageUrl" :src="contact.imageUrl" :alt="contact.firstName" />
-            <div v-else class="avatar-placeholder">
-              {{ contact.firstName.charAt(0).toUpperCase() }}
-            </div>
-          </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Contatos</h1>
+        <div class="flex items-center gap-2">
           <button
-            class="favorite-button"
-            @click.stop="toggleFavorite(contact)"
-            :title="contact.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
+            @click="toggleFavorites"
+            :class="[
+              'px-4 py-2 text-sm font-medium rounded-lg transition-colors border',
+              showFavoritesOnly
+                ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+            ]"
           >
-            <i :class="contact.isFavorite ? 'fas fa-star' : 'far fa-star'"></i>
+            <i :class="showFavoritesOnly ? 'fas fa-star' : 'far fa-star'"></i>
+            <span class="ml-2">Favoritos</span>
+          </button>
+          <button
+            @click="openCreateModal"
+            class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+          >
+            <i class="fas fa-plus"></i>
+            Novo Contato
           </button>
         </div>
+      </div>
 
-        <div class="contact-info">
-          <h3>{{ contact.firstName }} {{ contact.lastName || '' }}</h3>
-          <p v-if="contact.phoneNumbers.length > 0" class="contact-phone">
-            <i class="fas fa-phone"></i>
-            {{ contact.phoneNumbers[0].number }}
-          </p>
-          <p v-if="contact.emails.length > 0" class="contact-email">
-            <i class="fas fa-envelope"></i>
-            {{ contact.emails[0].email }}
-          </p>
-          <p v-if="contact.company" class="contact-company">
-            <i class="fas fa-building"></i>
-            {{ contact.company }}
-          </p>
+      <div class="mb-6">
+        <div class="relative">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Buscar contatos..."
+            class="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600"
+            @input="handleSearch"
+          />
         </div>
+      </div>
 
-        <div class="contact-actions">
-          <button class="btn-icon" @click.stop="editContact(contact)" title="Editar">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn-icon danger" @click.stop="deleteContact(contact)" title="Excluir">
-            <i class="fas fa-trash"></i>
-          </button>
+      <div v-if="loading" class="flex justify-center items-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-primary-600 dark:text-primary-400"></i>
+      </div>
+
+      <div v-else-if="contacts.length === 0" class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
+        <i class="fas fa-address-book text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+        <p class="text-gray-500 dark:text-gray-400 mb-4">Nenhum contato encontrado</p>
+        <button
+          @click="openCreateModal"
+          class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          Criar Primeiro Contato
+        </button>
+      </div>
+
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          v-for="contact in contacts"
+          :key="contact.id"
+          class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:shadow-lg transition-all cursor-pointer"
+          @click="editContact(contact)"
+        >
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div v-if="contact.imageUrl" class="w-12 h-12 rounded-full overflow-hidden">
+                <img :src="contact.imageUrl" :alt="contact.firstName" class="w-full h-full object-cover" />
+              </div>
+              <div v-else class="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
+                  {{ contact.firstName.charAt(0).toUpperCase() }}
+                </span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  {{ contact.firstName }} {{ contact.lastName || '' }}
+                </h3>
+              </div>
+            </div>
+            <button
+              @click.stop="toggleFavorite(contact)"
+              class="text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300"
+            >
+              <i :class="contact.isFavorite ? 'fas fa-star' : 'far fa-star'"></i>
+            </button>
+          </div>
+
+          <div class="space-y-2">
+            <p v-if="contact.phoneNumbers.length > 0" class="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+              <i class="fas fa-phone w-4"></i>
+              <span>{{ contact.phoneNumbers[0].number }}</span>
+            </p>
+            <p v-if="contact.emails.length > 0" class="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2 truncate">
+              <i class="fas fa-envelope w-4"></i>
+              <span class="truncate">{{ contact.emails[0].email }}</span>
+            </p>
+            <p v-if="contact.company" class="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2 truncate">
+              <i class="fas fa-building w-4"></i>
+              <span class="truncate">{{ contact.company }}</span>
+            </p>
+          </div>
+
+          <div class="flex gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button
+              @click.stop="editContact(contact)"
+              class="flex-1 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+            >
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button
+              @click.stop="deleteContact(contact)"
+              class="flex-1 px-3 py-2 text-sm bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
+            >
+              <i class="fas fa-trash"></i> Excluir
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal de Criação/Edição -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>{{ editingContact ? 'Editar Contato' : 'Novo Contato' }}</h2>
-          <button class="close-button" @click="closeModal">
-            <i class="fas fa-times"></i>
-          </button>
+    <!-- Modal -->
+    <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/50 dark:bg-black/70 transition-opacity" @click="closeModal"></div>
+        
+        <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+          <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              {{ editingContact ? 'Editar Contato' : 'Novo Contato' }}
+            </h2>
+            <button @click="closeModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+
+          <form @submit.prevent="saveContact" class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome *</label>
+                <input
+                  v-model="formData.firstName"
+                  type="text"
+                  required
+                  class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sobrenome</label>
+                <input
+                  v-model="formData.lastName"
+                  type="text"
+                  class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Empresa</label>
+                <input
+                  v-model="formData.company"
+                  type="text"
+                  class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cargo</label>
+                <input
+                  v-model="formData.jobTitle"
+                  type="text"
+                  class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telefones</label>
+                <button type="button" @click="addPhone" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                  <i class="fas fa-plus"></i> Adicionar
+                </button>
+              </div>
+              <div v-for="(phone, index) in formData.phoneNumbers" :key="index" class="flex gap-2 mb-2">
+                <input
+                  v-model="phone.label"
+                  type="text"
+                  placeholder="Tipo"
+                  class="w-1/3 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <input
+                  v-model="phone.number"
+                  type="tel"
+                  placeholder="Número"
+                  class="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <button type="button" @click="removePhone(index)" class="px-3 text-red-600 dark:text-red-400 hover:text-red-700">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">E-mails</label>
+                <button type="button" @click="addEmail" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                  <i class="fas fa-plus"></i> Adicionar
+                </button>
+              </div>
+              <div v-for="(email, index) in formData.emails" :key="index" class="flex gap-2 mb-2">
+                <input
+                  v-model="email.label"
+                  type="text"
+                  placeholder="Tipo"
+                  class="w-1/3 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <input
+                  v-model="email.email"
+                  type="email"
+                  placeholder="E-mail"
+                  class="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <button type="button" @click="removeEmail(index)" class="px-3 text-red-600 dark:text-red-400 hover:text-red-700">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notas</label>
+              <textarea
+                v-model="formData.notes"
+                rows="3"
+                class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              ></textarea>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input
+                v-model="formData.isFavorite"
+                type="checkbox"
+                id="favorite"
+                class="w-4 h-4 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+              />
+              <label for="favorite" class="text-sm text-gray-700 dark:text-gray-300">Adicionar aos favoritos</label>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+              <button
+                type="button"
+                @click="closeModal"
+                class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+              >
+                {{ editingContact ? 'Salvar' : 'Criar' }}
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form @submit.prevent="saveContact" class="contact-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nome *</label>
-              <input v-model="formData.firstName" type="text" required />
-            </div>
-            <div class="form-group">
-              <label>Sobrenome</label>
-              <input v-model="formData.lastName" type="text" />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Apelido</label>
-              <input v-model="formData.nickname" type="text" />
-            </div>
-            <div class="form-group">
-              <label>Empresa</label>
-              <input v-model="formData.company" type="text" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Cargo</label>
-            <input v-model="formData.jobTitle" type="text" />
-          </div>
-
-          <div class="form-section">
-            <h3>Telefones</h3>
-            <div v-for="(phone, index) in formData.phoneNumbers" :key="index" class="form-row">
-              <div class="form-group">
-                <input v-model="phone.label" type="text" placeholder="Tipo (ex: Celular)" />
-              </div>
-              <div class="form-group">
-                <input v-model="phone.number" type="tel" placeholder="Número" />
-              </div>
-              <button type="button" class="btn-icon danger" @click="removePhone(index)">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <button type="button" class="btn-secondary" @click="addPhone">
-              <i class="fas fa-plus"></i>
-              Adicionar Telefone
-            </button>
-          </div>
-
-          <div class="form-section">
-            <h3>E-mails</h3>
-            <div v-for="(email, index) in formData.emails" :key="index" class="form-row">
-              <div class="form-group">
-                <input v-model="email.label" type="text" placeholder="Tipo (ex: Pessoal)" />
-              </div>
-              <div class="form-group">
-                <input v-model="email.email" type="email" placeholder="E-mail" />
-              </div>
-              <button type="button" class="btn-icon danger" @click="removeEmail(index)">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <button type="button" class="btn-secondary" @click="addEmail">
-              <i class="fas fa-plus"></i>
-              Adicionar E-mail
-            </button>
-          </div>
-
-          <div class="form-group">
-            <label>Notas</label>
-            <textarea v-model="formData.notes" rows="3"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input v-model="formData.isFavorite" type="checkbox" />
-              Adicionar aos favoritos
-            </label>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="closeModal">
-              Cancelar
-            </button>
-            <button type="submit" class="btn-primary">
-              {{ editingContact ? 'Salvar' : 'Criar' }}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   </div>
@@ -197,6 +271,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { contactsApi, Contact, CreateContactRequest } from '../api/contacts';
+import { AppHeader } from '@/components/layout';
 
 const contacts = ref<Contact[]>([]);
 const loading = ref(false);
@@ -324,10 +399,6 @@ const deleteContact = async (contact: Contact) => {
   }
 };
 
-const viewContact = (contact: Contact) => {
-  editContact(contact);
-};
-
 const addPhone = () => {
   formData.value.phoneNumbers = formData.value.phoneNumbers || [];
   formData.value.phoneNumbers.push({ label: 'Celular', number: '' });
@@ -346,307 +417,3 @@ const removeEmail = (index: number) => {
   formData.value.emails?.splice(index, 1);
 };
 </script>
-
-<style scoped>
-.contacts-view {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.icon-button {
-  padding: 8px 16px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.icon-button:hover {
-  background: #f9fafb;
-}
-
-.icon-button.active {
-  background: #fef3c7;
-  border-color: #fbbf24;
-  color: #f59e0b;
-}
-
-.search-container {
-  position: relative;
-  margin-bottom: 24px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-}
-
-.search-input {
-  width: 100%;
-  padding: 12px 12px 12px 48px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-.contacts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-}
-
-.contact-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.contact-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.contact-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.contact-avatar {
-  width: 56px;
-  height: 56px;
-}
-
-.contact-avatar img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.avatar-placeholder {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #16a34a;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.favorite-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #fbbf24;
-  font-size: 20px;
-}
-
-.contact-info h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 8px;
-}
-
-.contact-info p {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 4px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.contact-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.btn-icon {
-  padding: 8px 12px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-icon:hover {
-  background: #f9fafb;
-}
-
-.btn-icon.danger {
-  color: #ef4444;
-}
-
-.btn-icon.danger:hover {
-  background: #fef2f2;
-  border-color: #ef4444;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #6b7280;
-}
-
-.contact-form {
-  padding: 24px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.form-section {
-  margin: 24px 0;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-}
-
-.form-section h3 {
-  margin-bottom: 12px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 24px;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #16a34a;
-  color: white;
-  border: none;
-}
-
-.btn-primary:hover {
-  background: #15803d;
-}
-
-.btn-secondary {
-  background: white;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-}
-
-.btn-secondary:hover {
-  background: #f9fafb;
-}
-
-.loading,
-.empty-state {
-  text-align: center;
-  padding: 64px 24px;
-  color: #9ca3af;
-}
-
-.loading i,
-.empty-state i {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-</style>
-
