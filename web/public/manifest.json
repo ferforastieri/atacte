@@ -4,7 +4,7 @@
   "description": "Gerenciador de Senhas e Segurança Familiar",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#111827",
+  "background_color": "#22c55e",
   "theme_color": "#22c55e",
   "orientation": "portrait-primary",
   "scope": "/",
