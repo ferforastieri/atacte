@@ -79,6 +79,18 @@
             </router-link>
             
             <router-link
+              to="/contacts"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
+              :class="isActive('/contacts') 
+                ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+            >
+              <UserCircleIcon class="w-4 h-4" />
+              <span>Contatos</span>
+              <div v-if="isActive('/contacts')" class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 pointer-events-none" />
+            </router-link>
+            
+            <router-link
               v-if="authStore.isAdmin"
               to="/audit"
               class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap relative pr-5"
@@ -253,6 +265,19 @@
               </router-link>
 
               <router-link
+                to="/contacts"
+                @click="mobileMenuOpen = false"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
+                :class="isActive('/contacts')
+                  ? 'text-gray-900 dark:text-gray-100 bg-primary-100 dark:bg-primary-900 shadow-sm'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              >
+                <UserCircleIcon class="h-5 w-5 flex-shrink-0" />
+                <span class="text-sm font-medium">Contatos</span>
+                <div v-if="isActive('/contacts')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
+              </router-link>
+
+              <router-link
                 v-if="authStore.isAdmin"
                 to="/audit"
                 @click="mobileMenuOpen = false"
@@ -319,7 +344,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Logo, ThemeToggle } from '@/components/ui'
-import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, LockClosedIcon, MapPinIcon, ComputerDesktopIcon, UserGroupIcon, ClipboardDocumentListIcon, ShieldCheckIcon, CalendarIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, LockClosedIcon, MapPinIcon, ComputerDesktopIcon, UserGroupIcon, ClipboardDocumentListIcon, ShieldCheckIcon, CalendarIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 
 const isElectron = computed(() => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
