@@ -227,7 +227,6 @@ class CalendarWidgetProvider : AppWidgetProvider() {
     val startDate: String,
     val color: String
   )
-}
 `;
 
       fs.writeFileSync(widgetProviderPath, widgetProviderContent, 'utf8');
