@@ -1,15 +1,5 @@
-import { Platform } from 'react-native';
-
-let ExtensionStorage: any = null;
-
-if (Platform.OS === 'ios') {
-  try {
-    const AppleTargets = require('@bacons/apple-targets');
-    ExtensionStorage = AppleTargets.ExtensionStorage;
-  } catch (error) {
-    console.warn('@bacons/apple-targets not available');
-  }
-}
+import { Platform, NativeModules } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface CalendarEventForWidget {
   id: string;
@@ -21,27 +11,29 @@ export interface CalendarEventForWidget {
 }
 
 class WidgetSyncService {
-  private storage: any = null;
-
-  constructor() {
-    if (Platform.OS === 'ios' && ExtensionStorage) {
-      try {
-        this.storage = new ExtensionStorage('group.com.atacte.mobile');
-      } catch (error) {
-        console.error('Erro ao inicializar ExtensionStorage:', error);
-      }
-    }
-  }
-
   async syncEvents(events: CalendarEventForWidget[]): Promise<void> {
     try {
-      if (Platform.OS === 'ios' && this.storage) {
-        await this.storage.set('calendar_events', JSON.stringify(events));
-        ExtensionStorage.reloadWidget?.();
-      } else if (Platform.OS === 'android') {
-        const { SharedPreferencesModule } = require('react-native').NativeModules;
-        if (SharedPreferencesModule) {
-          await SharedPreferencesModule.setString('calendar_events', JSON.stringify(events));
+      const eventsJson = JSON.stringify(events);
+      
+      // Salvar no AsyncStorage para backup
+      await AsyncStorage.setItem('calendar_events', eventsJson);
+      
+      // Salvar no storage nativo para o widget
+      const { NativeModules } = require('react-native');
+      const { LocationModule, NativeLocation } = NativeModules;
+      const LocationBridge = Platform.OS === 'ios' ? LocationModule : NativeLocation;
+      
+      if (LocationBridge && LocationBridge.saveCalendarEvents) {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            LocationBridge.saveCalendarEvents(
+              eventsJson,
+              () => resolve(),
+              (error: Error) => reject(error)
+            );
+          });
+        } catch (error) {
+          console.warn('Erro ao salvar eventos no storage nativo:', error);
         }
       }
     } catch (error) {
@@ -51,14 +43,12 @@ class WidgetSyncService {
 
   async clearEvents(): Promise<void> {
     try {
-      if (Platform.OS === 'ios' && this.storage) {
-        await this.storage.remove('calendar_events');
-        ExtensionStorage.reloadWidget?.();
-      } else if (Platform.OS === 'android') {
-        const { SharedPreferencesModule } = require('react-native').NativeModules;
-        if (SharedPreferencesModule) {
-          await SharedPreferencesModule.remove('calendar_events');
-        }
+      await AsyncStorage.removeItem('calendar_events');
+      
+      // Limpar também no storage nativo se necessário
+      if (Platform.OS === 'android') {
+        // O widget Android lê de SharedPreferences, mas não há módulo para limpar
+        // O widget continuará mostrando os últimos eventos até atualizar
       }
     } catch (error) {
       console.error('Erro ao limpar eventos do widget:', error);

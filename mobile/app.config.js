@@ -89,7 +89,6 @@ export default {
       }
     },
     plugins: [
-      "@bacons/apple-targets",
       "expo-router",
       "expo-font",
       "expo-secure-store",
@@ -109,9 +108,7 @@ export default {
             usesCleartextTraffic: true
           }
         }
-      ],
-      "./plugins/location",
-      "./plugins/withCalendarWidget"
+      ]
     ]
   }
 };
