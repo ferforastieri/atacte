@@ -130,8 +130,6 @@ class LocationModule: NSObject, CLLocationManagerDelegate {
     resolve(granted)
   }
   
-  // MARK: - CLLocationManagerDelegate
-  
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
     guard let location = locations.last, isTracking else { return }
     
@@ -176,7 +174,8 @@ class LocationModule: NSObject, CLLocationManagerDelegate {
       "altitude": location.altitude,
       "speed": location.speed >= 0 ? location.speed : NSNull(),
       "heading": location.course >= 0 ? location.course : NSNull(),
-      "isMoving": location.speed > 0.5
+      "isMoving": location.speed > 0.5,
+      "triggerType": "MOVEMENT"
     ]
     
     do {
@@ -212,5 +211,71 @@ class LocationModule: NSObject, CLLocationManagerDelegate {
     sharedDefaults?.set(eventsJson, forKey: "calendar_events")
     sharedDefaults?.synchronize()
     resolver(true)
+  }
+  
+  @objc
+  func sendInteractionLocation(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self,
+            let locationManager = self.locationManager else {
+        reject("ERROR", "LocationManager não disponível", nil)
+        return
+      }
+      
+      guard let lastLocation = locationManager.location else {
+        reject("NO_LOCATION", "Localização não disponível", nil)
+        return
+      }
+      
+      guard let token = self.authToken,
+            let apiUrl = self.apiUrl else {
+        reject("NO_TOKEN", "Token não encontrado", nil)
+        return
+      }
+      
+      var payload: [String: Any] = [
+        "latitude": lastLocation.coordinate.latitude,
+        "longitude": lastLocation.coordinate.longitude,
+        "accuracy": lastLocation.horizontalAccuracy,
+        "altitude": lastLocation.altitude,
+        "speed": lastLocation.speed >= 0 ? lastLocation.speed : NSNull(),
+        "heading": lastLocation.course >= 0 ? lastLocation.course : NSNull(),
+        "isMoving": false,
+        "triggerType": "INTERACTION"
+      ]
+      
+      guard let url = URL(string: "\(apiUrl)/api/location") else {
+        reject("INVALID_URL", "URL inválida", nil)
+        return
+      }
+      
+      var request = URLRequest(url: url)
+      request.httpMethod = "POST"
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      
+      do {
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+          if let error = error {
+            reject("NETWORK_ERROR", error.localizedDescription, error)
+            return
+          }
+          
+          if let httpResponse = response as? HTTPURLResponse,
+             httpResponse.statusCode != 200 && httpResponse.statusCode != 201 {
+            reject("HTTP_ERROR", "Status: \(httpResponse.statusCode)", nil)
+            return
+          }
+          
+          resolve(true)
+        }
+        
+        task.resume()
+      } catch {
+        reject("SERIALIZATION_ERROR", error.localizedDescription, error)
+      }
+    }
   }
 }

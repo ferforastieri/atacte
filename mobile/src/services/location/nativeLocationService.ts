@@ -12,6 +12,7 @@ export interface NativeLocationService {
   clearAuthToken(): Promise<boolean>;
   requestLocationPermissions(): Promise<boolean>;
   checkLocationPermissions(): Promise<boolean>;
+  sendInteractionLocation(): Promise<boolean>;
 }
 
 class NativeLocationServiceImpl implements NativeLocationService {
@@ -105,6 +106,23 @@ class NativeLocationServiceImpl implements NativeLocationService {
       return result === true;
     } catch (error) {
       console.error('Erro ao verificar permissões:', error);
+      return false;
+    }
+  }
+
+  async sendInteractionLocation(): Promise<boolean> {
+    try {
+      if (!LocationBridge) {
+        console.error('LocationBridge não está disponível');
+        return false;
+      }
+      if (LocationBridge.sendInteractionLocation) {
+        await LocationBridge.sendInteractionLocation();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Erro ao enviar localização de interação:', error);
       return false;
     }
   }

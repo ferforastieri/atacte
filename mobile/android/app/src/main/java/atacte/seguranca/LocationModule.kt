@@ -6,6 +6,12 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import android.content.SharedPreferences
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import android.Manifest
+import android.location.LocationManager
+import org.json.JSONObject
 
 class LocationModule(reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
@@ -77,12 +83,49 @@ class LocationModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun requestLocationPermissions(promise: Promise) {
+    val activity = currentActivity
+    if (activity == null) {
+      promise.reject("NO_ACTIVITY", "Activity não disponível", null)
+      return
+    }
+
+    val permissions = arrayOf(
+      Manifest.permission.ACCESS_FINE_LOCATION,
+      Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+
+    val fineLocationGranted = ContextCompat.checkSelfPermission(
+      appContext,
+      Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val coarseLocationGranted = ContextCompat.checkSelfPermission(
+      appContext,
+      Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    if (fineLocationGranted && coarseLocationGranted) {
+      promise.resolve(true)
+      return
+    }
+
+    ActivityCompat.requestPermissions(activity, permissions, 1001)
     promise.resolve(true)
   }
 
   @ReactMethod
   fun checkLocationPermissions(promise: Promise) {
-    promise.resolve(true)
+    val fineLocationGranted = ContextCompat.checkSelfPermission(
+      appContext,
+      Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val coarseLocationGranted = ContextCompat.checkSelfPermission(
+      appContext,
+      Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    promise.resolve(fineLocationGranted || coarseLocationGranted)
   }
 
   @ReactMethod
@@ -99,6 +142,56 @@ class LocationModule(reactContext: ReactApplicationContext) :
       promise.resolve(true)
     } catch (error: Exception) {
       promise.reject("SAVE_CALENDAR_EVENTS_ERROR", error)
+    }
+  }
+
+  @ReactMethod
+  fun sendInteractionLocation(promise: Promise) {
+    try {
+      val locationManager = appContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+      
+      val fineLocationGranted = ContextCompat.checkSelfPermission(
+        appContext,
+        Manifest.permission.ACCESS_FINE_LOCATION
+      ) == PackageManager.PERMISSION_GRANTED
+
+      if (!fineLocationGranted) {
+        promise.reject("NO_PERMISSION", "Permissão de localização não concedida", null)
+        return
+      }
+
+      val lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+        ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+
+      if (lastKnownLocation == null) {
+        promise.reject("NO_LOCATION", "Localização não disponível", null)
+        return
+      }
+
+      val prefs = appContext.getSharedPreferences("atacte_auth_prefs", Context.MODE_PRIVATE)
+      val token = prefs.getString("auth_token", null)
+      val apiUrl = prefs.getString("api_url", null) ?: "http://localhost:3000"
+
+      if (token == null) {
+        promise.reject("NO_TOKEN", "Token não encontrado", null)
+        return
+      }
+
+      val payload = JSONObject().apply {
+        put("latitude", lastKnownLocation.latitude)
+        put("longitude", lastKnownLocation.longitude)
+        put("accuracy", if (lastKnownLocation.hasAccuracy()) lastKnownLocation.accuracy else null)
+        put("altitude", if (lastKnownLocation.hasAltitude()) lastKnownLocation.altitude else null)
+        put("speed", if (lastKnownLocation.hasSpeed()) lastKnownLocation.speed else null)
+        put("heading", if (lastKnownLocation.hasBearing()) lastKnownLocation.bearing else null)
+        put("isMoving", false)
+        put("triggerType", "INTERACTION")
+      }
+
+      LocationTrackingService.sendLocationToServerSync(apiUrl, token, payload)
+      promise.resolve(true)
+    } catch (error: Exception) {
+      promise.reject("SEND_INTERACTION_ERROR", error)
     }
   }
 }

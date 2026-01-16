@@ -1,5 +1,3 @@
-import * as Battery from 'expo-battery';
-import { Platform } from 'react-native';
 import { formatISO } from 'date-fns';
 import apiClient from '../../lib/axios';
 import { nativeLocationService } from './nativeLocationService';
@@ -57,43 +55,6 @@ class LocationService {
       return await nativeLocationService.isTrackingActive();
     } catch (error) {
       console.error('Erro ao verificar status:', error);
-      return false;
-    }
-  }
-
-  async getCurrentLocation(): Promise<LocationData | null> {
-    try {
-      // Nota: Esta é uma simulação - o location real vem do backend
-      // via rastreamento em segundo plano
-      return null;
-    } catch (error) {
-      console.error('Erro ao obter localização:', error);
-      return null;
-    }
-  }
-
-  async sendLocationToServer(location: LocationData): Promise<boolean> {
-    try {
-      const batteryLevel = await Battery.getBatteryLevelAsync();
-      const batteryState = await Battery.getBatteryStateAsync();
-      
-      const locationData = {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        accuracy: location.accuracy,
-        altitude: location.altitude,
-        altitudeAccuracy: location.altitudeAccuracy,
-        heading: location.heading,
-        speed: location.speed,
-        timestamp: formatISO(new Date(location.timestamp)),
-        batteryLevel: Math.round(batteryLevel * 100),
-        isCharging: batteryState === Battery.BatteryState.CHARGING,
-      };
-
-      const response = await apiClient.post('/location', locationData);
-      return response.data.success;
-    } catch (error) {
-      console.error('Erro ao enviar localização:', error);
       return false;
     }
   }
@@ -168,6 +129,54 @@ class LocationService {
     } catch (error) {
       console.error('Erro ao buscar localização do membro:', error);
       return null;
+    }
+  }
+
+  async hasPermissions(): Promise<boolean> {
+    try {
+      return await nativeLocationService.checkLocationPermissions();
+    } catch (error) {
+      console.error('Erro ao verificar permissões:', error);
+      return false;
+    }
+  }
+
+  async getLatestLocation(): Promise<{ success: boolean; data?: LocationData }> {
+    try {
+      const response = await apiClient.get('/location/latest');
+      
+      if (response.data.success && response.data.data) {
+        const loc = response.data.data;
+        return {
+          success: true,
+          data: {
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            accuracy: loc.accuracy,
+            altitude: loc.altitude,
+            altitudeAccuracy: null,
+            heading: loc.heading,
+            speed: loc.speed,
+            timestamp: new Date(loc.timestamp).getTime(),
+            batteryLevel: loc.batteryLevel,
+            isCharging: loc.isCharging,
+          },
+        };
+      }
+      
+      return { success: false };
+    } catch (error) {
+      console.error('Erro ao buscar última localização:', error);
+      return { success: false };
+    }
+  }
+
+  async sendCurrentLocation(): Promise<boolean> {
+    try {
+      return await nativeLocationService.sendInteractionLocation();
+    } catch (error) {
+      console.error('Erro ao enviar localização atual:', error);
+      return false;
     }
   }
 }

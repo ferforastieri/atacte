@@ -10,6 +10,7 @@ RCT_EXTERN_METHOD(clearAuthToken:(RCTPromiseResolveBlock)resolve rejecter:(RCTPr
 RCT_EXTERN_METHOD(requestLocationPermissions:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(checkLocationPermissions:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(saveCalendarEvents:(NSString *)eventsJson resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(sendInteractionLocation:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 
 + (BOOL)requiresMainQueueSetup
 {

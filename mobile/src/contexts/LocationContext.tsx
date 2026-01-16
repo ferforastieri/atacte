@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { locationService, LocationData, FamilyMapData } from '../services/location/locationService';
-import { familyService } from '../services/family/familyService';
+import { nativeLocationService } from '../services/location/nativeLocationService';
 import { geofenceService, GeofenceZone } from '../services/geofence/geofenceService';
 import { notificationService } from '../services/notification/notificationService';
-import { localLocationStorage } from '../services/location/localLocationStorage';
-import * as Notifications from 'expo-notifications';
 import { useAuth as useAuthContext } from './AuthContext';
 
 interface LocationContextType {
@@ -39,32 +37,17 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   useEffect(() => {
     if (isAuthenticated) {
-      sendPendingLocations();
+      checkAndStartTracking();
     }
   }, [isAuthenticated]);
 
- 
   useEffect(() => {
     const checkTrackingStatus = async () => {
       try {
-        const backgroundFunctions = (global as typeof globalThis & {
-          backgroundLocationFunctions?: {
-            isBackgroundLocationActive: () => Promise<boolean>;
-            startBackgroundLocation: () => Promise<boolean>;
-            stopBackgroundLocation: () => Promise<void>;
-          };
-        }).backgroundLocationFunctions;
-        if (!backgroundFunctions) return;
-        
-        const isActive = await backgroundFunctions.isBackgroundLocationActive();
-        if (!isActive && isTrackingActive) {
-          await checkAndStartTracking();
-        } else if (isActive && !isTrackingActive) {
-          setIsTrackingActive(true);
-        }
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('Erro ao verificar status de rastreamento:', errorMessage);
+        const isActive = await nativeLocationService.isTrackingActive();
+        setIsTrackingActive(isActive);
+      } catch (error) {
+        console.error('Erro ao verificar status de rastreamento:', error);
       }
     };
 
@@ -72,30 +55,20 @@ export function LocationProvider({ children }: LocationProviderProps) {
     const interval = setInterval(checkTrackingStatus, 30000);
     
     return () => clearInterval(interval);
-  }, [isTrackingActive]);
+  }, [isAuthenticated]);
 
   const initializeLocation = async () => {
     try {
-      const backgroundFunctions = (global as typeof globalThis & {
-        backgroundLocationFunctions?: {
-          isBackgroundLocationActive: () => Promise<boolean>;
-          startBackgroundLocation: () => Promise<boolean>;
-          stopBackgroundLocation: () => Promise<void>;
-        };
-      }).backgroundLocationFunctions;
-      if (!backgroundFunctions) {
-        return;
-      }
-      
-      const isActive = await backgroundFunctions.isBackgroundLocationActive();
+      const isActive = await nativeLocationService.isTrackingActive();
       setIsTrackingActive(isActive);
       
-      if (!isActive) {
+      if (isAuthenticated) {
         await checkAndStartTracking();
       }
 
       await refreshLocation();
     } catch (error) {
+      console.error('Erro ao inicializar localização:', error);
     }
   };
 
@@ -108,88 +81,23 @@ export function LocationProvider({ children }: LocationProviderProps) {
         return;
       }
       
-      if (isAuthenticated) {
-      const response = await familyService.getFamilies();
+      const isActive = await nativeLocationService.isTrackingActive();
       
-      if (!response.success || !response.data || response.data.length === 0) {
-        setIsTrackingActive(false);
-        return;
-        }
-      }
-      
-      const backgroundFunctions = (global as typeof globalThis & {
-        backgroundLocationFunctions?: {
-          isBackgroundLocationActive: () => Promise<boolean>;
-          startBackgroundLocation: () => Promise<boolean>;
-          stopBackgroundLocation: () => Promise<void>;
-        };
-      }).backgroundLocationFunctions;
-      if (!backgroundFunctions) {
-        setIsTrackingActive(false);
-        return;
-      }
-      
-      const isActive = await backgroundFunctions.isBackgroundLocationActive();
-      
-      if (isActive) {
-        setIsTrackingActive(true);
-        return;
-      }
-      
-      const started = await backgroundFunctions.startBackgroundLocation();
-      
-      if (started) {
-        setIsTrackingActive(true);
-        if (isAuthenticated) {
-        try {
-          await locationService.sendCurrentLocation();
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.error('Erro ao enviar localização inicial:', errorMessage);
-          }
-        }
+      if (!isActive) {
+        const started = await nativeLocationService.startTracking();
+        setIsTrackingActive(started);
       } else {
-        setIsTrackingActive(false);
+        setIsTrackingActive(true);
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('Erro ao verificar e iniciar rastreamento:', errorMessage);
+    } catch (error) {
+      console.error('Erro ao verificar e iniciar rastreamento:', error);
       setIsTrackingActive(false);
     }
   };
 
-  const sendPendingLocations = async () => {
-    try {
-      const pendingLocations = await localLocationStorage.getStoredLocations();
-      
-      if (pendingLocations.length === 0) {
-        return;
-      }
-
-      for (const location of pendingLocations) {
-        try {
-          await locationService.updateLocation({
-            latitude: location.latitude,
-            longitude: location.longitude,
-            accuracy: location.accuracy,
-            altitude: location.altitude,
-            speed: location.speed,
-            heading: location.heading,
-            batteryLevel: location.batteryLevel,
-            isMoving: location.isMoving,
-          });
-        } catch (error) {
-          console.error('Erro ao enviar localização pendente:', error);
-        }
-      }
-
-      await localLocationStorage.clearStoredLocations();
-    } catch (error) {
-      console.error('Erro ao enviar localizações pendentes:', error);
-    }
-  };
-
   const refreshLocation = async () => {
+    if (!isAuthenticated) return;
+    
     try {
       setIsLoading(true);
       const response = await locationService.getLatestLocation();
@@ -217,10 +125,10 @@ export function LocationProvider({ children }: LocationProviderProps) {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const refreshInterval = setInterval(() => {
-      if (isAuthenticated) {
       refreshLocation();
-      }
     }, 30000);
 
     return () => clearInterval(refreshInterval);
@@ -246,13 +154,10 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
         if (isInZone) {
           currentlyInZones.add(zone.id);
-          
-         
           if (!activeZones.current.has(zone.id) && zone.notifyOnEnter) {
             await sendGeofenceNotification(zone, 'enter');
           }
         } else {
-         
           if (activeZones.current.has(zone.id) && zone.notifyOnExit) {
             await sendGeofenceNotification(zone, 'exit');
           }
@@ -261,20 +166,20 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
       activeZones.current = currentlyInZones;
     } catch (error) {
+      console.error('Erro ao verificar zonas de geofence:', error);
     }
   };
 
   const sendGeofenceNotification = async (zone: GeofenceZone, type: 'enter' | 'exit') => {
     try {
-     
       await notifyFamilyAboutGeofence(zone, type);
     } catch (error) {
+      console.error('Erro ao enviar notificação de geofence:', error);
     }
   };
 
   const notifyFamilyAboutGeofence = async (zone: GeofenceZone, type: 'enter' | 'exit') => {
     try {
-     
       await notificationService.sendGeofenceNotification({
         zoneName: zone.name,
         eventType: type,
@@ -287,26 +192,11 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const startTracking = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const backgroundFunctions = (global as typeof globalThis & {
-        backgroundLocationFunctions?: {
-          isBackgroundLocationActive: () => Promise<boolean>;
-          startBackgroundLocation: () => Promise<boolean>;
-          stopBackgroundLocation: () => Promise<void>;
-        };
-      }).backgroundLocationFunctions;
-      if (!backgroundFunctions) {
-        return false;
-      }
-      
-      const success = await backgroundFunctions.startBackgroundLocation();
-      
-      if (success) {
-        setIsTrackingActive(true);
-        await sendCurrentLocation();
-      }
-      
+      const success = await nativeLocationService.startTracking();
+      setIsTrackingActive(success);
       return success;
     } catch (error) {
+      console.error('Erro ao iniciar rastreamento:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -316,20 +206,10 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const stopTracking = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      const backgroundFunctions = (global as typeof globalThis & {
-        backgroundLocationFunctions?: {
-          isBackgroundLocationActive: () => Promise<boolean>;
-          startBackgroundLocation: () => Promise<boolean>;
-          stopBackgroundLocation: () => Promise<void>;
-        };
-      }).backgroundLocationFunctions;
-      if (!backgroundFunctions) {
-        return;
-      }
-      
-      await backgroundFunctions.stopBackgroundLocation();
+      await nativeLocationService.stopTracking();
       setIsTrackingActive(false);
     } catch (error) {
+      console.error('Erro ao parar rastreamento:', error);
     } finally {
       setIsLoading(false);
     }
@@ -337,7 +217,8 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const sendCurrentLocation = async (): Promise<boolean> => {
     try {
-      const success = await locationService.sendCurrentLocation();
+      // Enviar localização de interação
+      const success = await nativeLocationService.sendInteractionLocation();
       
       if (success) {
         await refreshLocation();
@@ -345,6 +226,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
       
       return success;
     } catch (error) {
+      console.error('Erro ao enviar localização atual:', error);
       return false;
     }
   };

@@ -11,11 +11,16 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { contactService, Contact, PhoneNumber, Email } from '../services/contacts/contactService';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Header } from '../components/shared';
+import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../hooks/useToast';
 
 export default function ContactFormScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { contactId } = (route.params as { contactId?: string }) || {};
+  const { isDark, toggleTheme } = useTheme();
+  const { showSuccess, showError } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [firstName, setFirstName] = useState('');
@@ -57,7 +62,7 @@ export default function ContactFormScreen() {
 
   const handleSave = async () => {
     if (!firstName.trim()) {
-      Alert.alert('Erro', 'O nome é obrigatório');
+      showError('O nome é obrigatório');
       return;
     }
 
@@ -76,18 +81,22 @@ export default function ContactFormScreen() {
         isFavorite,
       };
 
+      let response;
       if (contactId) {
-        await contactService.updateContact(contactId, data);
-        Alert.alert('Sucesso', 'Contato atualizado com sucesso');
+        response = await contactService.updateContact(contactId, data);
       } else {
-        await contactService.createContact(data);
-        Alert.alert('Sucesso', 'Contato criado com sucesso');
+        response = await contactService.createContact(data);
       }
 
-      navigation.goBack();
+      if (response.success) {
+        showSuccess(contactId ? 'Contato atualizado com sucesso!' : 'Contato criado com sucesso!');
+        navigation.goBack();
+      } else {
+        showError(response.message || 'Erro ao salvar contato');
+      }
     } catch (error) {
       console.error('Erro ao salvar:', error);
-      Alert.alert('Erro', 'Não foi possível salvar o contato');
+      showError('Erro de conexão. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -122,13 +131,17 @@ export default function ContactFormScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.cancelButton}>Cancelar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>{contactId ? 'Editar Contato' : 'Novo Contato'}</Text>
-        <TouchableOpacity onPress={handleSave} disabled={loading}>
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      <Header
+        title={contactId ? 'Editar Contato' : 'Novo Contato'}
+        showBackButton
+        onBack={() => navigation.goBack()}
+        showThemeToggle
+        onThemeToggle={toggleTheme}
+      />
+      
+      <View style={styles.headerActions}>
+        <TouchableOpacity onPress={handleSave} disabled={loading} style={styles.saveButtonContainer}>
           <Text style={[styles.saveButton, loading && styles.saveButtonDisabled]}>
             Salvar
           </Text>
@@ -136,55 +149,62 @@ export default function ContactFormScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.section}>
+        <View style={[styles.section, isDark && styles.sectionDark]}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, isDark && styles.inputDark]}
             placeholder="Nome *"
+            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
             value={firstName}
             onChangeText={setFirstName}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, isDark && styles.inputDark]}
             placeholder="Sobrenome"
+            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
             value={lastName}
             onChangeText={setLastName}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, isDark && styles.inputDark]}
             placeholder="Apelido"
+            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
             value={nickname}
             onChangeText={setNickname}
           />
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, isDark && styles.sectionDark]}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, isDark && styles.inputDark]}
             placeholder="Empresa"
+            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
             value={company}
             onChangeText={setCompany}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, isDark && styles.inputDark]}
             placeholder="Cargo"
+            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
             value={jobTitle}
             onChangeText={setJobTitle}
           />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Telefones</Text>
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>Telefones</Text>
           {phoneNumbers.map((phone, index) => (
             <View key={index} style={styles.multiFieldRow}>
               <TextInput
-                style={[styles.input, styles.multiFieldInput]}
+                style={[styles.input, styles.multiFieldInput, isDark && styles.inputDark]}
                 placeholder="Tipo"
+                placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
                 value={phone.label}
                 onChangeText={(value) => updatePhone(index, 'label', value)}
               />
               <TextInput
-                style={[styles.input, styles.multiFieldInput]}
+                style={[styles.input, styles.multiFieldInput, isDark && styles.inputDark]}
                 placeholder="Número"
+                placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
                 value={phone.number}
                 onChangeText={(value) => updatePhone(index, 'number', value)}
                 keyboardType="phone-pad"
@@ -200,19 +220,21 @@ export default function ContactFormScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>E-mails</Text>
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>E-mails</Text>
           {emails.map((email, index) => (
             <View key={index} style={styles.multiFieldRow}>
               <TextInput
-                style={[styles.input, styles.multiFieldInput]}
+                style={[styles.input, styles.multiFieldInput, isDark && styles.inputDark]}
                 placeholder="Tipo"
+                placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
                 value={email.label}
                 onChangeText={(value) => updateEmail(index, 'label', value)}
               />
               <TextInput
-                style={[styles.input, styles.multiFieldInput]}
+                style={[styles.input, styles.multiFieldInput, isDark && styles.inputDark]}
                 placeholder="E-mail"
+                placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
                 value={email.email}
                 onChangeText={(value) => updateEmail(index, 'email', value)}
                 keyboardType="email-address"
@@ -229,11 +251,12 @@ export default function ContactFormScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notas</Text>
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>Notas</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[styles.input, styles.textArea, isDark && styles.inputDark]}
             placeholder="Adicione notas sobre este contato..."
+            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -242,7 +265,7 @@ export default function ContactFormScreen() {
         </View>
 
         <TouchableOpacity
-          style={styles.favoriteToggle}
+          style={[styles.favoriteToggle, isDark && styles.favoriteToggleDark]}
           onPress={() => setIsFavorite(!isFavorite)}
         >
           <Ionicons
@@ -250,7 +273,9 @@ export default function ContactFormScreen() {
             size={24}
             color={isFavorite ? '#fbbf24' : '#6b7280'}
           />
-          <Text style={styles.favoriteText}>Adicionar aos favoritos</Text>
+          <Text style={[styles.favoriteText, isDark && styles.favoriteTextDark]}>
+            Adicionar aos favoritos
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -262,23 +287,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9fafb',
   },
-  header: {
+  containerDark: {
+    backgroundColor: '#111827',
+  },
+  headerActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  cancelButton: {
-    fontSize: 16,
-    color: '#6b7280',
+  saveButtonContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   saveButton: {
     fontSize: 16,
@@ -295,6 +317,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginTop: 8,
     padding: 16,
+    borderRadius: 12,
+  },
+  sectionDark: {
+    backgroundColor: '#1f2937',
   },
   sectionTitle: {
     fontSize: 12,
@@ -302,6 +328,9 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textTransform: 'uppercase',
     marginBottom: 12,
+  },
+  sectionTitleDark: {
+    color: '#9ca3af',
   },
   input: {
     backgroundColor: '#f9fafb',
@@ -312,6 +341,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
     marginBottom: 12,
+  },
+  inputDark: {
+    backgroundColor: '#374151',
+    borderColor: '#4b5563',
+    color: '#f9fafb',
   },
   textArea: {
     minHeight: 100,
@@ -348,10 +382,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 16,
     gap: 12,
+    borderRadius: 12,
+  },
+  favoriteToggleDark: {
+    backgroundColor: '#1f2937',
   },
   favoriteText: {
     fontSize: 16,
     color: '#111827',
+  },
+  favoriteTextDark: {
+    color: '#f9fafb',
   },
 });
 

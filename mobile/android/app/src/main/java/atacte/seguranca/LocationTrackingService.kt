@@ -153,6 +153,7 @@ class LocationTrackingService : Service() {
           put("speed", if (location.hasSpeed()) location.speed else null)
           put("heading", if (location.hasBearing()) location.bearing else null)
           put("isMoving", location.hasSpeed() && location.speed > 0.5)
+          put("triggerType", "MOVEMENT")
         }
 
         sendLocationToServer(apiUrl, token, payload)
@@ -164,6 +165,12 @@ class LocationTrackingService : Service() {
 
   private suspend fun sendLocationToServer(apiUrl: String, token: String, payload: JSONObject) {
     withContext(Dispatchers.IO) {
+      sendLocationToServerSync(apiUrl, token, payload)
+    }
+  }
+
+  companion object {
+    fun sendLocationToServerSync(apiUrl: String, token: String, payload: JSONObject) {
       try {
         val url = URL("$apiUrl/api/location")
         val connection = url.openConnection() as HttpURLConnection

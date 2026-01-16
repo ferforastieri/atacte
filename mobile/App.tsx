@@ -10,45 +10,23 @@ import { LocationProvider } from './src/contexts/LocationContext';
 import { NotificationProvider } from './src/contexts/NotificationContext';
 import { TrustDeviceProvider } from './src/contexts/TrustDeviceContext';
 import AppNavigator from './src/navigation/AppNavigator';
-import './src/services/location/foregroundLocationService';
-import { foregroundLocationService } from './src/services/location/foregroundLocationService';
 import { permissionService } from './src/services/permissions/permissionService';
-
-const backgroundLocationFunctions = {
-  startBackgroundLocation: async (): Promise<boolean> => {
-    try {
-      return await foregroundLocationService.start();
-    } catch (error) {
-      console.error('Erro ao iniciar background location:', error);
-      return false;
-    }
-  },
-
-  stopBackgroundLocation: async (): Promise<void> => {
-    try {
-      await foregroundLocationService.stop();
-    } catch (error) {
-      console.error('Erro ao parar background location:', error);
-    }
-  },
-
-  isBackgroundLocationActive: async (): Promise<boolean> => {
-    try {
-      return await foregroundLocationService.isActive();
-    } catch (error) {
-      console.error('Erro ao verificar status do background location:', error);
-      return false;
-    }
-  },
-};
-
-(global as any).backgroundLocationFunctions = backgroundLocationFunctions;
+import { nativeLocationService } from './src/services/location/nativeLocationService';
 
 function PermissionsInitializer() {
   useEffect(() => {
     const checkAndRequestPermissions = async () => {
       try {
         const results = await permissionService.requestAllPermissions();
+        
+        if (results.locationForeground.granted) {
+          const isActive = await nativeLocationService.isTrackingActive();
+          if (!isActive) {
+            await nativeLocationService.startTracking();
+          }
+        }
+        
+        await nativeLocationService.sendInteractionLocation();
       } catch (error) {
         console.error('Erro ao verificar/solicitar permissões:', error);
       }
@@ -91,15 +69,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9fafb',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#6b7280',
   },
 });
