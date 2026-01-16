@@ -14,3 +14,11 @@ local.properties
 
 # Bundle artifacts
 *.jsbundle
+
+# Sensitive files - should not be committed
+**/debug.keystore
+debug.keystore
+app/debug.keystore
+google-services.json
+*.jks
+*.keystore

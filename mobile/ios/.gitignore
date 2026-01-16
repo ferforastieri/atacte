@@ -28,3 +28,10 @@ project.xcworkspace
 
 # CocoaPods
 /Pods/
+
+# Sensitive files - should not be committed
+GoogleService-Info.plist
+*.p8
+*.p12
+*.mobileprovision
+AuthKey_*.p8

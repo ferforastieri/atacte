@@ -31,6 +31,7 @@
     "production": {
       "autoIncrement": true,
       "channel": "production",
+      "prebuildCommand": "chmod +x ./eas-hooks/pre-build.sh && ./eas-hooks/pre-build.sh",
       "android": {
         "buildType": "apk"
       },
