@@ -234,12 +234,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const getFamilyLocations = async (familyId: string): Promise<FamilyMapData | null> => {
     try {
       const response = await locationService.getFamilyLocations(familyId);
-      
-      if (response.success && response.data) {
-        return response.data;
-      }
-      
-      return null;
+      return response;
     } catch (error) {
       return null;
     }
