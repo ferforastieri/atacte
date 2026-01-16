@@ -17,9 +17,7 @@ export default {
     updates: {
       url: "https://u.expo.dev/4ed359d6-b000-4308-84c0-18c93f60b0c6"
     },
-    runtimeVersion: {
-      policy: "appVersion"
-    },
+    runtimeVersion: "3.0.0",
     ios: {
       bundleIdentifier: "com.atacte.mobile",
       supportsTablet: true,
