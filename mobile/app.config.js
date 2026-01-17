@@ -49,7 +49,7 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: "atacte.seguranca",
-      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
+      googleServicesFile: "./android/app/google-services.json",
       permissions: [
         "INTERNET",
         "ACCESS_FINE_LOCATION",
