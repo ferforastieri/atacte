@@ -1,4 +1,4 @@
-# Dockerfile Unificado - Atacte Password Manager
+# Dockerfile Unificado - Sentro Password Manager
 FROM node:18-alpine
 
 # Instalar dependências do sistema

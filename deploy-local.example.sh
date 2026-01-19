@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Script de Deploy Local - Atacte (EXEMPLO)
+# Script de Deploy Local - Sentro (EXEMPLO)
 # Copie este arquivo para deploy-local.sh e ajuste o IP
 
-echo "🚀 Deploy Local do Atacte"
+echo "🚀 Deploy Local do Sentro"
 
 # Verificar se está conectado à rede local
 echo "🌐 Conectando ao servidor local..."
@@ -11,12 +11,12 @@ echo "🌐 Conectando ao servidor local..."
 # Configurações (AJUSTE CONFORME SEU SERVIDOR)
 SERVER_HOST="SEU_IP_AQUI"  # Exemplo: 192.168.1.100
 SERVER_USER="seu_usuario"  # Exemplo: fernando
-SERVER_PATH="/caminho/do/projeto"  # Exemplo: /home/fernando/atacte
+SERVER_PATH="/caminho/do/projeto"  # Exemplo: /home/fernando/sentro
 
 echo "📁 Preparando arquivos..."
 
 # Criar diretório temporário
-TEMP_DIR="/tmp/atacte-deploy"
+TEMP_DIR="/tmp/sentro-deploy"
 rm -rf $TEMP_DIR
 mkdir -p $TEMP_DIR
 
