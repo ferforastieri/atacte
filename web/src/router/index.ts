@@ -113,7 +113,7 @@ const router = createRouter({
       component: () => import('@/views/totp/TotpView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Códigos TOTP - Sentro'
+        title: 'Sentro'
       }
     },
     {
