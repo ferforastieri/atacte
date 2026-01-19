@@ -16,14 +16,6 @@ export type AuditAction =
   | 'SESSION_REVOKED'
   | 'ACCOUNT_DELETED'
   | 'PROFILE_UPDATED'
-  | 'FAMILY_CREATED'
-  | 'FAMILY_UPDATED'
-  | 'FAMILY_DELETED'
-  | 'FAMILY_JOINED'
-  | 'FAMILY_LEFT'
-  | 'MEMBER_REMOVED'
-  | 'MEMBER_ROLE_UPDATED'
-  | 'MEMBER_SETTINGS_UPDATED'
   | 'NOTE_CREATED'
   | 'NOTE_UPDATED'
   | 'NOTE_DELETED';
@@ -33,8 +25,6 @@ export type ResourceType =
   | 'PASSWORD_ENTRY'
   | 'SESSION'
   | 'SYSTEM'
-  | 'FAMILY'
-  | 'FAMILY_MEMBER'
   | 'SECURE_NOTE';
 
 export class AuditUtil {

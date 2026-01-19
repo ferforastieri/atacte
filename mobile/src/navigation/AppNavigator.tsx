@@ -15,8 +15,6 @@ import DashboardScreen from '../screens/DashboardScreen';
 import SecureNotesScreen from '../screens/SecureNotesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PasswordDetailScreen from '../screens/PasswordDetailScreen';
-import FamilyScreen from '../screens/FamilyScreen';
-import FamilyDetailScreen from '../screens/FamilyDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SecureNoteDetailScreen from '../screens/SecureNoteDetailScreen';
 import AuditLogsScreen from '../screens/admin/AuditLogsScreen';
@@ -28,8 +26,6 @@ export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   PasswordDetail: { passwordId: string };
-  FamilyDetail: { familyId: string; familyName: string };
-  FamilyDetails: { familyId: string };
   SecureNoteDetail: { noteId: string };
   AuditLogs: undefined;
   Sessions: undefined;
@@ -43,8 +39,6 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
-  Family: undefined;
-  FamilyDetail: { familyId: string; familyName: string };
   SecureNotes: undefined;
   Profile: undefined;
   Settings: undefined;
@@ -97,8 +91,6 @@ function MainTabNavigator() {
 
             if (route.name === 'Dashboard') {
               iconName = focused ? 'key' : 'key-outline';
-            } else if (route.name === 'Family') {
-              iconName = focused ? 'people' : 'people-outline';
             } else if (route.name === 'SecureNotes') {
               iconName = focused ? 'document-text' : 'document-text-outline';
             } else if (route.name === 'Profile') {
@@ -123,20 +115,6 @@ function MainTabNavigator() {
         name="Dashboard" 
         component={DashboardScreen}
         options={{ title: 'Senhas' }}
-      />
-      <Tab.Screen 
-        name="Family" 
-        component={FamilyScreen}
-        options={{ title: 'Família' }}
-      />
-      <Tab.Screen 
-        name="FamilyDetail" 
-        component={FamilyDetailScreen}
-        options={{ 
-          title: 'Detalhes da Família',
-          tabBarButton: () => null,
-          tabBarItemStyle: { display: 'none' }
-        }}
       />
       <Tab.Screen 
         name="SecureNotes" 

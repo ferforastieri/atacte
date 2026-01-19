@@ -43,8 +43,6 @@ import userRoutes from './controllers/users/userController';
 import totpRoutes from './controllers/totp/totpController';
 import importExportRoutes from './controllers/importExport/importExportController';
 import preferencesRoutes from './controllers/preferences/preferencesController';
-import familyRoutes from './controllers/family/familyController';
-import notificationRoutes from './controllers/notification/notificationController';
 import secureNoteRoutes from './controllers/secureNotes/secureNoteController';
 
 app.use('/api/auth', authRoutes);
@@ -53,8 +51,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/totp', totpRoutes);
 app.use('/api/import-export', importExportRoutes);
 app.use('/api/preferences', preferencesRoutes);
-app.use('/api/family', familyRoutes);
-app.use('/api/notifications', notificationRoutes);
 app.use('/api/secure-notes', secureNoteRoutes);
 
 

@@ -15,9 +15,6 @@ interface HeaderProps {
   showRefreshButton?: boolean;
   onRefresh?: () => void;
   isRefreshing?: boolean;
-  showNotificationsButton?: boolean;
-  onNotificationsPress?: () => void;
-  notificationCount?: number;
   showSettingsButton?: boolean;
   onSettingsPress?: () => void;
 }
@@ -31,9 +28,6 @@ export const Header: React.FC<HeaderProps> = ({
   showRefreshButton = false,
   onRefresh,
   isRefreshing = false,
-  showNotificationsButton = false,
-  onNotificationsPress,
-  notificationCount = 0,
   showSettingsButton = false,
   onSettingsPress
 }) => {
@@ -96,33 +90,6 @@ export const Header: React.FC<HeaderProps> = ({
       marginRight: 8,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    notificationsButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      marginRight: 8,
-      justifyContent: 'center',
-      alignItems: 'center',
-      position: 'relative',
-    },
-    notificationBadge: {
-      position: 'absolute',
-      top: -2,
-      right: -2,
-      backgroundColor: '#ef4444',
-      borderRadius: 10,
-      minWidth: 18,
-      height: 18,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 4,
-    },
-    notificationBadgeText: {
-      color: '#ffffff',
-      fontSize: 10,
-      fontWeight: '600',
     },
     backButton: {
       width: 36,
@@ -195,25 +162,6 @@ export const Header: React.FC<HeaderProps> = ({
                 size={20} 
                 color={isRefreshing ? (isDark ? '#6b7280' : '#9ca3af') : (isDark ? '#f9fafb' : '#111827')} 
               />
-            </TouchableOpacity>
-          )}
-          {showNotificationsButton && (
-            <TouchableOpacity 
-              style={styles.notificationsButton}
-              onPress={onNotificationsPress}
-            >
-              <Ionicons 
-                name="notifications-outline" 
-                size={20} 
-                color={isDark ? '#f9fafb' : '#111827'} 
-              />
-              {notificationCount > 0 && (
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>
-                    {notificationCount > 99 ? '99+' : notificationCount}
-                  </Text>
-                </View>
-              )}
             </TouchableOpacity>
           )}
           {showThemeToggle && (

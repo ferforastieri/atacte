@@ -157,9 +157,8 @@ Sentro/
 - **React Navigation** - Navegação mobile
 - **AsyncStorage** - Armazenamento local
 - **Expo SecureStore** - Armazenamento seguro
-- **React Native Flash Message** - Notificações
+- **React Native Flash Message** - Mensagens toast
 - **Expo Clipboard** - Funcionalidade de copiar/colar
-- **Expo Notifications** - Notificações push e locais
 
 ### DevOps
 - **Docker** - Containerização
@@ -478,26 +477,6 @@ Exportar dados em JSON.
 
 #### POST `/api/import-export/import`
 Importar dados de JSON.
-
-### Localização Familiar
-
-#### POST `/api/families`
-Criar novo grupo familiar.
-
-#### POST `/api/families/:id/join`
-Entrar em família existente via código de convite.
-
-#### GET `/api/families`
-Listar famílias do usuário.
-
-#### GET `/api/families/:id/members`
-Listar membros de uma família.
-
-#### GET `/api/zones/family/:familyId`
-Listar zonas de uma família.
-
-#### DELETE `/api/zones/:id`
-Remover zona geográfica.
 
 ## 🚀 Deployment
 

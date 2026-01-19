@@ -31,7 +31,7 @@ export default {
         NSAppTransportSecurity: {
           NSAllowsArbitraryLoads: true
         },
-        UIBackgroundModes: ["remote-notification"]
+        UIBackgroundModes: []
       },
       entitlements: {
         "com.apple.security.application-groups": [
@@ -47,7 +47,6 @@ export default {
       package: "sentro.seguranca",
       permissions: [
         "INTERNET",
-        "POST_NOTIFICATIONS",
         "VIBRATE",
         "ACCESS_NETWORK_STATE",
         "CHANGE_NETWORK_STATE"
@@ -71,14 +70,6 @@ export default {
       "expo-font",
       "expo-secure-store",
       "expo-updates",
-      [
-        "expo-notifications",
-        {
-          icon: "./assets/logo.png",
-          color: "#16a34a",
-          defaultChannel: "default"
-        }
-      ],
       [
         "expo-build-properties",
         {

@@ -1,4 +1,3 @@
-import * as Notifications from 'expo-notifications';
 import { Platform, Linking, Alert } from 'react-native';
 import * as Battery from 'expo-battery';
 
@@ -8,7 +7,6 @@ export interface PermissionResult {
 }
 
 export interface AllPermissionsResult {
-  notifications: PermissionResult;
   batteryOptimization: PermissionResult;
   allGranted: boolean;
 }
@@ -16,51 +14,24 @@ export interface AllPermissionsResult {
 class PermissionService {
   async requestAllPermissions(): Promise<AllPermissionsResult> {
     const results: AllPermissionsResult = {
-      notifications: { granted: false },
       batteryOptimization: { granted: false },
       allGranted: false,
     };
 
     try {
-      results.notifications = await this.requestNotifications();
-      
       if (Platform.OS === 'android') {
         results.batteryOptimization = await this.requestBatteryOptimization();
       } else {
         results.batteryOptimization = { granted: true };
       }
 
-      results.allGranted = 
-        results.notifications.granted &&
-        results.batteryOptimization.granted;
+      results.allGranted = results.batteryOptimization.granted;
 
       return results;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao solicitar permissões:', errorMessage);
       return results;
-    }
-  }
-
-  async requestNotifications(): Promise<PermissionResult> {
-    try {
-      const { status } = await Notifications.requestPermissionsAsync({
-        ios: {
-          allowAlert: true,
-          allowBadge: true,
-          allowSound: true,
-        },
-      });
-      return {
-        granted: status === 'granted',
-        message: status === 'granted' ? undefined : 'Permissão de notificações negada',
-      };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao solicitar permissão de notificações';
-      return {
-        granted: false,
-        message: errorMessage,
-      };
     }
   }
 
@@ -98,17 +69,11 @@ class PermissionService {
 
   async checkAllPermissions(): Promise<AllPermissionsResult> {
     const results: AllPermissionsResult = {
-      notifications: { granted: false },
       batteryOptimization: { granted: false },
       allGranted: false,
     };
 
     try {
-      const notificationStatus = await Notifications.getPermissionsAsync();
-      results.notifications = {
-        granted: notificationStatus.granted,
-      };
-
       try {
         const batteryLevel = await Battery.getBatteryLevelAsync();
         results.batteryOptimization = {
@@ -118,9 +83,7 @@ class PermissionService {
         results.batteryOptimization = { granted: false };
       }
 
-      results.allGranted = 
-        results.notifications.granted &&
-        results.batteryOptimization.granted;
+      results.allGranted = results.batteryOptimization.granted;
 
       return results;
     } catch (error: unknown) {

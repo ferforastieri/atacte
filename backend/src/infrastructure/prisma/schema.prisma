@@ -29,16 +29,12 @@ model User {
   name                 String?
   phoneNumber          String?  @map("phone_number")
   profilePicture       String?  @map("profile_picture")
-  pushToken            String?  @map("push_token") 
   
   passwordEntries      PasswordEntry[]
   secureNotes          SecureNote[]
   userSessions         UserSession[]
   auditLogs            AuditLog[]
   preferences          UserPreferences?
-  familyMemberships    FamilyMember[]
-  sentNotifications    Notification[] @relation("NotificationSender")
-  receivedNotifications Notification[] @relation("NotificationReceiver")
   passwordResetTokens  PasswordResetToken[]
   trustedDevices       TrustedDevice[]
   
@@ -155,60 +151,6 @@ model UserPreferences {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("user_preferences")
-}
-
-
-model Family {
-  id           String   @id @default(cuid())
-  name         String
-  description  String?
-  createdById  String   @map("created_by_id")
-  inviteCode   String   @unique @map("invite_code") 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  isActive     Boolean  @default(true) @map("is_active")
-  
-  members      FamilyMember[]
-  
-  @@map("families")
-}
-
-model FamilyMember {
-  id              String   @id @default(cuid())
-  familyId        String   @map("family_id")
-  userId          String   @map("user_id")
-  role            String   @default("member") 
-  nickname        String?  
-  joinedAt        DateTime @default(now()) @map("joined_at")
-  leftAt          DateTime? @map("left_at")
-  isActive        Boolean  @default(true) @map("is_active")
-  
-  family          Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([familyId, userId])
-  @@map("family_members")
-}
-
-model Notification {
-  id           String   @id @default(cuid())
-  senderId     String?  @map("sender_id") 
-  receiverId   String   @map("receiver_id")
-  type         String   
-  title        String
-  body         String
-  data         Json?    
-  isRead       Boolean  @default(false) @map("is_read")
-  isSent       Boolean  @default(false) @map("is_sent")
-  sentAt       DateTime? @map("sent_at")
-  readAt       DateTime? @map("read_at")
-  createdAt    DateTime @default(now()) @map("created_at")
-  
-  sender       User?    @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
-  receiver     User     @relation("NotificationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  
-  @@index([receiverId, isRead])
-  @@map("notifications")
 }
 
 model PasswordResetToken {
