@@ -15,7 +15,7 @@ export default {
       "**/*"
     ],
     updates: {
-      url: "https://u.expo.dev/4ed359d6-b000-4308-84c0-18c93f60b0c6"
+      url: "https://u.expo.dev/63c2797a-2ec3-4383-b11a-949145aad6f0"
     },
     runtimeVersion: "3.0.0",
     ios: {
@@ -83,7 +83,8 @@ export default {
     },
     extra: {
       eas: {
-        projectId: "4ed359d6-b000-4308-84c0-18c93f60b0c6"
+        projectId: "63c2797a-2ec3-4383-b11a-949145aad6f0",
+        owner: "fernandoexpodev"
       }
     },
     plugins: [
