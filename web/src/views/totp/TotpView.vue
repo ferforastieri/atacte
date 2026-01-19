@@ -5,7 +5,6 @@
       :show-logo="true"
       :show-back-button="true"
       :show-navigation="true"
-      title="Códigos TOTP"
     />
 
     <!-- Main Content -->
