@@ -31,11 +31,7 @@ export default {
         NSAppTransportSecurity: {
           NSAllowsArbitraryLoads: true
         },
-        NSLocationWhenInUseUsageDescription: "Este app precisa da sua localização para compartilhar com sua família.",
-        NSLocationAlwaysUsageDescription: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
-        NSLocationAlwaysAndWhenInUseUsageDescription: "Este app precisa da sua localização para compartilhar com sua família.",
-        NSContactsUsageDescription: "Este app precisa acessar seus contatos para que você possa importá-los e gerenciá-los.",
-        UIBackgroundModes: ["location", "remote-notification"]
+        UIBackgroundModes: ["remote-notification"]
       },
       entitlements: {
         "com.apple.security.application-groups": [
@@ -49,29 +45,12 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: "sentro.seguranca",
-      googleServicesFile: "./android/app/google-services.json",
       permissions: [
         "INTERNET",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION",
         "POST_NOTIFICATIONS",
         "VIBRATE",
-        "WAKE_LOCK",
-        "RECEIVE_BOOT_COMPLETED",
-        "SYSTEM_ALERT_WINDOW",
-        "ACTIVITY_RECOGNITION",
-        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
-        "ACCESS_WIFI_STATE",
-        "CHANGE_WIFI_STATE",
-        "BLUETOOTH",
-        "BLUETOOTH_ADMIN",
         "ACCESS_NETWORK_STATE",
-        "CHANGE_NETWORK_STATE",
-        "READ_CONTACTS",
-        "WRITE_CONTACTS"
+        "CHANGE_NETWORK_STATE"
       ],
       usesCleartextTraffic: true,
       compileSdkVersion: 34,

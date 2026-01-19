@@ -117,48 +117,12 @@ const router = createRouter({
       }
     },
     {
-      path: '/location',
-      name: 'Location',
-      component: () => import('@/views/LocationView.vue'),
-      meta: { 
-        requiresAuth: true,
-        title: 'Localização - Sentro'
-      }
-    },
-    {
-      path: '/location/history/:userId',
-      name: 'LocationHistory',
-      component: () => import('@/views/location/LocationHistoryView.vue'),
-      meta: { 
-        requiresAuth: true,
-        title: 'Histórico de Localização - Sentro'
-      }
-    },
-    {
       path: '/secure-notes',
       name: 'SecureNotes',
       component: () => import('@/views/secureNotes/SecureNotesView.vue'),
       meta: { 
         requiresAuth: true,
         title: 'Notas Seguras - Sentro'
-      }
-    },
-    {
-      path: '/calendar',
-      name: 'Calendar',
-      component: () => import('@/views/calendar/CalendarView.vue'),
-      meta: { 
-        requiresAuth: true,
-        title: 'Calendário - Sentro'
-      }
-    },
-    {
-      path: '/contacts',
-      name: 'Contacts',
-      component: () => import('@/views/ContactsView.vue'),
-      meta: { 
-        requiresAuth: true,
-        title: 'Contatos - Sentro'
       }
     },
     {

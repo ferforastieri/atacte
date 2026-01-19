@@ -37,14 +37,10 @@ model User {
   auditLogs            AuditLog[]
   preferences          UserPreferences?
   familyMemberships    FamilyMember[]
-  locations            Location[]
   sentNotifications    Notification[] @relation("NotificationSender")
   receivedNotifications Notification[] @relation("NotificationReceiver")
-  geofenceStates       UserGeofenceState[]
   passwordResetTokens  PasswordResetToken[]
   trustedDevices       TrustedDevice[]
-  calendarEvents       CalendarEvent[]
-  contacts             Contact[]
   
   @@map("users")
 }
@@ -173,7 +169,6 @@ model Family {
   isActive     Boolean  @default(true) @map("is_active")
   
   members      FamilyMember[]
-  geofenceZones GeofenceZone[]
   
   @@map("families")
 }
@@ -188,35 +183,11 @@ model FamilyMember {
   leftAt          DateTime? @map("left_at")
   isActive        Boolean  @default(true) @map("is_active")
   
-  shareLocation   Boolean  @default(true) @map("share_location")
-  showOnMap       Boolean  @default(true) @map("show_on_map")
-  
   family          Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@unique([familyId, userId])
   @@map("family_members")
-}
-
-model Location {
-  id             String   @id @default(cuid())
-  userId         String   @map("user_id")
-  latitude       Float
-  longitude      Float
-  accuracy       Float?   
-  altitude       Float?
-  speed          Float?   
-  heading        Float?   
-  address        String?  
-  timestamp      DateTime @default(now())
-  batteryLevel   Float?   @map("battery_level") 
-  isMoving       Boolean  @default(false) @map("is_moving")
-  triggerType    String?  @default("MOVEMENT") @map("trigger_type")
-  
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId, timestamp])
-  @@map("locations")
 }
 
 model Notification {
@@ -240,47 +211,6 @@ model Notification {
   @@map("notifications")
 }
 
-model GeofenceZone {
-  id           String   @id @default(cuid())
-  familyId    String   @map("family_id")
-  name         String
-  description  String?
-  latitude     Float
-  longitude    Float
-  radius       Float    
-  isActive     Boolean  @default(true) @map("is_active")
-  notifyOnEnter Boolean @default(true) @map("notify_on_enter")
-  notifyOnExit Boolean @default(true) @map("notify_on_exit")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  
-  family       Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  userStates   UserGeofenceState[]
-  
-  @@index([familyId])
-  @@map("geofence_zones")
-}
-
-model UserGeofenceState {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
-  zoneId       String   @map("zone_id")
-  isInside     Boolean  @default(false) @map("is_inside")
-  lastEventAt  DateTime? @map("last_event_at") 
-  lastEnterAt  DateTime? @map("last_enter_at") 
-  lastExitAt   DateTime? @map("last_exit_at") 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  zone         GeofenceZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, zoneId])
-  @@index([userId])
-  @@index([zoneId])
-  @@map("user_geofence_states")
-}
-
 model PasswordResetToken {
   id        String   @id @default(cuid())
   userId   String   @map("user_id")
@@ -294,61 +224,4 @@ model PasswordResetToken {
   @@index([token])
   @@index([userId])
   @@map("password_reset_tokens")
-}
-
-model CalendarEvent {
-  id              String   @id @default(cuid())
-  userId          String   @map("user_id")
-  title           String
-  description     String?
-  startDate       DateTime @map("start_date")
-  endDate         DateTime? @map("end_date")
-  isAllDay        Boolean  @default(false) @map("is_all_day")
-  reminderMinutes Int[]    @default([]) @map("reminder_minutes")
-  color           String   @default("#3b82f6")
-  location        String?
-  recurrenceType  String?  @map("recurrence_type") // NONE, DAILY, WEEKLY, MONTHLY, YEARLY, CUSTOM
-  recurrenceInterval Int?  @default(1) @map("recurrence_interval") // A cada X dias/semanas/meses/anos
-  recurrenceEndDate DateTime? @map("recurrence_end_date") // Data final da repetição
-  recurrenceDaysOfWeek Int[] @default([]) @map("recurrence_days_of_week") // Para WEEKLY: [0=Dom, 1=Seg, ...]
-  recurrenceDayOfMonth Int? @map("recurrence_day_of_month") // Para MONTHLY: dia do mês
-  recurrenceWeekOfMonth Int? @map("recurrence_week_of_month") // Para MONTHLY: semana do mês (1-4)
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId, startDate])
-  @@index([userId])
-  @@map("calendar_events")
-}
-
-model Contact {
-  id              String   @id @default(cuid())
-  userId          String   @map("user_id")
-  
-  firstName       String   @map("first_name")
-  lastName        String?  @map("last_name")
-  nickname        String?
-  company         String?
-  jobTitle        String?  @map("job_title")
-  
-  phoneNumbers    Json     @default("[]") @map("phone_numbers")
-  emails          Json     @default("[]")
-  addresses       Json     @default("[]")
-  
-  birthday        DateTime?
-  notes           String?
-  imageUrl        String?  @map("image_url")
-  
-  isFavorite      Boolean  @default(false) @map("is_favorite")
-  
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([userId, isFavorite])
-  @@map("contacts")
 }

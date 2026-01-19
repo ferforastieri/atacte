@@ -422,10 +422,6 @@ const goToTotpScreen = () => {
   router.push('/totp')
 }
 
-const goToLocation = () => {
-  router.push('/location')
-}
-
 const goToSecureNotes = () => {
   router.push('/secure-notes')
 }

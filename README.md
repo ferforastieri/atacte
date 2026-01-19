@@ -55,13 +55,7 @@ A historia do projeto é simples, comprei uma maquina para rodar um homelab, e o
 - **Widget iOS nativo** desenvolvido em Swift
 
 #### 👨‍👩‍👧‍👦 Segurança Familiar
-- **Rastreamento de localização** em tempo real
 - **Criação de grupos familiares** com códigos de convite
-- **Geofences personalizáveis** para alertas de zona
-- **Histórico de localizações** com visualização em mapa
-- **Notificações de chegada/saída** de zonas configuradas
-- **Localização em background** mesmo com app fechado ou bloqueado
-- **Detecção de movimento** usando Activity Recognition
 - **Notificação persistente** para rastreamento contínuo
 - **Controle de permissões** granular por membro da família
 
@@ -164,14 +158,8 @@ Sentro/
 - **AsyncStorage** - Armazenamento local
 - **Expo SecureStore** - Armazenamento seguro
 - **React Native Flash Message** - Notificações
-- **Expo Location** - Rastreamento de localização
-- **Expo TaskManager** - Tarefas em background
-- **React Native WebView** - Visualização de mapas (Leaflet)
 - **Expo Clipboard** - Funcionalidade de copiar/colar
-- **Expo Contacts** - Sincronização de contatos
-- **Expo Calendar** - Integração com calendário
 - **Expo Notifications** - Notificações push e locais
-- **Plugin Nativo Swift** - Widget iOS para calendário
 
 ### DevOps
 - **Docker** - Containerização
@@ -301,16 +289,9 @@ O app mobile precisa ser configurado para se conectar ao backend e ter permissõ
    cd mobile
    npx expo prebuild --clean
    ```
-   Isso aplica as configurações nativas do plugin de localização persistente.
+   Isso aplica as configurações nativas.
 
-3. **Configurar permissões de localização** - O arquivo `mobile/app.config.js` já está configurado com:
-   - `ACCESS_FINE_LOCATION` - Localização precisa
-   - `ACCESS_BACKGROUND_LOCATION` - Localização em background
-   - `FOREGROUND_SERVICE_LOCATION` - Serviço em primeiro plano
-   - `ACTIVITY_RECOGNITION` - Detecção de movimento
-   - `WAKE_LOCK` - Manter dispositivo ativo
-
-4. **Configurar EAS Build** - Para builds de produção, edite `mobile/eas.json`:
+3. **Configurar EAS Build** - Para builds de produção, edite `mobile/eas.json`:
    ```json
    {
      "build": {
@@ -511,21 +492,6 @@ Listar famílias do usuário.
 
 #### GET `/api/families/:id/members`
 Listar membros de uma família.
-
-#### POST `/api/location`
-Atualizar localização do usuário.
-
-#### GET `/api/location/latest`
-Obter última localização do usuário.
-
-#### GET `/api/location/family/:familyId`
-Obter localizações dos membros da família.
-
-#### GET `/api/location/history/:userId`
-Obter histórico de localizações de um membro.
-
-#### POST `/api/zones`
-Criar nova zona geográfica.
 
 #### GET `/api/zones/family/:familyId`
 Listar zonas de uma família.

@@ -25,8 +25,6 @@ export interface FamilyMemberDto {
   nickname: string | null;
   joinedAt: Date;
   isActive: boolean;
-  shareLocation: boolean;
-  showOnMap: boolean;
 }
 
 export interface CreateFamilyData {
@@ -46,8 +44,6 @@ export interface JoinFamilyData {
 
 export interface UpdateMemberSettingsData {
   nickname?: string;
-  shareLocation?: boolean;
-  showOnMap?: boolean;
 }
 
 export class FamilyService {
@@ -370,8 +366,6 @@ export class FamilyService {
       nickname: member.nickname,
       joinedAt: member.joinedAt,
       isActive: member.isActive,
-      shareLocation: member.shareLocation,
-      showOnMap: member.showOnMap,
     };
   }
 }

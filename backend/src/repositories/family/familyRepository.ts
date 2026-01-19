@@ -25,8 +25,6 @@ export interface AddMemberData {
 export interface UpdateMemberData {
   role?: string;
   nickname?: string;
-  shareLocation?: boolean;
-  showOnMap?: boolean;
   isActive?: boolean;
 }
 

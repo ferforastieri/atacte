@@ -24,19 +24,9 @@ export type AuditAction =
   | 'MEMBER_REMOVED'
   | 'MEMBER_ROLE_UPDATED'
   | 'MEMBER_SETTINGS_UPDATED'
-  | 'LOCATION_UPDATED'
-  | 'GEOFENCE_ZONE_CREATED'
-  | 'GEOFENCE_ZONE_UPDATED'
-  | 'GEOFENCE_ZONE_DELETED'
   | 'NOTE_CREATED'
   | 'NOTE_UPDATED'
-  | 'NOTE_DELETED'
-  | 'CALENDAR_EVENT_CREATED'
-  | 'CALENDAR_EVENT_UPDATED'
-  | 'CALENDAR_EVENT_DELETED'
-  | 'CONTACT_CREATED'
-  | 'CONTACT_UPDATED'
-  | 'CONTACT_DELETED';
+  | 'NOTE_DELETED';
 
 export type ResourceType = 
   | 'USER'
@@ -45,11 +35,7 @@ export type ResourceType =
   | 'SYSTEM'
   | 'FAMILY'
   | 'FAMILY_MEMBER'
-  | 'LOCATION'
-  | 'GEOFENCE_ZONE'
-  | 'SECURE_NOTE'
-  | 'CALENDAR_EVENT'
-  | 'CONTACT';
+  | 'SECURE_NOTE';
 
 export class AuditUtil {
   

@@ -1,2 +1,0 @@
-export { CalendarEventModal } from './CalendarEventModal';
-

@@ -24,8 +24,6 @@ interface JoinFamilyRequest {
 
 interface UpdateMemberSettingsRequest {
   nickname?: string;
-  shareLocation?: boolean;
-  showOnMap?: boolean;
 }
 
 interface UpdateMemberRoleRequest {

@@ -17,13 +17,8 @@ import ProfileScreen from '../screens/ProfileScreen';
 import PasswordDetailScreen from '../screens/PasswordDetailScreen';
 import FamilyScreen from '../screens/FamilyScreen';
 import FamilyDetailScreen from '../screens/FamilyDetailScreen';
-import MemberHistoryScreen from '../screens/MemberHistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SecureNoteDetailScreen from '../screens/SecureNoteDetailScreen';
-import CalendarScreen from '../screens/CalendarScreen';
-import ContactsScreen from '../screens/ContactsScreen';
-import ContactDetailScreen from '../screens/ContactDetailScreen';
-import ContactFormScreen from '../screens/ContactFormScreen';
 import AuditLogsScreen from '../screens/admin/AuditLogsScreen';
 import SessionsScreen from '../screens/admin/SessionsScreen';
 import UsersScreen from '../screens/admin/UsersScreen';
@@ -35,7 +30,6 @@ export type RootStackParamList = {
   PasswordDetail: { passwordId: string };
   FamilyDetail: { familyId: string; familyName: string };
   FamilyDetails: { familyId: string };
-  MemberHistory: { userId: string; userName: string };
   SecureNoteDetail: { noteId: string };
   AuditLogs: undefined;
   Sessions: undefined;
@@ -52,15 +46,10 @@ export type MainTabParamList = {
   Family: undefined;
   FamilyDetail: { familyId: string; familyName: string };
   SecureNotes: undefined;
-  Calendar: undefined;
-  Contacts: undefined;
-  ContactDetail: { contactId: string };
-  ContactForm: { contactId?: string };
   Profile: undefined;
   Settings: undefined;
   PasswordDetail: { passwordId: string };
   SecureNoteDetail: { noteId: string };
-  MemberHistory: { userId: string; userName: string };
   AuditLogs: undefined;
   Sessions: undefined;
   Users: undefined;
@@ -110,12 +99,8 @@ function MainTabNavigator() {
               iconName = focused ? 'key' : 'key-outline';
             } else if (route.name === 'Family') {
               iconName = focused ? 'people' : 'people-outline';
-            } else             if (route.name === 'SecureNotes') {
+            } else if (route.name === 'SecureNotes') {
               iconName = focused ? 'document-text' : 'document-text-outline';
-            } else if (route.name === 'Calendar') {
-              iconName = focused ? 'calendar' : 'calendar-outline';
-            } else if (route.name === 'Contacts') {
-              iconName = focused ? 'person-circle' : 'person-circle-outline';
             } else if (route.name === 'Profile') {
               iconName = focused ? 'person' : 'person-outline';
             } else {
@@ -159,34 +144,6 @@ function MainTabNavigator() {
         options={{ title: 'Notas Seguras' }}
       />
       <Tab.Screen 
-        name="Calendar" 
-        component={CalendarScreen}
-        options={{ title: 'Calendário' }}
-      />
-      <Tab.Screen 
-        name="Contacts" 
-        component={ContactsScreen}
-        options={{ title: 'Contatos' }}
-      />
-      <Tab.Screen 
-        name="ContactDetail" 
-        component={ContactDetailScreen}
-        options={{ 
-          title: 'Detalhes do Contato',
-          tabBarButton: () => null,
-          tabBarItemStyle: { display: 'none' }
-        }}
-      />
-      <Tab.Screen 
-        name="ContactForm" 
-        component={ContactFormScreen}
-        options={{ 
-          title: 'Editar Contato',
-          tabBarButton: () => null,
-          tabBarItemStyle: { display: 'none' }
-        }}
-      />
-      <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}
         options={{ title: 'Perfil' }}
@@ -211,14 +168,6 @@ function MainTabNavigator() {
       <Tab.Screen 
         name="SecureNoteDetail" 
         component={SecureNoteDetailScreen}
-        options={{ 
-          tabBarButton: () => null,
-          tabBarItemStyle: { display: 'none' }
-        }}
-      />
-      <Tab.Screen 
-        name="MemberHistory" 
-        component={MemberHistoryScreen}
         options={{ 
           tabBarButton: () => null,
           tabBarItemStyle: { display: 'none' }
@@ -314,13 +263,6 @@ export default function AppNavigator() {
             <Stack.Screen 
               name="SecureNoteDetail" 
               component={SecureNoteDetailScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen 
-              name="MemberHistory" 
-              component={MemberHistoryScreen}
               options={{
                 headerShown: false,
               }}

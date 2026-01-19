@@ -1,9 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NativeModules } from 'react-native';
 import apiClient from '../../lib/axios';
-import { nativeLocationService } from '../location/nativeLocationService';
-
-const { CalendarWidgetModule } = NativeModules;
 
 interface LoginRequest {
   email: string;
@@ -77,28 +73,6 @@ class AuthService {
       await AsyncStorage.setItem('auth_token', token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       
-      const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-      
-      try {
-        await nativeLocationService.saveAuthToken(token, apiUrl);
-      } catch (error) {
-        console.error('Erro ao salvar token no módulo nativo:', error);
-      }
-
-      if (Platform.OS === 'ios' && CalendarWidgetModule) {
-        try {
-          await new Promise<void>((resolve, reject) => {
-            CalendarWidgetModule.saveAuthToken(
-              token,
-              apiUrl,
-              () => resolve(),
-              (error: Error) => reject(error)
-            );
-          });
-        } catch (error) {
-          console.error('Erro ao salvar token no UserDefaults compartilhado:', error);
-        }
-      }
     } else {
       await this.logout();
     }
@@ -119,28 +93,6 @@ class AuthService {
       await AsyncStorage.setItem('auth_token', token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       
-      const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-      
-      try {
-        await nativeLocationService.saveAuthToken(token, apiUrl);
-      } catch (error) {
-        console.error('Erro ao salvar token no módulo nativo:', error);
-      }
-
-      if (Platform.OS === 'ios' && CalendarWidgetModule) {
-        try {
-          await new Promise<void>((resolve, reject) => {
-            CalendarWidgetModule.saveAuthToken(
-              token,
-              apiUrl,
-              () => resolve(),
-              (error: Error) => reject(error)
-            );
-          });
-        } catch (error) {
-          console.error('Erro ao salvar token no UserDefaults compartilhado:', error);
-        }
-      }
     } else {
       await this.logout();
     }
@@ -155,24 +107,6 @@ class AuthService {
   async logout(): Promise<void> {
     await AsyncStorage.removeItem('auth_token');
     await AsyncStorage.removeItem('user');
-    
-    try {
-      await nativeLocationService.clearAuthToken();
-    } catch (error) {
-      console.error('Erro ao limpar token do módulo nativo:', error);
-    }
-
-    if (Platform.OS === 'ios' && CalendarWidgetModule) {
-      try {
-        await new Promise<void>((resolve, reject) => {
-          CalendarWidgetModule.clearAuthToken(
-            () => resolve(),
-            (error: Error) => reject(error)
-          );
-        });
-      } catch (error) {
-      }
-    }
   }
 
   async getStoredUser() {
@@ -182,13 +116,6 @@ class AuthService {
 
   async getStoredToken() {
     const token = await AsyncStorage.getItem('auth_token');
-    if (!token) {
-      try {
-        await nativeLocationService.clearAuthToken();
-      } catch (error) {
-        console.error('Erro ao limpar token:', error);
-      }
-    }
     return token;
   }
 
