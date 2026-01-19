@@ -20,7 +20,7 @@ const router = createRouter({
       component: LoginView,
       meta: { 
         requiresAuth: false,
-        title: 'Login - Atacte'
+        title: 'Login - Sentro'
       }
     },
     {
@@ -29,7 +29,7 @@ const router = createRouter({
       component: RegisterView,
       meta: { 
         requiresAuth: false,
-        title: 'Registro - Atacte'
+        title: 'Registro - Sentro'
       }
     },
     {
@@ -38,7 +38,7 @@ const router = createRouter({
       component: ForgotPasswordView,
       meta: { 
         requiresAuth: false,
-        title: 'Recuperar Senha - Atacte'
+        title: 'Recuperar Senha - Sentro'
       }
     },
     {
@@ -47,7 +47,7 @@ const router = createRouter({
       component: DashboardView,
       meta: { 
         requiresAuth: true,
-        title: 'Dashboard - Atacte'
+        title: 'Dashboard - Sentro'
       }
     },
     {
@@ -56,7 +56,7 @@ const router = createRouter({
       component: () => import('@/views/passwords/PasswordDetailView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Detalhes da Senha - Atacte'
+        title: 'Detalhes da Senha - Sentro'
       }
     },
     {
@@ -65,7 +65,7 @@ const router = createRouter({
       component: () => import('@/views/user/ProfileView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Perfil - Atacte'
+        title: 'Perfil - Sentro'
       }
     },
     {
@@ -74,7 +74,7 @@ const router = createRouter({
       component: () => import('@/views/user/SettingsView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Configurações - Atacte'
+        title: 'Configurações - Sentro'
       }
     },
     {
@@ -84,7 +84,7 @@ const router = createRouter({
       meta: { 
         requiresAuth: true,
         requiresAdmin: true,
-        title: 'Logs de Auditoria - Atacte'
+        title: 'Logs de Auditoria - Sentro'
       }
     },
     {
@@ -94,7 +94,7 @@ const router = createRouter({
       meta: { 
         requiresAuth: true,
         requiresAdmin: true,
-        title: 'Sessões - Atacte'
+        title: 'Sessões - Sentro'
       }
     },
     {
@@ -104,7 +104,7 @@ const router = createRouter({
       meta: { 
         requiresAuth: true,
         requiresAdmin: true,
-        title: 'Gerenciar Usuários - Atacte'
+        title: 'Gerenciar Usuários - Sentro'
       }
     },
     {
@@ -113,7 +113,7 @@ const router = createRouter({
       component: () => import('@/views/totp/TotpView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Códigos TOTP - Atacte'
+        title: 'Códigos TOTP - Sentro'
       }
     },
     {
@@ -122,7 +122,7 @@ const router = createRouter({
       component: () => import('@/views/LocationView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Localização - Atacte'
+        title: 'Localização - Sentro'
       }
     },
     {
@@ -131,7 +131,7 @@ const router = createRouter({
       component: () => import('@/views/location/LocationHistoryView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Histórico de Localização - Atacte'
+        title: 'Histórico de Localização - Sentro'
       }
     },
     {
@@ -140,7 +140,7 @@ const router = createRouter({
       component: () => import('@/views/secureNotes/SecureNotesView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Notas Seguras - Atacte'
+        title: 'Notas Seguras - Sentro'
       }
     },
     {
@@ -149,7 +149,7 @@ const router = createRouter({
       component: () => import('@/views/calendar/CalendarView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Calendário - Atacte'
+        title: 'Calendário - Sentro'
       }
     },
     {
@@ -158,7 +158,7 @@ const router = createRouter({
       component: () => import('@/views/ContactsView.vue'),
       meta: { 
         requiresAuth: true,
-        title: 'Contatos - Atacte'
+        title: 'Contatos - Sentro'
       }
     },
     {
@@ -167,7 +167,7 @@ const router = createRouter({
       component: () => import('@/views/NotFoundView.vue'),
       meta: { 
         requiresAuth: false,
-        title: 'Página não encontrada - Atacte'
+        title: 'Página não encontrada - Sentro'
       }
     }
   ]

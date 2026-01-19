@@ -1,7 +1,7 @@
 {
-  "name": "atacte-web",
+  "name": "sentro-web",
   "version": "1.0.0",
-  "description": "Frontend web do aplicativo de segurança familiar Atacte",
+  "description": "Frontend web do aplicativo de segurança familiar Sentro",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",

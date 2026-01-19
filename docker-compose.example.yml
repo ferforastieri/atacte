@@ -1,4 +1,4 @@
-# Docker Compose - Atacte (EXEMPLO)
+# Docker Compose - Sentro (EXEMPLO)
 # Copie este arquivo para docker-compose.yml e ajuste as configurações
 
 version: '3.8'
@@ -7,10 +7,10 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: atacte-postgres
+    container_name: sentro-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: atacte
+      POSTGRES_DB: sentro
       POSTGRES_USER: seu_usuario_db
       POSTGRES_PASSWORD: sua_senha_db_super_segura
     ports:
@@ -18,9 +18,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - atacte-network
+      - sentro-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U seu_usuario_db -d atacte"]
+      test: ["CMD-SHELL", "pg_isready -U seu_usuario_db -d sentro"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,11 +30,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: atacte-app
+    container_name: sentro-app
     restart: unless-stopped
     environment:
       # Database
-      DATABASE_URL: postgresql://seu_usuario_db:sua_senha_db_super_segura@postgres:5432/atacte?sslmode=disable
+      DATABASE_URL: postgresql://seu_usuario_db:sua_senha_db_super_segura@postgres:5432/sentro?sslmode=disable
       # CORS
       CORS_ORIGIN: "*"
       # Server
@@ -46,12 +46,12 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - atacte-network
+      - sentro-network
     volumes:
       - ./backend/config.env:/app/backend/config.env:ro
 
 networks:
-  atacte-network:
+  sentro-network:
     driver: bridge
 
 volumes:

@@ -19,8 +19,8 @@ export class EmailService {
     const smtpUser = process.env['SMTP_USER'];
     const smtpPass = process.env['SMTP_PASS'];
     
-    this.fromEmail = process.env['EMAIL_FROM'] || 'noreply@atacte.com';
-    this.fromName = process.env['EMAIL_FROM_NAME'] || 'Atacte';
+    this.fromEmail = process.env['EMAIL_FROM'] || 'noreply@sentro.com';
+    this.fromName = process.env['EMAIL_FROM_NAME'] || 'Sentro';
     this.isEnabled = !!(smtpHost && smtpPort && smtpUser && smtpPass);
 
     if (this.isEnabled) {
@@ -76,11 +76,11 @@ export class EmailService {
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Recuperação de Senha - Atacte</title>
+          <title>Recuperação de Senha - Sentro</title>
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background-color: #22c55e; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: #ffffff; margin: 0;">Atacte</h1>
+            <h1 style="color: #ffffff; margin: 0;">Sentro</h1>
           </div>
           
           <div style="background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
@@ -88,7 +88,7 @@ export class EmailService {
             
             <p>Olá,</p>
             
-            <p>Recebemos uma solicitação para redefinir a senha da sua conta Atacte.</p>
+            <p>Recebemos uma solicitação para redefinir a senha da sua conta Sentro.</p>
             
             ${resetUrl ? `
               <div style="text-align: center; margin: 30px 0;">
@@ -123,7 +123,7 @@ export class EmailService {
             
             <p style="font-size: 12px; color: #9ca3af; margin: 0;">
               Este é um email automático, por favor não responda.<br>
-              © ${new Date().getFullYear()} Atacte - Segurança Familiar
+              © ${new Date().getFullYear()} Sentro - Segurança Familiar
             </p>
           </div>
         </body>
@@ -131,11 +131,11 @@ export class EmailService {
     `;
 
     const text = `
-Recuperação de Senha - Atacte
+Recuperação de Senha - Sentro
 
 Olá,
 
-Recebemos uma solicitação para redefinir a senha da sua conta Atacte.
+Recebemos uma solicitação para redefinir a senha da sua conta Sentro.
 
 ${resetUrl ? `Acesse este link para redefinir sua senha:\n${resetLink}` : `Use este token para redefinir sua senha:\n\n${token}`}
 
@@ -143,12 +143,12 @@ ${resetUrl ? `Acesse este link para redefinir sua senha:\n${resetLink}` : `Use e
 
 Se você não solicitou esta recuperação de senha, ignore este email. Sua senha permanecerá inalterada.
 
-© ${new Date().getFullYear()} Atacte - Segurança Familiar
+© ${new Date().getFullYear()} Sentro - Segurança Familiar
     `;
 
     return this.sendEmail({
       to: email,
-      subject: 'Recuperação de Senha - Atacte',
+      subject: 'Recuperação de Senha - Sentro',
       html,
       text,
     });

@@ -32,7 +32,7 @@ class LocationModule: NSObject, CLLocationManagerDelegate {
   }
   
   private func loadCredentials() {
-    let sharedDefaults = UserDefaults(suiteName: "group.com.atacte.mobile")
+    let sharedDefaults = UserDefaults(suiteName: "group.com.sentro.mobile")
     authToken = sharedDefaults?.string(forKey: "auth_token")
     apiUrl = sharedDefaults?.string(forKey: "api_url") ?? "http://localhost:3000"
   }
@@ -85,7 +85,7 @@ class LocationModule: NSObject, CLLocationManagerDelegate {
   
   @objc
   func saveAuthToken(_ token: String, apiUrl: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    let sharedDefaults = UserDefaults(suiteName: "group.com.atacte.mobile")
+    let sharedDefaults = UserDefaults(suiteName: "group.com.sentro.mobile")
     sharedDefaults?.set(token, forKey: "auth_token")
     sharedDefaults?.set(apiUrl, forKey: "api_url")
     sharedDefaults?.synchronize()
@@ -98,7 +98,7 @@ class LocationModule: NSObject, CLLocationManagerDelegate {
   
   @objc
   func clearAuthToken(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    let sharedDefaults = UserDefaults(suiteName: "group.com.atacte.mobile")
+    let sharedDefaults = UserDefaults(suiteName: "group.com.sentro.mobile")
     sharedDefaults?.removeObject(forKey: "auth_token")
     sharedDefaults?.removeObject(forKey: "api_url")
     sharedDefaults?.synchronize()
@@ -200,14 +200,14 @@ class LocationModule: NSObject, CLLocationManagerDelegate {
   }
   
   private func saveTrackingState(_ active: Bool) {
-    let sharedDefaults = UserDefaults(suiteName: "group.com.atacte.mobile")
+    let sharedDefaults = UserDefaults(suiteName: "group.com.sentro.mobile")
     sharedDefaults?.set(active, forKey: "tracking_active")
     sharedDefaults?.synchronize()
   }
   
   @objc
   func saveCalendarEvents(_ eventsJson: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    let sharedDefaults = UserDefaults(suiteName: "group.com.atacte.mobile")
+    let sharedDefaults = UserDefaults(suiteName: "group.com.sentro.mobile")
     sharedDefaults?.set(eventsJson, forKey: "calendar_events")
     sharedDefaults?.synchronize()
     resolver(true)

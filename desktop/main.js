@@ -62,7 +62,7 @@ function createWindow() {
     backgroundColor: '#111827',
     frame: false,
     titleBarStyle: 'hidden',
-    title: 'Atacte'
+    title: 'Sentro'
   });
 
   if (isDev) {
@@ -85,8 +85,8 @@ function createWindow() {
     if (!isDev && BACKEND_URL) {
       details.frame.executeJavaScript(`
         (function() {
-          if (window.__ATACTE_INTERCEPTOR_INSTALLED__) return;
-          window.__ATACTE_INTERCEPTOR_INSTALLED__ = true;
+          if (window.__SENTRO_INTERCEPTOR_INSTALLED__) return;
+          window.__SENTRO_INTERCEPTOR_INSTALLED__ = true;
           
           const BACKEND_URL = '${BACKEND_URL}';
           

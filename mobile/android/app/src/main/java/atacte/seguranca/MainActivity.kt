@@ -1,4 +1,4 @@
-package atacte.seguranca
+package sentro.seguranca
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

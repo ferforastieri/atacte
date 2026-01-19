@@ -37,7 +37,7 @@
           fill="white"
         />
         
-        <!-- Texto "A" -->
+        <!-- Texto "S" -->
         <text 
           x="16" 
           y="26" 
@@ -47,7 +47,7 @@
           text-anchor="middle" 
           :fill="isDark ? '#15803d' : '#15803d'"
         >
-          A
+          S
         </text>
       </svg>
     </div>
@@ -61,7 +61,7 @@
         textSize || 'text-xl'
       ]"
     >
-      Atacte
+      Sentro
     </span>
   </div>
 </template>

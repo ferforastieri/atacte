@@ -1,9 +1,9 @@
 {
-  "name": "atacte-desktop",
+  "name": "sentro-desktop",
   "version": "1.0.0",
-  "description": "Aplicativo desktop Atacte - Gerenciador de Senhas e Segurança Familiar",
+  "description": "Aplicativo desktop Sentro - Gerenciador de Senhas e Segurança Familiar",
   "main": "main.js",
-  "homepage": "https://github.com/ferforastieri/atacte",
+  "homepage": "https://github.com/ferforastieri/sentro",
   "author": {
     "name": "Fernando",
     "email": "fernandoforastierineto@gmail.com"
@@ -28,8 +28,8 @@
     "electron-builder": "^24.9.1"
   },
   "build": {
-    "appId": "com.atacte.desktop",
-    "productName": "Atacte",
+    "appId": "com.sentro.desktop",
+    "productName": "Sentro",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -70,7 +70,7 @@
         }
       ],
       "icon": "build/icons/512x512.png",
-      "publisherName": "Atacte",
+      "publisherName": "Sentro",
       "requestedExecutionLevel": "asInvoker",
       "sign": null,
       "verifyUpdateCodeSignature": false
@@ -120,12 +120,12 @@
       "synopsis": "Gerenciador de Senhas e Segurança Familiar",
       "description": "Aplicativo de gerenciamento de senhas, autenticação 2FA e segurança familiar com localização em tempo real",
       "desktop": {
-        "Name": "Atacte",
+        "Name": "Sentro",
         "GenericName": "Password Manager",
         "Comment": "Gerenciador de Senhas e Segurança Familiar",
         "Categories": "Utility;Security;Office;",
-        "StartupWMClass": "Atacte",
-        "MimeType": "x-scheme-handler/atacte;",
+        "StartupWMClass": "Sentro",
+        "MimeType": "x-scheme-handler/sentro;",
         "Keywords": "password;security;2fa;family;"
       }
     },
@@ -134,7 +134,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Atacte",
+      "shortcutName": "Sentro",
       "include": "build/installer.nsh"
     }
   }

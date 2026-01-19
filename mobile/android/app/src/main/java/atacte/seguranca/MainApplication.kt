@@ -1,4 +1,4 @@
-package atacte.seguranca
+package sentro.seguranca
 
 import android.app.Application
 import android.content.res.Configuration
@@ -13,7 +13,7 @@ import com.facebook.react.common.ReleaseLevel
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactNativeHost
 
-import atacte.seguranca.LocationPackage
+import sentro.seguranca.LocationPackage
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 

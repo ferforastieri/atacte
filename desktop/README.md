@@ -1,12 +1,12 @@
-# 🖥️ Atacte Desktop
+# 🖥️ Sentro Desktop
 
-Aplicativo desktop do Atacte construído com Electron.
+Aplicativo desktop do Sentro construído com Electron.
 
 ## 📋 Pré-requisitos
 
 - Node.js 18+
 - npm 8+
-- Backend do Atacte rodando (ou configurar URL remota)
+- Backend do Sentro rodando (ou configurar URL remota)
 
 ## 🚀 Desenvolvimento
 

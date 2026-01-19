@@ -6,7 +6,7 @@
   >
     <div class="flex items-center space-x-2 px-3 flex-1 min-w-0">
       <Logo :size="16" :show-text="false" />
-      <span class="text-sm font-medium text-gray-300 truncate">Atacte</span>
+      <span class="text-sm font-medium text-gray-300 truncate">Sentro</span>
     </div>
     
     <div class="flex items-center no-drag flex-shrink-0" style="-webkit-app-region: no-drag;">

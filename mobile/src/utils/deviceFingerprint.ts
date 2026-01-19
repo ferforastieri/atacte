@@ -3,7 +3,7 @@ import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
-const DEVICE_FINGERPRINT_KEY = 'atacte_device_fingerprint';
+const DEVICE_FINGERPRINT_KEY = 'sentro_device_fingerprint';
 
 export async function getDeviceFingerprint(): Promise<string> {
   try {

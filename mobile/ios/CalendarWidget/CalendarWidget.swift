@@ -8,7 +8,7 @@ struct CalendarWidget: Widget {
         StaticConfiguration(kind: kind, provider: CalendarProvider()) { entry in
             CalendarWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Calendário Atacte")
+        .configurationDisplayName("Calendário Sentro")
         .description("Visualize seus eventos do calendário")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
@@ -36,7 +36,7 @@ struct CalendarProvider: TimelineProvider {
     }
 
     private func fetchCalendarEvents(completion: @escaping ([CalendarEvent]) -> Void) {
-        guard let sharedDefaults = UserDefaults(suiteName: "group.com.atacte.mobile"),
+        guard let sharedDefaults = UserDefaults(suiteName: "group.com.sentro.mobile"),
               let token = sharedDefaults.string(forKey: "auth_token"),
               let apiUrl = sharedDefaults.string(forKey: "api_url") else {
             completion([])

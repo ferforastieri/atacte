@@ -1,6 +1,6 @@
-# 🔐 Atacte - Aplicativo de Segurança Familiar
+# 🔐 Sentro - Aplicativo de Segurança Familiar
 
-**Atacte** é um aplicativo de segurança familiar desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA), rastreamento de localização familiar e interfaces modernas para web e mobile.
+**Sentro** é um aplicativo de segurança familiar desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA), rastreamento de localização familiar e interfaces modernas para web e mobile.
 
 A historia do projeto é simples, comprei uma maquina para rodar um homelab, e o vaultwarden nao me servia tão bem, portanto fiz o meu proprio. Acredito que tenhas varias falhas, mas tentei ao maximo fingir que um dia lançaria ele usando tudo que sei.
 
@@ -95,7 +95,7 @@ O projeto segue uma arquitetura de **3 camadas** com separação clara de respon
 ### Estrutura do Projeto
 
 ```
-Atacte/
+Sentro/
 ├── backend/                 # API Backend (Node.js + Express)
 │   ├── src/
 │   │   ├── controllers/     # Controladores das rotas
@@ -194,8 +194,8 @@ Atacte/
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/atacte.git
-cd atacte
+git clone https://github.com/seu-usuario/sentro.git
+cd sentro
 ```
 
 ### 2. Configuração do Banco de Dados
@@ -207,9 +207,9 @@ sudo apt install postgresql postgresql-contrib
 
 # Criar banco e usuário
 sudo -u postgres psql
-CREATE DATABASE atacte;
-CREATE USER atacte_user WITH PASSWORD 'sua_senha_segura';
-GRANT ALL PRIVILEGES ON DATABASE atacte TO atacte_user;
+CREATE DATABASE sentro;
+CREATE USER sentro_user WITH PASSWORD 'sua_senha_segura';
+GRANT ALL PRIVILEGES ON DATABASE sentro TO sentro_user;
 \q
 ```
 
@@ -262,7 +262,7 @@ PORT=3001
 NODE_ENV=development
 
 # Banco de Dados
-DATABASE_URL=postgresql://atacte_user:sua_senha@localhost:5432/atacte
+DATABASE_URL=postgresql://sentro_user:sua_senha@localhost:5432/sentro
 
 # JWT
 JWT_SECRET=sua_chave_jwt_super_secreta_de_pelo_menos_32_caracteres
@@ -548,8 +548,8 @@ cp deploy-local.example.sh deploy-local.sh
 - deploy-local.sh: IP do servidor, usuário, caminho
 
 # 3. Configurar SSH sem senha
-ssh-keygen -t rsa -f ~/.ssh/id_rsa_atacte -N ""
-ssh-copy-id -i ~/.ssh/id_rsa_atacte.pub usuario@servidor
+ssh-keygen -t rsa -f ~/.ssh/id_rsa_sentro -N ""
+ssh-copy-id -i ~/.ssh/id_rsa_sentro.pub usuario@servidor
 
 # 4. Deploy automático
 ./deploy-local.sh
@@ -559,8 +559,8 @@ ssh-copy-id -i ~/.ssh/id_rsa_atacte.pub usuario@servidor
 
 ```bash
 # No servidor
-git clone https://github.com/seu-usuario/atacte.git
-cd atacte
+git clone https://github.com/seu-usuario/sentro.git
+cd sentro
 
 # Configurar arquivos necessários
 cp backend/config.example.env backend/config.env

@@ -54,7 +54,7 @@ class Environment {
       NODE_ENV: this.getString('NODE_ENV', 'development') as 'development' | 'production' | 'test',
       
       
-      DATABASE_URL: this.getString('DATABASE_URL', 'postgresql://localhost:5432/atacte'),
+      DATABASE_URL: this.getString('DATABASE_URL', 'postgresql://localhost:5432/sentro'),
       
       
       JWT_SECRET: this.getString('JWT_SECRET', 'your-super-secret-jwt-key-change-this-in-production'),

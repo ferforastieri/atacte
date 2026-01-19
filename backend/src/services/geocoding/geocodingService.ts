@@ -36,7 +36,7 @@ export class GeocodingService {
 
       const response = await fetch(url.toString(), {
         headers: {
-          'User-Agent': 'AtacteApp/1.0',
+          'User-Agent': 'SentroApp/1.0',
         },
         signal: controller.signal,
       });

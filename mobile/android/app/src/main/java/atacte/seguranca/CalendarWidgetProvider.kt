@@ -1,4 +1,4 @@
-package atacte.seguranca
+package sentro.seguranca
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -64,7 +64,7 @@ class CalendarWidgetProvider : AppWidgetProvider() {
   
   private fun loadEventsFromStorage(context: Context): List<CalendarEvent> {
     try {
-      val prefs = context.getSharedPreferences("atacte_calendar_prefs", Context.MODE_PRIVATE)
+      val prefs = context.getSharedPreferences("sentro_calendar_prefs", Context.MODE_PRIVATE)
       val eventsJson = prefs.getString("calendar_events", null) ?: return emptyList()
       
       val eventsArray = JSONArray(eventsJson)

@@ -1,4 +1,4 @@
-package atacte.seguranca
+package sentro.seguranca
 
 import android.app.*
 import android.content.Context
@@ -20,8 +20,8 @@ class LocationTrackingService : Service() {
   companion object {
     const val CHANNEL_ID = "location_tracking_channel"
     const val NOTIFICATION_ID = 12345
-    const val ACTION_START = "atacte.seguranca.action.START_TRACKING"
-    const val ACTION_STOP = "atacte.seguranca.action.STOP_TRACKING"
+    const val ACTION_START = "sentro.seguranca.action.START_TRACKING"
+    const val ACTION_STOP = "sentro.seguranca.action.STOP_TRACKING"
 
     @Volatile
     var isRunning: Boolean = false
@@ -136,7 +136,7 @@ class LocationTrackingService : Service() {
   private fun handleLocationUpdate(location: Location) {
     serviceScope.launch {
       try {
-        val prefs = getSharedPreferences("atacte_auth_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("sentro_auth_prefs", Context.MODE_PRIVATE)
         val token = prefs.getString("auth_token", null)
         val apiUrl = prefs.getString("api_url", null) ?: "http://localhost:3000"
 
@@ -199,7 +199,7 @@ class LocationTrackingService : Service() {
       val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
       wakeLock = powerManager.newWakeLock(
         PowerManager.PARTIAL_WAKE_LOCK,
-        "Atacte::LocationWakeLock"
+        "Sentro::LocationWakeLock"
       )
       wakeLock?.acquire(10 * 60 * 60 * 1000L)
     } catch (e: Exception) {
@@ -253,7 +253,7 @@ class LocationTrackingService : Service() {
     )
 
     return NotificationCompat.Builder(this, CHANNEL_ID)
-      .setContentTitle("Atacte")
+      .setContentTitle("Sentro")
       .setContentText("Rastreando localização")
       .setSmallIcon(android.R.drawable.ic_menu_mylocation)
       .setOngoing(true)
@@ -267,7 +267,7 @@ class LocationTrackingService : Service() {
 
   private fun saveTrackingState(active: Boolean) {
     try {
-      val prefs = getSharedPreferences("atacte_tracking_prefs", Context.MODE_PRIVATE)
+      val prefs = getSharedPreferences("sentro_tracking_prefs", Context.MODE_PRIVATE)
       prefs.edit().putBoolean("tracking_active", active).apply()
     } catch (e: Exception) {
       android.util.Log.e("LocationTracking", "Erro ao salvar estado", e)

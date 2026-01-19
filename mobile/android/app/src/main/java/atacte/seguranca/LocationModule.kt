@@ -1,4 +1,4 @@
-package atacte.seguranca
+package sentro.seguranca
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -49,7 +49,7 @@ class LocationModule(reactContext: ReactApplicationContext) :
   fun saveAuthToken(token: String, apiUrl: String, promise: Promise) {
     try {
       val prefs: SharedPreferences = appContext.getSharedPreferences(
-        "atacte_auth_prefs",
+        "sentro_auth_prefs",
         Context.MODE_PRIVATE
       )
       prefs.edit().apply {
@@ -67,7 +67,7 @@ class LocationModule(reactContext: ReactApplicationContext) :
   fun clearAuthToken(promise: Promise) {
     try {
       val prefs: SharedPreferences = appContext.getSharedPreferences(
-        "atacte_auth_prefs",
+        "sentro_auth_prefs",
         Context.MODE_PRIVATE
       )
       prefs.edit().apply {
@@ -132,7 +132,7 @@ class LocationModule(reactContext: ReactApplicationContext) :
   fun saveCalendarEvents(eventsJson: String, promise: Promise) {
     try {
       val prefs: SharedPreferences = appContext.getSharedPreferences(
-        "atacte_calendar_prefs",
+        "sentro_calendar_prefs",
         Context.MODE_PRIVATE
       )
       prefs.edit().apply {
@@ -168,7 +168,7 @@ class LocationModule(reactContext: ReactApplicationContext) :
         return
       }
 
-      val prefs = appContext.getSharedPreferences("atacte_auth_prefs", Context.MODE_PRIVATE)
+      val prefs = appContext.getSharedPreferences("sentro_auth_prefs", Context.MODE_PRIVATE)
       val token = prefs.getString("auth_token", null)
       val apiUrl = prefs.getString("api_url", null) ?: "http://localhost:3000"
 

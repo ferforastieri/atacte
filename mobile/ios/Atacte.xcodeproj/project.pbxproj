@@ -15,7 +15,7 @@
 		XX1A6800511A685AB346D2XX /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = XXA12889081EB894481655XX /* AppIntents.framework */; };
 		XX3C562DEF346B45594832XX /* ActivityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = XXCAF23C3FC41F82140FA1XX /* ActivityKit.framework */; };
 		XX6A44985675A04437B8C4XX /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = XX4DFF38D47332D6BF0183XX /* SwiftUI.framework */; };
-		XXEA0D76864713AA6D436BXX /* Calendário Atacte.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XX36F1B2F8BFBFFEF64851XX /* Calendário Atacte.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		XXEA0D76864713AA6D436BXX /* Calendário Sentro.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XX36F1B2F8BFBFFEF64851XX /* Calendário Sentro.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -24,7 +24,7 @@
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = XX2F803BE0A009E1222CA0XX;
-			remoteInfo = "Calendário Atacte";
+			remoteInfo = "Calendário Sentro";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -33,7 +33,7 @@
 			isa = PBXCopyFilesBuildPhase;
 			name = "Embed Foundation Extensions";
 			files = (
-				XXEA0D76864713AA6D436BXX /* Calendário Atacte.appex in Embed Foundation Extensions */,
+				XXEA0D76864713AA6D436BXX /* Calendário Sentro.appex in Embed Foundation Extensions */,
 			);
 			dstPath = "";
 			dstSubfolderSpec = 13;
@@ -43,15 +43,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* Atacte.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Atacte.app; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = 4; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Atacte/Images.xcassets; sourceTree = "<group>"; fileEncoding = 4; includeInIndex = 0; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Atacte/Info.plist; sourceTree = "<group>"; includeInIndex = 0; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Atacte/SplashScreen.storyboard; sourceTree = "<group>"; includeInIndex = 0; };
+		13B07F961A680F5B00A75B9A /* Sentro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sentro.app; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = 4; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Sentro/Images.xcassets; sourceTree = "<group>"; fileEncoding = 4; includeInIndex = 0; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Sentro/Info.plist; sourceTree = "<group>"; includeInIndex = 0; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Sentro/SplashScreen.storyboard; sourceTree = "<group>"; includeInIndex = 0; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; includeInIndex = 0; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; fileEncoding = 4; includeInIndex = undefined; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Atacte/AppDelegate.swift; sourceTree = "<group>"; fileEncoding = 4; includeInIndex = 0; };
-		F11748442D0722820044C1D9 /* Atacte-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Atacte-Bridging-Header.h"; path = "Atacte/Atacte-Bridging-Header.h"; sourceTree = "<group>"; fileEncoding = 4; includeInIndex = 0; };
-		XX36F1B2F8BFBFFEF64851XX /* Calendário Atacte.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Calendário Atacte.appex"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = 4; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Sentro/AppDelegate.swift; sourceTree = "<group>"; fileEncoding = 4; includeInIndex = 0; };
+		F11748442D0722820044C1D9 /* Sentro-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Sentro-Bridging-Header.h"; path = "Sentro/Sentro-Bridging-Header.h"; sourceTree = "<group>"; fileEncoding = 4; includeInIndex = 0; };
+		XX36F1B2F8BFBFFEF64851XX /* Calendário Sentro.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Calendário Sentro.appex"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = 4; };
 		XX470101BAEB8E0BBC8B0DXX /* WidgetKit.framework */ = {isa = PBXFileReference; path = System/Library/Frameworks/WidgetKit.framework; fileEncoding = 4; lastKnownFileType = wrapper.framework; includeInIndex = undefined; name = WidgetKit.framework; sourceTree = SDKROOT; };
 		XX4DFF38D47332D6BF0183XX /* SwiftUI.framework */ = {isa = PBXFileReference; path = System/Library/Frameworks/SwiftUI.framework; fileEncoding = 4; lastKnownFileType = wrapper.framework; includeInIndex = undefined; name = SwiftUI.framework; sourceTree = SDKROOT; };
 		XXA12889081EB894481655XX /* AppIntents.framework */ = {isa = PBXFileReference; path = System/Library/Frameworks/AppIntents.framework; fileEncoding = 4; lastKnownFileType = wrapper.framework; includeInIndex = undefined; name = AppIntents.framework; sourceTree = SDKROOT; };
@@ -61,7 +61,7 @@
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		XXF8A9E0A4AB2A92B36092XX /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			target = XX2F803BE0A009E1222CA0XX /* Calendário Atacte */;
+			target = XX2F803BE0A009E1222CA0XX /* Calendário Sentro */;
 			membershipExceptions = (
 				Info.plist,
 				"expo-target.config.js",
@@ -106,17 +106,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* Atacte */ = {
+		13B07FAE1A68108700A75B9A /* Sentro */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* Atacte-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* Sentro-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 			);
-			name = Atacte;
+			name = Sentro;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
@@ -142,7 +142,7 @@
 			isa = PBXGroup;
 			children = (
 				XX3E41C1850246162C0061XX /* expo:targets */,
-				13B07FAE1A68108700A75B9A /* Atacte */,
+				13B07FAE1A68108700A75B9A /* Sentro */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -155,8 +155,8 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* Atacte.app */,
-				XX36F1B2F8BFBFFEF64851XX /* Calendário Atacte.appex */,
+				13B07F961A680F5B00A75B9A /* Sentro.app */,
+				XX36F1B2F8BFBFFEF64851XX /* Calendário Sentro.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -167,7 +167,7 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = Atacte/Supporting;
+			path = Sentro/Supporting;
 			sourceTree = "<group>";
 		};
 		XX3E41C1850246162C0061XX /* CalendarWidget */ = {
@@ -182,9 +182,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* Atacte */ = {
+		13B07F861A680F5B00A75B9A /* Sentro */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Atacte" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Sentro" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
@@ -199,12 +199,12 @@
 			dependencies = (
 				XX6E2DAA027456B6C274F4XX /* PBXTargetDependency */,
 			);
-			name = Atacte;
-			productName = Atacte;
-			productReference = 13B07F961A680F5B00A75B9A /* Atacte.app */;
+			name = Sentro;
+			productName = Sentro;
+			productReference = 13B07F961A680F5B00A75B9A /* Sentro.app */;
 			productType = "com.apple.product-type.application";
 		};
-		XX2F803BE0A009E1222CA0XX /* Calendário Atacte */ = {
+		XX2F803BE0A009E1222CA0XX /* Calendário Sentro */ = {
 			isa = PBXNativeTarget;
 			buildPhases = (
 				XX074B8811C1CF8E8A3D74XX /* Frameworks */,
@@ -215,10 +215,10 @@
 			);
 			dependencies = (
 			);
-			buildConfigurationList = XXE54926CB543C513BFCFAXX /* Build configuration list for PBXNativeTarget "Calendário Atacte" */;
-			name = "Calendário Atacte";
-			productName = CalendrioAtacte;
-			productReference = XX36F1B2F8BFBFFEF64851XX /* Calendário Atacte.appex */;
+			buildConfigurationList = XXE54926CB543C513BFCFAXX /* Build configuration list for PBXNativeTarget "Calendário Sentro" */;
+			name = "Calendário Sentro";
+			productName = CalendrioSentro;
+			productReference = XX36F1B2F8BFBFFEF64851XX /* Calendário Sentro.appex */;
 			productType = "com.apple.product-type.app-extension";
 			fileSystemSynchronizedGroups = (
 				XXDBBD04B2BDFA31FF684FXX /* CalendarWidget */,
@@ -242,7 +242,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Atacte" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Sentro" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -255,8 +255,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* Atacte */,
-				XX2F803BE0A009E1222CA0XX /* Calendário Atacte */,
+				13B07F861A680F5B00A75B9A /* Sentro */,
+				XX2F803BE0A009E1222CA0XX /* Calendário Sentro */,
 			);
 		};
 /* End PBXProject section */
@@ -318,7 +318,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Atacte-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-Sentro-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -331,7 +331,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Atacte/Pods-Atacte-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-Sentro/Pods-Sentro-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXUpdates/EXUpdates.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/RCTI18nStrings.bundle",
@@ -344,7 +344,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Atacte/Pods-Atacte-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Sentro/Pods-Sentro-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 			outputFileListPaths = (
 			);
@@ -374,7 +374,7 @@
 /* Begin PBXTargetDependency section */
 		XX6E2DAA027456B6C274F4XX /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = XX2F803BE0A009E1222CA0XX /* Calendário Atacte */;
+			target = XX2F803BE0A009E1222CA0XX /* Calendário Sentro */;
 			targetProxy = XXE2CB42DD7C072D7385F0XX /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -391,7 +391,7 @@
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = Atacte/Info.plist;
+				INFOPLIST_FILE = Sentro/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -403,14 +403,14 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.atacte.mobile;
-				PRODUCT_NAME = Atacte;
-				SWIFT_OBJC_BRIDGING_HEADER = "Atacte/Atacte-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.sentro.mobile;
+				PRODUCT_NAME = Sentro;
+				SWIFT_OBJC_BRIDGING_HEADER = "Sentro/Sentro-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				CODE_SIGN_ENTITLEMENTS = Atacte/Atacte.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Sentro/Sentro.entitlements;
 			};
 			name = Debug;
 		};
@@ -420,7 +420,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = Atacte/Info.plist;
+				INFOPLIST_FILE = Sentro/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -432,13 +432,13 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.atacte.mobile;
-				PRODUCT_NAME = Atacte;
-				SWIFT_OBJC_BRIDGING_HEADER = "Atacte/Atacte-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.sentro.mobile;
+				PRODUCT_NAME = Sentro;
+				SWIFT_OBJC_BRIDGING_HEADER = "Sentro/Sentro-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				CODE_SIGN_ENTITLEMENTS = Atacte/Atacte.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Sentro/Sentro.entitlements;
 			};
 			name = Release;
 		};
@@ -570,7 +570,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "CalendarWidget/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Calendário Atacte";
+				INFOPLIST_KEY_CFBundleDisplayName = "Calendário Sentro";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -581,7 +581,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.atacte.mobile.calendarwidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sentro.mobile.calendarwidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -589,7 +589,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				CODE_SIGN_ENTITLEMENTS = "Atacte/Atacte.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Sentro/Sentro.entitlements";
 			};
 		};
 		XXAC17101B2BC59A61C4D3XX /* Release */ = {
@@ -610,7 +610,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "CalendarWidget/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Calendário Atacte";
+				INFOPLIST_KEY_CFBundleDisplayName = "Calendário Sentro";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -620,7 +620,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.atacte.mobile.calendarwidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sentro.mobile.calendarwidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -628,13 +628,13 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				CODE_SIGN_ENTITLEMENTS = "Atacte/Atacte.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Sentro/Sentro.entitlements";
 			};
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Atacte" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Sentro" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -643,7 +643,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Atacte" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Sentro" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
@@ -652,7 +652,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		XXE54926CB543C513BFCFAXX /* Build configuration list for PBXNativeTarget "Calendário Atacte" */ = {
+		XXE54926CB543C513BFCFAXX /* Build configuration list for PBXNativeTarget "Calendário Sentro" */ = {
 			isa = XCConfigurationList;
 			defaultConfigurationIsVisible = 0;
 			buildConfigurations = (
