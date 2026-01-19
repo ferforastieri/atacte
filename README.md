@@ -1,6 +1,6 @@
-# 🔐 Sentro - Aplicativo de Segurança Familiar
+# 🔐 Sentro - Gerenciador de Senhas e Notas Seguras
 
-**Sentro** é um aplicativo de segurança familiar desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA), rastreamento de localização familiar e interfaces modernas para web e mobile.
+**Sentro** é um gerenciador de senhas e notas seguras desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA/TOTP) e interfaces modernas para web e mobile.
 
 A historia do projeto é simples, comprei uma maquina para rodar um homelab, e o vaultwarden nao me servia tão bem, portanto fiz o meu proprio. Acredito que tenhas varias falhas, mas tentei ao maximo fingir que um dia lançaria ele usando tudo que sei.
 
@@ -45,19 +45,6 @@ A historia do projeto é simples, comprei uma maquina para rodar um homelab, e o
 - **Organização por pastas** para melhor gerenciamento
 - **Sistema de favoritos** para acesso rápido
 - **Busca avançada** por título e conteúdo
-
-#### 📇 Contatos
-- **Gerenciamento de contatos** com informações e favoritos
-- **Sincronização com dispositivo** (mobile)
-
-#### 📅 Calendário
-- **Eventos e lembretes** com notificações
-- **Widget iOS nativo** desenvolvido em Swift
-
-#### 👨‍👩‍👧‍👦 Segurança Familiar
-- **Criação de grupos familiares** com códigos de convite
-- **Notificação persistente** para rastreamento contínuo
-- **Controle de permissões** granular por membro da família
 
 ### 🎨 Interface
 - **Design responsivo** com Tailwind CSS
@@ -276,7 +263,7 @@ O frontend web se conecta automaticamente ao backend via proxy configurado no Vi
 
 ### Configuração do App Mobile
 
-O app mobile precisa ser configurado para se conectar ao backend e ter permissões de localização:
+O app mobile precisa ser configurado para se conectar ao backend:
 
 1. **Configurar URL do backend** - Configure a variável de ambiente `EXPO_PUBLIC_API_BASE_URL` ou edite `mobile/src/lib/axios.ts`:
    ```typescript
