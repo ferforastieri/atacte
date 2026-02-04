@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Device from 'expo-device';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDeviceFingerprint, getDeviceName } from '../utils/deviceFingerprint';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Card, Logo } from '../components/shared';
@@ -36,7 +37,11 @@ export default function LoginScreen() {
       const result = await login(email, masterPassword, deviceName, deviceFingerprint);
       
       if (result.requiresTrust && result.sessionId) {
-        showTrustModal(result.sessionId, deviceName, 'Desconhecido');
+        // Verificar se já foi confiado antes de mostrar
+        const deviceTrusted = await AsyncStorage.getItem('device_trusted');
+        if (deviceTrusted !== 'true') {
+          showTrustModal(result.sessionId, deviceName, 'Desconhecido');
+        }
         setIsLoading(false);
         return;
       }

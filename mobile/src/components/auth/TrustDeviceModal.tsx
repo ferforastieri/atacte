@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '../shared';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useToast } from '../../hooks/useToast';
 import { authService } from '../../services/auth/authService';
 import { useAuth } from '../../contexts/AuthContext';
+import { getDeviceFingerprint } from '../../utils/deviceFingerprint';
 
 interface TrustDeviceModalProps {
   visible: boolean;
@@ -39,6 +41,10 @@ export default function TrustDeviceModal({
     try {
       const response = await authService.trustDevice(sessionId);
       if (response.success) {
+        const deviceFingerprint = await getDeviceFingerprint();
+        await AsyncStorage.setItem('device_trusted', 'true');
+        await AsyncStorage.setItem('device_fingerprint', deviceFingerprint);
+        
         showSuccess('Dispositivo confiado com sucesso!');
         await refreshUser();
         onTrusted();

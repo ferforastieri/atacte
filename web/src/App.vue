@@ -56,6 +56,11 @@ const trustDeviceName = ref('')
 const trustIpAddress = ref('')
 
 const handleDeviceTrustRequired = (event: CustomEvent) => {
+  const deviceTrusted = localStorage.getItem('device_trusted')
+  if (deviceTrusted === 'true') {
+    return
+  }
+  
   trustSessionId.value = event.detail.sessionId
   trustDeviceName.value = event.detail.deviceName || 'Desconhecido'
   trustIpAddress.value = event.detail.ipAddress || 'Desconhecido'
