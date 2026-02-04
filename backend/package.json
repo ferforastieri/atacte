@@ -1,7 +1,7 @@
 {
-  "name": "sentro-password-manager",
+  "name": "atacte-password-manager",
   "version": "1.0.0",
-  "description": "Backend API para aplicativo de segurança familiar Sentro",
+  "description": "Backend API para aplicativo de segurança familiar Atacte",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",

@@ -43,7 +43,7 @@ export const Logo: React.FC<LogoProps> = ({
             textStyle,
           ]}
         >
-          Sentro
+          Atacte
         </Text>
       )}
     </View>

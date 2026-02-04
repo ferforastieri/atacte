@@ -79,7 +79,7 @@ router.get('/export/bitwarden', asAuthenticatedHandler(async (req, res) => {
     })
 
     
-    const filename = `sentro-passwords-${new Date().toISOString().split('T')[0]}.json`
+    const filename = `atacte-passwords-${new Date().toISOString().split('T')[0]}.json`
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
 
@@ -117,7 +117,7 @@ router.get('/export/csv', asAuthenticatedHandler(async (req, res) => {
     })
 
     
-    const filename = `sentro-passwords-${new Date().toISOString().split('T')[0]}.csv`
+    const filename = `atacte-passwords-${new Date().toISOString().split('T')[0]}.csv`
     res.setHeader('Content-Type', 'text/csv; charset=utf-8')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
 

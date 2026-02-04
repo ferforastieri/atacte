@@ -2,7 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 const BACKEND_URL = process.env.BACKEND_URL;
 if (BACKEND_URL) {
-  contextBridge.exposeInMainWorld('SENTRO_BACKEND_URL', BACKEND_URL);
+  contextBridge.exposeInMainWorld('ATACTE_BACKEND_URL', BACKEND_URL);
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {

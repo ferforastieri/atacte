@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const THEME_STORAGE_KEY = '@sentro_theme';
+const THEME_STORAGE_KEY = '@atacte_theme';
 
 interface ThemeContextType {
   isDark: boolean;

@@ -1,11 +1,11 @@
 
 const isElectron = () => {
-  return !!(window as any).electronAPI || !!(window as any).SENTRO_BACKEND_URL;
+  return !!(window as any).electronAPI || !!(window as any).ATACTE_BACKEND_URL;
 }
 
 const getElectronBackendUrl = () => {
-  if ((window as any).SENTRO_BACKEND_URL) {
-    return (window as any).SENTRO_BACKEND_URL;
+  if ((window as any).ATACTE_BACKEND_URL) {
+    return (window as any).ATACTE_BACKEND_URL;
   }
   if ((window as any).electronAPI?.getBackendUrl) {
     return (window as any).electronAPI.getBackendUrl();
@@ -15,7 +15,7 @@ const getElectronBackendUrl = () => {
 
 export const config = {
   API_URL: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api'),
-  APP_NAME: import.meta.env.VITE_APP_NAME || 'Sentro',
+  APP_NAME: import.meta.env.VITE_APP_NAME || 'Atacte',
   APP_VERSION: import.meta.env.VITE_APP_VERSION || '1.0.0',
   NODE_ENV: import.meta.env.NODE_ENV || 'development',
   ENABLE_DEV_TOOLS: import.meta.env.NODE_ENV === 'development',

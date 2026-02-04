@@ -47,7 +47,7 @@
           text-anchor="middle" 
           :fill="isDark ? '#15803d' : '#15803d'"
         >
-          S
+          A
         </text>
       </svg>
     </div>
@@ -61,7 +61,7 @@
         textSize || 'text-xl'
       ]"
     >
-      Sentro
+      Atacte
     </span>
   </div>
 </template>

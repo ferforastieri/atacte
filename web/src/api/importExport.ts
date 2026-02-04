@@ -29,7 +29,7 @@ const importExportApi = {
     const contentDisposition = response.headers['content-disposition']
     const filename = contentDisposition 
       ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
-      : `sentro-passwords-${new Date().toISOString().split('T')[0]}.json`
+      : `atacte-passwords-${new Date().toISOString().split('T')[0]}.json`
     
     link.setAttribute('download', filename)
     document.body.appendChild(link)
@@ -55,7 +55,7 @@ const importExportApi = {
     const contentDisposition = response.headers['content-disposition']
     const filename = contentDisposition 
       ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
-      : `sentro-passwords-${new Date().toISOString().split('T')[0]}.csv`
+      : `atacte-passwords-${new Date().toISOString().split('T')[0]}.csv`
     
     link.setAttribute('download', filename)
     document.body.appendChild(link)

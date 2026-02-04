@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script para gerar novas logos com 'S' para o Sentro
+Script para gerar novas logos com 'A' para o Atacte
 Lê a logo original, remove a letra 'A' e desenha 'S' no lugar
 """
 
@@ -317,7 +317,7 @@ def generate_all_logos_from_original():
     return True
 
 if __name__ == '__main__':
-    print("Gerando logos do Sentro substituindo 'A' por 'S'...")
+    print("Gerando logos do Atacte substituindo 'S' por 'A'...")
     print("=" * 60)
     
     try:

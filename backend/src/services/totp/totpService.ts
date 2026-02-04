@@ -35,7 +35,7 @@ export class TOTPService {
   static generateSecret(serviceName: string, accountName: string): TOTPData {
     const secret = speakeasy.generateSecret({
       name: `${serviceName} (${accountName})`,
-      issuer: 'Sentro Password Manager',
+      issuer: 'Atacte Password Manager',
       length: 32
     });
 

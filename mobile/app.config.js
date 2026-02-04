@@ -1,7 +1,7 @@
 export default {
   expo: {
-    name: "Sentro",
-    slug: "sentro-mobile",
+    name: "Atacte",
+    slug: "atacte-mobile",
     version: "3.0.0",
     orientation: "portrait",
     icon: "./assets/logo.png",
@@ -19,7 +19,7 @@ export default {
     },
     runtimeVersion: "3.0.0",
     ios: {
-      bundleIdentifier: "com.sentro.mobile",
+      bundleIdentifier: "com.atacte.mobile",
       supportsTablet: true,
       buildNumber: "1",
       usesAppleSignIn: false,
@@ -35,7 +35,7 @@ export default {
       },
       entitlements: {
         "com.apple.security.application-groups": [
-          "group.com.sentro.mobile"
+          "group.com.atacte.mobile"
         ]
       }
     },
@@ -44,7 +44,7 @@ export default {
         foregroundImage: "./assets/logo.png",
         backgroundColor: "#ffffff"
       },
-      package: "sentro.seguranca",
+      package: "atacte.seguranca",
       permissions: [
         "INTERNET",
         "VIBRATE",

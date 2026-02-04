@@ -1,4 +1,5 @@
 {
+  "name": "atacte",
   "dependencies": {
     "react-native-worklets": "^0.5.1"
   },
