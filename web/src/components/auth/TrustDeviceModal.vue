@@ -52,7 +52,6 @@ import { ShieldExclamationIcon, InformationCircleIcon } from '@heroicons/vue/24/
 import { BaseModal, BaseButton } from '@/components/ui'
 import { useToast } from '@/hooks/useToast'
 import authApi from '@/api/auth'
-import { getDeviceFingerprint } from '@/utils/deviceFingerprint'
 
 interface Props {
   show: boolean
@@ -77,10 +76,6 @@ const handleTrust = async () => {
   try {
     const response = await authApi.trustDevice(props.sessionId)
     if (response.success) {
-      localStorage.setItem('device_trusted', 'true')
-      const deviceFingerprint = await getDeviceFingerprint()
-      localStorage.setItem('device_fingerprint', deviceFingerprint)
-      
       toast.success('Dispositivo confiado com sucesso!')
       emit('trusted')
     } else {

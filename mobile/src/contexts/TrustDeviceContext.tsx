@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { DeviceEventEmitter } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import TrustDeviceModal from '../components/auth/TrustDeviceModal';
 import { useAuth } from './AuthContext';
 
@@ -23,31 +22,11 @@ export function TrustDeviceProvider({ children }: { children: ReactNode }) {
   const { logout, refreshUser } = useAuth();
 
   useEffect(() => {
-    const checkIfAlreadyTrusted = async () => {
-      try {
-        const deviceTrusted = await AsyncStorage.getItem('device_trusted');
-        if (deviceTrusted === 'true') {
-          return;
-        }
-      } catch (error) {
-      }
-    };
-
-    checkIfAlreadyTrusted();
-
-    const subscription = DeviceEventEmitter.addListener('device-trust-required', async (data: {
+    const subscription = DeviceEventEmitter.addListener('device-trust-required', (data: {
       sessionId: string;
       deviceName: string;
       ipAddress: string;
     }) => {
-      try {
-        const deviceTrusted = await AsyncStorage.getItem('device_trusted');
-        if (deviceTrusted === 'true') {
-          return;
-        }
-      } catch (error) {
-      }
-      
       setSessionId(data.sessionId);
       setDeviceName(data.deviceName);
       setIpAddress(data.ipAddress);

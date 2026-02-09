@@ -1,3 +1,5 @@
+const FINGERPRINT_STORAGE_KEY = 'atacte_device_fingerprint';
+
 async function simpleHash(str: string): Promise<string> {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -10,6 +12,11 @@ async function simpleHash(str: string): Promise<string> {
 
 export async function getDeviceFingerprint(): Promise<string> {
   try {
+    const storedFingerprint = localStorage.getItem(FINGERPRINT_STORAGE_KEY);
+    if (storedFingerprint) {
+      return storedFingerprint;
+    }
+
     const fingerprintData = {
       platform: navigator.platform || 'Unknown',
       userAgent: navigator.userAgent || 'Unknown',
@@ -24,25 +31,33 @@ export async function getDeviceFingerprint(): Promise<string> {
 
     const fingerprintString = JSON.stringify(fingerprintData);
     
+    let fingerprint: string;
     if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
       try {
         const encoder = new TextEncoder();
         const data = encoder.encode(fingerprintString);
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        return hashHex;
+        fingerprint = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       } catch (cryptoError) {
         console.warn('crypto.subtle não disponível, usando hash simples:', cryptoError);
-        return await simpleHash(fingerprintString);
+        fingerprint = await simpleHash(fingerprintString);
       }
     } else {
-      return await simpleHash(fingerprintString);
+      fingerprint = await simpleHash(fingerprintString);
     }
+
+    localStorage.setItem(FINGERPRINT_STORAGE_KEY, fingerprint);
+    return fingerprint;
   } catch (error) {
     console.error('Erro ao gerar device fingerprint:', error);
     const fallback = `${navigator.platform}-${navigator.userAgent}-${Date.now()}`;
-    return await simpleHash(fallback);
+    const fingerprint = await simpleHash(fallback);
+    try {
+      localStorage.setItem(FINGERPRINT_STORAGE_KEY, fingerprint);
+    } catch (storageError) {
+    }
+    return fingerprint;
   }
 }
 

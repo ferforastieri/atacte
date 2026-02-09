@@ -37,11 +37,7 @@ export default function LoginScreen() {
       const result = await login(email, masterPassword, deviceName, deviceFingerprint);
       
       if (result.requiresTrust && result.sessionId) {
-        // Verificar se já foi confiado antes de mostrar
-        const deviceTrusted = await AsyncStorage.getItem('device_trusted');
-        if (deviceTrusted !== 'true') {
-          showTrustModal(result.sessionId, deviceName, 'Desconhecido');
-        }
+        showTrustModal(result.sessionId, deviceName, 'Desconhecido');
         setIsLoading(false);
         return;
       }
