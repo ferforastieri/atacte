@@ -22,9 +22,6 @@ export async function getDeviceFingerprint(): Promise<string> {
       userAgent: navigator.userAgent || 'Unknown',
       language: navigator.language || 'Unknown',
       languages: navigator.languages?.join(',') || 'Unknown',
-      screenWidth: window.screen.width || 0,
-      screenHeight: window.screen.height || 0,
-      colorDepth: window.screen.colorDepth || 0,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown',
       hardwareConcurrency: navigator.hardwareConcurrency || 0,
     };

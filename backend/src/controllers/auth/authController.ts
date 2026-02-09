@@ -34,7 +34,7 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, masterPassword, deviceName } = req.body;
+    const { email, masterPassword, deviceName, deviceFingerprint } = req.body;
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('User-Agent');
 
@@ -42,6 +42,7 @@ router.post('/login', async (req, res) => {
       email,
       masterPassword,
       deviceName,
+      deviceFingerprint,
     }, ipAddress, userAgent);
 
     res.json({
