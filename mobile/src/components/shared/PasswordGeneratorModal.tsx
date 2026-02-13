@@ -81,17 +81,6 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
     }
   };
 
-  const handleCopyPassword = async () => {
-    if (password) {
-      try {
-        const Clipboard = await import('expo-clipboard');
-        await Clipboard.setStringAsync(password);
-        showSuccess('Senha copiada!');
-      } catch (error) {
-        console.error('Erro ao copiar senha:', error);
-      }
-    }
-  };
 
   const styles = StyleSheet.create({
     container: {
@@ -108,14 +97,6 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
     },
     passwordInput: {
       flex: 1,
-    },
-    copyButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      height: 48, 
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     optionsSection: {
       gap: 12,
@@ -165,42 +146,9 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        {}
-        <View style={styles.passwordSection}>
-          <Text style={styles.sectionTitle}>Senha Gerada</Text>
-          
-          <View style={styles.passwordDisplay}>
-            <Input
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Senha será gerada aqui..."
-              secureTextEntry={!showPassword}
-              style={styles.passwordInput}
-              rightIcon={
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons
-                    name={showPassword ? "eye-off-outline" : "eye-outline"}
-                    size={20}
-                    color={isDark ? '#9ca3af' : '#6b7280'}
-                  />
-                </TouchableOpacity>
-              }
-            />
-            <TouchableOpacity onPress={handleCopyPassword} style={styles.copyButton}>
-              <Ionicons
-                name="copy-outline"
-                size={20}
-                color={isDark ? '#9ca3af' : '#6b7280'}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {}
         <View style={styles.optionsSection}>
           <Text style={styles.sectionTitle}>Opções de Geração</Text>
 
-          {}
           <View style={styles.optionRow}>
             <Text style={styles.optionLabel}>Comprimento</Text>
             <Input
@@ -211,7 +159,6 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
             />
           </View>
 
-          {}
           <View style={styles.optionRow}>
             <Text style={styles.optionLabel}>Maiúsculas (A-Z)</Text>
             <Switch
@@ -253,7 +200,29 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
           </View>
         </View>
 
-        {}
+        <View style={styles.passwordSection}>
+          <Text style={styles.sectionTitle}>Senha Gerada</Text>
+          
+          <View style={styles.passwordDisplay}>
+            <Input
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Senha será gerada aqui..."
+              secureTextEntry={!showPassword}
+              style={styles.passwordInput}
+              rightIcon={
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={isDark ? '#9ca3af' : '#6b7280'}
+                  />
+                </TouchableOpacity>
+              }
+            />
+          </View>
+        </View>
+
         <View style={styles.actions}>
           <Button
             title="Gerar"

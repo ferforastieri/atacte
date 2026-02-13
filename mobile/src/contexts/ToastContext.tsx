@@ -87,13 +87,13 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     <ToastContext.Provider value={value}>
       {children}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 9999 }}>
-        {toasts.map((toast) => (
+        {toasts.map((toast, index) => (
           <PanGestureHandler
             key={toast.id}
             onGestureEvent={(event: { nativeEvent: { translationX: number; state: number } }) => onGestureEvent(event, toast.id)}
             onHandlerStateChange={(event: { nativeEvent: { translationX: number; state: number } }) => onGestureEvent(event, toast.id)}
           >
-            <View>
+            <View style={{ marginTop: index === 0 ? 16 : 4 }}>
               <CustomToast
                 type={toast.type}
                 text1={toast.text1}

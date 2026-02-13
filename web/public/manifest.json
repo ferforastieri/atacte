@@ -1,7 +1,7 @@
 {
   "name": "Atacte - Gerenciador de Senhas",
   "short_name": "Atacte",
-  "description": "Gerenciador de Senhas e Segurança Familiar",
+  "description": "Gerenciador de Senhas e Notas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#22c55e",

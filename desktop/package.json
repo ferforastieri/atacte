@@ -1,7 +1,7 @@
 {
   "name": "atacte-desktop",
   "version": "1.0.0",
-  "description": "Aplicativo desktop Atacte - Gerenciador de Senhas e Segurança Familiar",
+  "description": "Aplicativo desktop Atacte - Gerenciador de Senhas e Notas",
   "main": "main.js",
   "homepage": "https://github.com/ferforastieri/atacte",
   "author": {
@@ -117,12 +117,12 @@
       "icon": "build/icons",
       "category": "Utility",
       "maintainer": "Fernando <fernandoforastierineto@gmail.com>",
-      "synopsis": "Gerenciador de Senhas e Segurança Familiar",
-      "description": "Aplicativo de gerenciamento de senhas, autenticação 2FA e segurança familiar com localização em tempo real",
+      "synopsis": "Gerenciador de Senhas e Notas",
+      "description": "Aplicativo de gerenciamento de senhas, autenticação 2FA e notas com localização em tempo real",
       "desktop": {
         "Name": "Atacte",
         "GenericName": "Password Manager",
-        "Comment": "Gerenciador de Senhas e Segurança Familiar",
+        "Comment": "Gerenciador de Senhas e Notas",
         "Categories": "Utility;Security;Office;",
         "StartupWMClass": "Atacte",
         "MimeType": "x-scheme-handler/atacte;",

@@ -1,7 +1,7 @@
 {
   "name": "atacte-password-manager",
   "version": "1.0.0",
-  "description": "Backend API para aplicativo de segurança familiar Atacte",
+  "description": "Backend API para aplicativo de senhas e notas Atacte",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",

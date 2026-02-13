@@ -59,7 +59,7 @@
             type="button"
             variant="ghost"
             size="sm"
-            @click="generatePassword"
+            @click="showPasswordGenerator = true"
           >
             <KeyIcon class="w-4 h-4 mr-1" />
             Gerar Senha
@@ -158,13 +158,20 @@
       </div>
     </template>
   </BaseModal>
+
+  <PasswordGeneratorModal
+    :show="showPasswordGenerator"
+    :initial-password="form.password"
+    @close="showPasswordGenerator = false"
+    @password-generated="handlePasswordGenerated"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useToast } from '@/hooks/useToast'
 import { KeyIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon } from '@heroicons/vue/24/outline'
-import { BaseModal, BaseInput, BaseButton, PasswordStrength } from '@/components/ui'
+import { BaseModal, BaseInput, BaseButton, PasswordStrength, PasswordGeneratorModal } from '@/components/ui'
 import { type PasswordEntry, type UpdatePasswordRequest } from '@/api/passwords'
 import { usePasswordsStore } from '@/stores/passwords'
 
@@ -197,6 +204,7 @@ const form = ref({
 })
 
 
+const showPasswordGenerator = ref(false)
 const isSubmitting = ref(false)
 
 
@@ -207,19 +215,8 @@ const isFormValid = computed(() => {
   return form.value.name.trim() && form.value.password.trim()
 })
 
-
-
-const generatePassword = () => {
-  
-  const length = 16
-  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
-  let password = ''
-  
-  for (let i = 0; i < length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charset.length))
-  }
-  
-  form.value.password = password
+const handlePasswordGenerated = (generatedPassword: string) => {
+  form.value.password = generatedPassword
 }
 
 

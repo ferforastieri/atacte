@@ -48,7 +48,6 @@ const CustomToast: React.FC<CustomToastProps> = ({ type, text1, text2, onHide })
       backgroundColor: isDark ? '#1f2937' : '#ffffff',
       borderRadius: 20,
       marginHorizontal: 16,
-      marginTop: 60,
       paddingHorizontal: 16,
       paddingVertical: 10,
       flexDirection: 'row' as const,

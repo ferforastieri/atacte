@@ -14,5 +14,6 @@ export { default as ThemeToggle } from './ThemeToggle.vue'
 export { default as Logo } from './Logo.vue'
 export { default as CustomToast } from './CustomToast.vue'
 export { default as DatePicker } from './DatePicker.vue'
+export { default as PasswordGeneratorModal } from './PasswordGeneratorModal.vue'
 export { default as AppHeader } from '../layout/AppHeader.vue'
 

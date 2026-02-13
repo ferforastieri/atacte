@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed top-[60px] right-4 z-50 space-y-2">
+  <div class="fixed top-4 right-4 z-50 space-y-1">
     <TransitionGroup
       enter-active-class="transform ease-out duration-300 transition"
       enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"

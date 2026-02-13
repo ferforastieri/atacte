@@ -123,7 +123,7 @@ export class EmailService {
             
             <p style="font-size: 12px; color: #9ca3af; margin: 0;">
               Este é um email automático, por favor não responda.<br>
-              © ${new Date().getFullYear()} Atacte - Segurança Familiar
+              © ${new Date().getFullYear()} Atacte - Senhas e Notas
             </p>
           </div>
         </body>
@@ -143,7 +143,7 @@ ${resetUrl ? `Acesse este link para redefinir sua senha:\n${resetLink}` : `Use e
 
 Se você não solicitou esta recuperação de senha, ignore este email. Sua senha permanecerá inalterada.
 
-© ${new Date().getFullYear()} Atacte - Segurança Familiar
+© ${new Date().getFullYear()} Atacte - Senhas e Notas
     `;
 
     return this.sendEmail({

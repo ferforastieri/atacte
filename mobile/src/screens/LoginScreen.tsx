@@ -121,7 +121,7 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Logo size={80} showText={true} textSize={36} textColor={isDark ? '#f9fafb' : '#111827'} />
-          <Text style={styles.subtitle}>Segurança Familiar</Text>
+          <Text style={styles.subtitle}>Senhas e Notas</Text>
         </View>
 
       <Card style={styles.formCard}>
