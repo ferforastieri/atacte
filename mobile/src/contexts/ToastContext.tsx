@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomToast from '../components/shared/CustomToast';
 import { useTheme } from './ThemeContext';
 
@@ -27,6 +28,7 @@ interface ToastData {
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [toasts, setToasts] = useState<ToastData[]>([]);
 
   const showToast = (type: 'success' | 'error' | 'info' | 'warning', text1: string, text2: string) => {
@@ -86,7 +88,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 9999 }}>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 9999, paddingTop: insets.top }}>
         {toasts.map((toast, index) => (
           <PanGestureHandler
             key={toast.id}
