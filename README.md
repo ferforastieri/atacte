@@ -107,7 +107,8 @@ Atacte/
 ├── nginx/                  # Configuração do Nginx
 ├── docker-compose.yml      # Orquestração de containers
 ├── Dockerfile             # Imagem unificada
-└── deploy.sh              # Script de deployment
+├── entrypoint.sh          # Inicia nginx + backend (logs no Dozzle)
+└── deploy-local.example.sh
 ```
 
 ## 🛠️ Tecnologias
@@ -498,7 +499,6 @@ cd atacte
 cp backend/config.example.env backend/config.env
 cp docker-compose.example.yml docker-compose.yml
 cp Dockerfile.example Dockerfile
-cp supervisord.example.conf supervisord.conf
 cp nginx/nginx.example.conf nginx/nginx.conf
 
 # Editar configurações

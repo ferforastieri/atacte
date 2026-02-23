@@ -88,8 +88,6 @@ docker-compose.*.yml
 docker-compose.yml
 Dockerfile
 !Dockerfile.example
-supervisord.conf
-!supervisord.example.conf
 nginx/nginx.conf
 !nginx/nginx.example.conf
 web/.env

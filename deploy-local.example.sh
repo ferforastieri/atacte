@@ -26,7 +26,7 @@ cp -r web/ $TEMP_DIR/
 cp -r nginx/ $TEMP_DIR/
 cp docker-compose.yml $TEMP_DIR/
 cp Dockerfile $TEMP_DIR/
-cp supervisord.conf $TEMP_DIR/
+cp entrypoint.sh $TEMP_DIR/
 
 # Remover arquivos desnecessários
 find $TEMP_DIR -name "node_modules" -type d -exec rm -rf {} + 2>/dev/null || true
