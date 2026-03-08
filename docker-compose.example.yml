@@ -1,18 +1,12 @@
-# Docker Compose - Atacte (EXEMPLO)
-# Copie este arquivo para docker-compose.yml e ajuste as configurações
-
-version: '3.8'
-
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: atacte-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: atacte
-      POSTGRES_USER: seu_usuario_db
-      POSTGRES_PASSWORD: sua_senha_db_super_segura
+      POSTGRES_USER: atacte_usuario
+      POSTGRES_PASSWORD: sua_senha_postgres
     ports:
       - "5435:5432"
     volumes:
@@ -20,35 +14,46 @@ services:
     networks:
       - atacte-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U seu_usuario_db -d atacte"]
+      test: ["CMD-SHELL", "pg_isready -U atacte_usuario -d atacte"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Aplicação Unificada (Frontend + Backend + Nginx)
-  app:
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: atacte-app
+      dockerfile: Dockerfile.backend
+    container_name: atacte-backend
     restart: unless-stopped
+    env_file:
+      - backend/.env
     environment:
-      # Database
-      DATABASE_URL: postgresql://seu_usuario_db:sua_senha_db_super_segura@postgres:5432/atacte?sslmode=disable
-      # CORS
+      DATABASE_URL: postgresql://atacte_usuario:sua_senha_postgres@postgres:5432/atacte?sslmode=disable
       CORS_ORIGIN: "*"
-      # Server
       PORT: 3001
       NODE_ENV: production
     ports:
-      - "3000:3000"
+      - "3457:3001"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - atacte-network
-    volumes:
-      - ./backend/config.env:/app/backend/config.env:ro
+
+  front:
+    build:
+      context: .
+      dockerfile: Dockerfile.front
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3457/api}
+    container_name: atacte-front
+    restart: unless-stopped
+    ports:
+      - "3456:80"
+    depends_on:
+      - backend
+    networks:
+      - atacte-network
 
 networks:
   atacte-network:

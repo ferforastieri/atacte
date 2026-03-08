@@ -1,10 +1,9 @@
 import axios from 'axios'
 import { useToast } from '@/hooks/useToast'
-import config from '@/config/environment'
-
+import { env } from '@/config/environment'
 
 const api = axios.create({
-  baseURL: config.apiUrl,
+  baseURL: env.apiUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
