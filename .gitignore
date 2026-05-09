@@ -17,6 +17,7 @@ web/.env
 # Build outputs
 dist/
 build/
+*.tsbuildinfo
 
 # Logs
 logs/

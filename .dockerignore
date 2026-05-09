@@ -67,6 +67,7 @@ Thumbs.db
 # Git
 .git/
 .gitignore
+.gitea/
 
 # Docker (mantém Dockerfile e docker-compose.yml, ignora apenas exemplos)
 Dockerfile.example
@@ -93,3 +94,4 @@ desktop/
 # Arquivos de exemplo
 *.example.*
 *example*
+*.tsbuildinfo
