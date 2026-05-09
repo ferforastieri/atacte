@@ -173,6 +173,15 @@
             
             <div class="flex flex-col space-y-1 ml-2">
               <button
+                v-if="password.username"
+                @click.stop="copyUsername(password)"
+                class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+                title="Copiar usuário"
+              >
+                <UserIcon class="h-4 w-4" />
+              </button>
+
+              <button
                 @click.stop="copyPassword(password)"
                 class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
                 title="Copiar senha"
@@ -274,7 +283,8 @@ import {
   FolderIcon,
   KeyIcon,
   ClipboardIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  UserIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
@@ -379,6 +389,17 @@ const copyPassword = async (password: PasswordEntry) => {
   const result = await copyToClipboard(password.password)
   if (result.success) {
     toast.success(result.message)
+  } else {
+    toast.error(result.message)
+  }
+}
+
+const copyUsername = async (password: PasswordEntry) => {
+  if (!password.username) return
+
+  const result = await copyToClipboard(password.username)
+  if (result.success) {
+    toast.success('Usuário copiado!')
   } else {
     toast.error(result.message)
   }

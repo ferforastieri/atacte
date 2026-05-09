@@ -20,8 +20,16 @@
         </div>
         
         <div v-if="password.username">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
-          <p class="text-sm text-gray-900 dark:text-gray-100">{{ password.username }}</p>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuário</label>
+          <div class="flex items-center space-x-2">
+            <p class="flex-1 text-sm text-gray-900 dark:text-gray-100 break-all">{{ password.username }}</p>
+            <button
+              @click="copyUsername"
+              class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+            >
+              Copiar
+            </button>
+          </div>
         </div>
         
         <div v-if="password.folder">
@@ -163,6 +171,17 @@ const copyPassword = async () => {
   }
 }
 
+const copyUsername = async () => {
+  if (!props.password?.username) return
+
+  const result = await copyToClipboard(props.password.username)
+  if (result.success) {
+    toast.success('Usuário copiado!')
+  } else {
+    toast.error(result.message)
+  }
+}
+
 const handleEdit = () => {
   showEditModal.value = true
 }
@@ -273,4 +292,3 @@ onUnmounted(() => {
   stopTotpTimer()
 })
 </script>
-

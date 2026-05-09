@@ -105,10 +105,10 @@ Atacte/
 │   ├── assets/            # Imagens e recursos
 │   └── package.json
 ├── nginx/                  # Configuração do Nginx
-├── docker-compose.yml      # Orquestração de containers
-├── Dockerfile             # Imagem unificada
-├── entrypoint.sh          # Inicia nginx + backend (logs no Dozzle)
-└── deploy-local.example.sh
+├── docker-compose.yml      # Orquestração de containers em produção
+├── Dockerfile.backend      # Imagem da API
+├── Dockerfile.front        # Imagem do frontend web
+└── .gitea/workflows/       # Pipeline de deploy no Gitea Actions
 ```
 
 ## 🛠️ Tecnologias
@@ -359,13 +359,13 @@ npm start
 
 ```bash
 # Construir e executar
-docker-compose up -d
+docker compose up -d --build
 
 # Ver logs
-docker-compose logs -f
+docker compose logs -f
 
 # Parar
-docker-compose down
+docker compose down
 ```
 
 ## 📡 API
@@ -468,57 +468,42 @@ Importar dados de JSON.
 
 ## 🚀 Deployment
 
-### Deploy com Docker (Recomendado)
+### Deploy Automático com Gitea Actions
 
-```bash
-# 1. Configurar arquivos de exemplo
-cp backend/config.example.env backend/config.env
-cp docker-compose.example.yml docker-compose.yml
-cp deploy-local.example.sh deploy-local.sh
+O deploy local por SSH/rsync foi removido. O fluxo atual é:
 
-# 2. Editar configurações
-- backend/config.env: banco de dados, JWT, etc.
-- deploy-local.sh: IP do servidor, usuário, caminho
+1. Faça push para o GitHub.
+2. O Gitea sincroniza o repositório.
+3. O workflow `.gitea/workflows/deploy.yml` roda no runner do próprio servidor.
+4. A pipeline cria o `.env`, faz build das imagens, aplica `prisma db push` e sobe os containers com Docker Compose.
 
-# 3. Configurar SSH sem senha
-ssh-keygen -t rsa -f ~/.ssh/id_rsa_atacte -N ""
-ssh-copy-id -i ~/.ssh/id_rsa_atacte.pub usuario@servidor
+Secrets obrigatórios no repositório do Gitea:
 
-# 4. Deploy automático
-./deploy-local.sh
-```
+- `POSTGRES_PASSWORD`
+- `JWT_SECRET`
+- `ENCRYPTION_KEY`
+- `VITE_API_URL`
 
-### Deploy Manual
+Secrets opcionais:
 
-```bash
-# No servidor
-git clone https://github.com/seu-usuario/atacte.git
-cd atacte
+- `POSTGRES_DB`, padrão `atacte`
+- `POSTGRES_USER`, padrão `atacte`
+- `POSTGRES_PORT`, padrão `5435`
+- `BACKEND_PORT`, padrão `3457`
+- `FRONT_PORT`, padrão `3456`
+- `JWT_EXPIRES_IN`, padrão `7d`
+- `BCRYPT_ROUNDS`, padrão `12`
+- `RATE_LIMIT_WINDOW_MS`, padrão `900000`
+- `RATE_LIMIT_MAX_REQUESTS`, padrão `500`
+- `CORS_ORIGIN`, padrão `*`
+- `LOG_LEVEL`, padrão `info`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `PASSWORD_RESET_URL`
 
-# Configurar arquivos necessários
-cp backend/config.example.env backend/config.env
-cp docker-compose.example.yml docker-compose.yml
-cp Dockerfile.example Dockerfile
-cp nginx/nginx.example.conf nginx/nginx.conf
+### Deploy Manual no Servidor
 
-# Editar configurações
-nano backend/config.env  # banco de dados, JWT, etc.
+O caminho manual ainda existe só para manutenção emergencial: crie um `.env` na raiz com os mesmos valores dos secrets e rode `docker compose --env-file .env up -d --build`.
 
-# Iniciar aplicação
-docker-compose up -d --build
-
-# Verificar status
-docker-compose ps
-docker-compose logs -f
-```
-
-### Git Hook Automático (Opcional)
-
-```bash
-# Configurar deploy automático após commit
-chmod +x .git/hooks/post-commit
-# O hook executa deploy-local.sh automaticamente
-```
+O `.env` permanece ignorado pelo Git.
 
 ## 💻 Desenvolvimento
 

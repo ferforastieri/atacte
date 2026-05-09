@@ -358,7 +358,12 @@ export default function DashboardScreen() {
     navigation.navigate('PasswordDetail', { passwordId: password.id });
   };
 
-  const copyToClipboard = async (text: string, label: string = 'Texto') => {
+  const copyToClipboard = async (text?: string, label: string = 'Texto') => {
+    if (!text) {
+      showError(`${label} indisponível`);
+      return;
+    }
+
     try {
       await Clipboard.setStringAsync(text);
       showSuccess(`${label} copiado para a área de transferência`);
@@ -541,7 +546,7 @@ export default function DashboardScreen() {
       onDelete={() => handleDeletePassword(item)}
       onToggleFavorite={() => toggleFavorite(item)}
       onCopyPassword={() => copyToClipboard(item.password, 'Senha')}
-      onCopyUsername={() => copyToClipboard(item.username!, 'Usuário')}
+      onCopyUsername={() => copyToClipboard(item.username, 'Usuário')}
     />
   );
 

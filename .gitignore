@@ -79,15 +79,15 @@ prisma/migrations/
 # Generated files
 generated/
 
-# Docker e deploy (contêm servidor/senhas; use os .example como base)
-docker-compose.yml
+# Docker e deploy
 deploy-local.sh
 docker-compose.override.yml
 Dockerfile
+.bin/
+.docker/
 
 # SSL
 nginx/ssl/
 *.pem
 *.key
 *.crt
-

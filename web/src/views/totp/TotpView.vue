@@ -206,13 +206,17 @@ const loadTotpCodes = async () => {
 
 const copyTotpCode = async (passwordId: string) => {
   const totpCode = getTotpCode(passwordId)
-  if (totpCode?.code) {
-    const result = await copyToClipboard(totpCode.code)
+  const cleanCode = totpCode?.code?.replace(/\D/g, '').slice(0, 6)
+
+  if (cleanCode?.length === 6) {
+    const result = await copyToClipboard(cleanCode)
     if (result.success) {
       toast.success('Código TOTP copiado!')
     } else {
       toast.error(result.message)
     }
+  } else {
+    toast.error('Código TOTP indisponível')
   }
 }
 

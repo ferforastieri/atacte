@@ -87,8 +87,15 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
 
   const handleCopy = async () => {
     if (displayCode && displayCode !== '------') {
+      const cleanCode = displayCode.replace(/\D/g, '').slice(0, 6);
+
+      if (cleanCode.length !== 6) {
+        console.error('Código TOTP indisponível para cópia');
+        return;
+      }
+
       try {
-        await Clipboard.setStringAsync(displayCode);
+        await Clipboard.setStringAsync(cleanCode);
         onCopy?.();
       } catch (error) {
         console.error('Erro ao copiar código:', error);

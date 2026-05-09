@@ -118,7 +118,12 @@ export default function PasswordDetailScreen() {
     showSuccess('Código TOTP copiado!');
   };
 
-  const copyToClipboard = async (text: string, label: string) => {
+  const copyToClipboard = async (text?: string, label: string = 'Texto') => {
+    if (!text) {
+      showError(`${label} indisponível`);
+      return;
+    }
+
     try {
       await Clipboard.setStringAsync(text);
       showSuccess(`${label} copiado!`);
@@ -469,7 +474,7 @@ export default function PasswordDetailScreen() {
               <Text style={styles.infoValue}>{password.username}</Text>
               <TouchableOpacity 
                 style={styles.copyButton}
-                onPress={() => copyToClipboard(password.username!, 'Usuário')}
+                onPress={() => copyToClipboard(password.username, 'Usuário')}
               >
                 <Ionicons name="copy-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
               </TouchableOpacity>

@@ -44,6 +44,7 @@ import { useToast } from '@/hooks/useToast'
 import { ClipboardIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import BaseButton from './BaseButton.vue'
 import { TOTPClient, type TOTPCode } from '@/utils/totpClient'
+import { copyToClipboard } from '@/utils/clipboard'
 
 interface Props {
   secret?: string | null 
@@ -113,12 +114,18 @@ const timerStyle = computed(() => {
 
 const copyCode = async () => {
   if (!displayCode.value || displayCode.value === '------') return
+
+  const cleanCode = displayCode.value.replace(/\D/g, '').slice(0, 6)
+  if (cleanCode.length !== 6) {
+    toast.error('Código indisponível')
+    return
+  }
   
-  try {
-    await navigator.clipboard.writeText(displayCode.value)
+  const result = await copyToClipboard(cleanCode)
+  if (result.success) {
     toast.success('Código copiado!')
-  } catch (error) {
-    toast.error('Erro ao copiar código')
+  } else {
+    toast.error(result.message)
   }
 }
 
@@ -185,7 +192,7 @@ onUnmounted(() => {
 
 <style scoped>
 .totp-container {
-  @apply bg-white rounded-lg border border-gray-200 p-4 space-y-4;
+  @apply bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4;
 }
 
 .totp-code-wrapper {
@@ -193,7 +200,7 @@ onUnmounted(() => {
 }
 
 .totp-code {
-  @apply font-mono text-3xl font-bold text-center bg-gray-50 rounded-lg py-4 px-6 border-2 border-dashed border-gray-300 tracking-widest;
+  @apply font-mono text-3xl font-bold text-center text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900 rounded-lg py-4 px-6 border-2 border-dashed border-gray-300 dark:border-gray-600 tracking-widest;
 }
 
 .totp-timer-container {
@@ -201,16 +208,15 @@ onUnmounted(() => {
 }
 
 .totp-timer {
-  @apply w-8 h-8 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center;
+  @apply w-8 h-8 rounded-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center;
   background: conic-gradient(from 0deg, #3b82f6 0deg, #3b82f6 var(--progress), #e5e7eb var(--progress), #e5e7eb 360deg);
 }
 
 .totp-timer-inner {
-  @apply w-6 h-6 bg-white rounded-full flex items-center justify-center text-xs font-medium text-gray-700;
+  @apply w-6 h-6 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-200;
 }
 
 .totp-actions {
   @apply flex justify-center space-x-2;
 }
 </style>
-
