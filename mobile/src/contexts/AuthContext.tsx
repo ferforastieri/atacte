@@ -98,11 +98,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { success: true };
       } else {
         await authService.logout();
-        return { success: false, message: response.message || 'Erro no login' };
+        return { success: false, message: response.message };
       }
     } catch (error: any) {
       await authService.logout();
-      const errorMessage = error?.response?.data?.message || error?.message || 'Erro no login. Verifique suas credenciais.';
+      const errorMessage = error?.response?.data?.message;
       return { success: false, message: errorMessage };
     }
   };
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsAuthenticated(true);
         return { success: true };
       } else {
-        return { success: false, message: response.message || 'Erro no registro' };
+        return { success: false, message: response.message };
       }
     } catch (error) {
       return { success: false, message: 'Erro no registro' };

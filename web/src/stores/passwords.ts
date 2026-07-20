@@ -77,7 +77,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         }
         return response.data
       }
-      throw new Error(response.message || 'Erro ao buscar senhas')
+      throw new Error(response.message)
     } catch (error) {
       throw error
     } finally {
@@ -93,7 +93,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         currentPassword.value = response.data
         return response.data
       }
-      throw new Error(response.message || 'Erro ao buscar senha')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -108,7 +108,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         await fetchFolders() 
         return response.data
       }
-      throw new Error(response.message || 'Erro ao criar senha')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -144,7 +144,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         await fetchFolders() 
         return response.data
       }
-      throw new Error(response.message || 'Erro ao atualizar senha')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -162,7 +162,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         await fetchFolders() 
         return response.data
       }
-      throw new Error(response.message || 'Erro ao deletar senha')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -196,7 +196,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
       if (response.success) {
         return response.data
       }
-      throw new Error(response.message || 'Erro ao gerar senha')
+      throw new Error(response.message)
     } catch (error) {
       throw error
     }
@@ -209,7 +209,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
       if (response.success) {
         return response.data
       }
-      throw new Error(response.message || 'Erro ao buscar código TOTP')
+      throw new Error(response.message)
     } catch (error) {
       throw error
     }
@@ -222,7 +222,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
       if (response.success) {
         return response.data
       }
-      throw new Error(response.message || 'Erro ao buscar secret TOTP')
+      throw new Error(response.message)
     } catch (error) {
       throw error
     }
@@ -243,7 +243,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         }
         return response.data
       }
-      throw new Error(response.message || 'Erro ao adicionar TOTP')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -264,7 +264,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         }
         return response.data
       }
-      throw new Error(response.message || 'Erro ao remover TOTP')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -285,7 +285,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         await fetchFolders()
         return response.data
       }
-      throw new Error(response.message || 'Erro ao importar senhas')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }

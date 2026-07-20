@@ -66,7 +66,7 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
         }
         return response.data
       }
-      throw new Error(response.message || 'Erro ao buscar notas')
+      throw new Error(response.message)
     } catch (error) {
       throw error
     } finally {
@@ -82,7 +82,7 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
         currentNote.value = response.data
         return response.data
       }
-      throw new Error(response.message || 'Erro ao buscar nota')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -97,7 +97,7 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
         await fetchFolders()
         return response.data
       }
-      throw new Error(response.message || 'Erro ao criar nota')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -119,7 +119,7 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
         await fetchFolders()
         return response.data
       }
-      throw new Error(response.message || 'Erro ao atualizar nota')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -137,7 +137,7 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
         await fetchFolders()
         return true
       }
-      throw new Error(response.message || 'Erro ao deletar nota')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }

@@ -118,10 +118,13 @@ router.get('/export/csv', asAuthenticatedHandler(async (req, res) => {
 
     
     const filename = `atacte-passwords-${new Date().toISOString().split('T')[0]}.csv`
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
 
-    res.send(result.data)
+    res.json({
+      success: true,
+      message: `Exportação concluída: ${result.total} senhas exportadas`,
+      data: result.data
+    })
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor durante a exportação CSV'

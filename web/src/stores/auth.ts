@@ -70,7 +70,7 @@ export const useAuthStore = defineStore('auth', () => {
         }
         return response
       }
-      throw new Error(response.message || 'Erro no login')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }
@@ -83,7 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.success) {
         return response
       }
-      throw new Error(response.message || 'Erro no registro')
+      throw new Error(response.message)
     } finally {
       isLoading.value = false
     }

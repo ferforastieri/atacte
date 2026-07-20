@@ -16,12 +16,10 @@ const importExportApi = {
   
   
   async exportToBitwarden() {
-    const response = await api.get('/import-export/export/bitwarden', {
-      responseType: 'blob'
-    })
+    const response = await api.get('/import-export/export/bitwarden')
     
     
-    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const url = window.URL.createObjectURL(new Blob([JSON.stringify(response.data.data, null, 2)], { type: 'application/json' }))
     const link = document.createElement('a')
     link.href = url
     
@@ -42,12 +40,10 @@ const importExportApi = {
 
   
   async exportToCSV() {
-    const response = await api.get('/import-export/export/csv', {
-      responseType: 'blob'
-    })
+    const response = await api.get('/import-export/export/csv')
     
     
-    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const url = window.URL.createObjectURL(new Blob([response.data.data], { type: 'text/csv;charset=utf-8' }))
     const link = document.createElement('a')
     link.href = url
     

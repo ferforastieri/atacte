@@ -64,7 +64,7 @@ export const preferencesApi = {
     } catch (error: any) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Erro ao atualizar preferências'
+        message: error.response?.data?.message
       }
     }
   },
@@ -77,7 +77,7 @@ export const preferencesApi = {
     } catch (error: any) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Erro ao salvar preferências'
+        message: error.response?.data?.message
       }
     }
   },
@@ -90,7 +90,7 @@ export const preferencesApi = {
     } catch (error: any) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Erro ao deletar preferências'
+        message: error.response?.data?.message
       }
     }
   }
