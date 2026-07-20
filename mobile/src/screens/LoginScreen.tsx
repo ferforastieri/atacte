@@ -7,7 +7,6 @@ import { getDeviceFingerprint, getDeviceName } from '../utils/deviceFingerprint'
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Card, Logo } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { useTrustDevice } from '../contexts/TrustDeviceContext';
@@ -17,7 +16,6 @@ export default function LoginScreen() {
   const [masterPassword, setMasterPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const { showSuccess, showError } = useToast();
   const { login, register } = useAuth();
   const { isDark } = useTheme();
   const navigation = useNavigation();
@@ -26,7 +24,6 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !masterPassword) {
-      showError('Por favor, preencha todos os campos');
       return;
     }
 
@@ -43,12 +40,9 @@ export default function LoginScreen() {
       }
       
       if (result.success) {
-        showSuccess('Login realizado com sucesso!');
       } else {
-        showError(result.message || 'Erro ao fazer login');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +50,6 @@ export default function LoginScreen() {
 
   const handleRegister = async () => {
     if (!email || !masterPassword) {
-      showError('Por favor, preencha todos os campos');
       return;
     }
 
@@ -65,12 +58,9 @@ export default function LoginScreen() {
       const result = await register(email, masterPassword);
       
       if (result.success) {
-        showSuccess('Conta criada com sucesso!');
       } else {
-        showError(result.message || 'Erro ao criar conta');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setIsLoading(false);
     }

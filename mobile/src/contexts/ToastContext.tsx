@@ -1,5 +1,5 @@
-import React, { createContext, useContext, ReactNode, useState } from 'react';
-import { View } from 'react-native';
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { DeviceEventEmitter, View } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomToast from '../components/shared/CustomToast';
@@ -58,6 +58,17 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const showWarning = (message: string) => {
     showToast('warning', 'Atenção!', message);
   };
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(
+      'api-response-toast',
+      ({ type, message }: { type: 'success' | 'error'; message: string }) => {
+        showToast(type, type === 'success' ? 'Sucesso!' : 'Erro!', message);
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
 
   const hideToast = (id?: string) => {
     if (id) {

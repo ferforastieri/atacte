@@ -7,7 +7,6 @@ import { Modal } from '../components/shared/Modal';
 import { Input } from '../components/shared/Input';
 import { passwordService } from '../services/passwords/passwordService';
 import { totpService } from '../services/totp/totpService';
-import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import * as Clipboard from 'expo-clipboard';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
@@ -63,7 +62,6 @@ export default function PasswordDetailScreen() {
     totpEnabled: false,
     totpSecret: '',
   });
-  const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -101,10 +99,8 @@ export default function PasswordDetailScreen() {
       if (response.success && response.data) {
         setTotpCode(response.data);
       } else {
-        showError(response.message || 'Erro ao carregar código TOTP');
       }
     } catch (error) {
-      showError('Erro ao carregar código TOTP');
     } finally {
       setIsLoadingTotp(false);
     }
@@ -115,20 +111,16 @@ export default function PasswordDetailScreen() {
   };
 
   const handleTotpCopy = () => {
-    showSuccess('Código TOTP copiado!');
   };
 
   const copyToClipboard = async (text?: string, label: string = 'Texto') => {
     if (!text) {
-      showError(`${label} indisponível`);
       return;
     }
 
     try {
       await Clipboard.setStringAsync(text);
-      showSuccess(`${label} copiado!`);
     } catch (error) {
-      showError('Erro ao copiar');
     }
   };
 
@@ -142,12 +134,9 @@ export default function PasswordDetailScreen() {
       
       if (response.success) {
         setPassword(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null);
-        showSuccess(password.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos');
       } else {
-        showError('Erro ao atualizar favorito');
       }
     } catch (error) {
-      showError('Erro ao atualizar favorito');
     }
   };
 
@@ -179,13 +168,10 @@ export default function PasswordDetailScreen() {
     try {
       const response = await passwordService.deletePassword(password.id);
       if (response.success) {
-        showSuccess('Senha excluída!');
         navigation.goBack();
       } else {
-        showError(response.message || 'Erro ao excluir senha');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setIsDeleting(false);
       setShowDeleteModal(false);
@@ -210,12 +196,10 @@ export default function PasswordDetailScreen() {
     if (!password) return;
     
     if (!formData.name.trim()) {
-      showError('Nome é obrigatório');
       return;
     }
     
     if (!formData.password.trim()) {
-      showError('Senha é obrigatória');
       return;
     }
 
@@ -242,14 +226,11 @@ export default function PasswordDetailScreen() {
       const response = await passwordService.updatePassword(password.id, passwordData);
 
       if (response.success && response.data) {
-        showSuccess('Senha atualizada!');
         setPassword(response.data);
         setShowEditModal(false);
       } else {
-        showError(response.message || 'Erro ao atualizar senha');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setIsSaving(false);
     }

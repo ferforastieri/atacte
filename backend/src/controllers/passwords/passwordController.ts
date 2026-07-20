@@ -123,6 +123,7 @@ router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Senhas obtidas com sucesso',
       data: result.passwords,
       pagination: {
         total: result.total,
@@ -161,6 +162,7 @@ router.get('/:id', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Senha obtida com sucesso',
       data: password
     });
   } catch (error) {
@@ -296,6 +298,7 @@ router.get('/generate', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Senha gerada com sucesso',
       data: {
         password: generatedPassword.password,
         strength: generatedPassword.strength

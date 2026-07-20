@@ -7,7 +7,6 @@ import { Header, Card, SkeletonLoader, Modal, Input, Button, BaseSelect } from '
 import { userService } from '../../services/users/userService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useToast } from '../../hooks/useToast';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from '../../navigation/AppNavigator';
 
@@ -27,7 +26,6 @@ export default function UsersScreen() {
   const navigation = useNavigation<UsersScreenNavigationProp>();
   const { isAdmin } = useAuth();
   const { isDark, toggleTheme } = useTheme();
-  const { showError, showSuccess } = useToast();
   const insets = useSafeAreaInsets();
 
   const handleBack = () => {
@@ -98,7 +96,6 @@ export default function UsersScreen() {
         setPagination(prev => ({ ...prev, totalPages: 1 }));
       }
     } catch (error) {
-      showError('Erro ao carregar usuários');
       setUsers([]);
       setPagination(prev => ({ ...prev, totalPages: 1 }));
     } finally {
@@ -144,7 +141,6 @@ export default function UsersScreen() {
     if (!editingUser.id) return;
 
     if (editingUserPassword && editingUserPassword.length < 8) {
-      showError('A senha deve ter pelo menos 8 caracteres');
       return;
     }
 
@@ -162,14 +158,12 @@ export default function UsersScreen() {
         await userService.changeUserPassword(editingUser.id, editingUserPassword);
       }
 
-      showSuccess('Usuário atualizado com sucesso');
       closeEditModal();
       await fetchUsers();
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error
         ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
         : undefined;
-      showError(errorMessage || 'Erro ao atualizar usuário');
     } finally {
       setIsSaving(false);
     }
@@ -189,12 +183,10 @@ export default function UsersScreen() {
 
   const changePassword = async () => {
     if (!selectedUser || !newPassword) {
-      showError('A senha é obrigatória');
       return;
     }
 
     if (newPassword.length < 8) {
-      showError('A senha deve ter pelo menos 8 caracteres');
       return;
     }
 
@@ -202,16 +194,13 @@ export default function UsersScreen() {
     try {
       const response = await userService.changeUserPassword(selectedUser.id, newPassword);
       if (response.success) {
-        showSuccess('Senha alterada com sucesso');
         closePasswordModal();
       } else {
-        showError(response.message || 'Erro ao alterar senha');
       }
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error
         ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
         : undefined;
-      showError(errorMessage || 'Erro ao alterar senha');
     } finally {
       setIsChangingPassword(false);
     }
@@ -236,17 +225,14 @@ export default function UsersScreen() {
     try {
       const response = await userService.deleteUser(deletingUserId);
       if (response.success) {
-        showSuccess('Usuário deletado com sucesso');
         closeDeleteModal();
         await fetchUsers(pagination.currentPage);
       } else {
-        showError(response.message || 'Erro ao deletar usuário');
       }
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error
         ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
         : undefined;
-      showError(errorMessage || 'Erro ao deletar usuário');
     } finally {
       setIsDeleting(false);
     }

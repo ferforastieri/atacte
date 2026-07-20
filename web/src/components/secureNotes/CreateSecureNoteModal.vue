@@ -109,7 +109,6 @@ import { ref, watch, computed } from 'vue'
 import { BaseModal, BaseInput, BaseButton } from '@/components/ui'
 import { useSecureNotesStore } from '@/stores/secureNotes'
 import type { CreateSecureNoteRequest } from '@/api/secureNotes'
-import { useToast } from '@/hooks/useToast'
 import { DocumentTextIcon, FolderIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
@@ -127,7 +126,6 @@ const emit = defineEmits<{
 }>()
 
 const secureNotesStore = useSecureNotesStore()
-const toast = useToast()
 
 const form = ref({
   title: '',
@@ -157,7 +155,6 @@ const validateForm = () => {
 
 const handleSubmit = async () => {
   if (!validateForm()) {
-    toast.error('Por favor, corrija os erros no formulário')
     return
   }
   
@@ -176,7 +173,6 @@ const handleSubmit = async () => {
     
     await secureNotesStore.createNote(noteData)
     
-    toast.success('Nota criada com sucesso!')
     emit('created')
     
     resetForm()
@@ -184,7 +180,6 @@ const handleSubmit = async () => {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao criar nota')
   } finally {
     isSubmitting.value = false
   }

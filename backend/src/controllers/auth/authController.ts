@@ -108,6 +108,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Usuário autenticado obtido com sucesso',
       data: {
         user: user
       }
@@ -135,6 +136,7 @@ router.get('/sessions', authenticateToken, async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Sessões obtidas com sucesso',
       data: result.sessions,
       pagination: {
         total: result.total,

@@ -9,7 +9,6 @@ import { Switch } from 'react-native';
 import { TotpCard } from '../components/totp/TotpCard';
 import { passwordService } from '../services/passwords/passwordService';
 import { authService } from '../services/auth/authService';
-import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -58,7 +57,6 @@ export default function DashboardScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentOffset, setCurrentOffset] = useState(0);
-  const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
 
   const styles = StyleSheet.create({
@@ -334,7 +332,6 @@ export default function DashboardScreen() {
       setCurrentOffset(0);
       await loadPasswords(0, false);
     } catch (error) {
-      showError('Erro ao buscar senhas');
     }
   }, [loadPasswords]);
 
@@ -344,7 +341,6 @@ export default function DashboardScreen() {
       setCurrentOffset(0);
       await loadPasswords(0, false);
     } catch (error) {
-      showError('Erro ao limpar busca');
     }
   }, [loadPasswords]);
 
@@ -360,15 +356,12 @@ export default function DashboardScreen() {
 
   const copyToClipboard = async (text?: string, label: string = 'Texto') => {
     if (!text) {
-      showError(`${label} indisponível`);
       return;
     }
 
     try {
       await Clipboard.setStringAsync(text);
-      showSuccess(`${label} copiado para a área de transferência`);
     } catch (error) {
-      showError('Erro ao copiar texto');
     }
   };
 
@@ -386,12 +379,9 @@ export default function DashboardScreen() {
               : p
           )
         );
-        showSuccess(response.data.isFavorite ? 'Adicionado aos favoritos' : 'Removido dos favoritos');
       } else {
-        showError(response.message || 'Erro ao atualizar favorito');
       }
     } catch (error) {
-      showError('Erro ao atualizar favorito');
     }
   };
 
@@ -443,7 +433,6 @@ export default function DashboardScreen() {
 
   const handleSavePassword = async () => {
     if (!formData.name || !formData.password) {
-      showError('Nome e senha são obrigatórios');
       return;
     }
 
@@ -496,13 +485,10 @@ export default function DashboardScreen() {
       }
 
       if (response.success) {
-        showSuccess(editingPassword ? 'Senha atualizada!' : 'Senha criada!');
         handlePasswordSaved();
       } else {
-        showError(response.message || 'Erro ao salvar senha');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setIsSaving(false);
     }
@@ -525,13 +511,10 @@ export default function DashboardScreen() {
     try {
       const response = await passwordService.deletePassword(deletingPassword.id);
       if (response.success) {
-        showSuccess('Senha excluída!');
         loadPasswords(0, false);
       } else {
-        showError(response.message || 'Erro ao excluir senha');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setShowDeleteModal(false);
       setDeletingPassword(null);

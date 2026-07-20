@@ -126,7 +126,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePasswordsStore } from '@/stores/passwords'
-import { useToast } from '@/hooks/useToast'
 import { copyToClipboard } from '@/utils/clipboard'
 import { TOTPClient } from '@/utils/totpClient'
 import type { PasswordEntry } from '@/api/passwords'
@@ -145,7 +144,6 @@ import {
 
 const router = useRouter()
 const passwordsStore = usePasswordsStore()
-const toast = useToast()
 
 
 const selectedPassword = ref<PasswordEntry | null>(null)
@@ -182,9 +180,7 @@ const refreshTotpCodes = async () => {
   try {
     await passwordsStore.fetchPasswords({ totpEnabled: true })
     await loadTotpCodes()
-    toast.success('Códigos TOTP atualizados')
   } catch (error) {
-    toast.error('Erro ao atualizar códigos TOTP')
   } finally {
     isRefreshing.value = false
   }
@@ -211,12 +207,9 @@ const copyTotpCode = async (passwordId: string) => {
   if (cleanCode?.length === 6) {
     const result = await copyToClipboard(cleanCode)
     if (result.success) {
-      toast.success('Código TOTP copiado!')
     } else {
-      toast.error(result.message)
     }
   } else {
-    toast.error('Código TOTP indisponível')
   }
 }
 
@@ -257,7 +250,6 @@ onMounted(async () => {
     await loadTotpCodes()
     startAutoRefresh()
   } catch (error) {
-    toast.error('Erro ao carregar códigos TOTP')
   }
 })
 

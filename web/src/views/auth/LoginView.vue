@@ -64,14 +64,12 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from '@/hooks/useToast'
 import { LockClosedIcon, EnvelopeIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { BaseButton, BaseInput, BaseCard, Logo } from '@/components/ui'
 import { getDeviceFingerprint, getDeviceName } from '@/utils/deviceFingerprint'
 
 const router = useRouter()
-const toast = useToast()
 const authStore = useAuthStore()
 
 const isLoading = ref(false)
@@ -112,13 +110,10 @@ const handleLogin = async () => {
 
     if (response?.success && response?.data) {
       if (authStore.isAuthenticated) {
-        toast.success('Login realizado com sucesso!')
         router.push('/dashboard')
       } else {
-        toast.error('Erro ao autenticar. Tente novamente.')
       }
     } else {
-      toast.error(response?.message || 'Erro ao fazer login. Tente novamente.')
     }
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'response' in error) {
@@ -134,11 +129,9 @@ const handleLogin = async () => {
         const errorMessage = axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data
           ? String(axiosError.response.data.message)
           : error instanceof Error ? error.message : 'Erro ao fazer login';
-        toast.error(errorMessage);
       }
     } else {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login';
-      toast.error(errorMessage);
     }
   } finally {
     isLoading.value = false

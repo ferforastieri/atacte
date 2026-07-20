@@ -5,7 +5,6 @@ import { Modal } from './Modal';
 import { Input } from './Input';
 import { Button } from './Button';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useToast } from '../../hooks/useToast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface PasswordGeneratorModalProps {
@@ -22,7 +21,6 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
   initialPassword = '',
 }) => {
   const { isDark } = useTheme();
-  const { showSuccess } = useToast();
   const [password, setPassword] = useState(initialPassword);
   const [showPassword, setShowPassword] = useState(false);
   const [length, setLength] = useState('16');
@@ -44,7 +42,6 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
     
     const lengthNum = parseInt(length, 10);
     if (isNaN(lengthNum) || lengthNum < 1 || lengthNum > 128) {
-      showSuccess('Comprimento deve ser entre 1 e 128');
       setIsGenerating(false);
       return;
     }
@@ -57,7 +54,6 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
     if (includeSymbols) charset += '!@#$%^&*';
     
     if (charset.length === 0) {
-      showSuccess('Selecione pelo menos um tipo de caractere');
       setIsGenerating(false);
       return;
     }
@@ -77,7 +73,6 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
     if (password) {
       onPasswordGenerated(password);
       onClose();
-      showSuccess('Senha aplicada!');
     }
   };
 

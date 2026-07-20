@@ -195,7 +195,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from '@/hooks/useToast'
 import {
   TrashIcon,
   CheckCircleIcon,
@@ -206,7 +205,6 @@ import { AppHeader, BaseButton, BaseCard, ConfirmModal, Pagination } from '@/com
 import authApi, { type Session } from '@/api/auth'
 
 const router = useRouter()
-const toast = useToast()
 
 const sessions = ref<Session[]>([])
 const isLoading = ref(false)
@@ -243,13 +241,11 @@ const formatDateTime = (dateString: string) => {
 const revokeSession = async (sessionId: string) => {
   try {
     await authApi.revokeSession(sessionId)
-    toast.success('Sessão revogada com sucesso!')
     await fetchSessions()
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao revogar sessão')
   }
 }
 
@@ -269,14 +265,12 @@ const confirmUntrustDevice = async () => {
   isUntrusting.value = true
   try {
     await authApi.untrustDevice(untrustingDeviceName.value)
-    toast.success('Confiança removida do dispositivo com sucesso!')
     closeUntrustModal()
     await fetchSessions()
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao remover confiança do dispositivo')
   } finally {
     isUntrusting.value = false
   }
@@ -297,14 +291,12 @@ const confirmRevokeAllSessions = async () => {
     
     await Promise.all(sessionsToRevoke.map(session => authApi.revokeSession(session.id)))
     
-    toast.success('Todas as sessões foram revogadas!')
     closeRevokeAllModal()
     await fetchSessions()
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao revogar sessões')
   } finally {
     isRevokingAll.value = false
   }
@@ -327,7 +319,6 @@ const fetchSessions = async () => {
       pagination.value.totalPages = 1
     }
   } catch (error: unknown) {
-    toast.error('Erro ao carregar sessões')
     sessions.value = []
     pagination.value.total = 0
     pagination.value.totalPages = 1

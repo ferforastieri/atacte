@@ -40,7 +40,6 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import { useToast } from '@/hooks/useToast'
 import { ClipboardIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import BaseButton from './BaseButton.vue'
 import { TOTPClient, type TOTPCode } from '@/utils/totpClient'
@@ -62,7 +61,6 @@ const emit = defineEmits<{
   refresh: []
 }>()
 
-const toast = useToast()
 const isRefreshing = ref(false)
 let intervalId: number | null = null
 
@@ -117,15 +115,12 @@ const copyCode = async () => {
 
   const cleanCode = displayCode.value.replace(/\D/g, '').slice(0, 6)
   if (cleanCode.length !== 6) {
-    toast.error('Código indisponível')
     return
   }
   
   const result = await copyToClipboard(cleanCode)
   if (result.success) {
-    toast.success('Código copiado!')
   } else {
-    toast.error(result.message)
   }
 }
 

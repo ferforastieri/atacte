@@ -71,6 +71,7 @@ router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Notas obtidas com sucesso',
       data: result.notes,
       pagination: {
         total: result.total,
@@ -108,6 +109,7 @@ router.get('/:id', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Nota obtida com sucesso',
       data: note
     });
   } catch (error) {
@@ -230,6 +232,7 @@ router.get('/folders/list', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Pastas obtidas com sucesso',
       data: folders
     });
   } catch (error) {
@@ -241,4 +244,3 @@ router.get('/folders/list', asAuthenticatedHandler(async (req, res) => {
 }));
 
 export default router;
-

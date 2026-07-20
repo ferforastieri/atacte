@@ -7,7 +7,6 @@ import { Header, Card, SkeletonLoader, Modal, Button } from '../../components/sh
 import { authService } from '../../services/auth/authService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useToast } from '../../hooks/useToast';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from '../../navigation/AppNavigator';
 
@@ -28,7 +27,6 @@ export default function SessionsScreen() {
   const navigation = useNavigation<SessionsScreenNavigationProp>();
   const { isAdmin } = useAuth();
   const { isDark, toggleTheme } = useTheme();
-  const { showError, showSuccess } = useToast();
   const insets = useSafeAreaInsets();
 
   const handleBack = () => {
@@ -86,7 +84,6 @@ export default function SessionsScreen() {
         setPagination(prev => ({ ...prev, totalPages: 1 }));
       }
     } catch (error) {
-      showError('Erro ao carregar sessões');
       setSessions([]);
       setPagination(prev => ({ ...prev, totalPages: 1 }));
     } finally {
@@ -106,13 +103,10 @@ export default function SessionsScreen() {
     try {
       const response = await authService.revokeSession(sessionId);
       if (response.success) {
-        showSuccess('Sessão revogada com sucesso!');
         await fetchSessions(pagination.currentPage);
       } else {
-        showError(response.message || 'Erro ao revogar sessão');
       }
     } catch (error) {
-      showError('Erro ao revogar sessão');
     }
   };
 
@@ -120,13 +114,10 @@ export default function SessionsScreen() {
     try {
       const response = await authService.untrustDevice(deviceName);
       if (response.success) {
-        showSuccess('Confiança removida do dispositivo com sucesso!');
         await fetchSessions(pagination.currentPage);
       } else {
-        showError(response.message || 'Erro ao remover confiança');
       }
     } catch (error) {
-      showError('Erro ao remover confiança do dispositivo');
     }
   };
 
@@ -135,10 +126,8 @@ export default function SessionsScreen() {
     try {
       const sessionsToRevoke = sessions.filter(s => !s.isCurrent);
       await Promise.all(sessionsToRevoke.map(session => authService.revokeSession(session.id)));
-      showSuccess('Todas as sessões foram revogadas!');
       await fetchSessions();
     } catch (error) {
-      showError('Erro ao revogar sessões');
     } finally {
       setIsRevokingAll(false);
       setShowRevokeModal(false);

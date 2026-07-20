@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Card, Logo } from '../components/shared';
 import { authService } from '../services/auth/authService';
-import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 
@@ -15,13 +14,11 @@ export default function ForgotPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [step, setStep] = useState<'request' | 'reset'>('request');
   const [isLoading, setIsLoading] = useState(false);
-  const { showSuccess, showError } = useToast();
   const { isDark } = useTheme();
   const navigation = useNavigation();
 
   const handleRequestReset = async () => {
     if (!email) {
-      showError('Por favor, informe seu email');
       return;
     }
 
@@ -30,13 +27,10 @@ export default function ForgotPasswordScreen() {
       const response = await authService.requestPasswordReset(email);
       
       if (response.success) {
-        showSuccess('Se o email existir, você receberá um token de recuperação por email. Verifique sua caixa de entrada.');
         setStep('reset');
       } else {
-        showError(response.message || 'Erro ao solicitar recuperação');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -44,17 +38,14 @@ export default function ForgotPasswordScreen() {
 
   const handleResetPassword = async () => {
     if (!token || !newPassword || !confirmPassword) {
-      showError('Por favor, preencha todos os campos');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      showError('As senhas não coincidem');
       return;
     }
 
     if (newPassword.length < 8) {
-      showError('A senha deve ter pelo menos 8 caracteres');
       return;
     }
 
@@ -63,13 +54,10 @@ export default function ForgotPasswordScreen() {
       const response = await authService.resetPassword(token, newPassword);
       
       if (response.success) {
-        showSuccess('Senha redefinida com sucesso!');
         navigation.goBack();
       } else {
-        showError(response.message || 'Erro ao redefinir senha');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setIsLoading(false);
     }

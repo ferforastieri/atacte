@@ -35,6 +35,7 @@ router.post('/generate', [
 
     res.json({
       success: true,
+      message: 'Segredo TOTP gerado com sucesso',
       data: {
         secret: totpData.secret,
         manualEntryKey: totpData.manualEntryKey,
@@ -73,6 +74,7 @@ router.post('/qrcode', [
 
     res.json({
       success: true,
+      message: 'QR Code gerado com sucesso',
       data: {
         qrCode: qrCodeDataUrl
       }
@@ -122,6 +124,7 @@ router.post('/validate', [
 
     res.json({
       success: true,
+      message: 'Código TOTP validado com sucesso',
       data: {
         isValid: validation.isValid,
         delta: validation.delta
@@ -165,6 +168,7 @@ router.post('/parse', [
 
     res.json({
       success: true,
+      message: 'URL otpauth processada com sucesso',
       data: parsed
     });
   } catch (error) {
@@ -215,6 +219,7 @@ router.post('/test', [
 
     res.json({
       success: true,
+      message: 'Códigos TOTP gerados com sucesso',
       data: {
         previous: TOTPService.formatCode(codes.previous),
         current: TOTPService.formatCode(codes.current),
@@ -253,6 +258,7 @@ router.get('/passwords/:id', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Código TOTP obtido com sucesso',
       data: totpCode
     });
   } catch (error) {
@@ -287,6 +293,7 @@ router.get('/passwords/:id/secret', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Segredo TOTP obtido com sucesso',
       data: totpSecret
     });
   } catch (error) {

@@ -20,6 +20,8 @@ import SecureNoteDetailScreen from '../screens/SecureNoteDetailScreen';
 import AuditLogsScreen from '../screens/admin/AuditLogsScreen';
 import SessionsScreen from '../screens/admin/SessionsScreen';
 import UsersScreen from '../screens/admin/UsersScreen';
+import ServerSetupScreen from '../screens/ServerSetupScreen';
+import { useServer } from '../contexts/ServerContext';
 
 
 export type RootStackParamList = {
@@ -181,10 +183,15 @@ function MainTabNavigator() {
 
 export default function AppNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { serverUrl, isLoading: isServerLoading } = useServer();
   const { isDark } = useTheme();
 
-  if (isLoading) {
+  if (isLoading || isServerLoading) {
     return <SkeletonLoader variant="default" />;
+  }
+
+  if (!serverUrl) {
+    return <ServerSetupScreen />;
   }
 
   return (
@@ -274,4 +281,3 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
-

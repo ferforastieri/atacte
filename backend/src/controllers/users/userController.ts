@@ -18,6 +18,7 @@ router.get('/profile', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Perfil obtido com sucesso',
       data: userProfile
     });
   } catch (error) {
@@ -35,6 +36,7 @@ router.get('/stats', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Estatísticas obtidas com sucesso',
       data: stats
     });
   } catch (error) {
@@ -52,6 +54,7 @@ router.get('/folders', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Pastas obtidas com sucesso',
       data: folders
     });
   } catch (error) {
@@ -99,6 +102,7 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Logs de auditoria obtidos com sucesso',
       data: auditLogs.logs,
       pagination: {
         total: auditLogs.total,
@@ -244,6 +248,7 @@ router.get('/admin/users', requireAdmin, asAuthenticatedHandler(async (req, res)
     const result = await userService.getAllUsers(limit, offset);
     res.json({
       success: true,
+      message: 'Usuários obtidos com sucesso',
       data: result.users,
       pagination: {
         total: result.total,

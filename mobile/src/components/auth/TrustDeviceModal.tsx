@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../shared';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useToast } from '../../hooks/useToast';
 import { authService } from '../../services/auth/authService';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -25,13 +24,11 @@ export default function TrustDeviceModal({
   onTrusted,
 }: TrustDeviceModalProps) {
   const { isDark } = useTheme();
-  const { showSuccess, showError } = useToast();
   const { logout, refreshUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleTrust = async () => {
     if (!sessionId) {
-      showError('ID da sessão não encontrado');
       return;
     }
 
@@ -39,11 +36,9 @@ export default function TrustDeviceModal({
     try {
       const response = await authService.trustDevice(sessionId);
       if (response.success) {
-        showSuccess('Dispositivo confiado com sucesso!');
         await refreshUser();
         onTrusted();
       } else {
-        showError(response.message || 'Erro ao confiar dispositivo');
       }
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error
@@ -51,7 +46,6 @@ export default function TrustDeviceModal({
         : error instanceof Error
         ? error.message
         : 'Erro ao confiar dispositivo';
-      showError(errorMessage || 'Erro ao confiar dispositivo');
     } finally {
       setIsLoading(false);
     }

@@ -30,6 +30,8 @@ app.use(limiter);
 
 app.get('/health', (_req, res) => {
   res.json({ 
+    success: true,
+    message: 'Servidor disponível',
     status: 'OK', 
     timestamp: new Date().toISOString(),
     version: '1.0.0'

@@ -110,13 +110,11 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from '@/hooks/useToast'
 import { EnvelopeIcon, LockClosedIcon, KeyIcon } from '@heroicons/vue/24/outline'
 import authApi from '@/api/auth'
 import { BaseButton, BaseInput, BaseCard, Logo } from '@/components/ui'
 
 const router = useRouter()
-const toast = useToast()
 
 const isLoading = ref(false)
 const step = ref<'request' | 'reset'>('request')
@@ -137,16 +135,13 @@ const handleSubmit = async () => {
     const response = await authApi.requestPasswordReset(form.email)
     
     if (response.success) {
-      toast.success(response.message || 'Token enviado com sucesso! Verifique seu email.')
       step.value = 'reset'
     } else {
-      toast.error(response.message || 'Erro ao solicitar recuperação')
     }
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao solicitar recuperação')
   } finally {
     isLoading.value = false
   }
@@ -181,16 +176,13 @@ const handleReset = async () => {
     const response = await authApi.resetPassword(form.token, form.newPassword)
     
     if (response.success) {
-      toast.success('Senha redefinida com sucesso!')
       router.push('/login')
     } else {
-      toast.error(response.message || 'Erro ao redefinir senha')
     }
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao redefinir senha')
   } finally {
     isLoading.value = false
   }

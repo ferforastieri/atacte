@@ -8,6 +8,7 @@ import { ThemeProvider } from './src/contexts/ThemeContext';
 import { ToastProvider } from './src/contexts/ToastContext';
 import { TrustDeviceProvider } from './src/contexts/TrustDeviceContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import { ServerProvider } from './src/contexts/ServerContext';
 
 
 export default function App() {
@@ -16,14 +17,16 @@ export default function App() {
       <SafeAreaProvider>
         <ThemeProvider>
           <ToastProvider>
-            <AuthProvider>
-              <TrustDeviceProvider>
-                <View style={styles.container}>
-                  <StatusBar style="auto" />
-                  <AppNavigator />
-                </View>
-              </TrustDeviceProvider>
-            </AuthProvider>
+            <ServerProvider>
+              <AuthProvider>
+                <TrustDeviceProvider>
+                  <View style={styles.container}>
+                    <StatusBar style="auto" />
+                    <AppNavigator />
+                  </View>
+                </TrustDeviceProvider>
+              </AuthProvider>
+            </ServerProvider>
           </ToastProvider>
         </ThemeProvider>
       </SafeAreaProvider>

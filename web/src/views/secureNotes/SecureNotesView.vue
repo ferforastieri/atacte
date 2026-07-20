@@ -214,7 +214,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSecureNotesStore } from '@/stores/secureNotes'
-import { useToast } from 'vue-toastification'
 import type { SecureNote } from '@/api/secureNotes'
 
 import { AppHeader, BaseButton, BaseCard, SearchInput, BaseSelect } from '@/components/ui'
@@ -232,7 +231,6 @@ import {
 
 const router = useRouter()
 const secureNotesStore = useSecureNotesStore()
-const toast = useToast()
 
 const showCreateModal = ref(false)
 const showViewModal = ref(false)
@@ -285,9 +283,7 @@ const refreshNotes = async () => {
       secureNotesStore.fetchNotes(),
       secureNotesStore.fetchFolders()
     ])
-    toast.success('Notas atualizadas')
   } catch (error) {
-    toast.error('Erro ao atualizar notas')
   } finally {
     isRefreshing.value = false
   }
@@ -351,9 +347,7 @@ const handleNoteDeleted = async () => {
 const toggleFavorite = async (note: SecureNote) => {
   try {
     await secureNotesStore.toggleFavorite(note.id)
-    toast.success(note.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos')
   } catch (error) {
-    toast.error('Erro ao atualizar favorito')
   }
 }
 
@@ -368,7 +362,6 @@ onMounted(async () => {
       secureNotesStore.fetchFolders()
     ])
   } catch (error) {
-    toast.error('Erro ao carregar notas')
   }
 })
 </script>

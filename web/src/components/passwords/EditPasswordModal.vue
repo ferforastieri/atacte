@@ -169,7 +169,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useToast } from '@/hooks/useToast'
 import { KeyIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength, PasswordGeneratorModal } from '@/components/ui'
 import { type PasswordEntry, type UpdatePasswordRequest } from '@/api/passwords'
@@ -187,7 +186,6 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
-const toast = useToast()
 const passwordsStore = usePasswordsStore()
 
 
@@ -250,12 +248,10 @@ const isValidUrl = (string: string) => {
 
 const handleSubmit = async () => {
   if (!validateForm()) {
-    toast.error('Por favor, corrija os erros no formulário')
     return
   }
   
   if (!props.password?.id) {
-    toast.error('Senha não encontrada')
     return
   }
   
@@ -292,14 +288,12 @@ const handleSubmit = async () => {
     
     await passwordsStore.updatePassword(props.password.id, updateData)
     
-    toast.success('Senha atualizada com sucesso!')
     emit('updated')
     emit('close')
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao atualizar senha')
   } finally {
     isSubmitting.value = false
   }

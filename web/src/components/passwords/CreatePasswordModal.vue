@@ -201,7 +201,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useToast } from '@/hooks/useToast'
 import { EyeIcon, EyeSlashIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon, KeyIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength, PasswordGeneratorModal } from '@/components/ui'
 import { usePasswordsStore } from '@/stores/passwords'
@@ -218,7 +217,6 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
-const toast = useToast()
 const passwordsStore = usePasswordsStore()
 
 
@@ -286,7 +284,6 @@ const isValidUrl = (string: string) => {
 
 const handleSubmit = async () => {
   if (!validateForm()) {
-    toast.error('Por favor, corrija os erros no formulário')
     return
   }
   
@@ -322,7 +319,6 @@ const handleSubmit = async () => {
     
     await passwordsStore.createPassword(passwordData)
     
-    toast.success('Senha criada com sucesso!')
     emit('created')
     
     
@@ -331,7 +327,6 @@ const handleSubmit = async () => {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao criar senha')
   } finally {
     isSubmitting.value = false
   }

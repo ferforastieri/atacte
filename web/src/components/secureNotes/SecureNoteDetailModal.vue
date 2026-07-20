@@ -101,7 +101,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useToast } from '@/hooks/useToast'
 import { DocumentTextIcon, StarIcon, FolderIcon, ClockIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseButton, ConfirmModal } from '@/components/ui'
 import { type SecureNote } from '@/api/secureNotes'
@@ -125,7 +124,6 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
-const toast = useToast()
 const secureNotesStore = useSecureNotesStore()
 
 const isDeleting = ref(false)
@@ -158,7 +156,6 @@ const handleEdit = () => {
 
 const handleEditUpdated = () => {
   emit('updated')
-  toast.success('Nota atualizada com sucesso!')
 }
 
 const handleEditClose = () => {
@@ -176,14 +173,12 @@ const confirmDelete = async () => {
   
   try {
     await secureNotesStore.deleteNote(props.note.id)
-    toast.success('Nota excluída com sucesso!')
     emit('deleted')
     emit('close')
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao excluir nota')
   } finally {
     isDeleting.value = false
     showDeleteConfirm.value = false

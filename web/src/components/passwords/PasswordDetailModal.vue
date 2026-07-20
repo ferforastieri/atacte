@@ -128,7 +128,6 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { useToast } from '@/hooks/useToast'
 import { HeartIcon, KeyIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, TotpCode, ConfirmModal } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
@@ -149,7 +148,6 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
-const toast = useToast()
 const passwordsStore = usePasswordsStore()
 
 const isDeleting = ref(false)
@@ -165,9 +163,7 @@ const copyPassword = async () => {
   
   const result = await copyToClipboard(props.password.password)
   if (result.success) {
-    toast.success(result.message)
   } else {
-    toast.error(result.message)
   }
 }
 
@@ -176,9 +172,7 @@ const copyUsername = async () => {
 
   const result = await copyToClipboard(props.password.username)
   if (result.success) {
-    toast.success('Usuário copiado!')
   } else {
-    toast.error(result.message)
   }
 }
 
@@ -189,7 +183,6 @@ const handleEdit = () => {
 const handleEditUpdated = () => {
   
   emit('updated')
-  toast.success('Senha atualizada com sucesso!')
 }
 
 const handleEditClose = () => {
@@ -207,14 +200,12 @@ const confirmDelete = async () => {
   
   try {
     await passwordsStore.deletePassword(props.password.id)
-    toast.success('Senha excluída com sucesso!')
     emit('deleted')
     emit('close')
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao excluir senha')
   } finally {
     isDeleting.value = false
     showDeleteConfirm.value = false

@@ -271,7 +271,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from '@/hooks/useToast'
 import {
   LockClosedIcon,
   ArrowPathIcon,
@@ -298,7 +297,6 @@ import ImportPasswordModal from '@/components/passwords/ImportPasswordModal.vue'
 import PasswordDetailModal from '@/components/passwords/PasswordDetailModal.vue'
 
 const router = useRouter()
-const toast = useToast()
 const authStore = useAuthStore()
 const passwordsStore = usePasswordsStore()
 
@@ -328,7 +326,6 @@ const refreshPasswords = async () => {
     await passwordsStore.loadCompleteStats() 
     
   } catch (error) {
-    toast.error('Erro ao atualizar senhas')
   } finally {
     isRefreshing.value = false
   }
@@ -342,7 +339,6 @@ const handleSearch = async (query: string) => {
       offset: 0 
     })
   } catch (error) {
-    toast.error('Erro ao buscar senhas')
   }
 }
 
@@ -353,7 +349,6 @@ const handleSearchClear = async () => {
       offset: 0
     })
   } catch (error) {
-    toast.error('Erro ao limpar busca')
   }
 }
 
@@ -364,7 +359,6 @@ const handleFolderFilter = async () => {
       offset: 0 
     })
   } catch (error) {
-    toast.error('Erro ao filtrar senhas')
   }
 }
 
@@ -376,7 +370,6 @@ const toggleFavorites = async () => {
       offset: 0 
     })
   } catch (error) {
-    toast.error('Erro ao filtrar favoritos')
   }
 }
 
@@ -388,9 +381,7 @@ const viewPassword = (password: PasswordEntry) => {
 const copyPassword = async (password: PasswordEntry) => {
   const result = await copyToClipboard(password.password)
   if (result.success) {
-    toast.success(result.message)
   } else {
-    toast.error(result.message)
   }
 }
 
@@ -399,9 +390,7 @@ const copyUsername = async (password: PasswordEntry) => {
 
   const result = await copyToClipboard(password.username)
   if (result.success) {
-    toast.success('Usuário copiado!')
   } else {
-    toast.error(result.message)
   }
 }
 
@@ -424,18 +413,14 @@ const toggleFavorite = async (password: PasswordEntry) => {
       await passwordsStore.loadCompleteStats()
     }
     
-    toast.success(newFavoriteStatus ? 'Adicionado aos favoritos' : 'Removido dos favoritos')
   } catch (error) {
-    toast.error('Erro ao atualizar favorito')
   }
 }
 
 const exportPasswords = async () => {
   try {
     
-    toast.success('Exportação iniciada!')
   } catch (error) {
-    toast.error('Erro ao exportar senhas')
   }
 }
 
@@ -472,7 +457,6 @@ onMounted(async () => {
       await passwordsStore.fetchPasswords()
       await passwordsStore.fetchFolders()
     } catch (error) {
-      toast.error('Erro ao carregar dados')
     }
   }
   

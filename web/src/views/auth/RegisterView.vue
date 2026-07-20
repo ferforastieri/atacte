@@ -101,14 +101,12 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from '@/hooks/useToast'
 import { UserPlusIcon, EnvelopeIcon, LockClosedIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { BaseButton, BaseInput, BaseCard, PasswordStrength } from '@/components/ui'
 import zxcvbn from 'zxcvbn'
 
 const router = useRouter()
-const toast = useToast()
 const authStore = useAuthStore()
 
 const isLoading = ref(false)
@@ -170,7 +168,6 @@ const handleRegister = async () => {
       masterPassword: form.masterPassword
     })
 
-    toast.success('Conta criada com sucesso! Agora você pode fazer login.')
     router.push('/login')
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'response' in error) {
@@ -186,11 +183,9 @@ const handleRegister = async () => {
         const errorMessage = axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data
           ? String(axiosError.response.data.message)
           : error instanceof Error ? error.message : 'Erro ao criar conta';
-        toast.error(errorMessage);
       }
     } else {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao criar conta';
-      toast.error(errorMessage);
     }
   } finally {
     isLoading.value = false

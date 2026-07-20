@@ -125,7 +125,6 @@
 import { ref, watch } from 'vue'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton } from '@/components/ui'
-import { useToast } from '@/hooks/useToast'
 
 interface Props {
   show: boolean
@@ -142,7 +141,6 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
-const toast = useToast()
 
 const password = ref(props.initialPassword)
 const showPassword = ref(false)
@@ -170,7 +168,6 @@ const generatePassword = () => {
   
   const lengthNum = parseInt(length.value, 10)
   if (isNaN(lengthNum) || lengthNum < 1 || lengthNum > 128) {
-    toast.error('Comprimento deve ser entre 1 e 128')
     isGenerating.value = false
     return
   }
@@ -182,7 +179,6 @@ const generatePassword = () => {
   if (includeSymbols.value) charset += '!@#$%^&*'
   
   if (charset.length === 0) {
-    toast.error('Selecione pelo menos um tipo de caractere')
     isGenerating.value = false
     return
   }
@@ -201,7 +197,6 @@ const handleUsePassword = () => {
   if (password.value) {
     emit('password-generated', password.value)
     emit('close')
-    toast.success('Senha aplicada!')
   }
 }
 </script>

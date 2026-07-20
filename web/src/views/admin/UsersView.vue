@@ -256,12 +256,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useToast } from '@/hooks/useToast'
 import { UserGroupIcon, PencilIcon, KeyIcon, EnvelopeIcon, UserIcon, PhoneIcon, LockClosedIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { AppHeader, BaseCard, BaseButton, BaseModal, BaseInput, BaseSelect, ConfirmModal, Pagination } from '@/components/ui'
 import usersApi, { type AdminUser } from '@/api/users'
 
-const toast = useToast()
 
 const users = ref<AdminUser[]>([])
 const isLoading = ref(false)
@@ -305,7 +303,6 @@ const fetchUsers = async () => {
       }
     }
   } catch (error: unknown) {
-    toast.error('Erro ao carregar usuários')
   } finally {
     isLoading.value = false
   }
@@ -372,7 +369,6 @@ const saveUser = async () => {
   if (!editingUser.value.id) return
 
   if (editingUserPassword.value && editingUserPassword.value.length < 8) {
-    toast.error('A senha deve ter pelo menos 8 caracteres')
     return
   }
 
@@ -390,14 +386,12 @@ const saveUser = async () => {
       await usersApi.changeUserPassword(editingUser.value.id, editingUserPassword.value)
     }
     
-    toast.success('Usuário atualizado com sucesso')
     closeEditModal()
     await fetchUsers()
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao atualizar usuário')
   } finally {
     isSaving.value = false
   }
@@ -407,20 +401,17 @@ const changePassword = async () => {
   if (!selectedUserId.value || !newPassword.value) return
 
   if (newPassword.value.length < 8) {
-    toast.error('A senha deve ter pelo menos 8 caracteres')
     return
   }
 
   isChangingPassword.value = true
   try {
     await usersApi.changeUserPassword(selectedUserId.value, newPassword.value)
-    toast.success('Senha alterada com sucesso')
     closePasswordModal()
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao alterar senha')
   } finally {
     isChangingPassword.value = false
   }
@@ -444,14 +435,12 @@ const confirmDeleteUser = async () => {
   isDeleting.value = true
   try {
     await usersApi.deleteUser(deletingUserId.value)
-    toast.success('Usuário deletado com sucesso')
     closeDeleteModal()
     await fetchUsers()
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao deletar usuário')
   } finally {
     isDeleting.value = false
   }

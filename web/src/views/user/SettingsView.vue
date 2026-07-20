@@ -166,7 +166,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from '@/hooks/useToast'
 import { AppHeader, BaseButton, BaseCard, BaseInput, BaseSelect } from '@/components/ui'
 import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
@@ -175,7 +174,6 @@ import usersApi from '@/api/users'
 import { LockClosedIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
-const toast = useToast()
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
 
@@ -225,7 +223,6 @@ const changeTheme = (value?: string) => {
   
   themeStore.applyTheme()
   localStorage.setItem('theme', themeStore.isDarkMode ? 'dark' : 'light')
-  toast.success('Tema alterado!')
 }
 
 const handleChangePassword = async () => {
@@ -259,7 +256,6 @@ const handleChangePassword = async () => {
       changePasswordForm.value.newPassword
     )
 
-    toast.success('Senha alterada com sucesso! Você será deslogado.')
     
     changePasswordForm.value = {
       currentPassword: '',
@@ -280,7 +276,6 @@ const handleChangePassword = async () => {
     if (errorMessage.includes('incorreta') || errorMessage.includes('atual')) {
       changePasswordErrors.value.currentPassword = errorMessage
     } else {
-      toast.error(errorMessage)
     }
   } finally {
     isChangingPassword.value = false
@@ -300,7 +295,6 @@ const handleDeleteAccount = async () => {
   try {
     await usersApi.deleteAccount(deleteAccountForm.value.password)
 
-    toast.success('Conta deletada com sucesso')
     
     setTimeout(() => {
       authStore.logout()
@@ -314,7 +308,6 @@ const handleDeleteAccount = async () => {
     if (errorMessage.includes('incorreta') || errorMessage.includes('Senha')) {
       deleteAccountErrors.value.password = errorMessage
     } else {
-      toast.error(errorMessage)
     }
   } finally {
     isDeletingAccount.value = false

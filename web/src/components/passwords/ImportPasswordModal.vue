@@ -113,7 +113,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useToast } from '@/hooks/useToast'
 import { BaseModal, BaseButton } from '@/components/ui'
 import { usePasswordsStore } from '@/stores/passwords'
 
@@ -129,7 +128,6 @@ interface Emits {
 defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const toast = useToast()
 const passwordsStore = usePasswordsStore()
 
 
@@ -150,13 +148,11 @@ const handleFileSelect = (event: Event) => {
   if (file) {
     
     if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-      toast.error('Por favor, selecione um arquivo JSON válido.')
       return
     }
     
     
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('O arquivo é muito grande. Máximo de 10MB permitido.')
       return
     }
     

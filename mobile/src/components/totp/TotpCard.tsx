@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card, TotpCode } from '../shared';
 import { useTheme } from '../../contexts/ThemeContext';
 import { totpService } from '../../services/totp/totpService';
-import { useToast } from '../../hooks/useToast';
 interface PasswordEntry {
   id: string;
   name: string;
@@ -36,7 +35,6 @@ export const TotpCard: React.FC<TotpCardProps> = ({
   onCopyUsername,
 }) => {
   const { isDark } = useTheme();
-  const { showSuccess } = useToast();
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [isLoadingTotp, setIsLoadingTotp] = useState(false);
 
@@ -67,7 +65,6 @@ export const TotpCard: React.FC<TotpCardProps> = ({
   };
 
   const handleTotpCopy = () => {
-    showSuccess('Código TOTP copiado!');
   };
 
   const styles = StyleSheet.create({

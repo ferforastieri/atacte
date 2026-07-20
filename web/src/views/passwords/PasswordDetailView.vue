@@ -260,7 +260,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useToast } from '@/hooks/useToast'
 import {
   ArrowLeftIcon,
   PencilIcon,
@@ -284,7 +283,6 @@ import { copyToClipboard } from '@/utils/clipboard'
 
 const route = useRoute()
 const router = useRouter()
-const toast = useToast()
 const passwordsStore = usePasswordsStore()
 
 
@@ -303,9 +301,7 @@ const togglePasswordVisibility = () => {
 const handleCopyToClipboard = async (text: string) => {
   const result = await copyToClipboard(text)
   if (result.success) {
-    toast.success(result.message)
   } else {
-    toast.error(result.message)
   }
 }
 
@@ -317,9 +313,7 @@ const toggleFavorite = async () => {
       id: password.value.id,
       isFavorite: !password.value.isFavorite
     })
-    toast.success(password.value.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos')
   } catch (error) {
-    toast.error('Erro ao atualizar favorito')
   }
 }
 
@@ -335,7 +329,6 @@ const refreshTotpCode = async () => {
   try {
     await passwordsStore.getTotpCode(password.value.id)
   } catch (error) {
-    toast.error('Erro ao atualizar código TOTP')
   }
 }
 
@@ -344,9 +337,7 @@ const removeTotp = async () => {
   
   try {
     await passwordsStore.removeTotp(password.value.id)
-    toast.success('TOTP removido com sucesso')
   } catch (error) {
-    toast.error('Erro ao remover TOTP')
   }
 }
 

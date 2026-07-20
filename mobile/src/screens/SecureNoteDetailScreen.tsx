@@ -6,7 +6,6 @@ import { useNavigation } from '@react-navigation/native';
 import { Header, Card, SkeletonLoader } from '../components/shared';
 import { secureNoteService } from '../services/secureNotes/secureNoteService';
 import { useTheme } from '../contexts/ThemeContext';
-import { useToast } from '../hooks/useToast';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -28,7 +27,6 @@ export default function SecureNoteDetailScreen() {
   const navigation = useNavigation<SecureNoteDetailNavigationProp>();
   const { noteId } = route.params;
   const { isDark, toggleTheme } = useTheme();
-  const { showError } = useToast();
 
   const handleBack = () => {
     navigation.goBack();
@@ -61,11 +59,9 @@ export default function SecureNoteDetailScreen() {
       if (response.success && response.data) {
         setNote(response.data);
       } else {
-        showError('Nota não encontrada');
         navigation.goBack();
       }
     } catch (error) {
-      showError('Erro ao carregar nota');
       navigation.goBack();
     } finally {
       setIsLoading(false);

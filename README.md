@@ -264,32 +264,14 @@ O frontend web se conecta automaticamente ao backend via proxy configurado no Vi
 
 ### Configuração do App Mobile
 
-O app mobile precisa ser configurado para se conectar ao backend:
+O app mobile solicita o endereço do servidor na primeira abertura. A configuração fica salva no aparelho enquanto a sessão estiver ativa e é removida ao sair.
 
-1. **Configurar URL do backend** - Configure a variável de ambiente `EXPO_PUBLIC_API_BASE_URL` ou edite `mobile/src/lib/axios.ts`:
-   ```typescript
-   const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://seu-servidor:3001/api';
-   ```
-
-2. **Executar prebuild** - Antes do primeiro build, execute:
+1. **Executar prebuild** - Antes do primeiro build, execute:
    ```bash
    cd mobile
    npx expo prebuild --clean
    ```
    Isso aplica as configurações nativas.
-
-3. **Configurar EAS Build** - Para builds de produção, edite `mobile/eas.json`:
-   ```json
-   {
-     "build": {
-       "production": {
-         "env": {
-           "EXPO_PUBLIC_API_BASE_URL": "https://seu-servidor.com/api"
-         }
-       }
-     }
-   }
-   ```
 
 ## 🎯 Uso
 

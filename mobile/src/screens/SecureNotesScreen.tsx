@@ -5,7 +5,6 @@ import { useNavigation } from '@react-navigation/native';
 import { Header, Modal, SearchInput, Card, SkeletonLoader } from '../components/shared';
 import { SecureNoteCard, FolderSelector, SecureNoteFormModal } from '../components/secureNotes';
 import { secureNoteService } from '../services/secureNotes/secureNoteService';
-import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface SecureNote {
@@ -39,7 +38,6 @@ export default function SecureNotesScreen() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -90,7 +88,6 @@ export default function SecureNotesScreen() {
       }
     } catch (error) {
       setAllNotes([]);
-      showError('Erro ao carregar notas');
     } finally {
       setIsLoading(false);
     }
@@ -153,13 +150,10 @@ export default function SecureNotesScreen() {
     try {
       const response = await secureNoteService.deleteNote(deletingNote.id);
       if (response.success) {
-        showSuccess('Nota excluída!');
         await Promise.all([loadFolders(), loadNotes()]);
       } else {
-        showError(response.message || 'Erro ao excluir nota');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setShowDeleteModal(false);
       setDeletingNote(null);
@@ -168,12 +162,10 @@ export default function SecureNotesScreen() {
 
   const handleSaveNote = async () => {
     if (!formData.title.trim()) {
-      showError('Título é obrigatório');
       return;
     }
 
     if (!formData.content.trim()) {
-      showError('Conteúdo é obrigatório');
       return;
     }
 
@@ -202,16 +194,13 @@ export default function SecureNotesScreen() {
       }
 
       if (response.success) {
-        showSuccess(editingNote ? 'Nota atualizada!' : 'Nota criada!');
         setShowCreateModal(false);
         setShowEditModal(false);
         setEditingNote(null);
         await Promise.all([loadFolders(), loadNotes()]);
       } else {
-        showError(response.message || 'Erro ao salvar nota');
       }
     } catch (error) {
-      showError('Erro de conexão. Tente novamente.');
     } finally {
       setIsSaving(false);
     }
@@ -224,17 +213,10 @@ export default function SecureNotesScreen() {
       });
       
       if (response.success) {
-        showSuccess(
-          note.isFavorite 
-            ? 'Removido dos favoritos!' 
-            : 'Adicionado aos favoritos!'
-        );
         await loadNotes();
       } else {
-        showError(response.message || 'Erro ao atualizar favorito');
       }
     } catch (error) {
-      showError('Erro ao atualizar favorito');
     }
   };
 

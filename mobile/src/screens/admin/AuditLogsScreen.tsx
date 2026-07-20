@@ -8,7 +8,6 @@ import { BaseSelect, DatePicker } from '../../components/shared';
 import { userService } from '../../services/users/userService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useToast } from '../../hooks/useToast';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from '../../navigation/AppNavigator';
 
@@ -31,7 +30,6 @@ export default function AuditLogsScreen() {
   const navigation = useNavigation<AuditLogsScreenNavigationProp>();
   const { isAdmin } = useAuth();
   const { isDark, toggleTheme } = useTheme();
-  const { showError } = useToast();
 
   const handleBack = () => {
     navigation.jumpTo('Profile');
@@ -129,7 +127,6 @@ export default function AuditLogsScreen() {
         setPagination(prev => ({ ...prev, hasMore: false, totalPages: 1 }));
       }
     } catch (error) {
-      showError('Erro ao carregar logs de auditoria');
       setLogs([]);
       setPagination(prev => ({ ...prev, hasMore: false }));
     } finally {

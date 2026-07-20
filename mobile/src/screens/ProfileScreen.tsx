@@ -10,7 +10,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { passwordService } from '../services/passwords/passwordService';
 import { userService } from '../services/users/userService';
 import { useTheme } from '../contexts/ThemeContext';
-import { useToast } from '../hooks/useToast';
 
 interface User {
   id: string;
@@ -45,7 +44,6 @@ export default function ProfileScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isDark, toggleTheme } = useTheme();
-  const { showError } = useToast();
 
   useEffect(() => {
     loadProfileData();
@@ -66,7 +64,6 @@ export default function ProfileScreen() {
         setProfileData(response.data);
       }
     } catch (error) {
-      showError('Erro ao carregar dados do perfil');
      
       setProfileData(user);
     }

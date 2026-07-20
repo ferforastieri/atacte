@@ -27,13 +27,19 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
+    const message = response.data?.message
+    if (typeof message === 'string') {
+      useToast().success(message)
+    }
     return response
   },
   (error) => {
-    const toast = useToast()
-    
     if (error.response) {
       const { status, data } = error.response
+
+      if (typeof data?.message === 'string') {
+        useToast().error(data.message)
+      }
       
       switch (status) {
         case 401:
@@ -55,7 +61,6 @@ api.interceptors.response.use(
             localStorage.removeItem('auth_token')
             localStorage.removeItem('user')
             window.location.href = '/login'
-            toast.error('Sessão expirada. Faça login novamente.')
           }
           break
           
@@ -71,42 +76,7 @@ api.interceptors.response.use(
             window.dispatchEvent(event)
             return Promise.reject(error)
           }
-          toast.error(data.message || 'Acesso negado.')
-          break
-          
-        case 404:
-          toast.error('Recurso não encontrado.')
-          break
-          
-        case 422:
-          
-          if (data.errors && Array.isArray(data.errors)) {
-            data.errors.forEach((err: { message?: string } | string) => {
-              const errorMessage = typeof err === 'string' ? err : err.message || 'Erro desconhecido';
-              toast.error(errorMessage);
-            })
-          } else {
-            toast.error(data.message || 'Dados inválidos.')
-          }
-          break
-          
-        case 429:
-          toast.error('Muitas tentativas. Tente novamente em alguns minutos.')
-          break
-          
-        case 500:
-          toast.error('Erro interno do servidor.')
-          break
-          
-        default:
-          toast.error(data.message || 'Erro inesperado.')
       }
-    } else if (error.request) {
-      
-      toast.error('Erro de conexão. Verifique sua internet.')
-    } else {
-      
-      toast.error('Erro inesperado.')
     }
     
     return Promise.reject(error)

@@ -50,7 +50,6 @@
 import { ref } from 'vue'
 import { ShieldExclamationIcon, InformationCircleIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseButton } from '@/components/ui'
-import { useToast } from '@/hooks/useToast'
 import authApi from '@/api/auth'
 
 interface Props {
@@ -67,7 +66,6 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
-const toast = useToast()
 
 const isLoading = ref(false)
 
@@ -76,16 +74,13 @@ const handleTrust = async () => {
   try {
     const response = await authApi.trustDevice(props.sessionId)
     if (response.success) {
-      toast.success('Dispositivo confiado com sucesso!')
       emit('trusted')
     } else {
-      toast.error(response.message || 'Erro ao confiar dispositivo')
     }
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : error instanceof Error ? error.message : 'Erro ao confiar dispositivo';
-    toast.error(errorMessage)
   } finally {
     isLoading.value = false
   }

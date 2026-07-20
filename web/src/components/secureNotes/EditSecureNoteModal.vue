@@ -108,7 +108,6 @@
 import { ref, watch, computed, onMounted } from 'vue'
 import { BaseModal, BaseInput, BaseButton } from '@/components/ui'
 import { useSecureNotesStore } from '@/stores/secureNotes'
-import { useToast } from '@/hooks/useToast'
 import type { SecureNote, UpdateSecureNoteRequest } from '@/api/secureNotes'
 import { DocumentTextIcon, FolderIcon } from '@heroicons/vue/24/outline'
 
@@ -128,7 +127,6 @@ const emit = defineEmits<{
 }>()
 
 const secureNotesStore = useSecureNotesStore()
-const toast = useToast()
 
 const form = ref({
   title: '',
@@ -169,12 +167,10 @@ const loadNoteData = () => {
 
 const handleSubmit = async () => {
   if (!validateForm()) {
-    toast.error('Por favor, corrija os erros no formulário')
     return
   }
   
   if (!props.note?.id) {
-    toast.error('Nota não encontrada')
     return
   }
   
@@ -193,14 +189,12 @@ const handleSubmit = async () => {
     
     await secureNotesStore.updateNote(props.note.id, updateData)
     
-    toast.success('Nota atualizada com sucesso!')
     emit('updated')
     emit('close')
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-    toast.error(errorMessage || 'Erro ao atualizar nota')
   } finally {
     isSubmitting.value = false
   }

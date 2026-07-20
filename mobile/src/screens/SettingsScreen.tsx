@@ -8,7 +8,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { Header, Modal } from '../components/shared';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { userService } from '../services/users/userService';
-import { useToast } from '../hooks/useToast';
 import { Ionicons } from '@expo/vector-icons';
 import axios from '../lib/axios';
 
@@ -16,7 +15,6 @@ const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { isDark, toggleTheme } = useTheme();
   const { user, refreshUser } = useAuth();
-  const { showError, showSuccess } = useToast();
 
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -57,7 +55,6 @@ const SettingsScreen: React.FC = () => {
         setProfilePicture(profileData.profilePicture || '');
       }
     } catch (error) {
-      showError('Erro ao carregar dados do perfil');
       if (user) {
         setName(user.name || '');
         setPhoneNumber(user.phoneNumber || '');
@@ -68,7 +65,6 @@ const SettingsScreen: React.FC = () => {
 
   const handleSaveProfile = async () => {
     if (!name.trim()) {
-      showError('Nome é obrigatório');
       return;
     }
 
@@ -81,13 +77,10 @@ const SettingsScreen: React.FC = () => {
       });
 
       if (response.success) {
-        showSuccess('Perfil atualizado com sucesso!');
         await refreshUser();
       } else {
-        showError(response.message || 'Erro ao atualizar perfil');
       }
     } catch (error: unknown) {
-      showError('Erro ao atualizar perfil');
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +89,6 @@ const SettingsScreen: React.FC = () => {
   const requestImagePickerPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      showError('Precisamos de permissão para acessar suas fotos.');
       return false;
     }
     return true;
@@ -113,7 +105,6 @@ const SettingsScreen: React.FC = () => {
 
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
     if (cameraPermission.status !== 'granted') {
-      showError('Precisamos de permissão para acessar a câmera.');
       return;
     }
 
@@ -151,7 +142,6 @@ const SettingsScreen: React.FC = () => {
     try {
       const fileInfo = await FileSystem.getInfoAsync(uri);
       if (!fileInfo.exists) {
-        showError('Arquivo de imagem não encontrado');
         setIsUploadingImage(false);
         return;
       }
@@ -173,11 +163,9 @@ const SettingsScreen: React.FC = () => {
       const base64data = `data:${mimeType};base64,${base64}`;
       setProfilePicture(base64data);
       setIsUploadingImage(false);
-      showSuccess('Imagem selecionada com sucesso');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao processar imagem:', error);
-      showError(`Erro ao processar imagem: ${errorMessage}`);
       setIsUploadingImage(false);
     }
   };

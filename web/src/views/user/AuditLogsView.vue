@@ -153,14 +153,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from '@/hooks/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { DocumentTextIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import { AppHeader, BaseInput, BaseCard, BaseSelect, DatePicker, Pagination } from '@/components/ui'
 import usersApi, { type AuditLog, type AdminUser } from '@/api/users'
 
 const router = useRouter()
-const toast = useToast()
 const authStore = useAuthStore()
 
 const logs = ref<AuditLog[]>([])
@@ -298,7 +296,6 @@ const fetchLogs = async () => {
       pagination.value.totalPages = 1
     }
   } catch (error: unknown) {
-    toast.error('Erro ao carregar logs de auditoria')
     logs.value = []
   } finally {
     isLoading.value = false

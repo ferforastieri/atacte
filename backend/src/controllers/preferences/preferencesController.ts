@@ -21,6 +21,7 @@ router.get('/', authenticateToken, asAuthenticatedHandler(async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Preferências obtidas com sucesso',
       data: preferences
     });
   } catch (error) {
