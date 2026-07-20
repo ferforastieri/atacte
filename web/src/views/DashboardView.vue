@@ -64,36 +64,6 @@
       <!-- Search, Filters and Actions -->
       <BaseCard class="mb-6" overflow-visible>
         <div class="flex flex-col gap-4" style="position: relative; overflow: visible;">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <BaseButton
-              variant="primary"
-              @click="showCreateModal = true"
-              class="w-full"
-            >
-              <PlusIcon class="w-5 h-5 mr-2" />
-              Nova Senha
-            </BaseButton>
-
-          <BaseButton
-            variant="secondary"
-            @click="showImportModal = true"
-              class="w-full"
-          >
-              <ArrowUpTrayIcon class="w-5 h-5 mr-2" />
-              Importar
-          </BaseButton>
-
-          <BaseButton
-            variant="secondary"
-            @click="exportPasswords"
-              class="w-full"
-          >
-              <ArrowDownTrayIcon class="w-5 h-5 mr-2" />
-              Exportar
-          </BaseButton>
-          </div>
-
-          <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
           <div class="flex-1">
             <SearchInput
               v-model="searchQuery"
@@ -104,13 +74,12 @@
               @clear="handleSearchClear"
             />
           </div>
-          </div>
           
-          <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div class="flex flex-wrap items-center gap-3">
             <BaseSelect
               v-model="selectedFolder"
               @update:modelValue="handleFolderFilter"
-              class="w-full sm:w-48"
+              class="w-full sm:w-48 flex-shrink-0"
             >
               <option value="">Todas as pastas</option>
               <option v-for="folder in passwordsStore.folders" :key="folder" :value="folder">
@@ -127,17 +96,44 @@
               <HeartIcon class="w-4 h-4 mr-1" />
               {{ showOnlyFavorites ? 'Todas' : 'Favoritas' }}
             </BaseButton>
+
+            <BaseButton
+              variant="primary"
+              @click="showCreateModal = true"
+              class="flex-1 sm:flex-none"
+            >
+              <PlusIcon class="w-5 h-5 mr-2" />
+              Nova Senha
+            </BaseButton>
+
+            <BaseButton
+              variant="secondary"
+              @click="showImportModal = true"
+              class="flex-1 sm:flex-none"
+            >
+              <ArrowUpTrayIcon class="w-5 h-5 mr-2" />
+              Importar
+            </BaseButton>
+
+            <BaseButton
+              variant="secondary"
+              @click="exportPasswords"
+              class="flex-1 sm:flex-none"
+            >
+              <ArrowDownTrayIcon class="w-5 h-5 mr-2" />
+              Exportar
+            </BaseButton>
           </div>
         </div>
       </BaseCard>
 
       <!-- Passwords List -->
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 items-start gap-4 lg:gap-5">
         <BaseCard
           v-for="password in filteredPasswords"
           :key="password.id"
           padding="none"
-          class="group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+          class="group self-start w-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
           @click="viewPassword(password)"
         >
           <div class="p-5 sm:p-6 min-h-[220px] flex flex-col">
