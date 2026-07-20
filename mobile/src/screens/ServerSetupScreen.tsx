@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, Logo } from '../components/shared';
 import { useServer } from '../contexts/ServerContext';
 import { useTheme } from '../contexts/ThemeContext';
+import axios from 'axios';
+import { normalizeServerUrl } from '../contexts/ServerContext';
 
 export default function ServerSetupScreen() {
   const [url, setUrl] = useState('');
@@ -17,7 +19,17 @@ export default function ServerSetupScreen() {
     setError('');
     setIsLoading(true);
     try {
-      await connectToServer(url);
+      const normalizedUrl = normalizeServerUrl(url);
+      const response = await axios.get(`${normalizedUrl}/auth/me`, {
+        timeout: 15000,
+        validateStatus: (status) => status < 500,
+      });
+
+      if (!response.data || typeof response.data !== 'object' || typeof response.data.success !== 'boolean') {
+        throw new Error('O endereço informado não aponta para uma API Atacte');
+      }
+
+      await connectToServer(normalizedUrl);
     } catch (connectError) {
       setError(connectError instanceof Error ? connectError.message : 'Informe uma URL válida');
     } finally {
@@ -49,7 +61,7 @@ export default function ServerSetupScreen() {
 
           <Input
             label="Endereço do servidor"
-            placeholder="https://atacte.exemplo.com"
+            placeholder="atacte.exemplo.com"
             value={url}
             onChangeText={(value) => {
               setUrl(value);

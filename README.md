@@ -465,6 +465,7 @@ Secrets obrigatórios no repositório do Gitea:
 - `JWT_SECRET`
 - `ENCRYPTION_KEY`
 - `VITE_API_URL`
+- `EXPO_TOKEN`, token de acesso usado para iniciar a build Android production no EAS
 
 Secrets opcionais:
 

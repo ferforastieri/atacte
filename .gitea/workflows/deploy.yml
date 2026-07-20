@@ -38,12 +38,14 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           set -eu
           test -n "$POSTGRES_PASSWORD" || { echo "Missing secret POSTGRES_PASSWORD"; exit 1; }
           test -n "$JWT_SECRET" || { echo "Missing secret JWT_SECRET"; exit 1; }
           test -n "$ENCRYPTION_KEY" || { echo "Missing secret ENCRYPTION_KEY"; exit 1; }
           test -n "$VITE_API_URL" || { echo "Missing secret VITE_API_URL"; exit 1; }
+          test -n "$EXPO_TOKEN" || { echo "Missing secret EXPO_TOKEN"; exit 1; }
 
       - name: Create deploy environment
         env:
@@ -118,3 +120,20 @@ jobs:
           $COMPOSE --env-file .env run --rm backend npm run db:push
           $COMPOSE --env-file .env up -d
           $COMPOSE --env-file .env ps
+
+      - name: Set up Node for EAS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Trigger Expo production build
+        working-directory: mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -eu
+          npx --yes eas-cli@21.0.2 build \
+            --platform android \
+            --profile production \
+            --non-interactive \
+            --no-wait

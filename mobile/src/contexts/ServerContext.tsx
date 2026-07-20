@@ -14,10 +14,21 @@ const ServerContext = createContext<ServerContextType | undefined>(undefined);
 
 export function normalizeServerUrl(value: string): string {
   const trimmed = value.trim().replace(/\/+$/, '');
-  const parsed = new URL(trimmed);
+  if (!trimmed) {
+    throw new Error('Informe o endereço do servidor');
+  }
+
+  const urlWithProtocol = /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+  const parsed = new URL(urlWithProtocol);
 
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     throw new Error('Use uma URL iniciada por http:// ou https://');
+  }
+
+  if (!parsed.hostname) {
+    throw new Error('Informe um endereço de servidor válido');
   }
 
   const path = parsed.pathname.replace(/\/+$/, '');
