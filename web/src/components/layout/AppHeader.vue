@@ -1,6 +1,6 @@
 <template>
   <header :class="['bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 sticky z-40', isElectron ? 'top-8' : 'top-0']">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="w-full px-3 sm:px-4 lg:px-5">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center flex-shrink-0">
           <button
@@ -21,7 +21,7 @@
           </router-link>
 
           <router-link v-if="showLogo" to="/dashboard" class="flex items-center">
-            <Logo :size="32" text-size="text-lg sm:text-xl" />
+            <Logo :size="32" :show-text="false" />
           </router-link>
 
           <h1 v-if="title" class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -163,7 +163,7 @@
 
           <div class="flex items-center justify-between px-6 pb-4 border-b border-gray-200 dark:border-gray-700">
             <router-link to="/dashboard" class="flex items-center gap-3" @click="mobileMenuOpen = false">
-              <Logo :size="32" text-size="text-lg" />
+              <Logo :size="32" :show-text="false" />
             </router-link>
             <button
               @click="mobileMenuOpen = false"

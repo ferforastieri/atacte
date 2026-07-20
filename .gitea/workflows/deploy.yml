@@ -116,5 +116,5 @@ jobs:
           $COMPOSE --env-file .env build --pull
           $COMPOSE --env-file .env up -d postgres
           $COMPOSE --env-file .env run --rm backend npm run db:push
-          $COMPOSE --env-file .env up -d --remove-orphans
+          $COMPOSE --env-file .env up -d
           $COMPOSE --env-file .env ps

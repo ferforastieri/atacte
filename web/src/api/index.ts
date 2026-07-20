@@ -28,7 +28,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     const message = response.data?.message
-    if (typeof message === 'string') {
+    if (response.config.method?.toLowerCase() !== 'get' && typeof message === 'string') {
       useToast().success(message)
     }
     return response

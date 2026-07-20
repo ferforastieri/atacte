@@ -6,7 +6,7 @@
       :show-navigation="true"
     />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+    <div class="w-full px-3 sm:px-4 lg:px-5 py-8 pb-24 md:pb-8">
       <!-- Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
@@ -135,67 +135,72 @@
       </BaseCard>
 
       <!-- Passwords List -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-5">
         <BaseCard
           v-for="password in filteredPasswords"
           :key="password.id"
-          class="hover:shadow-lg transition-shadow cursor-pointer"
+          padding="none"
+          class="group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
           @click="viewPassword(password)"
         >
-          <div class="flex items-start justify-between">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center space-x-2">
-                <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ password.name }}</h3>
-                <div class="flex space-x-1">
-                  <HeartIcon
-                    v-if="password.isFavorite"
-                    class="h-4 w-4 text-red-500 flex-shrink-0"
-                  />
-                  <KeyIcon
-                    v-if="password.totpEnabled"
-                    class="h-4 w-4 text-blue-500 flex-shrink-0"
-                  />
-                </div>
+          <div class="p-5 sm:p-6 min-h-[220px] flex flex-col">
+            <div class="flex items-start gap-4">
+              <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center flex-shrink-0">
+                <LockClosedIcon class="h-6 w-6 text-primary-600 dark:text-primary-400" />
               </div>
-              
-              <p v-if="password.website" class="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
-                {{ password.website }}
-              </p>
-              
-              <p v-if="password.username" class="text-sm text-gray-500 dark:text-gray-500 mt-1 truncate">
-                @{{ password.username }}
-              </p>
-              
-              <p v-if="password.folder" class="text-xs text-gray-400 dark:text-gray-500 mt-2 truncate">
-                📁 {{ password.folder }}
-              </p>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">{{ password.name }}</h3>
+                  <HeartIcon v-if="password.isFavorite" class="h-5 w-5 text-red-500 flex-shrink-0" />
+                </div>
+                <p v-if="password.website" class="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">{{ password.website }}</p>
+                <p v-if="password.username" class="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{{ password.username }}</p>
+              </div>
+
+              <span
+                v-if="password.totpEnabled"
+                class="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-300"
+              >
+                <KeyIcon class="h-3.5 w-3.5" /> TOTP
+              </span>
             </div>
-            
-            <div class="flex flex-col space-y-1 ml-2">
+
+            <div class="mt-4 min-h-6">
+              <span v-if="password.folder" class="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 px-2.5 py-1 text-xs text-gray-600 dark:text-gray-300">
+                <FolderIcon class="h-3.5 w-3.5" /> {{ password.folder }}
+              </span>
+            </div>
+
+            <div class="mt-auto pt-5 flex items-center gap-2 border-t border-gray-100 dark:border-gray-700">
+              <button
+                @click.stop="toggleFavorite(password)"
+                class="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                :class="password.isFavorite ? 'text-red-500' : 'text-gray-500 dark:text-gray-300'"
+                title="Alternar favorita"
+              >
+                <HeartIcon class="h-5 w-5" />
+              </button>
               <button
                 v-if="password.username"
                 @click.stop="copyUsername(password)"
-                class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+                class="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 title="Copiar usuário"
               >
-                <UserIcon class="h-4 w-4" />
+                <UserIcon class="h-5 w-5" />
               </button>
-
+              <button
+                @click.stop="viewPassword(password)"
+                class="h-10 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Ver
+              </button>
               <button
                 @click.stop="copyPassword(password)"
-                class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
-                title="Copiar senha"
+                class="h-10 flex-1 min-w-0 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors px-3"
               >
-                <ClipboardIcon class="h-4 w-4" />
-              </button>
-              
-              <button
-                @click.stop="toggleFavorite(password)"
-                class="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1"
-                :class="{ 'text-red-500': password.isFavorite }"
-                title="Marcar como favorita"
-              >
-                <HeartIcon class="h-4 w-4" />
+                <ClipboardIcon class="h-5 w-5" />
+                <span class="truncate">Copiar senha</span>
               </button>
             </div>
           </div>

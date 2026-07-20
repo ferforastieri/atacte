@@ -35,7 +35,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     const message = response.data?.message;
-    if (typeof message === 'string') {
+    if (response.config.method?.toLowerCase() !== 'get' && typeof message === 'string') {
       DeviceEventEmitter.emit('api-response-toast', { type: 'success', message });
     }
     return response;

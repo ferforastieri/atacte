@@ -5,7 +5,7 @@
       :show-navigation="true"
     />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+    <div class="w-full px-3 sm:px-4 lg:px-5 py-8 pb-24 md:pb-8">
       <div class="space-y-6">
         <BaseCard>
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-6 border-b border-gray-200 dark:border-gray-700">
@@ -181,4 +181,3 @@ onMounted(async () => {
   }
 })
 </script>
-

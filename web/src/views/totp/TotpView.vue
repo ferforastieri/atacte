@@ -8,7 +8,7 @@
     />
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="w-full px-3 sm:px-4 lg:px-5 py-8">
       <!-- Stats -->
       <div class="mb-6">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
@@ -40,17 +40,21 @@
         </div>
       </div>
 
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
         <BaseCard
           v-for="password in totpPasswords"
           :key="password.id"
-          class="hover:shadow-lg transition-shadow"
+          padding="none"
+          class="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
         >
-          <div class="p-4">
+          <div class="p-5 sm:p-6">
             <!-- Header -->
-            <div class="flex items-start justify-between mb-4">
+            <div class="flex items-start gap-4 mb-5">
+              <div class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0">
+                <KeyIcon class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
               <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {{ password.name }}
                 </h3>
                 <p v-if="password.website" class="text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -60,48 +64,47 @@
                   @{{ password.username }}
                 </p>
               </div>
-              <KeyIcon class="h-5 w-5 text-blue-500 flex-shrink-0" />
             </div>
 
             <!-- TOTP Code -->
-            <div class="text-center mb-4">
-              <div class="text-2xl font-mono font-bold text-gray-900 dark:text-gray-100 mb-2">
-                {{ getTotpCode(password.id)?.code || '--- ---' }}
+            <div class="relative text-center rounded-xl bg-gray-50 dark:bg-gray-900/70 border-2 border-dashed border-gray-300 dark:border-gray-600 px-4 py-5 mb-5">
+              <div class="text-4xl font-mono font-bold tracking-[0.18em] text-gray-900 dark:text-gray-100 mb-4">
+                {{ formatTotpCode(getTotpCode(password.id)?.code) }}
               </div>
               
               <!-- Progress Bar -->
-              <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
                 <div 
-                  class="bg-blue-500 h-2 rounded-full transition-all duration-1000"
-                  :style="{ width: `${getTotpCode(password.id)?.timeRemaining || 0}%` }"
+                  class="bg-blue-500 h-2.5 rounded-full transition-all duration-1000"
+                  :style="{ width: `${getTotpProgress(password.id)}%` }"
                 ></div>
               </div>
               
               <!-- Time Remaining -->
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2">
                 {{ getTotpCode(password.id)?.timeRemaining || 0 }}s restantes
               </p>
             </div>
 
             <!-- Actions -->
-            <div class="flex space-x-2">
+            <div class="flex gap-3">
               <BaseButton
                 @click="copyTotpCode(password.id)"
-                variant="ghost"
-                size="sm"
+                variant="primary"
+                size="md"
                 class="flex-1"
               >
-                <ClipboardIcon class="h-4 w-4 mr-1" />
+                <ClipboardIcon class="h-5 w-5 mr-2" />
                 Copiar
               </BaseButton>
               
               <BaseButton
                 @click="viewPassword(password)"
                 variant="ghost"
-                size="sm"
+                size="md"
                 class="flex-1"
               >
-                <EyeIcon class="h-4 w-4 mr-1" />
+                <EyeIcon class="h-5 w-5 mr-2" />
                 Ver
               </BaseButton>
             </div>
@@ -173,6 +176,17 @@ const getTotpCode = (passwordId: string) => {
   } catch (error) {
     return null
   }
+}
+
+const formatTotpCode = (code?: string) => {
+  const cleanCode = code?.replace(/\D/g, '').slice(0, 6)
+  return cleanCode?.length === 6 ? `${cleanCode.slice(0, 3)} ${cleanCode.slice(3)}` : '--- ---'
+}
+
+const getTotpProgress = (passwordId: string) => {
+  const code = getTotpCode(passwordId)
+  if (!code) return 0
+  return Math.max(0, Math.min(100, (code.timeRemaining / code.period) * 100))
 }
 
 const refreshTotpCodes = async () => {

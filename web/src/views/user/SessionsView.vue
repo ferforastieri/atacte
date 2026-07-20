@@ -5,7 +5,7 @@
       :show-navigation="true"
     />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="w-full px-3 sm:px-4 lg:px-5 py-8">
       <BaseCard class="mb-6 dark:bg-gray-800 dark:border-gray-700">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
@@ -350,5 +350,4 @@ onMounted(() => {
   fetchSessions()
 })
 </script>
-
 

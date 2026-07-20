@@ -5,7 +5,7 @@
       :show-navigation="true"
     />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="w-full px-3 sm:px-4 lg:px-5 py-8">
       <BaseCard class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
           Gerenciar Usuários
@@ -460,4 +460,3 @@ onMounted(() => {
   fetchUsers()
 })
 </script>
-
