@@ -8,7 +8,7 @@
     />
 
     <!-- Main Content -->
-    <div class="w-full px-3 sm:px-4 lg:px-5 py-8">
+    <div class="w-full px-4 sm:px-5 lg:px-6 py-8">
       <!-- Stats -->
       <div class="mb-6">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">

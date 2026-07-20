@@ -6,7 +6,7 @@
       :show-navigation="true"
     />
 
-    <div class="w-full px-3 sm:px-4 lg:px-5 py-8 pb-24 md:pb-8">
+    <div class="w-full px-4 sm:px-5 lg:px-6 py-8 pb-24 md:pb-8">
       <!-- Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
@@ -61,43 +61,39 @@
         </BaseCard>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <BaseButton
-          variant="primary"
-          @click="showCreateModal = true"
-          class="w-full sm:w-auto"
-        >
-          <PlusIcon class="w-4 h-4 mr-2" />
-          Nova Senha
-        </BaseButton>
+      <!-- Search, Filters and Actions -->
+      <BaseCard class="mb-6" overflow-visible>
+        <div class="flex flex-col gap-4" style="position: relative; overflow: visible;">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <BaseButton
+              variant="primary"
+              @click="showCreateModal = true"
+              class="w-full"
+            >
+              <PlusIcon class="w-5 h-5 mr-2" />
+              Nova Senha
+            </BaseButton>
 
-        <div class="flex gap-3 sm:gap-4">
           <BaseButton
             variant="secondary"
             @click="showImportModal = true"
-            class="flex-1 sm:flex-none"
+              class="w-full"
           >
-            <ArrowUpTrayIcon class="w-4 h-4 mr-2" />
-            <span class="hidden sm:inline">Importar</span>
-            <span class="sm:hidden">Importar</span>
+              <ArrowUpTrayIcon class="w-5 h-5 mr-2" />
+              Importar
           </BaseButton>
 
           <BaseButton
             variant="secondary"
             @click="exportPasswords"
-            class="flex-1 sm:flex-none"
+              class="w-full"
           >
-            <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
-            <span class="hidden sm:inline">Exportar</span>
-            <span class="sm:hidden">Exportar</span>
+              <ArrowDownTrayIcon class="w-5 h-5 mr-2" />
+              Exportar
           </BaseButton>
-        </div>
-      </div>
+          </div>
 
-      <!-- Search and Filters -->
-      <BaseCard class="mb-6" overflow-visible>
-        <div class="flex flex-col gap-4" style="position: relative; overflow: visible;">
+          <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
           <div class="flex-1">
             <SearchInput
               v-model="searchQuery"
@@ -107,6 +103,7 @@
               @search="handleSearch"
               @clear="handleSearchClear"
             />
+          </div>
           </div>
           
           <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -135,7 +132,7 @@
       </BaseCard>
 
       <!-- Passwords List -->
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
         <BaseCard
           v-for="password in filteredPasswords"
           :key="password.id"
@@ -172,6 +169,10 @@
               </span>
             </div>
 
+            <div v-if="password.totpEnabled" class="mt-4" @click.stop>
+              <TotpCode :secret="totpSecrets[password.id]" />
+            </div>
+
             <div class="mt-auto pt-5 flex items-center gap-2 border-t border-gray-100 dark:border-gray-700">
               <button
                 @click.stop="toggleFavorite(password)"
@@ -184,10 +185,11 @@
               <button
                 v-if="password.username"
                 @click.stop="copyUsername(password)"
-                class="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                class="h-10 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                 title="Copiar usuário"
               >
                 <UserIcon class="h-5 w-5" />
+                <span class="hidden sm:inline">Copiar usuário</span>
               </button>
               <button
                 @click.stop="viewPassword(password)"
@@ -274,7 +276,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   LockClosedIcon,
@@ -292,7 +294,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
-import { BaseButton, BaseCard, SearchInput, AppHeader, BaseSelect } from '@/components/ui'
+import { BaseButton, BaseCard, SearchInput, AppHeader, BaseSelect, TotpCode } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { copyToClipboard } from '@/utils/clipboard'
 
@@ -314,6 +316,7 @@ const searchQuery = ref('')
 const selectedFolder = ref('')
 const showOnlyFavorites = ref(false)
 const isRefreshing = ref(false)
+const totpSecrets = ref<Record<string, string>>({})
 
 
 const totpEnabledCount = computed(() => {
@@ -322,6 +325,23 @@ const totpEnabledCount = computed(() => {
 
 
 const filteredPasswords = computed(() => passwordsStore.searchResults)
+
+watch(
+  () => filteredPasswords.value.filter(password => password.totpEnabled).map(password => password.id),
+  async (passwordIds) => {
+    await Promise.all(passwordIds.map(async (passwordId) => {
+      if (totpSecrets.value[passwordId]) return
+      try {
+        const response = await passwordsStore.getTotpSecret(passwordId)
+        if (response?.secret) {
+          totpSecrets.value[passwordId] = response.secret
+        }
+      } catch (error) {
+      }
+    }))
+  },
+  { immediate: true }
+)
 
 
 const refreshPasswords = async () => {
