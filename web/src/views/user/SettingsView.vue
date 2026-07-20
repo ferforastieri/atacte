@@ -6,7 +6,7 @@
       :show-navigation="true"
     />
 
-    <div class="w-full px-4 sm:px-5 lg:px-6 py-8 pb-24 md:pb-8">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8 pb-24 md:pb-8">
       <div class="space-y-4 sm:space-y-6">
         <!-- Security Settings -->
         <BaseCard class="dark:bg-gray-800 dark:border-gray-700">

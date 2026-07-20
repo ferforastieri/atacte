@@ -5,7 +5,7 @@
       :show-navigation="true"
     />
 
-    <div class="w-full px-4 sm:px-5 lg:px-6 py-8 pb-24 md:pb-8">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8 pb-24 md:pb-8">
       <div class="space-y-6">
         <BaseCard>
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-6 border-b border-gray-200 dark:border-gray-700">

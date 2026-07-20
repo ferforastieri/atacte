@@ -6,7 +6,7 @@
       :show-navigation="true"
     />
 
-    <div class="w-full px-4 sm:px-5 lg:px-6 py-8 pb-24 md:pb-8">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8 pb-24 md:pb-8">
       <!-- Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
@@ -190,12 +190,6 @@
               >
                 <UserIcon class="h-5 w-5" />
                 <span class="hidden sm:inline">Copiar usuário</span>
-              </button>
-              <button
-                @click.stop="viewPassword(password)"
-                class="h-10 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                Ver
               </button>
               <button
                 @click.stop="copyPassword(password)"

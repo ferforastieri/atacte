@@ -7,7 +7,7 @@
       :title="password.name"
     />
 
-    <div class="w-full px-4 sm:px-5 lg:px-6 py-8">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8">
       <div class="mb-6 flex justify-end gap-3">
         <BaseButton
           variant="secondary"

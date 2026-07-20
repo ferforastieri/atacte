@@ -5,7 +5,7 @@
       :show-navigation="true"
     />
 
-    <div class="w-full px-4 sm:px-5 lg:px-6 py-8">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8">
       <BaseCard class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
           Gerenciar Usuários

@@ -7,7 +7,7 @@
     />
 
     <!-- Main Content -->
-    <div class="w-full px-4 sm:px-5 lg:px-6 py-8 pb-24 md:pb-8">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8 pb-24 md:pb-8">
       <!-- Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">

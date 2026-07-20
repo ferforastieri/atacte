@@ -8,7 +8,7 @@
     />
 
     <!-- Main Content -->
-    <div class="w-full px-4 sm:px-5 lg:px-6 py-8">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8">
       <!-- Stats -->
       <div class="mb-6">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
@@ -45,7 +45,8 @@
           v-for="password in totpPasswords"
           :key="password.id"
           padding="none"
-          class="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+          class="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+          @click="viewPassword(password)"
         >
           <div class="p-5 sm:p-6">
             <!-- Header -->
@@ -89,23 +90,13 @@
             <!-- Actions -->
             <div class="flex gap-3">
               <BaseButton
-                @click="copyTotpCode(password.id)"
+                @click.stop="copyTotpCode(password.id)"
                 variant="primary"
                 size="md"
-                class="flex-1"
+                class="w-full"
               >
                 <ClipboardIcon class="h-5 w-5 mr-2" />
                 Copiar
-              </BaseButton>
-              
-              <BaseButton
-                @click="viewPassword(password)"
-                variant="ghost"
-                size="md"
-                class="flex-1"
-              >
-                <EyeIcon class="h-5 w-5 mr-2" />
-                Ver
               </BaseButton>
             </div>
           </div>
@@ -141,8 +132,7 @@ import PasswordDetailModal from '@/components/passwords/PasswordDetailModal.vue'
 import {
   ArrowPathIcon,
   KeyIcon,
-  ClipboardIcon,
-  EyeIcon
+  ClipboardIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
