@@ -10,7 +10,7 @@ COPY web/index.html ./
 COPY web/env.d.ts ./
 RUN npm ci && npm cache clean --force
 
-ARG VITE_API_URL=http://localhost:3457/api
+ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 
 COPY web/src/ ./src/
