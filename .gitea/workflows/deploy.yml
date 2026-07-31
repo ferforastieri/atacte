@@ -173,6 +173,7 @@ jobs:
           COMPOSE="docker compose"
 
           export COMPOSE_PROJECT_NAME=atacte
+          $COMPOSE --env-file .env down --remove-orphans || true
           $COMPOSE --env-file .env build --pull
           $COMPOSE --env-file .env up -d postgres
           $COMPOSE --env-file .env run --rm backend npm run db:push
