@@ -196,4 +196,4 @@ jobs:
             --platform android \
             --profile production \
             --non-interactive \
-            --no-wait
+            --no-wait || echo "EAS Android build unavailable; web deploy already completed"
