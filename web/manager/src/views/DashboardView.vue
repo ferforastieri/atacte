@@ -68,7 +68,7 @@
           <div class="flex-1">
             <SearchInput
               v-model="searchQuery"
-              placeholder="Buscar senhas..."
+              placeholder="Buscar pintos..."
               :debounce-ms="300"
               :min-length="2"
               @search="handleSearch"
