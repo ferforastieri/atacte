@@ -97,6 +97,18 @@
         <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 min-w-0">
           <ThemeToggle />
 
+          <a
+            :href="env.androidApkUrl"
+            target="_blank"
+            rel="noreferrer"
+            class="flex h-10 items-center justify-center gap-1.5 rounded-lg bg-gray-100 px-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:px-3"
+            aria-label="Baixar APK Android"
+            title="Baixar APK Android"
+          >
+            <ArrowDownTrayIcon class="h-5 w-5" />
+            <span class="hidden lg:inline">APK</span>
+          </a>
+
           <div class="relative min-w-0">
             <button
               @click="showUserMenuDropdown = !showUserMenuDropdown"
@@ -132,14 +144,6 @@
                 >
                   Configurações
                 </router-link>
-                <a
-                  :href="env.androidApkUrl"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  Baixar APK Android
-                </a>
                 <button
                   @click="handleLogout"
                   class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -264,16 +268,6 @@
                 <span class="text-sm font-medium">Perfil</span>
                 <div v-if="isActive('/profile')" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400" />
               </router-link>
-              <a
-                :href="env.androidApkUrl"
-                target="_blank"
-                rel="noreferrer"
-                @click="mobileMenuOpen = false"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <ArrowDownTrayIcon class="h-5 w-5 flex-shrink-0" />
-                <span>Baixar APK Android</span>
-              </a>
             </div>
           </nav>
         </div>
