@@ -20,14 +20,30 @@ const message = ref('')
 const latestVersion = ref('')
 const releaseUrl = `https://github.com/${env.githubRepository}/releases/latest`
 function dismiss() { available.value = false; try { sessionStorage.setItem('atacte-dismissed-update', latestVersion.value) } catch { /* optional */ } }
+
+function isPublishedVersion(value: unknown): value is string {
+  return typeof value === 'string' && value !== 'development' && /^[a-zA-Z0-9._-]{7,64}$/.test(value)
+}
+
+async function fetchLatestReleaseVersion(): Promise<string | null> {
+  try {
+    const response = await fetch(`https://api.github.com/repos/${env.githubRepository}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' })
+    if (!response.ok) return null
+    const release = await response.json() as { target_commitish?: unknown; draft?: unknown; prerelease?: unknown }
+    if (release.draft === true || release.prerelease === true) return null
+    return isPublishedVersion(release.target_commitish) ? release.target_commitish : null
+  } catch {
+    return null
+  }
+}
+
 async function check() {
   try {
     const current = await systemApi.version()
-    const response = await fetch(`https://api.github.com/repos/${env.githubRepository}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' })
-    if (!response.ok) return
-    const release = await response.json() as { target_commitish?: unknown; tag_name?: unknown }
-    const latest = String(release.target_commitish || release.tag_name || '')
-    if (!latest || latest === current) return
+    if (!isPublishedVersion(current)) return
+    const latest = await fetchLatestReleaseVersion()
+    if (!latest || current === latest) return
+    if (latestVersion.value === latest) return
     latestVersion.value = latest
     try { if (sessionStorage.getItem('atacte-dismissed-update') === latest) return } catch { /* optional */ }
     available.value = true
