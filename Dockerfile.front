@@ -17,6 +17,7 @@ ENV VITE_BUILD_VERSION=$VITE_BUILD_VERSION
 
 COPY web/manager/ ./manager/
 COPY web/landing/ ./landing/
+COPY web/shared/ ./shared/
 RUN npm run build:manager
 
 FROM nginx:alpine
