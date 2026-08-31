@@ -57,6 +57,27 @@
           </div>
         </BaseCard>
 
+        <BaseCard v-if="authStore.isAdmin" class="dark:bg-gray-800 dark:border-gray-700">
+          <div class="space-y-4">
+            <div><h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Configuração da instalação</h2><p class="text-sm text-gray-500 dark:text-gray-400">Altere somente opções suportadas. A instalação será reiniciada pelo updater; segredos do banco e da criptografia não podem ser alterados por segurança.</p></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <BaseInput v-model="installationConfig.CORS_ORIGIN" label="Origens permitidas (CORS)" placeholder="https://vault.exemplo.com" />
+              <BaseInput v-model="installationConfig.TRUST_PROXY" label="Trust proxy" placeholder="0" />
+              <BaseSelect v-model="installationConfig.COOKIE_SECURE" label="Cookies Secure"><option value="true">Ativado (HTTPS)</option><option value="false">Desativado (HTTP local)</option></BaseSelect>
+              <BaseSelect v-model="installationConfig.COOKIE_SAME_SITE" label="SameSite"><option value="lax">Lax</option><option value="strict">Strict</option><option value="none">None (HTTPS)</option></BaseSelect>
+              <BaseInput v-model="installationConfig.AUTH_RATE_LIMIT_MAX" label="Tentativas de autenticação" type="number" />
+              <BaseInput v-model="installationConfig.MUTATION_RATE_LIMIT_MAX" label="Mutações por minuto" type="number" />
+              <BaseInput v-model="installationConfig.SMTP_HOST" label="SMTP host (opcional)" />
+              <BaseInput v-model="installationConfig.SMTP_PORT" label="SMTP port" type="number" />
+              <BaseInput v-model="installationConfig.SMTP_USER" label="SMTP usuário" />
+              <BaseInput v-model="installationConfig.SMTP_PASS" label="SMTP senha (deixe vazio para manter)" type="password" />
+              <BaseInput v-model="installationConfig.EMAIL_FROM" label="Email remetente" />
+              <BaseInput v-model="installationConfig.PASSWORD_RESET_URL" label="URL de recuperação" placeholder="https://vault.exemplo.com/reset-password" />
+            </div>
+            <div class="flex items-center justify-between gap-3"><p v-if="configMessage" class="text-sm text-gray-500 dark:text-gray-400">{{ configMessage }}</p><BaseButton variant="primary" :loading="isSavingConfig" @click="saveInstallationConfig">Salvar e reiniciar</BaseButton></div>
+          </div>
+        </BaseCard>
+
         <!-- Danger Zone -->
         <BaseCard class="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
           <div class="space-y-4">
@@ -171,6 +192,7 @@ import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
 import authApi from '@/api/auth'
 import usersApi from '@/api/users'
+import systemApi from '@/api/system'
 import { LockClosedIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -181,6 +203,13 @@ const showChangePasswordModal = ref(false)
 const showDeleteAccountModal = ref(false)
 const isChangingPassword = ref(false)
 const isDeletingAccount = ref(false)
+const isSavingConfig = ref(false)
+const configMessage = ref('')
+const installationConfig = ref<Record<string, string>>({
+  CORS_ORIGIN: '', TRUST_PROXY: '0', COOKIE_SECURE: 'true', COOKIE_SAME_SITE: 'lax',
+  AUTH_RATE_LIMIT_MAX: '5', MUTATION_RATE_LIMIT_MAX: '120', SMTP_HOST: '', SMTP_PORT: '587',
+  SMTP_USER: '', SMTP_PASS: '', EMAIL_FROM: '', PASSWORD_RESET_URL: '',
+})
 
 const theme = ref('auto')
 
@@ -206,7 +235,24 @@ onMounted(async () => {
 const loadSettings = async () => {
   try {
     theme.value = themeStore.isDarkMode ? 'dark' : 'light'
+    if (authStore.isAdmin) {
+      const config = await systemApi.getConfig()
+      installationConfig.value = { ...installationConfig.value, ...config.values }
+    }
   } catch (error) {
+  }
+}
+
+const saveInstallationConfig = async () => {
+  isSavingConfig.value = true
+  configMessage.value = ''
+  try {
+    await systemApi.saveConfig(installationConfig.value)
+    configMessage.value = 'Configuração salva. Os serviços estão reiniciando; aguarde alguns segundos.'
+  } catch {
+    configMessage.value = 'Não foi possível salvar. Verifique se o updater está ativo.'
+  } finally {
+    isSavingConfig.value = false
   }
 }
 

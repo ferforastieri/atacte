@@ -109,7 +109,7 @@ services:
       retries: 3
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/workspace:ro
+      - ./:/workspace:rw
     networks:
       - atacte-network
 
