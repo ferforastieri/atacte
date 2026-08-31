@@ -13,6 +13,15 @@ import { ENCRYPTION_KEY } from '../config';
 import { CryptoUtil } from '../../utils/cryptoUtil';
 
 const prisma = new PrismaClient();
+const dryRun = process.argv.includes('--dry-run');
+
+function reencrypt(value: string, sourceKey: string, targetKey: string, location: string): string {
+  try {
+    return CryptoUtil.encrypt(CryptoUtil.decrypt(value, sourceKey), targetKey);
+  } catch (error) {
+    throw new Error(`${location}: ${error instanceof Error ? error.message : 'valor inválido'}`);
+  }
+}
 
 async function migrateUser(user: {
   id: string;
@@ -33,17 +42,19 @@ async function migrateUser(user: {
   // occur unless every encrypted value for this user is valid.
   const passwords = user.passwordEntries.map((entry) => ({
     id: entry.id,
-    encryptedPassword: CryptoUtil.encrypt(CryptoUtil.decrypt(entry.encryptedPassword, sourceKey), targetKey),
-    totpSecret: entry.totpSecret === null ? null : CryptoUtil.encrypt(CryptoUtil.decrypt(entry.totpSecret, sourceKey), targetKey),
+    encryptedPassword: reencrypt(entry.encryptedPassword, sourceKey, targetKey, `password_entries/${entry.id}/encrypted_password`),
+    totpSecret: entry.totpSecret === null ? null : reencrypt(entry.totpSecret, sourceKey, targetKey, `password_entries/${entry.id}/totp_secret`),
     customFields: entry.customFields.map((field) => ({
       id: field.id,
-      encryptedValue: CryptoUtil.encrypt(CryptoUtil.decrypt(field.encryptedValue, sourceKey), targetKey),
+      encryptedValue: reencrypt(field.encryptedValue, sourceKey, targetKey, `custom_fields/${field.id}/encrypted_value`),
     })),
   }));
   const notes = user.secureNotes.map((note) => ({
     id: note.id,
-    encryptedContent: CryptoUtil.encrypt(CryptoUtil.decrypt(note.encryptedContent, sourceKey), targetKey),
+    encryptedContent: reencrypt(note.encryptedContent, sourceKey, targetKey, `secure_notes/${note.id}/encrypted_content`),
   }));
+
+  if (dryRun) return updates;
 
   await prisma.$transaction(async (tx) => {
     for (const entry of passwords) {
@@ -75,17 +86,25 @@ async function main(): Promise<void> {
   });
 
   let migrated = 0;
+  let failed = 0;
   for (const user of users) {
-    const count = await migrateUser(user);
-    migrated += 1;
-    console.log(`Usuário ${user.id}: ${count} valores recriptografados.`);
+    try {
+      const count = await migrateUser(user);
+      migrated += 1;
+      console.log(`Usuário ${user.id}: ${dryRun ? `${count} valores válidos (dry-run)` : `${count} valores recriptografados`}.`);
+    } catch (error) {
+      failed += 1;
+      console.error(`Usuário ${user.id}: falha; nenhum write foi confirmado para este usuário.`);
+      console.error(error instanceof Error ? error.message : error);
+    }
   }
-  console.log(`Migração concluída: ${migrated} usuário(s). Nenhuma alteração de schema foi executada.`);
+  console.log(`${dryRun ? 'Verificação' : 'Migração'} concluída: ${migrated} usuário(s) processado(s), ${failed} falha(s). Nenhuma alteração de schema foi executada.`);
+  if (failed > 0) process.exitCode = 1;
 }
 
 main()
   .catch((error: unknown) => {
-    console.error('Migração interrompida; nenhum write parcial foi confirmado para o usuário com erro.');
+    console.error('Migração interrompida antes da conclusão. Nenhum write parcial foi confirmado para o usuário com erro.');
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;
   })
