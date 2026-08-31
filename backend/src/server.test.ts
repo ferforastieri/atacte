@@ -23,6 +23,12 @@ test('health check is public and uncached', async () => {
   assert.equal(response.body.success, true);
 });
 
+test('health check is also available under the public API prefix', async () => {
+  const response = await request(await getApp()).get('/api/health');
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+});
+
 test('published version endpoint is public and uncached', async () => {
   const response = await request(await getApp()).get('/api/version');
   assert.equal(response.status, 200);

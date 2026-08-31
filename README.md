@@ -484,6 +484,7 @@ Secrets opcionais:
 - `POSTGRES_DB`, padrão `atacte`
 - `POSTGRES_USER`, padrão `atacte`
 - `POSTGRES_PORT`, padrão `5435`
+- `BACKEND_BIND`, padrão `0.0.0.0` (necessário quando o reverse proxy está em outro host/CT; restrinja a porta no firewall)
 - `BACKEND_PORT`, padrão `3457`
 - `FRONT_PORT`, padrão `3456`
 - `JWT_EXPIRES_IN`, padrão `7d`

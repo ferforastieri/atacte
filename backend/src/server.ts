@@ -46,14 +46,14 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.path === '/health'
+  skip: (req) => req.path === '/health' || req.path === '/api/health'
 });
 app.use(limiter);
 app.use('/api', csrfProtection);
 app.use('/api', mutationLimiter);
 
 
-app.get('/health', (_req, res) => {
+app.get(['/health', '/api/health'], (_req, res) => {
   res.json({ 
     success: true,
     message: 'Servidor disponível',

@@ -63,7 +63,10 @@ services:
       UPDATER_URL: ${UPDATER_URL:-http://atacte-updater:8080}
       UPDATER_TOKEN: ${UPDATER_TOKEN:-}
     ports:
-      - "127.0.0.1:${BACKEND_PORT:-3457}:3001"
+      # The reverse proxy may run in another container/VM (for example Caddy
+      # in a separate Proxmox CT), so the API must listen on the host network.
+      # Restrict this port with the host firewall to the proxy network.
+      - "${BACKEND_BIND:-0.0.0.0}:${BACKEND_PORT:-3457}:3001"
     depends_on:
       postgres:
         condition: service_healthy
