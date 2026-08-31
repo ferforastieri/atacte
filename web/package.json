@@ -26,7 +26,7 @@
   "devDependencies": {
     "@types/zxcvbn": "^4.4.5",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
-    "@typescript-eslint/parser": "^6.5.0",
+    "@typescript-eslint/parser": "^8.68.0",
     "@vitejs/plugin-vue": "^4.3.1",
     "@vue/tsconfig": "^0.4.0",
     "autoprefixer": "^10.4.14",
