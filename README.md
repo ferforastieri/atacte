@@ -106,7 +106,7 @@ O manager é o cliente principal e fica no mesmo Compose da API. A landing públ
 
 ### Android (Expo)
 
-Baixe o APK da release mais recente em [Releases](https://github.com/ferforastieri/atacte/releases), quando disponível. Na primeira abertura, informe a URL HTTPS da sua instalação (por exemplo, `https://cofre.exemplo.com`). O job de Android é opcional: se a Expo estiver sem quota ou sem credencial, backend e web continuam sendo publicados.
+Baixe o APK da release mais recente em [Releases](https://github.com/ferforastieri/atacte/releases), quando disponível. Na primeira abertura, informe a URL HTTPS da sua instalação (por exemplo, `https://cofre.exemplo.com`). O job de Android é opcional e aguarda a build remota do EAS para baixar e anexar o APK automaticamente à release; se a Expo estiver sem quota ou sem credencial, backend e web continuam sendo publicados.
 
 ### Desktop
 
