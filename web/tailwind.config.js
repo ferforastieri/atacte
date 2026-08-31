@@ -4,6 +4,8 @@ export default {
     "./index.html",
     "./manager/index.html",
     "./manager/src/**/*.{vue,js,ts,jsx,tsx}",
+    "./landing/**/*.{vue,js,ts,jsx,tsx,html}",
+    "./shared/**/*.{css,vue,js,ts}",
   ],
   darkMode: 'class',
   theme: {
