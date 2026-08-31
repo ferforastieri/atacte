@@ -9,8 +9,8 @@
           </span>
         </a>
         <nav class="flex items-center space-x-1 text-sm font-medium" aria-label="Navegação principal">
-          <a href="/#recursos" :class="linkClass()" class="hidden sm:block">Recursos</a>
-          <a href="/#como-funciona" :class="linkClass()" class="hidden sm:block">Como funciona</a>
+          <a href="/#recursos" :class="linkClass('section')" class="hidden sm:block">Recursos</a>
+          <a href="/#como-funciona" :class="linkClass('section')" class="hidden sm:block">Como funciona</a>
           <a href="/docs/" :class="linkClass('docs')">Documentação</a>
           <a href="/releases/" :class="linkClass('releases')" class="hidden sm:block">Releases</a>
           <a href="/#instalacao" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">Instalar</a>
@@ -25,9 +25,9 @@
 import { ref } from 'vue'
 import { MoonIcon, SunIcon } from '@heroicons/vue/24/outline'
 
-const props = withDefaults(defineProps<{ active?: 'docs' | 'releases' | '' }>(), { active: '' })
+const props = withDefaults(defineProps<{ active?: 'docs' | 'releases' | 'landing' }>(), { active: 'landing' })
 const isDark = ref(document.documentElement.classList.contains('dark'))
-const linkClass = (name = '') => props.active === name
+const linkClass = (name: 'section' | 'docs' | 'releases') => props.active === name
   ? 'rounded-lg bg-primary-100 px-3 py-2 text-primary-700 dark:bg-primary-900 dark:text-primary-300'
   : 'rounded-lg px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
 const toggleTheme = () => {
@@ -36,4 +36,3 @@ const toggleTheme = () => {
   window.localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 </script>
-
