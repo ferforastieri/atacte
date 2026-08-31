@@ -52,14 +52,14 @@ jobs:
           - image: updater
             image_name: atacte-updater
             context: updater
-            dockerfile: Dockerfile
+            dockerfile: updater/Dockerfile
             architecture: amd64
             platform: linux/amd64
             runner: ubuntu-latest
           - image: updater
             image_name: atacte-updater
             context: updater
-            dockerfile: Dockerfile
+            dockerfile: updater/Dockerfile
             architecture: arm64
             platform: linux/arm64
             runner: ubuntu-24.04-arm
