@@ -287,7 +287,8 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { env } from '@/config/environment'
-import { Logo, ThemeToggle } from '@/components/ui'
+import Logo from '../ui/Logo.vue'
+import ThemeToggle from '../ui/ThemeToggle.vue'
 import { ArrowLeftIcon, ArrowDownTrayIcon, UserIcon, ChevronDownIcon, DocumentTextIcon, Bars3Icon, XMarkIcon, LockClosedIcon, ComputerDesktopIcon, UserGroupIcon, ClipboardDocumentListIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
 
 const isElectron = computed(() => {

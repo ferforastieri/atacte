@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen overflow-hidden bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-    <header class="mx-auto flex h-[84px] max-w-[1440px] items-center justify-between border-b border-gray-200 bg-white px-[5vw] shadow-sm transition-colors dark:border-gray-700 dark:bg-gray-800">
+    <header class="mx-auto flex h-[84px] w-full max-w-[1440px] items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm transition-colors dark:border-gray-700 dark:bg-gray-800 sm:px-6 lg:px-10 xl:px-12">
       <a class="flex items-center gap-2 font-bold" href="#top" aria-label="Atacte início">
         <img class="h-[34px] w-[34px] rounded-lg shadow-sm" src="/favicon-web.png" alt="" />
         <span>Atacte<small class="mt-0.5 block text-[8px] font-medium uppercase tracking-[.16em] text-gray-500 dark:text-gray-400">Private vault</small></span>
@@ -10,18 +10,18 @@
         <a class="hidden rounded-lg px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 sm:block" href="#como-funciona">Como funciona</a>
         <a class="hidden rounded-lg px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 md:block" href="/docs/">Documentação</a>
         <a class="hidden rounded-lg px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 md:block" href="/releases/">Releases</a>
-        <a class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700" :href="managerUrl">Abrir gerenciador <span>↗</span></a>
+        <a class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700" href="#instalacao">Instalar com Docker <span>↘</span></a>
       </nav>
     </header>
 
-    <main id="top" class="mx-auto max-w-[1440px] px-[5vw]">
+    <main id="top" class="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10 xl:px-12">
       <section class="relative grid min-h-[calc(100vh-84px)] items-center gap-[5vw] py-[8vh] lg:grid-cols-2">
         <div class="public-reveal relative z-10" aria-labelledby="hero-title">
           <p class="mb-6 text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300"><span class="mr-2 inline-block h-2 w-2 rounded-full bg-primary-600 align-middle" /> Self-hosted · open source · sem ruído</p>
           <h1 id="hero-title" class="max-w-3xl text-5xl font-extrabold leading-[.98] tracking-[-.065em] sm:text-6xl lg:text-8xl">O lugar onde<br /><em class="not-italic text-primary-600 dark:text-primary-400">suas chaves descansam.</em></h1>
           <p class="mt-6 max-w-xl text-base leading-7 text-gray-600 dark:text-gray-300">Atacte reúne senhas, códigos de autenticação e notas privadas em um cofre simples de operar — no seu servidor, sob suas regras.</p>
           <div class="mt-8 mb-14 flex flex-wrap gap-3">
-            <a class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" :href="managerUrl">Abrir gerenciador <span>→</span></a>
+            <a class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" href="#instalacao">Instalar com Docker <span>↓</span></a>
             <a class="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600" href="#instalacao">Ver instalação</a>
           </div>
           <div class="grid grid-cols-3 gap-3 border-t border-gray-200 pt-5 dark:border-gray-700">
@@ -59,17 +59,15 @@
 
       <section id="como-funciona" class="border-t border-gray-200 py-[120px] dark:border-gray-700"><p class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">02 / SEM MÁGICA</p><div class="mt-8 grid gap-12 lg:grid-cols-2 lg:gap-[10vw]"><div class="public-reveal"><p class="text-gray-500 dark:text-gray-400">O Atacte não tenta esconder a infraestrutura.</p><h2 class="mt-5 text-5xl font-extrabold leading-none tracking-[-.06em] sm:text-6xl lg:text-7xl">Você sabe<br />onde ele roda.<br /><em class="not-italic text-primary-600 dark:text-primary-400">Você decide.</em></h2></div><div class="public-reveal max-w-md border-l-4 border-primary-600 pl-7"><span class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">O modelo</span><p class="mt-4 leading-7 text-gray-600 dark:text-gray-300">O gerenciador roda com sua API e seu PostgreSQL. A landing é pública; o cofre continua no ambiente que você escolheu.</p><dl class="mt-10"><div class="flex gap-5 border-t border-gray-200 py-4 dark:border-gray-700"><dt class="font-mono text-xs font-semibold text-primary-600">01</dt><dd class="m-0 text-sm">Suba com Docker Compose</dd></div><div class="flex gap-5 border-t border-gray-200 py-4 dark:border-gray-700"><dt class="font-mono text-xs font-semibold text-primary-600">02</dt><dd class="m-0 text-sm">Acesse pela web, mobile ou desktop</dd></div><div class="flex gap-5 border-t border-gray-200 py-4 dark:border-gray-700"><dt class="font-mono text-xs font-semibold text-primary-600">03</dt><dd class="m-0 text-sm">Atualize pela imagem versionada</dd></div></dl></div></div></section>
 
-      <section id="instalacao" class="public-reveal flex flex-col items-start justify-between gap-8 border-t border-gray-200 py-[86px] dark:border-gray-700 lg:flex-row lg:items-end"><div><p class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">03 / PRIMEIRO PASSO</p><h2 class="mt-5 text-5xl font-extrabold leading-none tracking-[-.06em] sm:text-6xl lg:text-7xl">Seu cofre começa<br /><em class="not-italic text-primary-600 dark:text-primary-400">no seu servidor.</em></h2><p class="mt-6 max-w-xl leading-7 text-gray-500 dark:text-gray-400">Instale com Docker em um comando. O updater interno avisa quando há uma nova release e preserva o PostgreSQL.</p><pre class="mt-6 max-w-xl overflow-auto rounded-lg border border-gray-700 bg-gray-900 px-4 py-3.5 font-mono text-xs leading-6 text-green-200"><code>curl -fsSL https://atacte.vercel.app/install.sh | sh</code></pre></div><div class="flex flex-wrap gap-3"><a class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" :href="managerUrl">Abrir o gerenciador <span>→</span></a><a class="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600" href="/docs/">Ler a documentação</a></div></section>
+      <section id="instalacao" class="public-reveal flex flex-col items-start justify-between gap-8 border-t border-gray-200 py-[86px] dark:border-gray-700 lg:flex-row lg:items-end"><div><p class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">03 / PRIMEIRO PASSO</p><h2 class="mt-5 text-5xl font-extrabold leading-none tracking-[-.06em] sm:text-6xl lg:text-7xl">Seu cofre começa<br /><em class="not-italic text-primary-600 dark:text-primary-400">no seu servidor.</em></h2><p class="mt-6 max-w-xl leading-7 text-gray-500 dark:text-gray-400">Instale com Docker em um comando. O updater interno avisa quando há uma nova release e preserva o PostgreSQL.</p><pre class="mt-6 max-w-xl overflow-auto rounded-lg border border-gray-700 bg-gray-900 px-4 py-3.5 font-mono text-xs leading-6 text-green-200"><code>curl -fsSL https://atacte.vercel.app/install.sh | sh</code></pre></div><div class="flex flex-wrap gap-3"><a class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" href="/docs/#instalacao">Ver instruções <span>→</span></a><a class="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600" href="/releases/">Ver releases</a></div></section>
     </main>
 
-    <footer class="mx-auto flex max-w-[1440px] justify-between border-t border-gray-200 px-[5vw] py-6 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400"><span>Atacte / private vault</span><span><a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" href="/docs/">Docs</a> · <a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" href="/releases/">Releases</a> · <a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" :href="managerUrl">Entrar</a></span></footer>
+    <footer class="mx-auto flex w-full max-w-[1440px] justify-between border-t border-gray-200 px-4 py-6 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400 sm:px-6 lg:px-10 xl:px-12"><span>Atacte / private vault</span><span><a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" href="/docs/">Docs</a> · <a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" href="/releases/">Releases</a></span></footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-
-const managerUrl = computed(() => import.meta.env.VITE_MANAGER_URL || '/manager/')
+import { onMounted } from 'vue'
 
 onMounted(() => {
   const nodes = document.querySelectorAll<HTMLElement>('.public-reveal')

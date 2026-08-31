@@ -86,6 +86,7 @@ generated/
 deploy-local.sh
 docker-compose.override.yml
 Dockerfile
+!updater/Dockerfile
 .bin/
 .docker/
 

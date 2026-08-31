@@ -83,12 +83,13 @@ export default function UsersScreen() {
       const response = await userService.getAllUsers(pagination.limit, offset);
       if (response.success && response.data) {
         setUsers(response.data);
-        if (response.pagination) {
+        const responsePagination = response.pagination;
+        if (responsePagination) {
           setPagination(prev => ({
             ...prev,
             currentPage: page,
-            total: response.pagination.total,
-            totalPages: Math.ceil(response.pagination.total / prev.limit)
+            total: responsePagination.total,
+            totalPages: Math.ceil(responsePagination.total / prev.limit)
           }));
         }
       } else {

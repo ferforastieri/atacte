@@ -275,7 +275,16 @@ const pagination = ref({
 const showEditModal = ref(false)
 const showPasswordModal = ref(false)
 const showDeleteModal = ref(false)
-const editingUser = ref<Partial<AdminUser> & { isActive: boolean }>({
+type EditableUser = {
+  id: string
+  email: string
+  name: string
+  phoneNumber: string
+  role: 'USER' | 'ADMIN'
+  isActive: boolean
+}
+
+const editingUser = ref<EditableUser>({
   id: '',
   email: '',
   name: '',

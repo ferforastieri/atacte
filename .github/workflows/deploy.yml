@@ -14,8 +14,9 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Configure SSH
         env:
@@ -25,12 +26,13 @@ jobs:
           SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
         run: |
           set -eu
-          mkdir -p "$HOME/.ssh"
-          chmod 700 "$HOME/.ssh"
-          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/id_ed25519"
-          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
-          chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
-          printf 'DEPLOY_SSH_HOST=%s\nDEPLOY_SSH_USER=%s\n' "$SSH_HOST" "$SSH_USER" >> "$GITHUB_ENV"
+          ssh_dir="$RUNNER_TEMP/atacte-ssh"
+          mkdir -p "$ssh_dir"
+          chmod 700 "$ssh_dir"
+          printf '%s\n' "$SSH_KEY" > "$ssh_dir/id_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          chmod 600 "$ssh_dir/id_ed25519" "$ssh_dir/known_hosts"
+          printf 'DEPLOY_SSH_HOST=%s\nDEPLOY_SSH_USER=%s\nDEPLOY_SSH_KEY_PATH=%s\n' "$SSH_HOST" "$SSH_USER" "$ssh_dir/id_ed25519" >> "$GITHUB_ENV"
       - name: Pull and restart immutable images
         env:
           BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/atacte-backend:sha-${{ github.event.workflow_run.head_sha }}
@@ -39,24 +41,31 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         run: |
           set -eu
-          ssh -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_SSH_USER@$DEPLOY_SSH_HOST" \
-            "echo '$GHCR_TOKEN' | docker login ghcr.io --username '$GHCR_USERNAME' --password-stdin >/dev/null"
-          ssh -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_SSH_USER@$DEPLOY_SSH_HOST" \
+          ghcr_username_quoted="$(printf '%q' "$GHCR_USERNAME")"
+          printf '%s\n' "$GHCR_TOKEN" | ssh -i "$DEPLOY_SSH_KEY_PATH" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_SSH_USER@$DEPLOY_SSH_HOST" \
+            "docker login ghcr.io --username $ghcr_username_quoted --password-stdin >/dev/null"
+          ssh -i "$DEPLOY_SSH_KEY_PATH" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_SSH_USER@$DEPLOY_SSH_HOST" \
             "BACKEND_IMAGE='$BACKEND_IMAGE' FRONT_IMAGE='$FRONT_IMAGE' bash -s" <<'REMOTE'
           set -eu
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
           cd /opt/atacte
           old_backend="$(docker inspect --format '{{.Config.Image}}' atacte-backend 2>/dev/null || true)"
           old_front="$(docker inspect --format '{{.Config.Image}}' atacte-front 2>/dev/null || true)"
-          docker compose pull
-          docker compose up -d --remove-orphans
-          healthy=0
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:${BACKEND_PORT:-3457}/health >/dev/null && curl --fail --silent --show-error http://127.0.0.1:${FRONT_PORT:-3456}/ >/dev/null; then healthy=1; break; fi
-            sleep 2
-          done
-          if [ "$healthy" -ne 1 ]; then
+          docker compose pull backend front
+          docker compose up -d --no-build --remove-orphans backend front
+          wait_for_health() {
+            for attempt in $(seq 1 30); do
+              if curl --fail --silent --show-error http://127.0.0.1:${BACKEND_PORT:-3457}/health >/dev/null && curl --fail --silent --show-error http://127.0.0.1:${FRONT_PORT:-3456}/ >/dev/null; then return 0; fi
+              sleep 2
+            done
+            return 1
+          }
+          if ! wait_for_health; then
             echo "health check falhou; restaurando imagens anteriores" >&2
-            if [ -n "$old_backend" ] && [ -n "$old_front" ]; then BACKEND_IMAGE="$old_backend" FRONT_IMAGE="$old_front" docker compose up -d --remove-orphans; fi
+            if [ -n "$old_backend" ] && [ -n "$old_front" ]; then
+              BACKEND_IMAGE="$old_backend" FRONT_IMAGE="$old_front" docker compose up -d --no-build --remove-orphans backend front
+              if ! wait_for_health; then echo "rollback também falhou" >&2; fi
+            fi
             exit 1
           fi
           docker compose ps --format json

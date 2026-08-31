@@ -201,8 +201,8 @@ cd backend
 npm install
 
 # Configurar variáveis de ambiente
-cp config.env.example config.env
-# Edite o arquivo config.env com suas configurações
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
 ```
 
 ### 4. Configuração do Frontend Web
@@ -233,7 +233,7 @@ npx expo doctor
 
 ### Variáveis de Ambiente (Backend)
 
-Crie o arquivo `backend/config.env`:
+Crie o arquivo `backend/.env`:
 
 ```env
 # Servidor
@@ -271,7 +271,7 @@ LOG_LEVEL=info
 
 ### Configuração do Frontend Web
 
-O frontend web se conecta automaticamente ao backend via proxy configurado no Vite. Na Vercel, defina `VITE_MANAGER_URL` para o endereço da instalação self-hosted e, se o repositório não for `ferforastieri/atacte`, `VITE_GITHUB_REPOSITORY`. `VITE_ANDROID_APK_URL` pode apontar para um APK privado ou mirror; por padrão usa o asset da release mais recente.
+O frontend do gerenciador se conecta automaticamente ao backend via proxy configurado no Vite. A landing publicada na Vercel é exclusivamente pública e não tenta acessar a instalação self-hosted. Se o repositório não for `ferforastieri/atacte`, defina `VITE_GITHUB_REPOSITORY`; `VITE_ANDROID_APK_URL` pode apontar para um APK privado ou mirror, e por padrão usa o asset da release mais recente.
 
 ### Configuração do App Mobile
 
@@ -472,20 +472,17 @@ Importar dados de JSON.
 O deploy local por SSH/rsync foi removido. O fluxo atual é:
 
 1. Faça push para a branch `main` ou crie uma tag `v*`.
-2. O CI valida tipos, testes, builds, Compose e dependências.
-3. O workflow publica imagens multi-arquitetura versionadas no GHCR, tenta a build Android no EAS de forma não bloqueante e cria um release.
-4. O deploy conecta por SSH, atualiza os containers e verifica `/health`; falhas de health check mantêm a versão anterior para rollback manual por tag SHA.
+2. O CI executa backend, web, updater e Compose em jobs paralelos, com cache de npm/Go.
+3. O workflow constrói amd64 e arm64 em runners nativos, publica os manifests multi-arquitetura versionados no GHCR, tenta a build Android no EAS de forma não bloqueante e cria um release idempotente.
+4. O deploy conecta por SSH, faz pull somente das imagens do backend/manager, verifica `/health` e executa rollback automático validado se a nova versão não responder.
 5. A Vercel publica a landing, documentação e releases automaticamente pela integração GitHub.
 
-Secrets obrigatórios no repositório do GitHub (o instalador local gera os equivalentes automaticamente):
+Secrets obrigatórios no repositório do GitHub para deploy:
 
-- `POSTGRES_PASSWORD`
-- `JWT_SECRET`
-- `ENCRYPTION_KEY`
-- `VITE_API_URL`
-- `EXPO_TOKEN`, opcional; inicia a build Android production no EAS. Falhas/quota da Expo não bloqueiam backend, manager ou landing.
 - `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`, `DEPLOY_SSH_PRIVATE_KEY`, `DEPLOY_SSH_KNOWN_HOSTS`
 - `GHCR_USERNAME`, `GHCR_TOKEN` (leitura das imagens no servidor `/opt/atacte`)
+
+`EXPO_TOKEN` é opcional; inicia a build Android production no EAS. Falhas/quota da Expo não bloqueiam backend, manager ou landing. `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `VITE_API_URL` são configurações do servidor/instalador e não precisam ser cadastradas no GitHub Actions.
 
 Secrets opcionais:
 

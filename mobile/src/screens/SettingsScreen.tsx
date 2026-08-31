@@ -174,7 +174,7 @@ const SettingsScreen: React.FC = () => {
     setProfilePicture('');
   };
 
-  const settingsSections = [
+  const settingsSections: Array<{ title: string; items: SettingItem[] }> = [
     {
       title: 'Perfil',
       items: [
@@ -226,7 +226,7 @@ const SettingsScreen: React.FC = () => {
         {
           label: 'Versão do App',
           type: 'text',
-          value: Constants.expoConfig?.version || Constants.expoConfig?.runtimeVersion || 'N/A',
+          value: Constants.expoConfig?.version || (typeof Constants.expoConfig?.runtimeVersion === 'string' ? Constants.expoConfig.runtimeVersion : 'N/A'),
         },
       ],
     },
@@ -265,13 +265,13 @@ const SettingsScreen: React.FC = () => {
         
         {item.type === 'switch' && (
           <Switch
-            value={item.value}
+            value={item.value === true}
             onValueChange={item.onToggle}
             trackColor={{ 
               false: isDark ? '#374151' : '#d1d5db', 
               true: isDark ? '#22c55e' : '#22c55e' 
             }}
-            thumbColor={item.value ? '#ffffff' : isDark ? '#6b7280' : '#ffffff'}
+            thumbColor={item.value === true ? '#ffffff' : isDark ? '#6b7280' : '#ffffff'}
             ios_backgroundColor={isDark ? '#374151' : '#d1d5db'}
           />
         )}
@@ -288,7 +288,7 @@ const SettingsScreen: React.FC = () => {
               styles.input,
               isDark && styles.inputDark,
             ]}
-            value={item.value}
+            value={typeof item.value === 'string' ? item.value : ''}
             onChangeText={item.onChangeText}
             placeholder={item.placeholder}
             placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
@@ -311,7 +311,7 @@ const SettingsScreen: React.FC = () => {
                 >
                   <View style={styles.imagePreviewContainer}>
                     <Image 
-                      source={{ uri: item.value }} 
+                      source={{ uri: typeof item.value === 'string' ? item.value : '' }}
                       style={styles.imagePreview}
                     />
                     <View style={styles.imageOverlay}>
@@ -322,7 +322,7 @@ const SettingsScreen: React.FC = () => {
                       style={styles.removeImageButton}
                       onPress={(e) => {
                         e.stopPropagation();
-                        item.onRemoveImage();
+                        item.onRemoveImage?.();
                       }}
                     >
                       <Ionicons name="close-circle" size={24} color="#ef4444" />

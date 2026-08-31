@@ -13,7 +13,7 @@ import { MainTabParamList } from '../../navigation/AppNavigator';
 
 interface AuditLog {
   id: string;
-  userId: string;
+  userId?: string;
   action: string;
   details: Record<string, unknown>;
   ipAddress?: string;
@@ -113,13 +113,14 @@ export default function AuditLogsScreen() {
       });
       if (response.success && response.data) {
         setLogs(response.data);
-        if (response.pagination) {
+        const responsePagination = response.pagination;
+        if (responsePagination) {
           setPagination(prev => ({
             ...prev,
             currentPage: page,
-            total: response.pagination.total,
-            totalPages: Math.ceil(response.pagination.total / prev.limit),
-            hasMore: page < Math.ceil(response.pagination.total / prev.limit)
+            total: responsePagination.total,
+            totalPages: Math.ceil(responsePagination.total / prev.limit),
+            hasMore: page < Math.ceil(responsePagination.total / prev.limit)
           }));
         }
       } else {

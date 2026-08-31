@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import type { Component } from 'vue'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
@@ -74,8 +75,8 @@ interface Props {
   required?: boolean
   disabled?: boolean
   readonly?: boolean
-  leftIcon?: string | (() => unknown)
-  rightIcon?: string | (() => unknown)
+  leftIcon?: string | Component
+  rightIcon?: string | Component
   showPasswordToggle?: boolean
 }
 
@@ -154,4 +155,3 @@ watch(() => props.type, (newType) => {
   }
 })
 </script>
-

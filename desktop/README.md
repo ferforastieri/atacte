@@ -118,7 +118,7 @@ O electron-builder vai gerar automaticamente os formatos `.ico` (Windows) e `.ic
 
 ## 📝 Notas
 
-- O aplicativo desktop usa o build estático do frontend web (`web/dist/`)
+- O aplicativo desktop usa o build estático do manager (`web/dist-manager/`)
 - Em desenvolvimento, você pode usar o servidor Vite do web (`npm run dev`)
 - O Electron se conecta ao backend configurado via `BACKEND_URL`
 - Por padrão, tenta conectar em `http://localhost:3001`
@@ -139,4 +139,3 @@ Verifique se:
 1. O backend está rodando
 2. A URL está correta no `.env` ou variável de ambiente
 3. O CORS está configurado no backend para permitir requisições do Electron
-

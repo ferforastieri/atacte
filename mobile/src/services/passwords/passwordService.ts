@@ -69,7 +69,7 @@ class PasswordService {
     options: {
       method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
       data?: unknown;
-      params?: Record<string, string>;
+      params?: Record<string, string | number | boolean>;
     } = {}
   ): Promise<T> {
     try {

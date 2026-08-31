@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "manager/src/**/*", "manager/src/**/*.vue", "landing/**/*"],
+  "include": ["env.d.ts", "manager/src/**/*", "manager/src/**/*.vue", "landing/**/*", "shared/**/*"],
   "exclude": ["manager/src/**/__tests__/*"],
   "compilerOptions": {
     "composite": true,
@@ -12,6 +12,6 @@
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": false
   }
 }

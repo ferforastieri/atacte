@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
+import { View, TextInput, Text, TouchableOpacity, ViewStyle, TextStyle, TextInputProps } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -18,6 +18,7 @@ interface InputProps {
   inputStyle?: TextStyle;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  autoCapitalize?: TextInputProps['autoCapitalize'];
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -35,6 +36,7 @@ export const Input: React.FC<InputProps> = ({
   inputStyle,
   leftIcon,
   rightIcon,
+  autoCapitalize = 'sentences',
 }) => {
   const { isDark } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -92,6 +94,7 @@ export const Input: React.FC<InputProps> = ({
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
           editable={!disabled}
           multiline={multiline}
           numberOfLines={numberOfLines}

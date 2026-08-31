@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Component } from 'vue'
 
 interface Props {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
@@ -24,7 +25,7 @@ interface Props {
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
   loading?: boolean
-  icon?: string | (() => unknown)
+  icon?: string | Component
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -62,4 +63,3 @@ const buttonClasses = computed(() => {
   ].join(' ')
 })
 </script>
-

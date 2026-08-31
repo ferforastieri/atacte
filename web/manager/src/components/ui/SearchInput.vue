@@ -74,12 +74,12 @@ let debounceTimer: number | null = null
 let searchTimeout: number | null = null
 
 
-const debounce = (func: (...args: unknown[]) => void, delay: number) => {
-  return (...args: unknown[]) => {
+const debounce = <T>(func: (value: T) => void, delay: number) => {
+  return (value: T) => {
     if (debounceTimer) {
       clearTimeout(debounceTimer)
     }
-    debounceTimer = window.setTimeout(() => func.apply(this, args), delay)
+    debounceTimer = window.setTimeout(() => func(value), delay)
   }
 }
 

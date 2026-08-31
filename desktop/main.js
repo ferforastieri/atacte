@@ -73,7 +73,7 @@ function createWindow() {
       const resourcesPath = process.resourcesPath || path.dirname(process.execPath);
       indexPath = path.join(resourcesPath, 'web-dist', 'index.html');
     } else {
-      indexPath = path.join(__dirname, '..', 'web', 'dist', 'index.html');
+      indexPath = path.join(__dirname, '..', 'web', 'dist-manager', 'manager', 'index.html');
     }
     
     if (fs.existsSync(indexPath)) {

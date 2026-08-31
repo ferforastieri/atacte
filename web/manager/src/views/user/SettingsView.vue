@@ -316,7 +316,7 @@ const handleChangePassword = async () => {
     }, 2000)
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Erro ao alterar senha'
       : error instanceof Error ? error.message : 'Erro ao alterar senha';
     
     if (errorMessage.includes('incorreta') || errorMessage.includes('atual')) {
@@ -348,7 +348,7 @@ const handleDeleteAccount = async () => {
     }, 2000)
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Erro ao deletar conta'
       : error instanceof Error ? error.message : 'Erro ao deletar conta';
     
     if (errorMessage.includes('incorreta') || errorMessage.includes('Senha')) {

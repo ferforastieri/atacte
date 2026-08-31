@@ -10,7 +10,6 @@ interface ImportMetaEnv {
   readonly VITE_API_URL: string
   readonly VITE_APP_NAME: string
   readonly VITE_APP_VERSION: string
-  readonly VITE_MANAGER_URL?: string
   readonly VITE_GITHUB_REPOSITORY?: string
   readonly VITE_ANDROID_APK_URL?: string
   readonly VITE_BUILD_VERSION?: string

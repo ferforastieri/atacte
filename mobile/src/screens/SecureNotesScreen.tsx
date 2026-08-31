@@ -6,6 +6,8 @@ import { Header, Modal, SearchInput, Card, SkeletonLoader } from '../components/
 import { SecureNoteCard, FolderSelector, SecureNoteFormModal } from '../components/secureNotes';
 import { secureNoteService } from '../services/secureNotes/secureNoteService';
 import { useTheme } from '../contexts/ThemeContext';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainTabParamList } from '../navigation/AppNavigator';
 
 interface SecureNote {
   id: string;
@@ -18,7 +20,7 @@ interface SecureNote {
 }
 
 export default function SecureNotesScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'SecureNotes'>>();
   const [notes, setNotes] = useState<SecureNote[]>([]);
   const [allNotes, setAllNotes] = useState<SecureNote[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
@@ -279,10 +281,6 @@ export default function SecureNotesScreen() {
       shadowRadius: 8,
       elevation: 8,
       zIndex: 1000,
-    },
-    emptyCard: {
-      alignItems: 'center',
-      paddingVertical: 40,
     },
     emptyTitle: {
       fontSize: 18,
