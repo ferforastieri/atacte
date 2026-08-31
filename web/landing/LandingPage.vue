@@ -1,73 +1,93 @@
 <template>
-  <div class="min-h-screen overflow-hidden bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-    <header class="mx-auto flex h-[84px] w-full max-w-[1440px] items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm transition-colors dark:border-gray-700 dark:bg-gray-800 sm:px-6 lg:px-10 xl:px-12">
-      <a class="flex items-center gap-2 font-bold" href="#top" aria-label="Atacte início">
-        <img class="h-[34px] w-[34px] rounded-lg shadow-sm" src="/favicon-web.png" alt="" />
-        <span>Atacte<small class="mt-0.5 block text-[8px] font-medium uppercase tracking-[.16em] text-gray-500 dark:text-gray-400">Private vault</small></span>
-      </a>
-      <nav class="flex items-center gap-1 text-sm font-medium text-gray-700 dark:text-gray-300" aria-label="Navegação principal">
-        <a class="hidden rounded-lg px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 sm:block" href="#recursos">Recursos</a>
-        <a class="hidden rounded-lg px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 sm:block" href="#como-funciona">Como funciona</a>
-        <a class="hidden rounded-lg px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 md:block" href="/docs/">Documentação</a>
-        <a class="hidden rounded-lg px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 md:block" href="/releases/">Releases</a>
-        <a class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700" href="#instalacao">Instalar com Docker <span>↘</span></a>
-      </nav>
+  <div class="min-h-screen bg-gray-50 text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-gray-100">
+    <header class="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+      <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
+        <div class="flex h-16 items-center justify-between">
+          <a href="#top" class="flex items-center" aria-label="Atacte, início">
+            <span class="flex items-center space-x-2">
+              <svg class="h-8 w-8" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <circle cx="16" cy="16" r="14" fill="#22c55e" stroke="#15803d" stroke-width="2" />
+                <path d="M12 14v-2a4 4 0 1 1 8 0v2" stroke="white" stroke-width="2" stroke-linecap="round" />
+                <rect x="10" y="14" width="12" height="8" rx="2" fill="white" />
+                <text x="16" y="26" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#15803d">A</text>
+              </svg>
+              <span class="text-xl font-bold">Atacte</span>
+            </span>
+          </a>
+          <nav class="flex items-center space-x-1 text-sm font-medium" aria-label="Navegação principal">
+            <a href="#recursos" class="hidden rounded-lg px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 sm:block">Recursos</a>
+            <a href="#como-funciona" class="hidden rounded-lg px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 sm:block">Como funciona</a>
+            <a href="/docs/" class="hidden rounded-lg px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 md:block">Documentação</a>
+            <a href="/releases/" class="hidden rounded-lg px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 md:block">Releases</a>
+            <button type="button" class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:hover:bg-gray-700" :aria-label="isDark ? 'Alternar para modo claro' : 'Alternar para modo escuro'" :title="isDark ? 'Alternar para modo claro' : 'Alternar para modo escuro'" @click="toggleTheme"><SunIcon v-if="isDark" class="h-5 w-5 text-yellow-500" /><MoonIcon v-else class="h-5 w-5 text-gray-600 dark:text-gray-300" /></button>
+            <a href="#instalacao" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">Instalar</a>
+          </nav>
+        </div>
+      </div>
     </header>
 
-    <main id="top" class="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10 xl:px-12">
-      <section class="relative grid min-h-[calc(100vh-84px)] items-center gap-[5vw] py-[8vh] lg:grid-cols-2">
-        <div class="public-reveal relative z-10" aria-labelledby="hero-title">
-          <p class="mb-6 text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300"><span class="mr-2 inline-block h-2 w-2 rounded-full bg-primary-600 align-middle" /> Self-hosted · open source · sem ruído</p>
-          <h1 id="hero-title" class="max-w-3xl text-5xl font-extrabold leading-[.98] tracking-[-.065em] sm:text-6xl lg:text-8xl">O lugar onde<br /><em class="not-italic text-primary-600 dark:text-primary-400">suas chaves descansam.</em></h1>
-          <p class="mt-6 max-w-xl text-base leading-7 text-gray-600 dark:text-gray-300">Atacte reúne senhas, códigos de autenticação e notas privadas em um cofre simples de operar — no seu servidor, sob suas regras.</p>
-          <div class="mt-8 mb-14 flex flex-wrap gap-3">
-            <a class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" href="#instalacao">Instalar com Docker <span>↓</span></a>
-            <a class="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600" href="#instalacao">Ver instalação</a>
-          </div>
-          <div class="grid grid-cols-3 gap-3 border-t border-gray-200 pt-5 dark:border-gray-700">
-            <div><strong class="block font-mono text-lg font-semibold text-primary-600 dark:text-primary-400">01</strong><span class="mt-2 block text-xs font-bold">Local</span><small class="mt-1 block text-[10px] leading-4 text-gray-500 dark:text-gray-400">Seus dados ficam na sua infraestrutura.</small></div>
-            <div><strong class="block font-mono text-lg font-semibold text-primary-600 dark:text-primary-400">02</strong><span class="mt-2 block text-xs font-bold">Consciente</span><small class="mt-1 block text-[10px] leading-4 text-gray-500 dark:text-gray-400">Sem promessas de segurança que o produto não cumpre.</small></div>
-            <div><strong class="block font-mono text-lg font-semibold text-primary-600 dark:text-primary-400">03</strong><span class="mt-2 block text-xs font-bold">Portátil</span><small class="mt-1 block text-[10px] leading-4 text-gray-500 dark:text-gray-400">Docker, web, mobile e desktop.</small></div>
-          </div>
+    <main id="top" class="w-full px-4 py-8 pb-24 sm:px-6 lg:px-10 lg:py-10 xl:px-12">
+      <section class="grid items-center gap-10 py-8 sm:py-12 lg:grid-cols-2 lg:gap-16 lg:py-16" aria-labelledby="hero-title">
+        <div class="public-reveal">
+          <div class="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900 dark:text-primary-300"><span class="h-2 w-2 rounded-full bg-primary-600" aria-hidden="true" />Seu servidor. Suas regras.</div>
+          <h1 id="hero-title" class="max-w-2xl text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">Senhas seguras, organizadas e sob seu controle.</h1>
+          <p class="mt-5 max-w-xl text-lg leading-8 text-gray-600 dark:text-gray-300">Atacte é um gerenciador self-hosted para senhas, TOTP e notas privadas. Uma experiência simples, com os dados na infraestrutura que você escolheu.</p>
+          <div class="mt-8 flex flex-wrap gap-3"><a href="#instalacao" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">Instalar com Docker <span aria-hidden="true">↓</span></a><a href="/docs/" class="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">Ler documentação</a></div>
+          <div class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 dark:text-gray-400"><span class="inline-flex items-center gap-2"><LockClosedIcon class="h-4 w-4 text-primary-600" />Cookies HttpOnly</span><span class="inline-flex items-center gap-2"><ServerIcon class="h-4 w-4 text-primary-600" />Docker e PostgreSQL</span><span class="inline-flex items-center gap-2"><ShieldCheckIcon class="h-4 w-4 text-primary-600" />Código aberto</span></div>
         </div>
 
-        <div class="public-reveal relative flex min-h-[390px] items-center justify-center lg:min-h-[500px]" aria-label="Ilustração de um cofre com itens protegidos">
-          <div class="absolute h-2/3 w-[96%] rotate-[-24deg] rounded-full border border-blue-500/20" />
-          <div class="absolute h-1/2 w-4/5 rotate-[-24deg] rounded-full border border-primary-500/30" />
-          <div class="relative w-full max-w-[430px] rotate-2 rounded-lg border border-gray-300 bg-gradient-to-br from-white to-gray-100 p-[18px] shadow-[22px_24px_0_rgba(220,252,231,.8),0_24px_48px_rgba(17,24,39,.14)] dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:shadow-[22px_24px_0_rgba(20,83,45,.8),0_24px_48px_rgba(0,0,0,.3)]">
-            <div class="flex justify-between font-mono text-[10px] tracking-widest text-gray-500 dark:text-gray-400"><span>AT—01</span><span>SECURE / LOCAL</span></div>
-            <div class="relative my-[18px] grid h-[245px] place-items-center rounded-lg border border-gray-300 bg-gradient-to-br from-white to-gray-200 dark:border-gray-600 dark:from-gray-600 dark:to-gray-800">
-              <div class="grid h-[154px] w-[154px] place-items-center rounded-full border-[11px] border-primary-500 bg-transparent shadow-[inset_0_0_0_5px_#bbf7d0,0_0_0_2px_#15803d]"><strong class="text-3xl font-bold text-primary-600 dark:text-primary-400">✦</strong></div>
-              <div class="absolute bottom-4 font-mono text-[10px] text-gray-500 dark:text-gray-400"><span class="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-primary-500" /> VAULT READY</div>
-            </div>
-            <div class="grid grid-cols-[70px_1fr_38px] items-center border-t border-gray-200 px-3 py-3.5 font-mono text-[11px] text-gray-500 dark:border-gray-700 dark:text-gray-400"><span>KEYS</span><b class="font-medium tracking-widest text-gray-900 dark:text-gray-100">••••••••••••</b><i class="text-right not-italic text-primary-600">✓</i></div>
-            <div class="grid grid-cols-[70px_1fr_38px] items-center border-t border-gray-200 px-3 py-3.5 font-mono text-[11px] text-gray-500 dark:border-gray-700 dark:text-gray-400"><span>TOTP</span><b class="font-medium tracking-[.25em] text-blue-600">4 8 2 1 9 0</b><i class="text-right not-italic text-primary-600">30s</i></div>
-            <div class="mt-1 flex justify-between border-t border-gray-200 pt-4 font-mono text-[9px] tracking-widest text-gray-500 dark:border-gray-700 dark:text-gray-400"><span>PRIVATE BY DESIGN</span><span>EST. 2024</span></div>
+        <div class="public-reveal" aria-label="Prévia do gerenciador Atacte">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 p-4 text-white shadow-sm"><KeyIcon class="h-5 w-5 opacity-90" /><p class="mt-5 text-2xl font-bold">24</p><p class="text-sm text-blue-100">Senhas</p></div>
+            <div class="rounded-lg bg-gradient-to-br from-green-500 to-green-600 p-4 text-white shadow-sm"><HeartIcon class="h-5 w-5 opacity-90" /><p class="mt-5 text-2xl font-bold">8</p><p class="text-sm text-green-100">Favoritas</p></div>
+            <div class="rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 p-4 text-white shadow-sm"><DocumentTextIcon class="h-5 w-5 opacity-90" /><p class="mt-5 text-2xl font-bold">12</p><p class="text-sm text-purple-100">Notas seguras</p></div>
+            <div class="rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 p-4 text-white shadow-sm"><ShieldCheckIcon class="h-5 w-5 opacity-90" /><p class="mt-5 text-2xl font-bold">6</p><p class="text-sm text-orange-100">TOTP ativos</p></div>
+          </div>
+          <div class="mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-5">
+            <div class="flex items-center justify-between gap-3"><div class="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"><MagnifyingGlassIcon class="h-4 w-4 shrink-0 text-gray-400" /><span class="truncate text-sm text-gray-500 dark:text-gray-400">Pesquisar senhas...</span></div><span class="hidden rounded-lg bg-primary-100 px-3 py-2 text-xs font-medium text-primary-700 dark:bg-primary-900 dark:text-primary-300 sm:inline">Dashboard</span></div>
+            <div class="mt-4 flex items-center gap-3 border-t border-gray-200 pt-4 dark:border-gray-700"><div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900"><LockClosedIcon class="h-5 w-5 text-primary-600 dark:text-primary-400" /></div><div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">Atacte · Gerenciador</p><p class="truncate text-xs text-gray-500 dark:text-gray-400">usuario@exemplo.com</p></div><span class="hidden rounded bg-blue-100 px-2 py-1 font-mono text-xs font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-300 sm:inline">482 190</span><span class="rounded-lg p-2 text-gray-400" aria-hidden="true"><EllipsisVerticalIcon class="h-5 w-5" /></span></div>
           </div>
         </div>
       </section>
 
-      <section id="recursos" class="border-t border-gray-200 py-[120px] dark:border-gray-700">
-        <div class="public-reveal max-w-2xl"><p class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">01 / O COFRE</p><h2 class="mt-4 text-5xl font-extrabold leading-none tracking-[-.06em] sm:text-6xl lg:text-7xl">O essencial,<br /><em class="not-italic text-primary-600 dark:text-primary-400">bem guardado.</em></h2><p class="mt-6 max-w-xl leading-7 text-gray-500 dark:text-gray-400">Uma interface direta para as coisas que você não pode perder — nem deixar expostas.</p></div>
-        <div class="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <article class="public-reveal flex min-h-[250px] flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"><span class="text-2xl font-bold text-primary-600">⌘</span><h3 class="mt-8 text-lg font-semibold">Senhas no lugar</h3><p class="mt-3 mb-6 text-sm leading-6 text-gray-500 dark:text-gray-400">Crie, organize, pesquise e importe suas credenciais sem espalhar cópias pela nuvem.</p><small class="mt-auto text-[10px] font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">01 / CREDENCIAIS</small></article>
-          <article class="public-reveal flex min-h-[250px] flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"><span class="text-2xl font-bold text-blue-600">◌</span><h3 class="mt-8 text-lg font-semibold">TOTP junto da senha</h3><p class="mt-3 mb-6 text-sm leading-6 text-gray-500 dark:text-gray-400">Gere códigos de dois fatores no mesmo contexto, sem alternar entre aplicativos.</p><small class="mt-auto text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">02 / AUTENTICAÇÃO</small></article>
-          <article class="public-reveal flex min-h-[250px] flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"><span class="text-2xl font-bold text-purple-600">◇</span><h3 class="mt-8 text-lg font-semibold">Notas privadas</h3><p class="mt-3 mb-6 text-sm leading-6 text-gray-500 dark:text-gray-400">Guarde chaves de recuperação, documentos e lembretes que merecem outra camada.</p><small class="mt-auto text-[10px] font-semibold uppercase tracking-wider text-purple-700 dark:text-purple-300">03 / NOTAS</small></article>
-          <article class="public-reveal flex min-h-[250px] flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"><span class="text-2xl font-bold text-orange-600">▣</span><h3 class="mt-8 text-lg font-semibold">Controle de acesso</h3><p class="mt-3 mb-6 text-sm leading-6 text-gray-500 dark:text-gray-400">Veja sessões, confie dispositivos e mantenha uma trilha de auditoria compreensível.</p><small class="mt-auto text-[10px] font-semibold uppercase tracking-wider text-orange-700 dark:text-orange-300">04 / SESSÕES</small></article>
-        </div>
+      <section id="recursos" class="border-t border-gray-200 py-12 dark:border-gray-700 sm:py-16" aria-labelledby="recursos-title">
+        <div class="public-reveal"><p class="text-sm font-semibold text-primary-600 dark:text-primary-400">Tudo no mesmo lugar</p><h2 id="recursos-title" class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Um gerenciador que acompanha seu dia.</h2><p class="mt-3 max-w-2xl text-gray-600 dark:text-gray-400">A interface do Atacte foi feita para consultar, criar e manter seus dados sem distrações.</p></div>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><article v-for="feature in features" :key="feature.title" class="public-reveal rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"><div :class="['flex h-10 w-10 items-center justify-center rounded-lg', feature.bg]"><component :is="feature.icon" :class="['h-5 w-5', feature.color]" /></div><h3 class="mt-4 font-semibold">{{ feature.title }}</h3><p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">{{ feature.description }}</p></article></div>
       </section>
 
-      <section id="como-funciona" class="border-t border-gray-200 py-[120px] dark:border-gray-700"><p class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">02 / SEM MÁGICA</p><div class="mt-8 grid gap-12 lg:grid-cols-2 lg:gap-[10vw]"><div class="public-reveal"><p class="text-gray-500 dark:text-gray-400">O Atacte não tenta esconder a infraestrutura.</p><h2 class="mt-5 text-5xl font-extrabold leading-none tracking-[-.06em] sm:text-6xl lg:text-7xl">Você sabe<br />onde ele roda.<br /><em class="not-italic text-primary-600 dark:text-primary-400">Você decide.</em></h2></div><div class="public-reveal max-w-md border-l-4 border-primary-600 pl-7"><span class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">O modelo</span><p class="mt-4 leading-7 text-gray-600 dark:text-gray-300">O gerenciador roda com sua API e seu PostgreSQL. A landing é pública; o cofre continua no ambiente que você escolheu.</p><dl class="mt-10"><div class="flex gap-5 border-t border-gray-200 py-4 dark:border-gray-700"><dt class="font-mono text-xs font-semibold text-primary-600">01</dt><dd class="m-0 text-sm">Suba com Docker Compose</dd></div><div class="flex gap-5 border-t border-gray-200 py-4 dark:border-gray-700"><dt class="font-mono text-xs font-semibold text-primary-600">02</dt><dd class="m-0 text-sm">Acesse pela web, mobile ou desktop</dd></div><div class="flex gap-5 border-t border-gray-200 py-4 dark:border-gray-700"><dt class="font-mono text-xs font-semibold text-primary-600">03</dt><dd class="m-0 text-sm">Atualize pela imagem versionada</dd></div></dl></div></div></section>
+      <section id="como-funciona" class="border-t border-gray-200 py-12 dark:border-gray-700 sm:py-16" aria-labelledby="como-title">
+        <div class="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start"><div class="public-reveal"><p class="text-sm font-semibold text-primary-600 dark:text-primary-400">Simples de operar</p><h2 id="como-title" class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Você decide onde o cofre roda.</h2><p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">O Atacte é publicado como containers e usa PostgreSQL. Não há serviço externo obrigatório para acessar seu gerenciador.</p></div><div class="grid gap-4 sm:grid-cols-3"><article v-for="(step, index) in steps" :key="step.title" class="public-reveal rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800"><span class="font-mono text-sm font-semibold text-primary-600 dark:text-primary-400">0{{ index + 1 }}</span><h3 class="mt-5 font-semibold">{{ step.title }}</h3><p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">{{ step.description }}</p></article></div></div>
+      </section>
 
-      <section id="instalacao" class="public-reveal flex flex-col items-start justify-between gap-8 border-t border-gray-200 py-[86px] dark:border-gray-700 lg:flex-row lg:items-end"><div><p class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">03 / PRIMEIRO PASSO</p><h2 class="mt-5 text-5xl font-extrabold leading-none tracking-[-.06em] sm:text-6xl lg:text-7xl">Seu cofre começa<br /><em class="not-italic text-primary-600 dark:text-primary-400">no seu servidor.</em></h2><p class="mt-6 max-w-xl leading-7 text-gray-500 dark:text-gray-400">Instale com Docker em um comando. O updater interno avisa quando há uma nova release e preserva o PostgreSQL.</p><pre class="mt-6 max-w-xl overflow-auto rounded-lg border border-gray-700 bg-gray-900 px-4 py-3.5 font-mono text-xs leading-6 text-green-200"><code>curl -fsSL https://atacte.vercel.app/install.sh | sh</code></pre></div><div class="flex flex-wrap gap-3"><a class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" href="/docs/#instalacao">Ver instruções <span>→</span></a><a class="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600" href="/releases/">Ver releases</a></div></section>
+      <section id="instalacao" class="public-reveal rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-8" aria-labelledby="instalacao-title"><div class="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end"><div><p class="text-sm font-semibold text-primary-600 dark:text-primary-400">Comece em minutos</p><h2 id="instalacao-title" class="mt-2 text-3xl font-bold tracking-tight">Instale no seu servidor.</h2><p class="mt-3 max-w-2xl text-gray-600 dark:text-gray-400">O instalador cria a configuração inicial, preserva os dados e inicia o gerenciador com Docker Compose.</p><div class="mt-5 overflow-x-auto rounded-lg bg-gray-900 px-4 py-3 font-mono text-sm text-green-200"><code>curl -fsSL https://atacte.vercel.app/install.sh | sh</code></div></div><div class="flex flex-wrap gap-3"><a href="/docs/#instalacao" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">Instruções completas</a><a href="/releases/" class="inline-flex items-center justify-center rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">Ver releases</a></div></div></section>
     </main>
 
-    <footer class="mx-auto flex w-full max-w-[1440px] justify-between border-t border-gray-200 px-4 py-6 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400 sm:px-6 lg:px-10 xl:px-12"><span>Atacte / private vault</span><span><a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" href="/docs/">Docs</a> · <a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" href="/releases/">Releases</a></span></footer>
+    <footer class="border-t border-gray-200 dark:border-gray-700"><div class="flex w-full flex-col gap-3 px-4 py-6 text-sm text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10 xl:px-12"><div class="flex items-center gap-2"><span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">A</span><span>Atacte · seu cofre, suas regras.</span></div><nav class="flex items-center gap-4" aria-label="Links do rodapé"><a class="transition-colors hover:text-primary-600 dark:hover:text-primary-400" href="/docs/">Documentação</a><a class="transition-colors hover:text-primary-600 dark:hover:text-primary-400" href="/releases/">Releases</a><a class="transition-colors hover:text-primary-600 dark:hover:text-primary-400" href="https://github.com/ferforastieri/atacte" rel="noreferrer">GitHub</a></nav></div></footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
+import { DocumentTextIcon, EllipsisVerticalIcon, HeartIcon, KeyIcon, LockClosedIcon, MagnifyingGlassIcon, MoonIcon, ServerIcon, ShieldCheckIcon, SunIcon } from '@heroicons/vue/24/outline'
+
+const isDark = ref(document.documentElement.classList.contains('dark'))
+const toggleTheme = () => {
+  isDark.value = !isDark.value
+  document.documentElement.classList.toggle('dark', isDark.value)
+  window.localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+}
+
+const features = [
+  { title: 'Senhas organizadas', description: 'Crie, pesquise, favorite e importe credenciais em poucos cliques.', icon: KeyIcon, bg: 'bg-blue-100 dark:bg-blue-900', color: 'text-blue-600 dark:text-blue-300' },
+  { title: 'TOTP integrado', description: 'Gere códigos de dois fatores junto da conta que você está acessando.', icon: ShieldCheckIcon, bg: 'bg-green-100 dark:bg-green-900', color: 'text-green-600 dark:text-green-300' },
+  { title: 'Notas privadas', description: 'Guarde chaves de recuperação, documentos e lembretes com organização.', icon: DocumentTextIcon, bg: 'bg-purple-100 dark:bg-purple-900', color: 'text-purple-600 dark:text-purple-300' },
+  { title: 'Sessões sob controle', description: 'Revise dispositivos, encerre sessões e acompanhe a atividade da conta.', icon: ServerIcon, bg: 'bg-orange-100 dark:bg-orange-900', color: 'text-orange-600 dark:text-orange-300' }
+]
+const steps = [
+  { title: 'Instale', description: 'Um comando baixa a configuração e sobe os containers.' },
+  { title: 'Organize', description: 'Acesse o manager pela web, mobile ou desktop.' },
+  { title: 'Atualize', description: 'O updater avisa sobre releases e mantém seu volume.' }
+]
 
 onMounted(() => {
   const nodes = document.querySelectorAll<HTMLElement>('.public-reveal')

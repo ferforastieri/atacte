@@ -1,602 +1,165 @@
-# 🔐 Atacte - Gerenciador de Senhas e Notas Seguras
+# Atacte
 
-**Atacte** é um gerenciador de senhas e notas seguras desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA/TOTP) e interfaces modernas para web e mobile.
+Gerenciador self-hosted de senhas, códigos TOTP e notas privadas. O Atacte foi pensado para pessoas e pequenas equipes que querem uma interface agradável sem entregar o cofre a um serviço externo: você escolhe o servidor, mantém o PostgreSQL e controla as atualizações.
 
-A historia do projeto é simples, comprei uma maquina para rodar um homelab, e o vaultwarden nao me servia tão bem, portanto fiz o meu proprio. Acredito que tenhas varias falhas, mas tentei ao maximo fingir que um dia lançaria ele usando tudo que sei.
+> O Atacte não é apresentado como zero-knowledge ou criptografia end-to-end. A cifragem histórica deriva uma chave do email por compatibilidade; proteja o banco e leia a seção [Segurança](#segurança) antes de usar dados críticos.
 
-## 📋 Índice
+## O que você pode fazer
 
-- [Características](#-características)
-- [Arquitetura](#-arquitetura)
-- [Tecnologias](#-tecnologias)
-- [Pré-requisitos](#-pré-requisitos)
-- [Instalação](#-instalação)
-- [Configuração](#-configuração)
-- [Uso](#-uso)
-- [API](#-api)
-- [Deployment](#-deployment)
-- [Desenvolvimento](#-desenvolvimento)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
+- guardar, pesquisar, favoritar e organizar senhas;
+- gerar e consultar códigos de autenticação TOTP;
+- criar notas privadas e pastas;
+- importar e exportar seus dados em JSON;
+- revisar sessões, dispositivos confiáveis e auditoria;
+- usar o mesmo servidor pela web, pelo aplicativo Android/Expo ou pelo desktop;
+- receber um aviso no gerenciador quando uma nova versão estiver disponível.
 
-## ✨ Características
+O código é dividido em uma API Express/Prisma, um gerenciador Vue/Tailwind e clientes mobile/desktop. A landing, a documentação e o histórico de releases são publicados separadamente do gerenciador autenticado.
 
-### 🔒 Segurança
-- **Criptografia AES-256** para todas as senhas armazenadas
-- **Hash bcrypt** para senha mestra com salt personalizado
-- **Autenticação JWT** com refresh tokens
-- **Sessões cookie-only** (`HttpOnly` + CSRF); o JWT nunca é persistido no navegador
-- **Rate limiting** para proteção contra ataques de força bruta
-- **Auditoria completa** de todas as ações do usuário
-- **Sessões gerenciadas** com controle de dispositivos confiáveis
+## Instalação rápida (Docker)
 
-### 🎯 Funcionalidades
+Requisitos: Docker Engine com Docker Compose v2, `curl` e um host Linux ou macOS. Para acesso fora da rede local, use HTTPS por meio de Caddy, Nginx ou outro reverse proxy.
 
-#### 🔐 Gerenciamento de Senhas
-- **Gerenciamento de senhas** com categorização e favoritos
-- **Geração de senhas seguras** com critérios personalizáveis
-- **Autenticação de dois fatores (2FA/TOTP)** integrada
-- **Importação/Exportação** de dados em formato JSON
-- **Campos customizados** para cada entrada de senha
-- **Auto-lock** configurável por inatividade
-- **Logs de auditoria** detalhados
-
-#### 📝 Notas Seguras
-- **Notas criptografadas** com suporte a conteúdo extenso
-- **Organização por pastas** para melhor gerenciamento
-- **Sistema de favoritos** para acesso rápido
-- **Busca avançada** por título e conteúdo
-
-### 🎨 Interface
-- **Design responsivo** com Tailwind CSS
-- **Interface moderna** construída com Vue.js 3
-- **Componentes reutilizáveis** e acessíveis
-- **Feedback visual** para força das senhas
-- **Navegação intuitiva** com roteamento SPA
-
-## 🏗️ Arquitetura
-
-O projeto segue uma arquitetura de **3 camadas** com separação clara de responsabilidades, suportando múltiplas interfaces:
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │    Backend      │    │   Database      │
-│                 │    │ (Node.js +      │    │ (PostgreSQL)    │
-│ ┌─────────────┐ │    │  Express)       │    │                 │
-│ │   Web App   │ │◄──►│ • API REST      │◄──►│ • Dados         │
-│ │ (Vue.js 3)  │ │    │ • Autenticação  │    │ • Criptografia  │
-│ └─────────────┘ │    │ • Criptografia  │    │ • Auditoria     │
-│ ┌─────────────┐ │    │ • Validação     │    │ • Sessões       │
-│ │  Mobile App │ │    │                 │    │                 │
-│ │(React Native│ │    │                 │    │                 │
-│ │   + Expo)   │ │    │                 │    │                 │
-│ └─────────────┘ │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-### Estrutura do Projeto
-
-```
-Atacte/
-├── backend/                 # API Backend (Node.js + Express)
-│   ├── src/
-│   │   ├── controllers/     # Controladores das rotas
-│   │   ├── services/        # Lógica de negócio
-│   │   ├── repositories/    # Acesso aos dados
-│   │   ├── middleware/      # Middlewares (auth, validação)
-│   │   ├── utils/          # Utilitários (crypto, audit)
-│   │   └── infrastructure/ # Configuração (DB, env)
-│   └── package.json
-├── web/                    # Landing pública e gerenciador Vue/Vite
-│   ├── landing/            # Página pública, /docs e /releases (Vercel)
-│   ├── manager/             # Cofre autenticado (Docker/Nginx)
-│   ├── shared/
-│   │   ├── components/     # Componentes Vue
-│   │   ├── views/         # Páginas da aplicação
-│   │   ├── stores/        # Estado global (Pinia)
-│   │   ├── api/           # Cliente HTTP
-│   │   └── router/        # Roteamento
-│   └── package.json
-├── mobile/                 # App Mobile (React Native + Expo)
-│   ├── src/
-│   │   ├── components/     # Componentes React Native
-│   │   ├── screens/       # Telas da aplicação
-│   │   ├── contexts/      # Contextos (Auth, Theme, Toast)
-│   │   ├── services/      # Serviços de API
-│   │   ├── hooks/         # Custom hooks
-│   │   └── navigation/    # Navegação
-│   ├── assets/            # Imagens e recursos
-│   └── package.json
-├── nginx/                  # Configuração do Nginx
-├── updater/                # Serviço mínimo de atualização via Docker socket
-├── docker-compose.yml      # Orquestração de containers em produção
-├── Dockerfile.backend      # Imagem da API
-├── Dockerfile.front        # Imagem do frontend web
-└── .github/workflows/      # CI, publicação GHCR e release
-```
-
-## 🛠️ Tecnologias
-
-### Backend
-- **Node.js 18** - Runtime JavaScript
-- **Express.js** - Framework web
-- **TypeScript** - Tipagem estática
-- **Prisma** - ORM para PostgreSQL
-- **PostgreSQL** - Banco de dados
-- **JWT** - Autenticação
-- **bcryptjs** - Hash de senhas
-- **crypto-js** - Criptografia AES
-- **speakeasy** - Geração TOTP
-- **helmet** - Segurança HTTP
-- **express-rate-limit** - Rate limiting
-
-### Frontend Web
-- **Vue.js 3** - Framework frontend
-- **TypeScript** - Tipagem estática
-- **Vite** - Build tool
-- **Tailwind CSS** - Framework CSS
-- **Pinia** - Gerenciamento de estado
-- **Vue Router** - Roteamento SPA
-- **Axios** - Cliente HTTP
-- **@vueuse/core** - Utilitários Vue
-- **@headlessui/vue** - Componentes acessíveis
-
-### Frontend Mobile
-- **React Native** - Framework mobile
-- **Expo** - Plataforma de desenvolvimento
-- **TypeScript** - Tipagem estática
-- **NativeWind** - Tailwind CSS para React Native
-- **React Navigation** - Navegação mobile
-- **AsyncStorage** - Armazenamento local
-- **Expo SecureStore** - Armazenamento seguro
-- **React Native Flash Message** - Mensagens toast
-- **Expo Clipboard** - Funcionalidade de copiar/colar
-
-### DevOps
-- **Docker** - Containerização
-- **Docker Compose** - Orquestração
-- **Nginx** - Proxy reverso
-- **Supervisor** - Gerenciamento de processos
-
-## 📋 Pré-requisitos
-
-- **Node.js** 18+ 
-- **npm** 8+
-- **PostgreSQL** 13+
-- **Docker** 20+ (opcional)
-- **Git**
-- **Expo CLI** (para desenvolvimento mobile)
-- **Android Studio** / **Xcode** (para build mobile)
-
-## 🚀 Instalação
-
-### 1. Clone o repositório
-
-```bash
-git clone https://github.com/seu-usuario/atacte.git
-cd atacte
-```
-
-### 2. Configuração do Banco de Dados
-
-```bash
-# Instalar PostgreSQL (Ubuntu/Debian)
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-
-# Criar banco e usuário
-sudo -u postgres psql
-CREATE DATABASE atacte;
-CREATE USER atacte_user WITH PASSWORD 'sua_senha_segura';
-GRANT ALL PRIVILEGES ON DATABASE atacte TO atacte_user;
-\q
-```
-
-### 3. Configuração do Backend
-
-```bash
-cd backend
-
-# Instalar dependências
-npm install
-
-# Configurar variáveis de ambiente
-cp .env.example .env
-# Edite o arquivo .env com suas configurações
-```
-
-### 4. Configuração do Frontend Web
-
-```bash
-cd ../web
-
-# Instalar dependências
-npm install
-```
-
-### 5. Configuração do App Mobile
-
-```bash
-cd ../mobile
-
-# Instalar dependências
-npm install
-
-# Instalar Expo CLI globalmente (se ainda não tiver)
-npm install -g @expo/cli
-
-# Verificar se tudo está funcionando
-npx expo doctor
-```
-
-## ⚙️ Configuração
-
-### Variáveis de Ambiente (Backend)
-
-Crie o arquivo `backend/.env`:
-
-```env
-# Servidor
-PORT=3001
-NODE_ENV=development
-
-# Banco de Dados
-DATABASE_URL=postgresql://atacte_user:sua_senha@localhost:5432/atacte
-
-# JWT
-JWT_SECRET=sua_chave_jwt_super_secreta_de_pelo_menos_32_caracteres
-JWT_EXPIRES_IN=7d
-
-# Criptografia
-ENCRYPTION_KEY=sua_chave_de_32_caracteres_exatos
-
-# Segurança
-BCRYPT_ROUNDS=12
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-
-# CORS
-CORS_ORIGIN=http://localhost:3000
-
-# Cookies/Proxy
-COOKIE_SECURE=false
-COOKIE_SAME_SITE=lax
-TRUST_PROXY=0
-UPDATER_URL=http://atacte-updater:8080
-UPDATER_TOKEN=um-token-gerado-na-instalacao
-
-# Logs
-LOG_LEVEL=info
-```
-
-### Configuração do Frontend Web
-
-O frontend do gerenciador se conecta automaticamente ao backend via proxy configurado no Vite. A landing publicada na Vercel é exclusivamente pública e não tenta acessar a instalação self-hosted. Se o repositório não for `ferforastieri/atacte`, defina `VITE_GITHUB_REPOSITORY`; `VITE_ANDROID_APK_URL` pode apontar para um APK privado ou mirror, e por padrão usa o asset da release mais recente.
-
-### Configuração do App Mobile
-
-O app mobile solicita o endereço do servidor na primeira abertura. A configuração fica salva no aparelho enquanto a sessão estiver ativa e é removida ao sair.
-
-1. **Executar prebuild** - Antes do primeiro build, execute:
-   ```bash
-   cd mobile
-   npx expo prebuild --clean
-   ```
-   Isso aplica as configurações nativas.
-
-## 🎯 Uso
-
-### Desenvolvimento Mobile
-
-Para desenvolvimento do app mobile:
-
-1. **Executar prebuild** (primeira vez):
-   ```bash
-   cd mobile
-   npx expo prebuild --clean
-   ```
-
-2. **Iniciar desenvolvimento**:
-   ```bash
-   npm start
-   ```
-
-3. **Testar no dispositivo**:
-   - Instale o app **Expo Go** no seu smartphone
-   - Escaneie o QR code que aparece no terminal
-   - Ou use um emulador Android/iOS
-
-### Desenvolvimento
-
-```bash
-# Terminal 1 - Backend
-cd backend
-npm run dev
-
-# Terminal 2 - Frontend Web
-cd web
-npm run dev
-
-# Terminal 3 - App Mobile (opcional)
-cd mobile
-npx expo start
-```
-
-- **Web**: http://localhost:3000
-- **Mobile**: Use o app Expo Go no seu dispositivo ou emulador
-
-### Produção
-
-```bash
-# Build do backend
-cd backend
-npm run build
-
-# Build do frontend web
-cd ../web
-npm run build
-
-# Build do app mobile (requer prebuild primeiro)
-cd ../mobile
-npx expo prebuild --clean
-npx eas build --platform android --profile production
-# ou para iOS:
-# npx eas build --platform ios --profile production
-
-# Iniciar backend
-cd ../backend
-npm start
-```
-
-### Com Docker
-
-```bash
-# Construir e executar
-docker compose up -d --build
-
-# Ver logs
-docker compose logs -f
-
-# Parar
-docker compose down
-```
-
-## 📡 API
-
-### Autenticação
-
-#### POST `/api/auth/register`
-Registrar novo usuário.
-
-```json
-{
-  "email": "usuario@exemplo.com",
-  "masterPassword": "senha_mestra_segura"
-}
-```
-
-#### POST `/api/auth/login`
-Fazer login.
-
-```json
-{
-  "email": "usuario@exemplo.com", 
-  "masterPassword": "senha_mestra_segura",
-  "deviceName": "Android - Samsung Galaxy"
-}
-```
-
-#### POST `/api/auth/trust-device`
-Confiar em um dispositivo (requer autenticação).
-
-```json
-{
-  "sessionId": "id_da_sessao"
-}
-```
-
-#### GET `/api/auth/me`
-Obter informações do usuário autenticado.
-
-#### GET `/api/auth/sessions`
-Listar todas as sessões ativas do usuário.
-
-#### GET `/api/version`
-Retorna a versão imutável da imagem em execução; usado pelo aviso de atualização.
-
-#### POST `/api/update`
-Inicia o updater interno (administrador + CSRF). Não executa migração nem altera o volume PostgreSQL.
-
-### Senhas
-
-#### GET `/api/passwords`
-Listar senhas do usuário.
-
-#### POST `/api/passwords`
-Criar nova senha.
-
-```json
-{
-  "name": "Conta do Gmail",
-  "website": "gmail.com",
-  "username": "usuario@gmail.com",
-  "password": "senha_criptografada",
-  "notes": "Conta principal",
-  "folder": "Trabalho"
-}
-```
-
-#### PUT `/api/passwords/:id`
-Atualizar senha existente.
-
-#### DELETE `/api/passwords/:id`
-Excluir senha.
-
-### Notas Seguras
-
-#### GET `/api/secure-notes`
-Listar notas do usuário.
-
-#### POST `/api/secure-notes`
-Criar nova nota segura.
-
-#### PUT `/api/secure-notes/:id`
-Atualizar nota existente.
-
-#### DELETE `/api/secure-notes/:id`
-Excluir nota.
-
-#### GET `/api/secure-notes/folders/list`
-Listar pastas disponíveis.
-
-### TOTP/2FA
-
-#### POST `/api/totp/generate`
-Gerar QR Code para 2FA.
-
-#### POST `/api/totp/verify`
-Verificar código TOTP.
-
-### Importação/Exportação
-
-#### GET `/api/import-export/export`
-Exportar dados em JSON.
-
-#### POST `/api/import-export/import`
-Importar dados de JSON.
-
-## 🚀 Deployment
-
-### Deploy Automático com GitHub Actions
-
-O fluxo de publicação atual é:
-
-1. Faça push para a branch `main` ou crie uma tag `v*`.
-2. O CI executa backend, web, updater e Compose em jobs paralelos, com cache de npm/Go.
-3. O workflow constrói amd64 e arm64 em runners nativos, publica os manifests multi-arquitetura versionados no GHCR, tenta a build Android no EAS de forma não bloqueante e cria um release idempotente.
-4. A Vercel publica a landing, documentação e releases automaticamente pela integração GitHub.
-5. Cada instalação self-hosted atualiza pelo updater local, sem conexão SSH com o GitHub.
-
-Não são necessários secrets de SSH ou acesso remoto ao seu servidor no GitHub Actions. `EXPO_TOKEN` é opcional; inicia a build Android production no EAS. Falhas/quota da Expo não bloqueiam backend, manager ou landing. `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `VITE_API_URL` são configurações do servidor/instalador e não precisam ser cadastradas no GitHub Actions.
-
-Secrets opcionais:
-
-- `POSTGRES_DB`, padrão `atacte`
-- `POSTGRES_USER`, padrão `atacte`
-- `POSTGRES_PORT`, padrão `5435`
-- `BACKEND_BIND`, padrão `0.0.0.0` (necessário quando o reverse proxy está em outro host/CT; restrinja a porta no firewall)
-- `BACKEND_PORT`, padrão `3457`
-- `FRONT_PORT`, padrão `3456`
-- `JWT_EXPIRES_IN`, padrão `7d`
-- `BCRYPT_ROUNDS`, padrão `12`
-- `RATE_LIMIT_WINDOW_MS`, padrão `900000`
-- `RATE_LIMIT_MAX_REQUESTS`, padrão `500`
-- `AUTH_RATE_LIMIT_MAX`, padrão `5`
-- `AUTH_RATE_LIMIT_WINDOW_MS`, padrão `900000`
-- `MUTATION_RATE_LIMIT_MAX`, padrão `120`
-- `MUTATION_RATE_LIMIT_WINDOW_MS`, padrão `60000`
-- `CORS_ORIGIN`, lista separada por vírgula, sem wildcard com credenciais
-- Requisições same-origin atrás de Caddy/Nginx são reconhecidas automaticamente; o proxy deve encaminhar `X-Forwarded-Proto`
-- `COOKIE_SECURE`, padrão `true` em produção
-- `COOKIE_SAME_SITE`, padrão `lax`
-- `COOKIE_DOMAIN`, opcional
-- `COOKIE_MAX_AGE_MS`, padrão 30 dias
-- `TRUST_PROXY`, padrão `0`
-- `JWT_ISSUER`, padrão `atacte-api`
-- `JWT_AUDIENCE`, padrão `atacte-clients`
-- `UPDATER_TOKEN`, token privado criado pelo instalador para autorizar atualizações
-- `UPDATER_URL`, padrão `http://atacte-updater:8080`
-- `BUILD_VERSION`, SHA da imagem publicada
-- `LOG_LEVEL`, padrão `info`
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `PASSWORD_RESET_URL`
-
-### Deploy Manual no Servidor
-
-O caminho manual ainda existe só para manutenção emergencial: crie um `.env` na raiz com os mesmos valores dos secrets e rode `docker compose --env-file .env up -d --build`.
-
-O `.env` permanece ignorado pelo Git.
-
-### Instalação e atualização pelo updater
-
-Em um host com Docker Compose v2, a instalação recomendada é:
-
-```bash
+```sh
 curl -fsSL https://atacte.vercel.app/install.sh | sh
 ```
 
-O script cria `~/.atacte`, baixa somente o Compose, gera `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `UPDATER_TOKEN` aleatórios no `.env` privado, configura o CORS para a porta local e inicia backend, manager, PostgreSQL e updater. Backend, manager e updater são imagens prontas multi-arquitetura publicadas no GHCR; o servidor não precisa do código-fonte nem dos Dockerfiles do repositório. Em `localhost` ele define `COOKIE_SECURE=false` para a sessão funcionar em HTTP; antes de expor o serviço por domínio, configure `COOKIE_SECURE=true` atrás de HTTPS. Portanto, a instalação inicial não exige variáveis manuais; reexecutar o comando preserva esses segredos e atualiza sem alterar schema ou volume do banco. Para fixar uma release: `ATACTE_RELEASE_REF=v0.0.12 curl -fsSL https://atacte.vercel.app/install.sh | sh`.
+O instalador cria `~/.atacte`, baixa o Compose e imagens prontas para sua arquitetura, gera os segredos locais e inicia PostgreSQL, API, manager e updater. Nenhuma variável é necessária na primeira instalação. O volume do banco e o arquivo `.env` são preservados ao executar o comando novamente.
 
-Administradores veem o aviso de nova versão no Dashboard. O botão **Atualizar agora** chama `POST /api/update`; o updater faz pull de backend/frontend e recria somente esses containers. O serviço usa o socket Docker e deve ficar acessível apenas pela rede interna; não publique sua porta diretamente na internet.
+Depois, abra **http://localhost:3456**. Em um banco vazio, o primeiro visitante verá o cadastro inicial; essa conta passa a ser a administradora. Se já existir um banco, faça backup antes de apontar o Compose para ele.
 
-### Landing, documentação e downloads
+Para instalar uma versão específica:
 
-- `/` — apresentação pública e instalação;
-- `/docs/` — requisitos, Docker, updater, backup e segurança;
-- `/releases/` — histórico publicado no GitHub e links para assets;
-- `Baixar APK Android` no menu do manager — aponta para o APK anexado à release mais recente quando a build EAS estiver disponível.
-
-O APK é gerado pelo job não bloqueante `Expo Android` em `.github/workflows/publish.yml`. Quando `EXPO_TOKEN` não estiver configurado ou a Expo falhar, a release continua sendo criada sem o asset Android.
-
-### Modelo de segurança e risco conhecido
-
-As sessões web, mobile e desktop usam cookies `HttpOnly`; requisições mutáveis também exigem o header `X-CSRF-Token`. Configure sempre HTTPS em produção e uma lista explícita em `CORS_ORIGIN`.
-
-O schema do PostgreSQL não é alterado automaticamente pelos workflows. A cifragem histórica do cofre usa uma chave derivada do email e permanece nesta versão por compatibilidade; isso significa que um dump do banco pode permitir a recuperação dos dados cifrados. Não trate o Atacte como zero-knowledge até uma futura migração criptográfica.
-
-O rate limit usa memória local e não é compartilhado entre réplicas. Para escalar horizontalmente, substitua o store por Redis.
-
-## 💻 Desenvolvimento
-
-### Estrutura de Código
-
-O projeto segue padrões de **Clean Architecture**:
-
-- **Controllers**: Recebem requisições e retornam respostas
-- **Services**: Contêm a lógica de negócio
-- **Repositories**: Gerenciam acesso aos dados
-- **Utils**: Funções utilitárias (crypto, audit, etc.)
-
-### Scripts Disponíveis
-
-```bash
-# Backend
-npm run dev          # Desenvolvimento com hot reload
-npm run build        # Build para produção
-npm run start        # Iniciar em produção
-npm run test         # Executar testes
-npm run db:generate  # Gerar cliente Prisma
-npm run db:push      # Sincronizar schema com DB
-npm run db:migrate   # Executar migrações
-npm run db:studio    # Abrir Prisma Studio
-
-# Frontend Web
-npm run dev          # Desenvolvimento com hot reload
-npm run build        # Build para produção
-npm run preview      # Preview do build
-npm run type-check   # Verificar tipos TypeScript
-npm run lint         # Linter ESLint
-
-# App Mobile
-npm start            # Iniciar Expo dev server
-npm run android      # Executar no Android
-npm run ios          # Executar no iOS
-npm run web          # Executar versão web (Expo)
+```sh
+ATACTE_RELEASE_REF=v1.2.3 curl -fsSL https://atacte.vercel.app/install.sh | sh
 ```
 
-### Contribuindo
+Os arquivos da instalação ficam em `~/.atacte`. O PostgreSQL é publicado somente em `127.0.0.1` por padrão. Quando o reverse proxy estiver em outro host ou container, publique a API na interface de rede privada e restrinja a porta no firewall:
 
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+```env
+BACKEND_BIND=0.0.0.0
+BACKEND_PORT=3457
+```
 
-## 📝 Licença
+Não exponha PostgreSQL nem a porta do updater à internet.
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+## Uso diário
 
-## 👨‍💻 Autor
+1. Abra o endereço do seu manager e crie a primeira conta, se a instalação for nova.
+2. Cadastre uma senha, nota ou TOTP; use pastas e favoritos para encontrar tudo rapidamente.
+3. Em **Sessões**, confira os dispositivos e encerre acessos que você não reconhece.
+4. Em **Configurações**, faça exportações somente para um local protegido e apague o arquivo depois de conferi-lo.
+5. Quando o aviso de atualização aparecer, um administrador pode iniciar a atualização pelo botão do manager. O updater baixa as imagens e recria os serviços sem apagar o volume do PostgreSQL.
 
-**Fernando** - Desenvolvedor
+## Atualizar e voltar uma versão
 
----
+Atualização normal, a partir do host:
+
+```sh
+cd ~/.atacte
+docker compose pull backend front updater
+docker compose up -d --no-build --remove-orphans
+```
+
+O instalador também pode ser executado novamente para buscar a release configurada. Para voltar, edite o `ATACTE_RELEASE_REF`/as tags de imagem no Compose para uma versão conhecida e execute `docker compose pull` e `docker compose up -d`. Valide a API com:
+
+```sh
+curl -fsS http://localhost:3457/health
+```
+
+O updater não executa `prisma migrate`, `db push` ou qualquer alteração automática de schema. Faça um backup antes de qualquer troca de versão.
+
+## Backup e restauração
+
+O banco fica no volume Docker `atacte_postgres_data` (o nome pode variar conforme o projeto). Um dump lógico é portátil e recomendado:
+
+```sh
+cd ~/.atacte
+docker compose exec -T postgres pg_dump -U atacte -d atacte > atacte-backup.sql
+```
+
+Guarde o dump em mídia criptografada. Para restaurar, pare a API/manager, confirme o banco de destino e importe o arquivo com `psql`; não substitua o volume sem antes fazer uma cópia. Consulte a [documentação de backup](https://atacte.vercel.app/docs/#backup) para o procedimento completo.
+
+## Configuração opcional
+
+Os valores abaixo ficam em `~/.atacte/.env` e só precisam ser alterados quando você publicar o serviço ou integrar um proxy. O instalador já gera os segredos obrigatórios.
+
+| Variável | Finalidade | Padrão |
+| --- | --- | --- |
+| `FRONT_PORT` | Porta HTTP do manager | `3456` |
+| `BACKEND_BIND` / `BACKEND_PORT` | Interface e porta da API | `0.0.0.0` / `3457` |
+| `CORS_ORIGIN` | Origens permitidas, separadas por vírgula | origem local |
+| `COOKIE_SECURE` | Exigir HTTPS no cookie de sessão | `false` local, `true` em produção |
+| `COOKIE_SAME_SITE` | Política SameSite (`lax`, `strict` ou `none`) | `lax` |
+| `COOKIE_DOMAIN` | Domínio explícito do cookie, se necessário | vazio |
+| `TRUST_PROXY` | Confiança no reverse proxy para IP/HTTPS | `0` |
+| `JWT_EXPIRES_IN` | Duração da sessão | `7d` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Envio de recuperação de senha | vazio |
+
+Mantenha `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `UPDATER_TOKEN` privados. Não os publique em issues, logs, imagens ou repositórios.
+
+## Clientes
+
+### Web
+
+O manager é o cliente principal e fica no mesmo Compose da API. A landing pública não acessa sua instalação e serve apenas para apresentação, documentação e releases.
+
+### Android (Expo)
+
+Baixe o APK da release mais recente em [Releases](https://github.com/ferforastieri/atacte/releases), quando disponível. Na primeira abertura, informe a URL HTTPS da sua instalação (por exemplo, `https://cofre.exemplo.com`). O job de Android é opcional: se a Expo estiver sem quota ou sem credencial, backend e web continuam sendo publicados.
+
+### Desktop
+
+O cliente Electron está em `desktop/` e pode ser empacotado para Windows, macOS ou Linux. Ele usa a mesma API e o mesmo login do manager.
+
+## Segurança
+
+As sessões usam cookies `HttpOnly`, `Secure` em HTTPS e proteção CSRF; tokens de sessão não são gravados em `localStorage`. A API aplica CORS por lista explícita de origens, rate limit, validação de entrada e headers de segurança. Use sempre HTTPS para acesso remoto, firewall para as portas internas e backups criptografados.
+
+O schema Prisma não é migrado automaticamente. O rate limit padrão fica na memória do processo e, portanto, não é compartilhado entre múltiplas réplicas.
+
+### Risco criptográfico conhecido
+
+Por compatibilidade com os dados existentes, a chave usada pela cifragem histórica é derivada de `SHA-256(email)` e o resultado necessário fica no banco. Um comprometimento do PostgreSQL pode permitir recuperar dados do cofre. Isso é um risco aceito temporariamente e não equivale a zero-knowledge; uma migração criptográfica específica é necessária antes de fazer essa alegação.
+
+## Desenvolvimento
+
+Cada parte possui seu próprio `package.json` e lockfile. Node.js 18+ e npm são recomendados.
+
+```sh
+# API
+cd backend
+npm ci
+npm run db:generate
+npm run dev
+
+# Web (outro terminal)
+cd web
+npm ci
+npm run dev
+
+# Verificação e builds
+npm run type-check
+npm run build:manager
+npm run build:landing
+
+# Mobile (opcional)
+cd mobile
+npm ci
+npx expo start
+```
+
+Para subir tudo localmente com containers, copie `backend/.env.example` para `backend/.env`, preencha os segredos e execute `docker compose up -d --build`. Os workflows de CI executam testes e builds, mas nunca fazem migração automática do banco.
+
+## Links
+
+- [Landing](https://atacte.vercel.app/)
+- [Documentação](https://atacte.vercel.app/docs/)
+- [Releases e APK](https://github.com/ferforastieri/atacte/releases)
+- [Código-fonte](https://github.com/ferforastieri/atacte)
+
+## Contribuição e licença
+
+Issues e pull requests são bem-vindos. Antes de reportar uma falha de segurança, não inclua dados do cofre nem segredos nos anexos.
+
+Atacte é distribuído sob a licença [MIT](LICENSE).
