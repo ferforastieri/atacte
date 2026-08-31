@@ -15,7 +15,7 @@
       </section>
     </main>
 
-    <footer class="border-t border-gray-200 dark:border-gray-700"><div class="flex w-full flex-col gap-3 px-4 py-6 text-sm text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10 xl:px-12"><div class="flex items-center gap-2"><PublicLogo :size="24" /><span>Atacte · seu cofre, suas regras.</span></div><nav class="flex items-center gap-4" aria-label="Links do rodapé"><a class="hover:text-primary-600 dark:hover:text-primary-400" href="/">Início</a><a class="hover:text-primary-600 dark:hover:text-primary-400" href="/docs/">Documentação</a><a class="hover:text-primary-600 dark:hover:text-primary-400" href="https://github.com/ferforastieri/atacte" rel="noreferrer">GitHub</a></nav></div></footer>
+        <footer class="border-t border-gray-200 dark:border-gray-700"><div class="flex w-full flex-col gap-3 px-4 py-6 text-sm text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10 xl:px-12"><div class="flex flex-wrap items-center gap-x-2 gap-y-1"><PublicLogo :size="24" /><span>Atacte · seu cofre, suas regras.</span><span aria-label="Direitos autorais">© 2026 Fernando Forastieri · Licença MIT</span></div><nav class="flex items-center gap-4" aria-label="Links do rodapé"><a class="hover:text-primary-600 dark:hover:text-primary-400" href="/">Início</a><a class="hover:text-primary-600 dark:hover:text-primary-400" href="/docs/">Documentação</a><a class="hover:text-primary-600 dark:hover:text-primary-400" href="https://github.com/ferforastieri/atacte" rel="noreferrer">GitHub</a></nav></div></footer>
   </div>
 </template>
 

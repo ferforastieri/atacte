@@ -1,6 +1,7 @@
 import { CryptoUtil } from '../../utils/cryptoUtil'
 import { ImportExportRepository } from '../../repositories/importExport/importExportRepository'
 import { PasswordEntry, CustomField } from '../../../node_modules/.prisma/client'
+import { ENCRYPTION_KEY } from '../../infrastructure/config'
 
 export interface BitwardenItem {
   passwordHistory: Array<{
@@ -78,12 +79,6 @@ class ImportExportService {
     }
 
     
-    const user = await this.importExportRepository.getUserEncryptionKey(userId)
-
-    if (!user) {
-      throw new Error('Usuário não encontrado')
-    }
-
     let imported = 0
     let duplicates = 0
     const errors: string[] = []
@@ -107,10 +102,10 @@ class ImportExportService {
         
 
         
-        const encryptedPassword = CryptoUtil.encrypt(password, user.encryptionKeyHash)
+        const encryptedPassword = CryptoUtil.encrypt(password, ENCRYPTION_KEY)
         
         
-        const encryptedTotpSecret = totpSecret ? CryptoUtil.encrypt(totpSecret, user.encryptionKeyHash) : null
+        const encryptedTotpSecret = totpSecret ? CryptoUtil.encrypt(totpSecret, ENCRYPTION_KEY) : null
 
         
         await this.importExportRepository.createPasswordEntry({
@@ -119,7 +114,7 @@ class ImportExportService {
           website: website ?? undefined,
           username: username ?? undefined,
           encryptedPassword,
-          notes: notes ?? undefined,
+          notes: notes ? CryptoUtil.encrypt(notes, ENCRYPTION_KEY) : undefined,
           isFavorite,
           totpSecret: encryptedTotpSecret ?? undefined,
           totpEnabled: !!totpSecret
@@ -157,11 +152,11 @@ class ImportExportService {
       type: 1, 
       reprompt: 0,
       name: password.name,
-      notes: password.notes,
+      notes: password.notes ? CryptoUtil.decrypt(password.notes, ENCRYPTION_KEY) : null,
       favorite: password.isFavorite,
       fields: (password as PasswordEntry & { customFields?: CustomField[] }).customFields?.map((field) => ({
         name: field.fieldName,
-        value: field.encryptedValue,
+        value: CryptoUtil.decrypt(field.encryptedValue, ENCRYPTION_KEY),
         type: 0 
       })) || [],
       login: {
@@ -170,8 +165,8 @@ class ImportExportService {
           uri: password.website
         }] : [],
         username: password.username,
-        password: password.encryptedPassword, 
-        totp: password.totpSecret ? Buffer.from(password.totpSecret, 'base64').toString() : null
+        password: CryptoUtil.decrypt(password.encryptedPassword, ENCRYPTION_KEY),
+        totp: password.totpSecret ? CryptoUtil.decrypt(password.totpSecret, ENCRYPTION_KEY) : null
       },
       collectionIds: null
     }))
@@ -214,8 +209,8 @@ class ImportExportService {
         `"${password.name}"`,
         `"${password.website || ''}"`,
         `"${password.username || ''}"`,
-        `"${password.encryptedPassword}"`, 
-        `"${password.notes || ''}"`,
+        `"${CryptoUtil.decrypt(password.encryptedPassword, ENCRYPTION_KEY)}"`,
+        `"${password.notes ? CryptoUtil.decrypt(password.notes, ENCRYPTION_KEY) : ''}"`,
         `"${password.folder || ''}"`,
         password.isFavorite ? 'Sim' : 'Não',
         password.totpEnabled ? 'Sim' : 'Não',

@@ -2,6 +2,8 @@ import { Request } from 'express';
 import bcrypt from 'bcryptjs';
 import { AuditUtil } from '../../utils/auditUtil';
 import { UserRepository } from '../../repositories/users/userRepository';
+import { CryptoUtil } from '../../utils/cryptoUtil';
+import { ENCRYPTION_KEY } from '../../infrastructure/config';
 
 export interface UserProfileDto {
   id: string;
@@ -241,13 +243,13 @@ export class UserService {
         name: p.name,
         website: p.website ?? undefined,
         username: p.username ?? undefined,
-        password: p.encryptedPassword,
-        notes: p.notes ?? undefined,
+        password: CryptoUtil.decrypt(p.encryptedPassword, ENCRYPTION_KEY),
+        notes: p.notes ? CryptoUtil.decrypt(p.notes, ENCRYPTION_KEY) : undefined,
         folder: p.folder ?? undefined,
         isFavorite: p.isFavorite,
         customFields: p.customFields.map(f => ({
           fieldName: f.fieldName,
-          value: f.encryptedValue,
+          value: CryptoUtil.decrypt(f.encryptedValue, ENCRYPTION_KEY),
           fieldType: f.fieldType
         })),
         createdAt: p.createdAt,

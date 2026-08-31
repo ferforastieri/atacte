@@ -4,6 +4,7 @@ import { CryptoUtil } from '../../utils/cryptoUtil';
 import { PasswordRepository } from '../../repositories/passwords/passwordRepository';
 import { AuditUtil } from '../../utils/auditUtil';
 import { Request } from 'express';
+import { ENCRYPTION_KEY } from '../../infrastructure/config';
 
 export interface TOTPData {
   secret: string;
@@ -239,12 +240,6 @@ export class TOTPService {
     }
 
     
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
     let totpSecret: string;
 
     
@@ -267,7 +262,7 @@ export class TOTPService {
     }
 
     
-    const encryptedSecret = TOTPService.encryptSecret(totpSecret, user.encryptionKeyHash);
+    const encryptedSecret = TOTPService.encryptSecret(totpSecret, ENCRYPTION_KEY);
 
     const updatedEntry = await this.passwordRepository.update(passwordId, {
       totpSecret: encryptedSecret,
@@ -298,12 +293,6 @@ export class TOTPService {
       throw new Error('Senha não encontrada');
     }
 
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
     const updatedEntry = await this.passwordRepository.update(passwordId, {
       totpSecret: undefined,
       totpEnabled: false
@@ -332,14 +321,8 @@ export class TOTPService {
       return null;
     }
 
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
     try {
-      const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, user.encryptionKeyHash);
+      const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, ENCRYPTION_KEY);
       
       const totpCode = TOTPService.generateCurrentCode(decryptedSecret);
 
@@ -360,14 +343,8 @@ export class TOTPService {
       return null;
     }
 
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
     try {
-      const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, user.encryptionKeyHash);
+      const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, ENCRYPTION_KEY);
 
       return { secret: decryptedSecret };
     } catch (error) {

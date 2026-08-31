@@ -2,6 +2,7 @@ import { Request } from 'express';
 import { SecureNote } from '../../infrastructure/prisma';
 import { CryptoUtil } from '../../utils/cryptoUtil';
 import { AuditUtil } from '../../utils/auditUtil';
+import { ENCRYPTION_KEY } from '../../infrastructure/config';
 import { SecureNoteRepository, SearchFilters as RepositorySearchFilters, UpdateSecureNoteData as RepositoryUpdateSecureNoteData } from '../../repositories/secureNotes/secureNoteRepository';
 
 export interface SecureNoteDto {
@@ -73,16 +74,10 @@ export class SecureNoteService {
     const notes = result.items;
     const total = result.total;
 
-    const user = await this.secureNoteRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
     const decryptedNotes = [];
     for (const note of notes) {
       try {
-        const decryptedNote = await this.decryptSecureNote(note, user.encryptionKeyHash);
+        const decryptedNote = await this.decryptSecureNote(note, ENCRYPTION_KEY);
         decryptedNotes.push(decryptedNote);
       } catch (error) {
         continue;
@@ -102,23 +97,11 @@ export class SecureNoteService {
       return null;
     }
 
-    const user = await this.secureNoteRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    return this.decryptSecureNote(note, user.encryptionKeyHash);
+    return this.decryptSecureNote(note, ENCRYPTION_KEY);
   }
 
   async createNote(userId: string, data: CreateSecureNoteData, req?: Request): Promise<SecureNoteDto> {
-    const user = await this.secureNoteRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    const encryptedContent = CryptoUtil.encrypt(data.content, user.encryptionKeyHash);
+    const encryptedContent = CryptoUtil.encrypt(data.content, ENCRYPTION_KEY);
 
     const secureNote = await this.secureNoteRepository.create({
       userId,
@@ -137,7 +120,7 @@ export class SecureNoteService {
       req
     );
 
-    return this.decryptSecureNote(secureNote, user.encryptionKeyHash);
+    return this.decryptSecureNote(secureNote, ENCRYPTION_KEY);
   }
 
   async updateNote(
@@ -152,12 +135,6 @@ export class SecureNoteService {
       return null;
     }
 
-    const user = await this.secureNoteRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
     const updateData: RepositoryUpdateSecureNoteData = {};
 
     if (data.title !== undefined) updateData.title = data.title;
@@ -165,7 +142,7 @@ export class SecureNoteService {
     if (data.isFavorite !== undefined) updateData.isFavorite = data.isFavorite;
 
     if (data.content !== undefined) {
-      updateData.encryptedContent = CryptoUtil.encrypt(data.content, user.encryptionKeyHash);
+      updateData.encryptedContent = CryptoUtil.encrypt(data.content, ENCRYPTION_KEY);
     }
 
     await this.secureNoteRepository.update(noteId, updateData);
@@ -181,7 +158,7 @@ export class SecureNoteService {
       req
     );
 
-    return this.decryptSecureNote(finalNote!, user.encryptionKeyHash);
+    return this.decryptSecureNote(finalNote!, ENCRYPTION_KEY);
   }
 
   async deleteNote(userId: string, noteId: string, req?: Request): Promise<boolean> {
@@ -230,4 +207,3 @@ export class SecureNoteService {
     } as SecureNoteDto;
   }
 }
-

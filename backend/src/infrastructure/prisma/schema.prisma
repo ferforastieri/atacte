@@ -22,6 +22,8 @@ model User {
   email                 String   @unique
   masterPasswordHash    String   @map("master_password_hash")
   masterPasswordSalt    String   @map("master_password_salt")
+  // Legacy column retained as a migration marker; vault ciphertexts use the
+  // process-level ENCRYPTION_KEY and this value must never contain a key.
   encryptionKeyHash     String   @map("encryption_key_hash")
   createdAt            DateTime @default(now()) @map("created_at")
   updatedAt            DateTime @updatedAt @map("updated_at")

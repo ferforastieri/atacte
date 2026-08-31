@@ -6,7 +6,6 @@ import { UserRepository, CreateUserData, CreateUserSessionData } from '../../rep
 import { PasswordResetRepository } from '../../repositories/auth/passwordResetRepository';
 import { COOKIE_MAX_AGE_MS, JWT_AUDIENCE, JWT_EXPIRES_IN, JWT_ISSUER, JWT_SECRET, PASSWORD_RESET_URL } from '../../infrastructure/config';
 import { emailService } from '../email/emailService';
-import { CryptoUtil } from '../../utils/cryptoUtil';
 
 export interface UserDto {
   id: string;
@@ -72,15 +71,13 @@ export class AuthService {
     const masterPasswordHash = await bcrypt.hash(data.masterPassword, salt);
 
     
-    // Generate an independent vault key; never derive encryption material from
-    // a user-controlled identifier such as the email address.
-    const encryptionKey = CryptoUtil.generateKey();
-
     const userData: CreateUserData = {
       email,
       masterPasswordHash,
       masterPasswordSalt: salt,
-      encryptionKeyHash: encryptionKey,
+      // Kept for schema compatibility; vault data is encrypted with the
+      // process-level ENCRYPTION_KEY, never with a key stored in the database.
+      encryptionKeyHash: 'master-key:v1',
       role: firstUser ? 'ADMIN' : undefined,
     };
 

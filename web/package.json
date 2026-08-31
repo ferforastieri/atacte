@@ -2,6 +2,7 @@
   "name": "atacte-web",
   "version": "1.0.0",
   "description": "Frontend web do aplicativo de senhas e notas Atacte",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",

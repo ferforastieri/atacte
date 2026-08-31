@@ -5,6 +5,7 @@ import { AuditUtil } from '../../utils/auditUtil';
 import { PasswordUtil, PasswordGeneratorOptions } from '../../utils/passwordUtil';
 import { TOTPService, TOTPCode } from '../totp/totpService';
 import { PasswordRepository, SearchFilters as RepositorySearchFilters, UpdatePasswordEntryData as RepositoryUpdatePasswordEntryData } from '../../repositories/passwords/passwordRepository';
+import { ENCRYPTION_KEY } from '../../infrastructure/config';
 
 export interface PasswordEntryDto {
   id: string;
@@ -108,17 +109,11 @@ export class PasswordService {
     const total = result.total;
 
     
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
     
     const decryptedPasswords = [];
     for (const password of passwords) {
       try {
-        const decryptedPassword = await this.decryptPasswordEntry(password, user.encryptionKeyHash);
+        const decryptedPassword = await this.decryptPasswordEntry(password, ENCRYPTION_KEY);
         decryptedPasswords.push(decryptedPassword);
       } catch (error) {
         continue;
@@ -140,29 +135,15 @@ export class PasswordService {
     }
 
     
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    
     await this.passwordRepository.updateLastUsed(passwordId);
 
-    return this.decryptPasswordEntry(password, user.encryptionKeyHash);
+    return this.decryptPasswordEntry(password, ENCRYPTION_KEY);
   }
 
   
   async createPassword(userId: string, data: CreatePasswordEntryData, req?: Request): Promise<PasswordEntryDto> {
     
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    
-    const encryptedPassword = CryptoUtil.encrypt(data.password, user.encryptionKeyHash);
+    const encryptedPassword = CryptoUtil.encrypt(data.password, ENCRYPTION_KEY);
 
     
     let encryptedTotpSecret: string | undefined;
@@ -170,7 +151,7 @@ export class PasswordService {
       if (!TOTPService.isValidSecret(data.totpSecret)) {
         throw new Error('Secret TOTP inválido');
       }
-      encryptedTotpSecret = TOTPService.encryptSecret(data.totpSecret, user.encryptionKeyHash);
+      encryptedTotpSecret = TOTPService.encryptSecret(data.totpSecret, ENCRYPTION_KEY);
     }
 
     
@@ -180,14 +161,14 @@ export class PasswordService {
       website: data.website,
       username: data.username,
       encryptedPassword,
-      notes: data.notes,
+      notes: data.notes ? CryptoUtil.encrypt(data.notes, ENCRYPTION_KEY) : data.notes,
       folder: data.folder,
       isFavorite: data.isFavorite || false,
       totpSecret: encryptedTotpSecret,
       totpEnabled: data.totpEnabled || false,
       customFields: data.customFields?.map(field => ({
         fieldName: field.fieldName,
-        encryptedValue: CryptoUtil.encrypt(field.value, user.encryptionKeyHash),
+        encryptedValue: CryptoUtil.encrypt(field.value, ENCRYPTION_KEY),
         fieldType: field.fieldType
       })) || undefined
     });
@@ -202,7 +183,7 @@ export class PasswordService {
       req
     );
 
-    return this.decryptPasswordEntry(passwordEntry, user.encryptionKeyHash);
+    return this.decryptPasswordEntry(passwordEntry, ENCRYPTION_KEY);
   }
 
   
@@ -220,24 +201,19 @@ export class PasswordService {
     }
 
     
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    
     const updateData: RepositoryUpdatePasswordEntryData = {};
 
     if (data.name !== undefined) updateData.name = data.name;
     if (data.website !== undefined) updateData.website = data.website;
     if (data.username !== undefined) updateData.username = data.username;
-    if (data.notes !== undefined) updateData.notes = data.notes;
+    if (data.notes !== undefined) {
+      updateData.notes = data.notes ? CryptoUtil.encrypt(data.notes, ENCRYPTION_KEY) : data.notes;
+    }
     if (data.folder !== undefined) updateData.folder = data.folder;
     if (data.isFavorite !== undefined) updateData.isFavorite = data.isFavorite;
 
     if (data.password) {
-      updateData.encryptedPassword = CryptoUtil.encrypt(data.password, user.encryptionKeyHash);
+      updateData.encryptedPassword = CryptoUtil.encrypt(data.password, ENCRYPTION_KEY);
     }
 
     if (data.totpSecret !== undefined) {
@@ -245,7 +221,7 @@ export class PasswordService {
         if (!TOTPService.isValidSecret(data.totpSecret)) {
           throw new Error('Secret TOTP inválido');
         }
-        updateData.totpSecret = TOTPService.encryptSecret(data.totpSecret, user.encryptionKeyHash);
+        updateData.totpSecret = TOTPService.encryptSecret(data.totpSecret, ENCRYPTION_KEY);
         updateData.totpEnabled = true;
       } else {
         updateData.totpSecret = undefined;
@@ -266,7 +242,7 @@ export class PasswordService {
         await this.passwordRepository.createCustomField({
           passwordEntryId: passwordId,
           fieldName: field.fieldName,
-          encryptedValue: CryptoUtil.encrypt(field.value, user.encryptionKeyHash),
+          encryptedValue: CryptoUtil.encrypt(field.value, ENCRYPTION_KEY),
           fieldType: field.fieldType
         });
       }
@@ -285,7 +261,7 @@ export class PasswordService {
       req
     );
 
-    return this.decryptPasswordEntry(finalPassword!, user.encryptionKeyHash);
+    return this.decryptPasswordEntry(finalPassword!, ENCRYPTION_KEY);
   }
 
   
@@ -356,7 +332,7 @@ export class PasswordService {
       website: password.website || undefined,
       username: password.username || undefined,
       password: decryptedPassword,
-      notes: password.notes || undefined,
+      notes: password.notes ? CryptoUtil.decrypt(password.notes, encryptionKey) : undefined,
       folder: password.folder || undefined,
       isFavorite: password.isFavorite,
       createdAt: password.createdAt,

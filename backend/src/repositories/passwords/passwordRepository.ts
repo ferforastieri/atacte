@@ -119,7 +119,6 @@ export class PasswordRepository {
         { name: { contains: filters.search, mode: 'insensitive' } },
         { website: { contains: filters.search, mode: 'insensitive' } },
         { username: { contains: filters.search, mode: 'insensitive' } },
-        { notes: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
 
