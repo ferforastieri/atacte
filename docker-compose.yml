@@ -87,7 +87,7 @@ services:
       - atacte-network
 
   updater:
-    image: ${UPDATER_IMAGE:-atacte-updater:local}
+    image: ${UPDATER_IMAGE:-ghcr.io/ferforastieri/atacte-updater:latest}
     build:
       context: ./updater
     container_name: atacte-updater

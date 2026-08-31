@@ -112,7 +112,7 @@ Atacte/
 ├── docker-compose.yml      # Orquestração de containers em produção
 ├── Dockerfile.backend      # Imagem da API
 ├── Dockerfile.front        # Imagem do frontend web
-└── .github/workflows/      # CI, publicação GHCR e deploy self-hosted
+└── .github/workflows/      # CI, publicação GHCR e release
 ```
 
 ## 🛠️ Tecnologias
@@ -469,20 +469,15 @@ Importar dados de JSON.
 
 ### Deploy Automático com GitHub Actions
 
-O deploy local por SSH/rsync foi removido. O fluxo atual é:
+O fluxo de publicação atual é:
 
 1. Faça push para a branch `main` ou crie uma tag `v*`.
 2. O CI executa backend, web, updater e Compose em jobs paralelos, com cache de npm/Go.
 3. O workflow constrói amd64 e arm64 em runners nativos, publica os manifests multi-arquitetura versionados no GHCR, tenta a build Android no EAS de forma não bloqueante e cria um release idempotente.
-4. O deploy conecta por SSH, faz pull somente das imagens do backend/manager, verifica `/health` e executa rollback automático validado se a nova versão não responder.
-5. A Vercel publica a landing, documentação e releases automaticamente pela integração GitHub.
+4. A Vercel publica a landing, documentação e releases automaticamente pela integração GitHub.
+5. Cada instalação self-hosted atualiza pelo updater local, sem conexão SSH com o GitHub.
 
-Secrets obrigatórios no repositório do GitHub para deploy:
-
-- `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`, `DEPLOY_SSH_PRIVATE_KEY`, `DEPLOY_SSH_KNOWN_HOSTS`
-- `GHCR_USERNAME`, `GHCR_TOKEN` (leitura das imagens no servidor `/opt/atacte`)
-
-`EXPO_TOKEN` é opcional; inicia a build Android production no EAS. Falhas/quota da Expo não bloqueiam backend, manager ou landing. `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `VITE_API_URL` são configurações do servidor/instalador e não precisam ser cadastradas no GitHub Actions.
+Não são necessários secrets de SSH ou acesso remoto ao seu servidor no GitHub Actions. `EXPO_TOKEN` é opcional; inicia a build Android production no EAS. Falhas/quota da Expo não bloqueiam backend, manager ou landing. `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `VITE_API_URL` são configurações do servidor/instalador e não precisam ser cadastradas no GitHub Actions.
 
 Secrets opcionais:
 
@@ -527,7 +522,7 @@ Em um host com Docker Compose v2, a instalação recomendada é:
 curl -fsSL https://atacte.vercel.app/install.sh | sh
 ```
 
-O script cria `~/.atacte`, baixa o Compose e o código mínimo do updater, gera `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `UPDATER_TOKEN` aleatórios no `.env` privado, configura o CORS para a porta local e inicia backend, manager, PostgreSQL e updater. Backend e manager são baixados como imagens prontas do GHCR; somente o updater é compilado localmente, portanto a instalação não depende dos Dockerfiles do repositório. Em `localhost` ele define `COOKIE_SECURE=false` para a sessão funcionar em HTTP; antes de expor o serviço por domínio, configure `COOKIE_SECURE=true` atrás de HTTPS. Portanto, a instalação inicial não exige variáveis manuais; reexecutar o comando preserva esses segredos e atualiza sem alterar schema ou volume do banco. Para fixar uma release: `ATACTE_RELEASE_REF=v0.0.12 curl -fsSL https://atacte.vercel.app/install.sh | sh`.
+O script cria `~/.atacte`, baixa somente o Compose, gera `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `UPDATER_TOKEN` aleatórios no `.env` privado, configura o CORS para a porta local e inicia backend, manager, PostgreSQL e updater. Backend, manager e updater são imagens prontas multi-arquitetura publicadas no GHCR; o servidor não precisa do código-fonte nem dos Dockerfiles do repositório. Em `localhost` ele define `COOKIE_SECURE=false` para a sessão funcionar em HTTP; antes de expor o serviço por domínio, configure `COOKIE_SECURE=true` atrás de HTTPS. Portanto, a instalação inicial não exige variáveis manuais; reexecutar o comando preserva esses segredos e atualiza sem alterar schema ou volume do banco. Para fixar uma release: `ATACTE_RELEASE_REF=v0.0.12 curl -fsSL https://atacte.vercel.app/install.sh | sh`.
 
 Administradores veem o aviso de nova versão no Dashboard. O botão **Atualizar agora** chama `POST /api/update`; o updater faz pull de backend/frontend e recria somente esses containers. O serviço usa o socket Docker e deve ficar acessível apenas pela rede interna; não publique sua porta diretamente na internet.
 

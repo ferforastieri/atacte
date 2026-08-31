@@ -5,7 +5,6 @@ RELEASE_REF="${ATACTE_RELEASE_REF:-main}"
 REPOSITORY="${ATACTE_REPOSITORY:-https://raw.githubusercontent.com/ferforastieri/atacte/$RELEASE_REF}"
 INSTALL_DIR="${ATACTE_DIR:-${HOME:-.}/.atacte}"
 COMPOSE_FILE="$INSTALL_DIR/docker-compose.yml"
-UPDATER_DIR="$INSTALL_DIR/updater"
 
 if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
   echo "Docker Engine não encontrado ou indisponível para este usuário." >&2
@@ -16,7 +15,7 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-mkdir -p "$INSTALL_DIR" "$UPDATER_DIR"
+mkdir -p "$INSTALL_DIR"
 ENV_FILE="$INSTALL_DIR/.env"
 touch "$ENV_FILE"
 chmod 600 "$ENV_FILE"
@@ -28,9 +27,6 @@ download() {
 }
 
 download "$REPOSITORY/docker-compose.yml" "$COMPOSE_FILE"
-for file in Dockerfile go.mod go.sum main.go; do
-  download "$REPOSITORY/updater/$file" "$UPDATER_DIR/$file"
-done
 
 random_hex() {
   od -An -N"$1" -tx1 /dev/urandom | tr -d ' \n'
@@ -64,13 +60,9 @@ compose() {
   docker compose --project-directory "$INSTALL_DIR" -f "$COMPOSE_FILE" "$@"
 }
 
-# Backend e frontend são artefatos publicados no GHCR. O instalador não baixa
-# o código-fonte nem os Dockerfiles deles, portanto nunca deve tentar compilá-los.
-compose pull postgres backend front
-
-# O updater é pequeno e seu contexto é baixado acima. Gere somente essa imagem
-# local antes de subir a stack; assim --no-build não depende de uma imagem ausente.
-compose build --pull updater
+# Todos os serviços são artefatos publicados. O instalador baixa somente o
+# Compose e nunca depende do código-fonte ou de Dockerfiles no servidor.
+compose pull postgres backend front updater
 compose up -d --no-build --remove-orphans
 echo "Atacte instalado/atualizado em http://localhost:${FRONT_PORT:-3456}"
 echo "Arquivos preservados em $INSTALL_DIR (o volume PostgreSQL não é alterado)."
