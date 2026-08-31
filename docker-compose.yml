@@ -76,7 +76,7 @@ services:
       context: .
       dockerfile: Dockerfile.front
       args:
-        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_URL: ${VITE_API_URL:-/api}
     container_name: atacte-front
     restart: unless-stopped
     ports:
@@ -87,6 +87,7 @@ services:
       - atacte-network
 
   updater:
+    image: ${UPDATER_IMAGE:-atacte-updater:local}
     build:
       context: ./updater
     container_name: atacte-updater

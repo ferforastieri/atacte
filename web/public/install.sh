@@ -60,7 +60,17 @@ if ! grep -q '^UPDATER_TOKEN=[^[:space:]]' "$ENV_FILE" 2>/dev/null; then
   echo "Gerado token exclusivo do updater em $ENV_FILE."
 fi
 
-docker compose --project-directory "$INSTALL_DIR" -f "$COMPOSE_FILE" pull
-docker compose --project-directory "$INSTALL_DIR" -f "$COMPOSE_FILE" up -d --build --remove-orphans
+compose() {
+  docker compose --project-directory "$INSTALL_DIR" -f "$COMPOSE_FILE" "$@"
+}
+
+# Backend e frontend são artefatos publicados no GHCR. O instalador não baixa
+# o código-fonte nem os Dockerfiles deles, portanto nunca deve tentar compilá-los.
+compose pull postgres backend front
+
+# O updater é pequeno e seu contexto é baixado acima. Gere somente essa imagem
+# local antes de subir a stack; assim --no-build não depende de uma imagem ausente.
+compose build --pull updater
+compose up -d --no-build --remove-orphans
 echo "Atacte instalado/atualizado em http://localhost:${FRONT_PORT:-3456}"
 echo "Arquivos preservados em $INSTALL_DIR (o volume PostgreSQL não é alterado)."
