@@ -61,7 +61,7 @@ class AuthService {
   }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    await this.logout();
+    await this.clearLocalSession();
     
     const response = await this.makeRequest('/auth/login', {
       method: 'POST',
@@ -72,14 +72,14 @@ class AuthService {
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       
     } else {
-      await this.logout();
+      await this.clearLocalSession();
     }
 
     return response;
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    await this.logout();
+    await this.clearLocalSession();
     
     const response = await this.makeRequest('/auth/register', {
       method: 'POST',
@@ -90,7 +90,7 @@ class AuthService {
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       
     } else {
-      await this.logout();
+      await this.clearLocalSession();
     }
 
     return response;
@@ -106,6 +106,10 @@ class AuthService {
     } catch {
       // A local logout must still complete if the server is unreachable.
     }
+    await this.clearLocalSession();
+  }
+
+  async clearLocalSession(): Promise<void> {
     await CookieManager.clearAllStores().catch(() => undefined);
     await AsyncStorage.removeItem('user');
   }

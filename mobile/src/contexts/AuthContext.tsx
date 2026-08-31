@@ -43,7 +43,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const storedUser = await authService.getStoredUser();
       if (!storedUser) {
-        await authService.logout();
+        await authService.clearLocalSession();
         setUser(null);
         setIsAuthenticated(false);
         setIsLoading(false);
@@ -56,19 +56,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsAuthenticated(true);
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       } else {
-        await authService.logout();
+        await authService.clearLocalSession();
         setUser(null);
         setIsAuthenticated(false);
       }
     } catch (error: any) {
       if (error?.response?.status === 401 || error?.isAuthError) {
-        await authService.logout();
+        await authService.clearLocalSession();
         setUser(null);
         setIsAuthenticated(false);
       } else {
-      await authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
+        await authService.clearLocalSession();
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } finally {
       setIsLoading(false);
@@ -77,8 +77,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, masterPassword: string, deviceName?: string, deviceFingerprint?: string): Promise<{ success: boolean; message?: string; requiresTrust?: boolean; sessionId?: string }> => {
     try {
-      await authService.logout();
-      
       const response = await authService.login({ email, masterPassword, deviceName, deviceFingerprint });
       if (response.success && response.data) {
         if (response.data.user) {
@@ -97,11 +95,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         return { success: true };
       } else {
-        await authService.logout();
+        await authService.clearLocalSession();
         return { success: false, message: response.message };
       }
     } catch (error: any) {
-      await authService.logout();
+      await authService.clearLocalSession();
       const errorMessage = error?.response?.data?.message;
       return { success: false, message: errorMessage };
     }
@@ -139,13 +137,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(response.data.user);
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       } else {
-        await authService.logout();
+        await authService.clearLocalSession();
         setUser(null);
         setIsAuthenticated(false);
       }
     } catch (error: any) {
       if (error?.response?.status === 401 || error?.isAuthError) {
-        await authService.logout();
+        await authService.clearLocalSession();
         setUser(null);
         setIsAuthenticated(false);
       }

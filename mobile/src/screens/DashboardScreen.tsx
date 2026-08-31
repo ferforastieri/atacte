@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -57,6 +57,7 @@ export default function DashboardScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentOffset, setCurrentOffset] = useState(0);
+  const activeSearchQuery = useRef('');
   const { isDark, toggleTheme } = useTheme();
 
   const styles = StyleSheet.create({
@@ -252,20 +253,12 @@ export default function DashboardScreen() {
     loadPasswords();
   }, []);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setCurrentOffset(0);
-      loadPasswords(0, false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
   const loadUser = async () => {
     const userData = await authService.getStoredUser();
     setUser(userData);
   };
 
-  const loadPasswords = useCallback(async (offset = 0, append = false) => {
+  const loadPasswords = useCallback(async (offset = 0, append = false, query = activeSearchQuery.current) => {
     if (offset === 0) {
       setIsLoading(true);
     } else {
@@ -274,7 +267,7 @@ export default function DashboardScreen() {
 
     try {
       const response = await passwordService.getPasswords({
-        query: searchQuery,
+        query,
         offset: offset,
         limit: 50,
       });
@@ -317,7 +310,7 @@ export default function DashboardScreen() {
       setIsLoadingMore(false);
       setIsRefreshing(false);
     }
-  }, [searchQuery]);
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -328,18 +321,9 @@ export default function DashboardScreen() {
   
   const handleSearch = useCallback(async (query: string) => {
     try {
-      setSearchQuery(query);
+      activeSearchQuery.current = query;
       setCurrentOffset(0);
-      await loadPasswords(0, false);
-    } catch (error) {
-    }
-  }, [loadPasswords]);
-
-  const handleSearchClear = useCallback(async () => {
-    try {
-      setSearchQuery('');
-      setCurrentOffset(0);
-      await loadPasswords(0, false);
+      await loadPasswords(0, false, query);
     } catch (error) {
     }
   }, [loadPasswords]);
@@ -591,7 +575,6 @@ export default function DashboardScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSearch={handleSearch}
-            onClear={handleSearchClear}
             placeholder="Buscar senhas..."
             debounceMs={300}
             minLength={2}

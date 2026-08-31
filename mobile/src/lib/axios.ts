@@ -45,12 +45,12 @@ apiClient.interceptors.request.use(
 );
 
 apiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
+  async (response: AxiosResponse) => {
     const serverUrl = response.config.baseURL;
     const setCookie = response.headers['set-cookie'];
     if (serverUrl && setCookie) {
       const values = Array.isArray(setCookie) ? setCookie : [setCookie];
-      Promise.all(values.map((value) => CookieManager.setFromResponse(serverUrl, value))).catch(() => undefined);
+      await Promise.all(values.map((value) => CookieManager.setFromResponse(serverUrl, value))).catch(() => undefined);
     }
     const message = response.data?.message;
     if (response.config.method?.toLowerCase() !== 'get' && typeof message === 'string') {
