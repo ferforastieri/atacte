@@ -63,6 +63,8 @@ compose() {
 # Todos os serviços são artefatos publicados. O instalador baixa somente o
 # Compose e nunca depende do código-fonte ou de Dockerfiles no servidor.
 compose pull postgres backend front updater
+compose up -d postgres
+compose run --rm --no-deps backend ./node_modules/.bin/prisma migrate deploy --schema=src/infrastructure/prisma/schema.prisma
 compose up -d --no-build --remove-orphans
 echo "Atacte instalado/atualizado em http://localhost:${FRONT_PORT:-3456}"
 echo "Arquivos preservados em $INSTALL_DIR (o volume PostgreSQL não é alterado)."
