@@ -57,7 +57,7 @@ if ! grep -q '^UPDATER_TOKEN=[^[:space:]]' "$ENV_FILE" 2>/dev/null; then
 fi
 
 compose() {
-  docker compose --project-directory "$INSTALL_DIR" -f "$COMPOSE_FILE" "$@"
+  docker compose --project-name atacte --project-directory "$INSTALL_DIR" -f "$COMPOSE_FILE" "$@"
 }
 
 # Todos os serviços são artefatos publicados. O instalador baixa somente o

@@ -148,7 +148,7 @@ func writeEnv(path string, values map[string]string) error {
 }
 
 func (u *updater) restart(projectDir string) {
-	compose := []string{"compose", "--project-directory", projectDir, "-f", filepath.Join(projectDir, "docker-compose.yml")}
+	compose := composeCommand(projectDir)
 	args := append(compose, "up", "-d", "--no-build", "--remove-orphans", "backend", "front")
 	if out, err := exec.Command("docker", args...).CombinedOutput(); err != nil {
 		slog.Error("configuration restart failed", "error", err, "output", string(out))
@@ -173,12 +173,12 @@ func (u *updater) run() {
 		u.mu.Unlock()
 	}()
 	projectDir := env("ATACTE_INSTALL_DIR", "/workspace")
-	compose := []string{"compose", "--project-directory", projectDir, "-f", projectDir + "/docker-compose.yml"}
+	compose := composeCommand(projectDir)
 	commands := [][]string{
 		{"pull", "backend", "front"},
 		// Run versioned Prisma migrations from the freshly pulled backend image
 		// before replacing the running API container.
-		{"run", "--rm", "backend", "./node_modules/.bin/prisma", "migrate", "deploy", "--schema=src/infrastructure/prisma/schema.prisma"},
+		{"run", "--rm", "--no-deps", "backend", "./node_modules/.bin/prisma", "migrate", "deploy", "--schema=src/infrastructure/prisma/schema.prisma"},
 		{"up", "-d", "--no-build", "--remove-orphans", "backend", "front"},
 	}
 	for _, args := range commands {
@@ -189,6 +189,10 @@ func (u *updater) run() {
 		}
 	}
 	slog.Info("update completed")
+}
+
+func composeCommand(projectDir string) []string {
+	return []string{"compose", "--project-name", "atacte", "--project-directory", projectDir, "-f", filepath.Join(projectDir, "docker-compose.yml")}
 }
 
 func env(key, fallback string) string {

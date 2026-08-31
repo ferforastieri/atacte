@@ -6,7 +6,7 @@ export default {
     return response.data.data.version
   },
   async update() {
-    const response = await api.post('/update')
+    const response = await api.post('/update', undefined, { headers: { 'X-Silent-Toast': 'true' } })
     return response.data
   },
   async getConfig(): Promise<{ values: Record<string, string>; secretFields: string[] }> {

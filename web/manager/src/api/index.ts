@@ -49,7 +49,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     const message = response.data?.message
-    if (response.config.method?.toLowerCase() !== 'get' && typeof message === 'string') {
+    if (response.config.method?.toLowerCase() !== 'get' && response.config.headers?.['X-Silent-Toast'] !== 'true' && typeof message === 'string') {
       useToast().success(message)
     }
     return response
@@ -58,7 +58,7 @@ api.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response
 
-      if (typeof data?.message === 'string') {
+      if (error.config?.headers?.['X-Silent-Toast'] !== 'true' && typeof data?.message === 'string') {
         useToast().error(data.message)
       }
       
