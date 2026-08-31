@@ -36,6 +36,23 @@ test('published version endpoint is public and uncached', async () => {
   assert.equal(response.headers['cache-control'], 'no-store');
 });
 
+test('same-origin HTTPS requests through a reverse proxy are accepted', async () => {
+  const response = await request(await getApp())
+    .get('/api/version')
+    .set('Host', 'atacte.home.fer.tec.br')
+    .set('Origin', 'https://atacte.home.fer.tec.br')
+    .set('X-Forwarded-Proto', 'https');
+  assert.equal(response.status, 200);
+});
+
+test('disallowed CORS origins do not become HTTP 500', async () => {
+  const response = await request(await getApp())
+    .get('/api/version')
+    .set('Origin', 'https://malicious.example');
+  assert.equal(response.status, 200);
+  assert.equal(response.headers['access-control-allow-origin'], undefined);
+});
+
 test('CSRF endpoint emits a readable token cookie', async () => {
   const response = await request(await getApp()).get('/api/auth/csrf');
   assert.equal(response.status, 200);

@@ -496,6 +496,7 @@ Secrets opcionais:
 - `MUTATION_RATE_LIMIT_MAX`, padrão `120`
 - `MUTATION_RATE_LIMIT_WINDOW_MS`, padrão `60000`
 - `CORS_ORIGIN`, lista separada por vírgula, sem wildcard com credenciais
+- Requisições same-origin atrás de Caddy/Nginx são reconhecidas automaticamente; o proxy deve encaminhar `X-Forwarded-Proto`
 - `COOKIE_SECURE`, padrão `true` em produção
 - `COOKIE_SAME_SITE`, padrão `lax`
 - `COOKIE_DOMAIN`, opcional

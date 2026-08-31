@@ -11,12 +11,17 @@ const app = express();
 
 app.set('trust proxy', TRUST_PROXY);
 const allowedOrigins = new Set(CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean));
+function requestOrigin(req: express.Request): string {
+  const forwardedProto = req.get('X-Forwarded-Proto')?.split(',')[0]?.trim();
+  const protocol = forwardedProto || req.protocol;
+  return `${protocol}://${req.get('host')}`;
+}
 
 // Requests routed through the same public origin do not need CORS negotiation.
 // Strip their Origin before cors() while preserving cross-origin checks.
 app.use((req, _res, next) => {
   const origin = req.get('Origin');
-  if (origin && origin === `${req.protocol}://${req.get('host')}`) {
+  if (origin && origin === requestOrigin(req)) {
     delete req.headers.origin;
   }
   next();
@@ -29,7 +34,9 @@ app.use(cors({
       callback(null, true);
       return;
     }
-    callback(new Error('Origem não permitida'));
+    // CORS denials must not become server errors. The browser will reject the
+    // response when no CORS headers are returned, while CSRF protects writes.
+    callback(null, false);
   },
   credentials: true
 }));
