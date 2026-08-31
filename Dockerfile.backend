@@ -8,12 +8,15 @@ RUN apk add --no-cache curl
 WORKDIR /app
 COPY backend/package*.json ./
 COPY backend/tsconfig.json ./
-RUN npm ci && npm cache clean --force
+# Skip lifecycle scripts during install: esbuild's postinstall executes an
+# architecture-specific binary and can crash under Buildx/QEMU on arm64.
+# Prisma is generated explicitly below after all sources are present.
+RUN npm ci --ignore-scripts && npm cache clean --force
 
 COPY backend/src/ ./src/
 RUN npx prisma generate --schema=src/infrastructure/prisma/schema.prisma
 RUN npm run build
-RUN npm prune --omit=dev && npm cache clean --force
+RUN npm prune --omit=dev --ignore-scripts && npm cache clean --force
 
 RUN addgroup -S atacte && adduser -S -G atacte atacte \
     && chown -R atacte:atacte /app

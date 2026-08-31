@@ -8,7 +8,9 @@ COPY web/tailwind.config.js ./
 COPY web/postcss.config.js ./
 COPY web/env.d.ts ./
 COPY web/manager/public/ ./public/
-RUN npm ci && npm cache clean --force
+# Vite resolves the matching optional esbuild package at runtime. Avoid its
+# install-time binary probe, which may SIGILL when arm64 is emulated by QEMU.
+RUN npm ci --ignore-scripts && npm cache clean --force
 
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
