@@ -164,10 +164,6 @@ jobs:
   mobile:
     name: Expo Android (non-blocking)
     continue-on-error: true
-    # Temporarily disabled while the Expo/EAS pipeline is paused. Keeping the
-    # job and its output preserves the release workflow without building an APK.
-    env:
-      EXPO_BUILD_ENABLED: 'false'
     outputs:
       apk_available: ${{ steps.apk_status.outputs.available }}
     runs-on: ubuntu-latest
@@ -186,19 +182,14 @@ jobs:
         id: expo_token
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          if [ "$EXPO_BUILD_ENABLED" != "true" ]; then
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=$([ -n \"$EXPO_TOKEN\" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "enabled=$([ -n \"$EXPO_TOKEN\" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - name: Install mobile dependencies
-        if: ${{ env.EXPO_BUILD_ENABLED == 'true' && steps.expo_token.outputs.enabled == 'true' }}
+        if: ${{ steps.expo_token.outputs.enabled == 'true' }}
         working-directory: mobile
         run: npm ci
       - name: Build Android with EAS
         id: eas
-        if: ${{ env.EXPO_BUILD_ENABLED == 'true' && steps.expo_token.outputs.enabled == 'true' }}
+        if: ${{ steps.expo_token.outputs.enabled == 'true' }}
         working-directory: mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -217,7 +208,7 @@ jobs:
           curl --fail --location --retry 3 "$url" -o atacte-android.apk
           test -s atacte-android.apk
       - name: Upload APK artifact
-        if: ${{ env.EXPO_BUILD_ENABLED == 'true' && steps.expo_token.outputs.enabled == 'true' && hashFiles('mobile/atacte-android.apk') != '' }}
+        if: ${{ steps.expo_token.outputs.enabled == 'true' && hashFiles('mobile/atacte-android.apk') != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: atacte-android-apk
