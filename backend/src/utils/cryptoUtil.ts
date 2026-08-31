@@ -1,11 +1,6 @@
 import crypto from 'crypto-js';
 
 export class CryptoUtil {
-  /** Deriva uma chave por usuário a partir do segredo do servidor, sem usar o email. */
-  static deriveUserKey(masterKey: string, userId: string): string {
-    return crypto.HmacSHA256(userId, masterKey).toString();
-  }
-
   
   static encrypt(data: string, key: string): string {
     try {
