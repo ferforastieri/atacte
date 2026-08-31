@@ -11,6 +11,7 @@
     "db:generate": "prisma generate --schema=src/infrastructure/prisma/schema.prisma",
     "db:push": "prisma db push --schema=src/infrastructure/prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema=src/infrastructure/prisma/schema.prisma",
+    "db:migrate:encryption": "tsx src/infrastructure/scripts/migrate-encryption-v2.ts",
     "db:studio": "prisma studio --schema=src/infrastructure/prisma/schema.prisma"
   },
   "dependencies": {

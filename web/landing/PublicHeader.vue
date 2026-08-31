@@ -3,10 +3,7 @@
     <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
       <div class="flex h-16 items-center justify-between">
         <a href="/" class="flex items-center" aria-label="Atacte, início">
-          <span class="flex items-center space-x-2">
-            <svg class="h-8 w-8" viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#22c55e" stroke="#15803d" stroke-width="2" /><path d="M12 14v-2a4 4 0 1 1 8 0v2" stroke="white" stroke-width="2" stroke-linecap="round" /><rect x="10" y="14" width="12" height="8" rx="2" fill="white" /><text x="16" y="26" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#15803d">A</text></svg>
-            <span class="text-xl font-bold">Atacte</span>
-          </span>
+          <PublicLogo :show-text="true" />
         </a>
         <nav class="flex items-center space-x-1 text-sm font-medium" aria-label="Navegação principal">
           <a href="/#recursos" :class="linkClass('section')" class="hidden sm:block">Recursos</a>
@@ -24,6 +21,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { MoonIcon, SunIcon } from '@heroicons/vue/24/outline'
+import PublicLogo from './PublicLogo.vue'
 
 const props = withDefaults(defineProps<{ active?: 'docs' | 'releases' | 'landing' }>(), { active: 'landing' })
 const isDark = ref(document.documentElement.classList.contains('dark'))

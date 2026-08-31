@@ -15,13 +15,14 @@
       </section>
     </main>
 
-    <footer class="border-t border-gray-200 dark:border-gray-700"><div class="flex w-full flex-col gap-3 px-4 py-6 text-sm text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10 xl:px-12"><div class="flex items-center gap-2"><span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">A</span><span>Atacte · seu cofre, suas regras.</span></div><nav class="flex items-center gap-4" aria-label="Links do rodapé"><a class="hover:text-primary-600 dark:hover:text-primary-400" href="/">Início</a><a class="hover:text-primary-600 dark:hover:text-primary-400" href="/docs/">Documentação</a><a class="hover:text-primary-600 dark:hover:text-primary-400" href="https://github.com/ferforastieri/atacte" rel="noreferrer">GitHub</a></nav></div></footer>
+    <footer class="border-t border-gray-200 dark:border-gray-700"><div class="flex w-full flex-col gap-3 px-4 py-6 text-sm text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10 xl:px-12"><div class="flex items-center gap-2"><PublicLogo :size="24" /><span>Atacte · seu cofre, suas regras.</span></div><nav class="flex items-center gap-4" aria-label="Links do rodapé"><a class="hover:text-primary-600 dark:hover:text-primary-400" href="/">Início</a><a class="hover:text-primary-600 dark:hover:text-primary-400" href="/docs/">Documentação</a><a class="hover:text-primary-600 dark:hover:text-primary-400" href="https://github.com/ferforastieri/atacte" rel="noreferrer">GitHub</a></nav></div></footer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import PublicHeader from '../PublicHeader.vue'
+import PublicLogo from '../PublicLogo.vue'
 import { ArrowDownTrayIcon, ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline'
 const releases = ref<Array<{ tag_name: string; name: string; html_url: string; published_at: string; body: string | null; assets?: Array<{ name: string; browser_download_url: string }> }>>([])
 const loading = ref(true)

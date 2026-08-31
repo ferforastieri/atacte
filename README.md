@@ -2,8 +2,6 @@
 
 Gerenciador self-hosted de senhas, códigos TOTP e notas privadas. O Atacte foi pensado para pessoas e pequenas equipes que querem uma interface agradável sem entregar o cofre a um serviço externo: você escolhe o servidor, mantém o PostgreSQL e controla as atualizações.
 
-> O Atacte não é apresentado como zero-knowledge ou criptografia end-to-end. A cifragem histórica deriva uma chave do email por compatibilidade; proteja o banco e leia a seção [Segurança](#segurança) antes de usar dados críticos.
-
 ## O que você pode fazer
 
 - guardar, pesquisar, favoritar e organizar senhas;
@@ -117,10 +115,6 @@ O cliente Electron está em `desktop/` e pode ser empacotado para Windows, macOS
 As sessões usam cookies `HttpOnly`, `Secure` em HTTPS e proteção CSRF; tokens de sessão não são gravados em `localStorage`. A API aplica CORS por lista explícita de origens, rate limit, validação de entrada e headers de segurança. Use sempre HTTPS para acesso remoto, firewall para as portas internas e backups criptografados.
 
 O schema Prisma não é migrado automaticamente. O rate limit padrão fica na memória do processo e, portanto, não é compartilhado entre múltiplas réplicas.
-
-### Risco criptográfico conhecido
-
-Por compatibilidade com os dados existentes, a chave usada pela cifragem histórica é derivada de `SHA-256(email)` e o resultado necessário fica no banco. Um comprometimento do PostgreSQL pode permitir recuperar dados do cofre. Isso é um risco aceito temporariamente e não equivale a zero-knowledge; uma migração criptográfica específica é necessária antes de fazer essa alegação.
 
 ## Desenvolvimento
 
