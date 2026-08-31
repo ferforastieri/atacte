@@ -3,7 +3,10 @@ FROM node:20-alpine
 ARG BUILD_VERSION=development
 ENV BUILD_VERSION=$BUILD_VERSION
 
-RUN apk add --no-cache curl
+# Prisma detects the native OpenSSL target during `prisma generate`. Without
+# OpenSSL installed it falls back to linux-musl (OpenSSL 1.1), which is not
+# available in current Alpine images and causes the container to crash at boot.
+RUN apk add --no-cache curl openssl
 
 WORKDIR /app
 COPY backend/package*.json ./

@@ -2,6 +2,9 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../../../node_modules/.prisma/client"
+  // Keep the host engine for local development and include the Alpine
+  // OpenSSL 3 engine used by the production container.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
