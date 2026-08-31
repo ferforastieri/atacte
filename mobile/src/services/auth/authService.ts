@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient from '../../lib/axios';
+import CookieManager from '@preeternal/react-native-cookie-manager';
 
 interface LoginRequest {
   email: string;
@@ -16,7 +17,6 @@ interface RegisterRequest {
 interface AuthResponse {
   success: boolean;
   data?: {
-    token: string;
     user: {
       id: string;
       name: string;
@@ -68,9 +68,7 @@ class AuthService {
       data: credentials,
     });
 
-    if (response.success && response.data?.token && response.data?.user) {
-      const token = response.data.token;
-      await AsyncStorage.setItem('auth_token', token);
+    if (response.success && response.data?.user) {
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       
     } else {
@@ -88,9 +86,7 @@ class AuthService {
       data: userData,
     });
 
-    if (response.success && response.data?.token) {
-      const token = response.data.token;
-      await AsyncStorage.setItem('auth_token', token);
+    if (response.success && response.data?.user) {
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       
     } else {
@@ -105,7 +101,12 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    await AsyncStorage.removeItem('auth_token');
+    try {
+      await apiClient.post('/auth/logout');
+    } catch {
+      // A local logout must still complete if the server is unreachable.
+    }
+    await CookieManager.clearAllStores().catch(() => undefined);
     await AsyncStorage.removeItem('user');
   }
 
@@ -115,8 +116,7 @@ class AuthService {
   }
 
   async getStoredToken() {
-    const token = await AsyncStorage.getItem('auth_token');
-    return token;
+    return (await AsyncStorage.getItem('user')) ? 'cookie' : null;
   }
 
   async requestPasswordReset(email: string): Promise<AuthResponse> {

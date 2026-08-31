@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   getPlatform: () => ipcRenderer.invoke('get-platform'),
   getBackendUrl: () => BACKEND_URL,
+  getCsrfToken: () => ipcRenderer.invoke('get-csrf-token'),
   showMessageBox: (options) => ipcRenderer.invoke('show-message-box', options),
   showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
   showSaveDialog: (options) => ipcRenderer.invoke('show-save-dialog', options),

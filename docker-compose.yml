@@ -8,18 +8,23 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-atacte}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT:-5435}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5435}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - atacte-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-atacte} -d ${POSTGRES_DB:-atacte}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-atacte} -d ${POSTGRES_DB:-atacte}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
 
   backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/ferforastieri/atacte-backend:latest}
     build:
       context: .
       dockerfile: Dockerfile.backend
@@ -35,7 +40,18 @@ services:
       BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
       RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
       RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-500}
-      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-5}
+      AUTH_RATE_LIMIT_WINDOW_MS: ${AUTH_RATE_LIMIT_WINDOW_MS:-900000}
+      MUTATION_RATE_LIMIT_MAX: ${MUTATION_RATE_LIMIT_MAX:-120}
+      MUTATION_RATE_LIMIT_WINDOW_MS: ${MUTATION_RATE_LIMIT_WINDOW_MS:-60000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-lax}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      COOKIE_MAX_AGE_MS: ${COOKIE_MAX_AGE_MS:-2592000000}
+      JWT_ISSUER: ${JWT_ISSUER:-atacte-api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-atacte-clients}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
@@ -44,8 +60,10 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Atacte}
       PASSWORD_RESET_URL: ${PASSWORD_RESET_URL:-}
+      UPDATER_URL: ${UPDATER_URL:-http://atacte-updater:8080}
+      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
     ports:
-      - "${BACKEND_PORT:-3457}:3001"
+      - "127.0.0.1:${BACKEND_PORT:-3457}:3001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,6 +71,7 @@ services:
       - atacte-network
 
   front:
+    image: ${FRONT_IMAGE:-ghcr.io/ferforastieri/atacte-frontend:latest}
     build:
       context: .
       dockerfile: Dockerfile.front
@@ -64,6 +83,33 @@ services:
       - "${FRONT_PORT:-3456}:80"
     depends_on:
       - backend
+    networks:
+      - atacte-network
+
+  updater:
+    build:
+      context: ./updater
+    container_name: atacte-updater
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - "/tmp:rw,noexec,nosuid,size=16m"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
+      ATACTE_INSTALL_DIR: ${ATACTE_INSTALL_DIR:-/workspace}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace:ro
     networks:
       - atacte-network
 

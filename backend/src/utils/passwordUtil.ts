@@ -1,4 +1,5 @@
 import zxcvbn from 'zxcvbn';
+import { randomInt } from 'node:crypto';
 
 export interface PasswordGeneratorOptions {
   length: number;
@@ -45,7 +46,7 @@ export class PasswordUtil {
     
     let password = '';
     for (let i = 0; i < length; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
+      password += charset.charAt(randomInt(charset.length));
     }
     
     

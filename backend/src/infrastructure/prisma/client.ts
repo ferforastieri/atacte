@@ -15,9 +15,6 @@ class PrismaService {
       });
 
       
-      PrismaService.instance.$connect();
-
-      
       process.on('beforeExit', async () => {
         await PrismaService.instance.$disconnect();
       });

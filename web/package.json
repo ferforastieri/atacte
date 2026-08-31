@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "npm run build:manager && npm run build:landing",
+    "build:manager": "vite build --mode manager",
+    "build:landing": "vite build --mode landing",
     "preview": "vite preview --host 0.0.0.0",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"

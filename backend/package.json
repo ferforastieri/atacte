@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "test": "jest",
+    "test": "tsx --test src/server.test.ts",
     "db:generate": "prisma generate --schema=src/infrastructure/prisma/schema.prisma",
     "db:push": "prisma db push --schema=src/infrastructure/prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema=src/infrastructure/prisma/schema.prisma",
@@ -28,7 +28,7 @@
     "joi": "^17.9.2",
     "jsonwebtoken": "^9.0.1",
     "morgan": "^1.10.0",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "^9.1.0",
     "qrcode": "^1.5.3",
     "speakeasy": "^2.0.0",
     "zxcvbn": "^4.4.2"

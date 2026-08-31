@@ -1,12 +1,12 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
-  "exclude": ["src/**/__tests__/*"],
+  "include": ["env.d.ts", "manager/src/**/*", "manager/src/**/*.vue", "landing/**/*"],
+  "exclude": ["manager/src/**/__tests__/*"],
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./manager/src/*"]
     },
     "types": ["vite/client"],
     "strict": true,
@@ -15,4 +15,3 @@
     "exactOptionalPropertyTypes": true
   }
 }
-

@@ -55,7 +55,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      webSecurity: false
+      webSecurity: true
     },
     icon: path.join(__dirname, 'build', 'icon.png'),
     show: false,
@@ -80,35 +80,6 @@ function createWindow() {
       mainWindow.loadFile(indexPath);
     }
   }
-
-  mainWindow.webContents.on('frame-created', (event, details) => {
-    if (!isDev && BACKEND_URL) {
-      details.frame.executeJavaScript(`
-        (function() {
-          if (window.__ATACTE_INTERCEPTOR_INSTALLED__) return;
-          window.__ATACTE_INTERCEPTOR_INSTALLED__ = true;
-          
-          const BACKEND_URL = '${BACKEND_URL}';
-          
-          const originalFetch = window.fetch;
-          window.fetch = function(url, options) {
-            if (typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/health'))) {
-              return originalFetch.call(this, BACKEND_URL + url, options);
-            }
-            return originalFetch.call(this, url, options);
-          };
-          
-          const originalOpen = XMLHttpRequest.prototype.open;
-          XMLHttpRequest.prototype.open = function(method, url, ...args) {
-            if (typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/health'))) {
-              return originalOpen.call(this, method, BACKEND_URL + url, ...args);
-            }
-            return originalOpen.call(this, method, url, ...args);
-          };
-        })();
-      `);
-    }
-  });
 
 
   mainWindow.once('ready-to-show', () => {
@@ -145,6 +116,12 @@ function createWindow() {
     mainWindow = null;
   });
 }
+
+ipcMain.handle('get-csrf-token', async () => {
+  if (!BACKEND_URL) return null;
+  const cookies = await mainWindow?.webContents.session.cookies.get({ url: BACKEND_URL }) || [];
+  return cookies.find((cookie) => cookie.name === 'atacte_csrf')?.value || null;
+});
 
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();

@@ -16,6 +16,8 @@ web/.env
 
 # Build outputs
 dist/
+web/dist-*/
+backend/dist/
 build/
 *.tsbuildinfo
 

@@ -29,7 +29,7 @@ export default {
       },
       infoPlist: {
         NSAppTransportSecurity: {
-          NSAllowsArbitraryLoads: true
+          NSAllowsArbitraryLoads: false
         },
         UIBackgroundModes: []
       },
@@ -51,7 +51,7 @@ export default {
         "ACCESS_NETWORK_STATE",
         "CHANGE_NETWORK_STATE"
       ],
-      usesCleartextTraffic: true,
+      usesCleartextTraffic: false,
       compileSdkVersion: 34,
       targetSdkVersion: 34,
       minSdkVersion: 23
@@ -70,11 +70,12 @@ export default {
       "expo-font",
       "expo-secure-store",
       "expo-updates",
+      "@preeternal/react-native-cookie-manager",
       [
         "expo-build-properties",
         {
           android: {
-            usesCleartextTraffic: true
+            usesCleartextTraffic: false
           }
         }
       ]

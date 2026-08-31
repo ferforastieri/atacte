@@ -2,9 +2,11 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
 import { SERVER_URL_STORAGE_KEY } from '../contexts/ServerContext';
+import CookieManager from '@preeternal/react-native-cookie-manager';
 
 const apiClient: AxiosInstance = axios.create({
   timeout: 20000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,9 +21,19 @@ apiClient.interceptors.request.use(
       }
       config.baseURL = serverUrl;
 
-      const token = await AsyncStorage.getItem('auth_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const cookieHeader = await CookieManager.getCookieHeader(serverUrl);
+      if (cookieHeader) config.headers.Cookie = cookieHeader;
+      const method = config.method?.toUpperCase() ?? 'GET';
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && !config.url?.endsWith('/auth/csrf')) {
+        const csrfCookies = await CookieManager.get(serverUrl);
+        const csrf = csrfCookies.atacte_csrf?.value;
+        if (!csrf) {
+          await apiClient.get('/auth/csrf');
+          const refreshed = await CookieManager.get(serverUrl);
+          if (refreshed.atacte_csrf?.value) config.headers['X-CSRF-Token'] = refreshed.atacte_csrf.value;
+        } else {
+          config.headers['X-CSRF-Token'] = csrf;
+        }
       }
     } catch (error) {
     }
@@ -34,6 +46,12 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
+    const serverUrl = response.config.baseURL;
+    const setCookie = response.headers['set-cookie'];
+    if (serverUrl && setCookie) {
+      const values = Array.isArray(setCookie) ? setCookie : [setCookie];
+      Promise.all(values.map((value) => CookieManager.setFromResponse(serverUrl, value))).catch(() => undefined);
+    }
     const message = response.data?.message;
     if (response.config.method?.toLowerCase() !== 'get' && typeof message === 'string') {
       DeviceEventEmitter.emit('api-response-toast', { type: 'success', message });
@@ -63,7 +81,6 @@ apiClient.interceptors.response.use(
         
         if (!isLogout) {
           try {
-            await AsyncStorage.removeItem('auth_token');
             await AsyncStorage.removeItem('user');
           } catch (storageError) {
           }

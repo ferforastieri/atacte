@@ -1,9 +1,10 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto-js';
+import { randomBytes } from 'node:crypto';
 import { UserRepository, CreateUserData, CreateUserSessionData } from '../../repositories/auth/userRepository';
 import { PasswordResetRepository } from '../../repositories/auth/passwordResetRepository';
-import { JWT_SECRET, PASSWORD_RESET_URL } from '../../infrastructure/config';
+import { COOKIE_MAX_AGE_MS, JWT_AUDIENCE, JWT_EXPIRES_IN, JWT_ISSUER, JWT_SECRET, PASSWORD_RESET_URL } from '../../infrastructure/config';
 import { emailService } from '../email/emailService';
 
 export interface UserDto {
@@ -46,8 +47,21 @@ export class AuthService {
     this.passwordResetRepository = new PasswordResetRepository();
   }
 
+  async hasUsers(): Promise<boolean> {
+    return (await this.userRepository.countUsers()) > 0;
+  }
+
   async register(data: RegisterRequest): Promise<UserDto> {
-    const existingUser = await this.userRepository.findByEmail(data.email);
+    const firstUser = !(await this.hasUsers());
+    if (!firstUser) {
+      throw new Error('O cadastro público já foi encerrado; peça a um administrador para criar usuários.');
+    }
+    const email = data.email?.trim().toLowerCase();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) throw new Error('Email inválido');
+    if (!data.masterPassword || data.masterPassword.length < 8 || data.masterPassword.length > 256) {
+      throw new Error('A senha deve ter entre 8 e 256 caracteres');
+    }
+    const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) {
       throw new Error('Email já está em uso');
     }
@@ -57,13 +71,14 @@ export class AuthService {
     const masterPasswordHash = await bcrypt.hash(data.masterPassword, salt);
 
     
-    const encryptionKey = crypto.SHA256(data.email).toString();
+    const encryptionKey = crypto.SHA256(email).toString();
 
     const userData: CreateUserData = {
-      email: data.email,
+      email,
       masterPasswordHash,
       masterPasswordSalt: salt,
       encryptionKeyHash: encryptionKey,
+      role: firstUser ? 'ADMIN' : undefined,
     };
 
     const user = await this.userRepository.create(userData);
@@ -71,7 +86,9 @@ export class AuthService {
   }
 
   async login(data: LoginRequest, ipAddress?: string, userAgent?: string): Promise<LoginResponse> {
-    const user = await this.userRepository.findByEmail(data.email);
+    const email = data.email?.trim().toLowerCase();
+    if (!email || !data.masterPassword || data.masterPassword.length > 256) throw new Error('Credenciais inválidas');
+    const user = await this.userRepository.findByEmail(email);
     if (!user) {
       throw new Error('Credenciais inválidas');
     }
@@ -98,12 +115,13 @@ export class AuthService {
         userId: user.id, 
         email: user.email
       },
-      JWT_SECRET as jwt.Secret
+      JWT_SECRET as jwt.Secret,
+      { algorithm: 'HS256', expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'], issuer: JWT_ISSUER, audience: JWT_AUDIENCE, jwtid: randomBytes(16).toString('hex') }
     );
 
     
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setTime(expiresAt.getTime() + COOKIE_MAX_AGE_MS);
     const tokenHash = crypto.SHA256(token).toString();
     const deviceName = data.deviceName || 'Dispositivo Web';
     const deviceFingerprint = data.deviceFingerprint || undefined;
@@ -144,7 +162,7 @@ export class AuthService {
     }
   }
 
-  async refreshToken(userId: string): Promise<{ token: string }> {
+  async refreshToken(userId: string, sessionId: string, currentToken?: string): Promise<{ token: string }> {
     const user = await this.userRepository.findById(userId);
     if (!user || !user.isActive) {
       throw new Error('Usuário não encontrado ou inativo');
@@ -159,8 +177,12 @@ export class AuthService {
         userId: user.id, 
         email: user.email
       },
-      JWT_SECRET as jwt.Secret
+      JWT_SECRET as jwt.Secret,
+      { algorithm: 'HS256', expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'], issuer: JWT_ISSUER, audience: JWT_AUDIENCE, jwtid: randomBytes(16).toString('hex') }
     );
+
+    if (!currentToken) throw new Error('Sessão inválida');
+    await this.userRepository.updateSession(sessionId, { tokenHash: crypto.SHA256(token).toString() });
 
     return { token };
   }
@@ -275,12 +297,12 @@ export class AuthService {
   }
 
   async requestPasswordReset(email: string): Promise<{ token: string | undefined; expiresAt: Date }> {
-    const user = await this.userRepository.findByEmail(email);
+    const user = await this.userRepository.findByEmail(email.trim().toLowerCase());
     if (!user) {
       throw new Error('Se o email existir, você receberá um link de recuperação');
     }
 
-    const token = crypto.SHA256(email + Date.now() + Math.random().toString()).toString();
+    const token = randomBytes(32).toString('hex');
     
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
@@ -300,6 +322,9 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
+    if (newPassword.length < 8 || newPassword.length > 256) {
+      throw new Error('A senha deve ter entre 8 e 256 caracteres');
+    }
     const resetToken = await this.passwordResetRepository.findByToken(token);
     
     if (!resetToken) {

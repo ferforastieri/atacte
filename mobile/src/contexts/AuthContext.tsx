@@ -41,8 +41,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkAuthStatus = async () => {
     try {
-      const token = await authService.getStoredToken();
-      if (!token) {
+      const storedUser = await authService.getStoredUser();
+      if (!storedUser) {
         await authService.logout();
         setUser(null);
         setIsAuthenticated(false);
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       const response = await authService.login({ email, masterPassword, deviceName, deviceFingerprint });
       if (response.success && response.data) {
-        if (response.data.token && response.data.user) {
+        if (response.data.user) {
           setUser(response.data.user);
           setIsAuthenticated(true);
         }

@@ -22,6 +22,7 @@ export interface CreateUserSessionData {
 }
 
 export interface UpdateUserSessionData {
+  tokenHash?: string;
   lastUsed?: Date;
   deviceName?: string;
   isTrusted?: boolean;
@@ -44,6 +45,10 @@ export class UserRepository {
     return await prisma.user.findUnique({
       where: { id },
     });
+  }
+
+  async countUsers(): Promise<number> {
+    return prisma.user.count();
   }
 
   async update(id: string, data: Partial<CreateUserData>): Promise<User> {

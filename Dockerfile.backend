@@ -1,4 +1,7 @@
-FROM node:18-alpine3.19
+FROM node:20-alpine
+
+ARG BUILD_VERSION=development
+ENV BUILD_VERSION=$BUILD_VERSION
 
 RUN apk add --no-cache curl
 
@@ -11,6 +14,10 @@ COPY backend/src/ ./src/
 RUN npx prisma generate --schema=src/infrastructure/prisma/schema.prisma
 RUN npm run build
 RUN npm prune --omit=dev && npm cache clean --force
+
+RUN addgroup -S atacte && adduser -S -G atacte atacte \
+    && chown -R atacte:atacte /app
+USER atacte
 
 RUN echo '#!/bin/sh' > /usr/local/bin/health-check.sh && \
     echo 'curl -f http://localhost:3001/health || exit 1' >> /usr/local/bin/health-check.sh && \

@@ -4,11 +4,28 @@ import { AuthService } from '../../services/auth/authService';
 import { UserService } from '../../services/users/userService';
 import { authenticateToken } from '../../middleware/auth';
 import { AuthenticatedRequest } from '../../types/express';
+import { authLimiter } from '../../middleware/auth';
+import { clearSessionCookie, issueCsrfCookie, parseCookies, SESSION_COOKIE_NAME, setSessionCookie } from '../../middleware/cookies';
 
 const router = express.Router();
 const authService = new AuthService();
 
-router.post('/register', async (req, res) => {
+router.get('/csrf', (_req, res) => {
+  issueCsrfCookie(res);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ success: true, message: 'Token CSRF emitido' });
+});
+
+router.get('/setup-status', async (_req, res) => {
+  try {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ success: true, data: { needsSetup: !(await authService.hasUsers()) } });
+  } catch {
+    res.status(503).json({ success: false, message: 'Serviço temporariamente indisponível' });
+  }
+});
+
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { email, masterPassword } = req.body;
     
@@ -32,7 +49,7 @@ router.post('/register', async (req, res) => {
 });
 
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, masterPassword, deviceName, deviceFingerprint } = req.body;
     const ipAddress = req.ip || req.connection.remoteAddress;
@@ -45,9 +62,14 @@ router.post('/login', async (req, res) => {
       deviceFingerprint,
     }, ipAddress, userAgent);
 
+    setSessionCookie(res, result.token);
     res.json({
       success: true,
-      data: result,
+      data: {
+        user: result.user,
+        sessionId: result.sessionId,
+        requiresTrust: result.requiresTrust,
+      },
       message: 'Login realizado com sucesso'
     });
   } catch (error: unknown) {
@@ -63,8 +85,9 @@ router.post('/login', async (req, res) => {
 router.post('/logout', authenticateToken, async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = parseCookies(req.get('Cookie'))[SESSION_COOKIE_NAME];
     await authService.logout(authReq.user.id, token);
+    clearSessionCookie(res);
 
     res.json({
       success: true,
@@ -83,11 +106,13 @@ router.post('/logout', authenticateToken, async (req, res) => {
 router.post('/refresh', authenticateToken, async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   try {
-    const result = await authService.refreshToken(authReq.user.id);
+    const currentToken = parseCookies(req.get('Cookie'))[SESSION_COOKIE_NAME];
+    const result = await authService.refreshToken(authReq.user.id, authReq.sessionId, currentToken);
+    setSessionCookie(res, result.token);
 
     res.json({
       success: true,
-      data: result,
+      data: { sessionId: authReq.sessionId },
       message: 'Token renovado com sucesso'
     });
   } catch (error: unknown) {
@@ -127,10 +152,12 @@ router.get('/sessions', authenticateToken, async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   try {
     const queryParams = req.query;
-    const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
-    const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
+    const requestedLimit = queryParams['limit'] ? Number.parseInt(queryParams['limit'] as string, 10) : 50;
+    const requestedOffset = queryParams['offset'] ? Number.parseInt(queryParams['offset'] as string, 10) : 0;
+    const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 50;
+    const offset = Number.isFinite(requestedOffset) ? Math.max(requestedOffset, 0) : 0;
     
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = parseCookies(req.get('Cookie'))[SESSION_COOKIE_NAME];
     const tokenHash = token ? crypto.SHA256(token).toString() : undefined;
     const result = await authService.getUserSessions(authReq.user.id, tokenHash, limit, offset);
 
@@ -231,7 +258,7 @@ router.post('/untrust-device', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     
@@ -257,7 +284,7 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', authLimiter, async (req, res) => {
   try {
     const { token, newPassword } = req.body;
     
@@ -290,7 +317,7 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-router.post('/change-password', authenticateToken, async (req, res) => {
+router.post('/change-password', authLimiter, authenticateToken, async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   try {
     const { currentPassword, newPassword } = req.body;

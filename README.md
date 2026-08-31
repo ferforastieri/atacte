@@ -25,6 +25,7 @@ A historia do projeto é simples, comprei uma maquina para rodar um homelab, e o
 - **Criptografia AES-256** para todas as senhas armazenadas
 - **Hash bcrypt** para senha mestra com salt personalizado
 - **Autenticação JWT** com refresh tokens
+- **Sessões cookie-only** (`HttpOnly` + CSRF); o JWT nunca é persistido no navegador
 - **Rate limiting** para proteção contra ataques de força bruta
 - **Auditoria completa** de todas as ações do usuário
 - **Sessões gerenciadas** com controle de dispositivos confiáveis
@@ -86,8 +87,10 @@ Atacte/
 │   │   ├── utils/          # Utilitários (crypto, audit)
 │   │   └── infrastructure/ # Configuração (DB, env)
 │   └── package.json
-├── web/                    # Frontend Web (Vue.js 3)
-│   ├── src/
+├── web/                    # Landing pública e gerenciador Vue/Vite
+│   ├── landing/            # Página pública, /docs e /releases (Vercel)
+│   ├── manager/             # Cofre autenticado (Docker/Nginx)
+│   ├── shared/
 │   │   ├── components/     # Componentes Vue
 │   │   ├── views/         # Páginas da aplicação
 │   │   ├── stores/        # Estado global (Pinia)
@@ -105,10 +108,11 @@ Atacte/
 │   ├── assets/            # Imagens e recursos
 │   └── package.json
 ├── nginx/                  # Configuração do Nginx
+├── updater/                # Serviço mínimo de atualização via Docker socket
 ├── docker-compose.yml      # Orquestração de containers em produção
 ├── Dockerfile.backend      # Imagem da API
 ├── Dockerfile.front        # Imagem do frontend web
-└── .gitea/workflows/       # Pipeline de deploy no Gitea Actions
+└── .github/workflows/      # CI, publicação GHCR e deploy self-hosted
 ```
 
 ## 🛠️ Tecnologias
@@ -254,13 +258,20 @@ RATE_LIMIT_MAX_REQUESTS=100
 # CORS
 CORS_ORIGIN=http://localhost:3000
 
+# Cookies/Proxy
+COOKIE_SECURE=false
+COOKIE_SAME_SITE=lax
+TRUST_PROXY=0
+UPDATER_URL=http://atacte-updater:8080
+UPDATER_TOKEN=um-token-gerado-na-instalacao
+
 # Logs
 LOG_LEVEL=info
 ```
 
 ### Configuração do Frontend Web
 
-O frontend web se conecta automaticamente ao backend via proxy configurado no Vite.
+O frontend web se conecta automaticamente ao backend via proxy configurado no Vite. Na Vercel, defina `VITE_MANAGER_URL` para o endereço da instalação self-hosted e, se o repositório não for `ferforastieri/atacte`, `VITE_GITHUB_REPOSITORY`. `VITE_ANDROID_APK_URL` pode apontar para um APK privado ou mirror; por padrão usa o asset da release mais recente.
 
 ### Configuração do App Mobile
 
@@ -390,6 +401,12 @@ Obter informações do usuário autenticado.
 #### GET `/api/auth/sessions`
 Listar todas as sessões ativas do usuário.
 
+#### GET `/api/version`
+Retorna a versão imutável da imagem em execução; usado pelo aviso de atualização.
+
+#### POST `/api/update`
+Inicia o updater interno (administrador + CSRF). Não executa migração nem altera o volume PostgreSQL.
+
 ### Senhas
 
 #### GET `/api/passwords`
@@ -450,22 +467,25 @@ Importar dados de JSON.
 
 ## 🚀 Deployment
 
-### Deploy Automático com Gitea Actions
+### Deploy Automático com GitHub Actions
 
 O deploy local por SSH/rsync foi removido. O fluxo atual é:
 
-1. Faça push para o GitHub.
-2. O Gitea sincroniza o repositório.
-3. O workflow `.gitea/workflows/deploy.yml` roda no runner do próprio servidor.
-4. A pipeline cria o `.env`, faz build das imagens, aplica `prisma db push` e sobe os containers com Docker Compose.
+1. Faça push para a branch `main` ou crie uma tag `v*`.
+2. O CI valida tipos, testes, builds, Compose e dependências.
+3. O workflow publica imagens multi-arquitetura versionadas no GHCR, tenta a build Android no EAS de forma não bloqueante e cria um release.
+4. O deploy conecta por SSH, atualiza os containers e verifica `/health`; falhas de health check mantêm a versão anterior para rollback manual por tag SHA.
+5. A Vercel publica a landing, documentação e releases automaticamente pela integração GitHub.
 
-Secrets obrigatórios no repositório do Gitea:
+Secrets obrigatórios no repositório do GitHub (o instalador local gera os equivalentes automaticamente):
 
 - `POSTGRES_PASSWORD`
 - `JWT_SECRET`
 - `ENCRYPTION_KEY`
 - `VITE_API_URL`
-- `EXPO_TOKEN`, token de acesso usado para iniciar a build Android production no EAS
+- `EXPO_TOKEN`, opcional; inicia a build Android production no EAS. Falhas/quota da Expo não bloqueiam backend, manager ou landing.
+- `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`, `DEPLOY_SSH_PRIVATE_KEY`, `DEPLOY_SSH_KNOWN_HOSTS`
+- `GHCR_USERNAME`, `GHCR_TOKEN` (leitura das imagens no servidor `/opt/atacte`)
 
 Secrets opcionais:
 
@@ -478,7 +498,21 @@ Secrets opcionais:
 - `BCRYPT_ROUNDS`, padrão `12`
 - `RATE_LIMIT_WINDOW_MS`, padrão `900000`
 - `RATE_LIMIT_MAX_REQUESTS`, padrão `500`
-- `CORS_ORIGIN`, padrão `*`
+- `AUTH_RATE_LIMIT_MAX`, padrão `5`
+- `AUTH_RATE_LIMIT_WINDOW_MS`, padrão `900000`
+- `MUTATION_RATE_LIMIT_MAX`, padrão `120`
+- `MUTATION_RATE_LIMIT_WINDOW_MS`, padrão `60000`
+- `CORS_ORIGIN`, lista separada por vírgula, sem wildcard com credenciais
+- `COOKIE_SECURE`, padrão `true` em produção
+- `COOKIE_SAME_SITE`, padrão `lax`
+- `COOKIE_DOMAIN`, opcional
+- `COOKIE_MAX_AGE_MS`, padrão 30 dias
+- `TRUST_PROXY`, padrão `0`
+- `JWT_ISSUER`, padrão `atacte-api`
+- `JWT_AUDIENCE`, padrão `atacte-clients`
+- `UPDATER_TOKEN`, token privado criado pelo instalador para autorizar atualizações
+- `UPDATER_URL`, padrão `http://atacte-updater:8080`
+- `BUILD_VERSION`, SHA da imagem publicada
 - `LOG_LEVEL`, padrão `info`
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `PASSWORD_RESET_URL`
 
@@ -487,6 +521,35 @@ Secrets opcionais:
 O caminho manual ainda existe só para manutenção emergencial: crie um `.env` na raiz com os mesmos valores dos secrets e rode `docker compose --env-file .env up -d --build`.
 
 O `.env` permanece ignorado pelo Git.
+
+### Instalação e atualização pelo updater
+
+Em um host com Docker Compose v2, a instalação recomendada é:
+
+```bash
+curl -fsSL https://atacte.vercel.app/install.sh | sh
+```
+
+O script cria `~/.atacte`, baixa o Compose e o updater, gera `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `UPDATER_TOKEN` aleatórios no `.env` privado, configura o CORS para a porta local e inicia backend, manager, PostgreSQL e updater. Em `localhost` ele define `COOKIE_SECURE=false` para a sessão funcionar em HTTP; antes de expor o serviço por domínio, configure `COOKIE_SECURE=true` atrás de HTTPS. Portanto, a instalação inicial não exige variáveis manuais; reexecutar o comando preserva esses segredos e atualiza sem alterar schema ou volume do banco. Para fixar uma release: `ATACTE_RELEASE_REF=v0.0.12 curl -fsSL https://atacte.vercel.app/install.sh | sh`.
+
+Administradores veem o aviso de nova versão no Dashboard. O botão **Atualizar agora** chama `POST /api/update`; o updater faz pull de backend/frontend e recria somente esses containers. O serviço usa o socket Docker e deve ficar acessível apenas pela rede interna; não publique sua porta diretamente na internet.
+
+### Landing, documentação e downloads
+
+- `/` — apresentação pública e instalação;
+- `/docs/` — requisitos, Docker, updater, backup e segurança;
+- `/releases/` — histórico publicado no GitHub e links para assets;
+- `Baixar APK Android` no menu do manager — aponta para o APK anexado à release mais recente quando a build EAS estiver disponível.
+
+O APK é gerado pelo job não bloqueante `Expo Android` em `.github/workflows/publish.yml`. Quando `EXPO_TOKEN` não estiver configurado ou a Expo falhar, a release continua sendo criada sem o asset Android.
+
+### Modelo de segurança e risco conhecido
+
+As sessões web, mobile e desktop usam cookies `HttpOnly`; requisições mutáveis também exigem o header `X-CSRF-Token`. Configure sempre HTTPS em produção e uma lista explícita em `CORS_ORIGIN`.
+
+O schema do PostgreSQL não é alterado automaticamente pelos workflows. A cifragem histórica do cofre usa uma chave derivada do email e permanece nesta versão por compatibilidade; isso significa que um dump do banco pode permitir a recuperação dos dados cifrados. Não trate o Atacte como zero-knowledge até uma futura migração criptográfica.
+
+O rate limit usa memória local e não é compartilhado entre réplicas. Para escalar horizontalmente, substitua o store por Redis.
 
 ## 💻 Desenvolvimento
 

@@ -50,7 +50,7 @@
     ],
     "extraResources": [
       {
-        "from": "../web/dist",
+        "from": "../web/dist-manager",
         "to": "web-dist"
       }
     ],

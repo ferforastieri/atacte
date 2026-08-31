@@ -2,7 +2,8 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
+    "./manager/index.html",
+    "./manager/src/**/*.{vue,js,ts,jsx,tsx}",
   ],
   darkMode: 'class',
   theme: {
@@ -54,4 +55,3 @@ export default {
   },
   plugins: [],
 }
-

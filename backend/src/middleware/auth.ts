@@ -4,11 +4,13 @@ import crypto from 'crypto-js';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../infrastructure/prisma';
 import { AuthenticatedRequest } from '../types/express';
+import { AUTH_RATE_LIMIT_MAX, AUTH_RATE_LIMIT_WINDOW_MS, JWT_AUDIENCE, JWT_ISSUER, JWT_SECRET, MUTATION_RATE_LIMIT_MAX, MUTATION_RATE_LIMIT_WINDOW_MS } from '../infrastructure/config';
+import { SESSION_COOKIE_NAME, parseCookies } from './cookies';
 
 
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 5, 
+  windowMs: AUTH_RATE_LIMIT_WINDOW_MS,
+  max: AUTH_RATE_LIMIT_MAX,
   message: { 
     success: false, 
     message: 'Muitas tentativas de login. Tente novamente em 15 minutos.' 
@@ -17,6 +19,19 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+export const mutationLimiter = rateLimit({
+  windowMs: MUTATION_RATE_LIMIT_WINDOW_MS,
+  max: MUTATION_RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => ['GET', 'HEAD', 'OPTIONS'].includes(req.method),
+  message: { success: false, message: 'Muitas operações. Tente novamente em instantes.' },
+});
+
+function getSessionToken(req: Request): string | undefined {
+  return parseCookies(req.get('Cookie'))[SESSION_COOKIE_NAME];
+}
+
 
 export const authenticateToken = async (
   req: Request,
@@ -24,8 +39,7 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = getSessionToken(req);
 
     if (!token) {
       res.status(401).json({ 
@@ -36,7 +50,11 @@ export const authenticateToken = async (
     }
 
     
-    const decoded = jwt.verify(token, process.env['JWT_SECRET']!) as { 
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    }) as { 
       userId: string; 
       email: string; 
     };
@@ -85,15 +103,10 @@ export const authenticateToken = async (
       return;
     }
 
-    const allowedPathsWithoutTrust = ['/api/auth/trust-device', '/api/auth/me', '/api/auth/logout', '/auth/trust-device', '/auth/me', '/auth/logout'];
-    const path = req.path;
-    const originalUrl = req.originalUrl || req.url;
-    
-    const isAllowedPath = allowedPathsWithoutTrust.some(allowed => 
-      path === allowed || 
-      path.includes(allowed) || 
-      originalUrl.includes(allowed) ||
-      originalUrl === allowed
+    const isAllowedPath = (
+      (req.baseUrl === '/api/auth' && req.method === 'POST' && req.path === '/trust-device') ||
+      (req.baseUrl === '/api/auth' && req.method === 'GET' && req.path === '/me') ||
+      (req.baseUrl === '/api/auth' && req.method === 'POST' && req.path === '/logout')
     );
 
     if (!session.isTrusted && !isAllowedPath) {
@@ -138,15 +151,18 @@ export const optionalAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = getSessionToken(req);
 
     if (!token) {
       next();
       return;
     }
 
-    const decoded = jwt.verify(token, process.env['JWT_SECRET']!) as { 
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    }) as { 
       userId: string; 
       email: string; 
     };
