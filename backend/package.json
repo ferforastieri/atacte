@@ -8,10 +8,10 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "test": "tsx --test src/server.test.ts",
-    "db:consolidate-encryption": "node dist/infrastructure/scripts/consolidate-encryption.js",
     "db:generate": "prisma generate --schema=src/infrastructure/prisma/schema.prisma",
     "db:push": "prisma db push --schema=src/infrastructure/prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema=src/infrastructure/prisma/schema.prisma",
+    "db:migrate:deploy": "prisma migrate deploy --schema=src/infrastructure/prisma/schema.prisma",
     "db:studio": "prisma studio --schema=src/infrastructure/prisma/schema.prisma"
   },
   "dependencies": {
@@ -28,6 +28,7 @@
     "jsonwebtoken": "^9.0.1",
     "morgan": "^1.10.0",
     "nodemailer": "^9.1.0",
+    "prisma": "^5.2.0",
     "qrcode": "^1.5.3",
     "speakeasy": "^2.0.0",
     "zxcvbn": "^4.4.2"
@@ -44,7 +45,6 @@
     "@types/speakeasy": "^2.0.7",
     "@types/supertest": "^7.2.1",
     "@types/zxcvbn": "^4.4.5",
-    "prisma": "^5.2.0",
     "supertest": "^7.2.2",
     "tsx": "^3.12.7",
     "typescript": "^5.1.6"

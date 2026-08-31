@@ -65,7 +65,7 @@ O instalador também pode ser executado novamente para buscar a release configur
 curl -fsS http://localhost:3457/health
 ```
 
-O updater não executa `prisma migrate`, `db push` ou qualquer alteração automática de schema. Faça um backup antes de qualquer troca de versão.
+O updater executa as migrations versionadas do Prisma com `prisma migrate deploy` antes de substituir o backend. Ele não executa `db push` nem alterações de schema fora dos arquivos de migration. Faça um backup antes de qualquer troca de versão.
 
 ## Backup e restauração
 
@@ -114,7 +114,7 @@ O cliente Electron está em `desktop/` e pode ser empacotado para Windows, macOS
 
 As sessões usam cookies `HttpOnly`, `Secure` em HTTPS e proteção CSRF; tokens de sessão não são gravados em `localStorage`. A API aplica CORS por lista explícita de origens, rate limit, validação de entrada e headers de segurança. Use sempre HTTPS para acesso remoto, firewall para as portas internas e backups criptografados.
 
-O schema Prisma não é migrado automaticamente. O rate limit padrão fica na memória do processo e, portanto, não é compartilhado entre múltiplas réplicas.
+O updater aplica as migrations versionadas do Prisma durante uma atualização. O rate limit padrão fica na memória do processo e, portanto, não é compartilhado entre múltiplas réplicas.
 
 ## Desenvolvimento
 

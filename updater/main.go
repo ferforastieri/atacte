@@ -176,6 +176,9 @@ func (u *updater) run() {
 	compose := []string{"compose", "--project-directory", projectDir, "-f", projectDir + "/docker-compose.yml"}
 	commands := [][]string{
 		{"pull", "backend", "front"},
+		// Run versioned Prisma migrations from the freshly pulled backend image
+		// before replacing the running API container.
+		{"run", "--rm", "backend", "./node_modules/.bin/prisma", "migrate", "deploy", "--schema=src/infrastructure/prisma/schema.prisma"},
 		{"up", "-d", "--no-build", "--remove-orphans", "backend", "front"},
 	}
 	for _, args := range commands {

@@ -73,6 +73,8 @@ Thumbs.db
 
 # Prisma
 prisma/migrations/
+!backend/src/infrastructure/prisma/migrations/
+!backend/src/infrastructure/prisma/migrations/**
 
 # Database
 *.db

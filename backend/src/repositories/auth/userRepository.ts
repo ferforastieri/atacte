@@ -6,7 +6,6 @@ export interface CreateUserData {
   email: string;
   masterPasswordHash: string;
   masterPasswordSalt: string;
-  encryptionKeyHash: string;
   role?: 'USER' | 'ADMIN';
 }
 

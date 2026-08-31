@@ -127,11 +127,4 @@ export class SecureNoteRepository {
     });
   }
 
-  async getUserEncryptionKey(userId: string): Promise<{ encryptionKeyHash: string } | null> {
-    return await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true },
-    });
-  }
 }
-

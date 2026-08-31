@@ -6,7 +6,6 @@ export interface UpdateUserData {
   email?: string;
   masterPasswordHash?: string;
   masterPasswordSalt?: string;
-  encryptionKeyHash?: string;
   lastLogin?: Date;
   isActive?: boolean;
   name?: string;

@@ -75,9 +75,6 @@ export class AuthService {
       email,
       masterPasswordHash,
       masterPasswordSalt: salt,
-      // Kept for schema compatibility; vault data is encrypted with the
-      // process-level ENCRYPTION_KEY, never with a key stored in the database.
-      encryptionKeyHash: 'master-key:v1',
       role: firstUser ? 'ADMIN' : undefined,
     };
 
