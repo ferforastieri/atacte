@@ -163,6 +163,8 @@ jobs:
 
   mobile:
     name: Expo Android (non-blocking)
+    # Temporarily disabled. Re-enable this job when the Expo build is needed.
+    if: ${{ false }}
     continue-on-error: true
     outputs:
       apk_available: ${{ steps.apk_status.outputs.available }}
@@ -220,7 +222,7 @@ jobs:
 
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [manifest, mobile]
+    needs: manifest
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -243,15 +245,3 @@ jobs:
               --generate-notes \
               docker-compose.yml README.md web/public/install.sh updater/Dockerfile updater/go.mod updater/go.sum updater/main.go
           fi
-      - name: Download APK artifact when available
-        if: ${{ always() && needs.mobile.outputs.apk_available == 'true' }}
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: atacte-android-apk
-          path: mobile-release
-      - name: Attach APK to release
-        if: ${{ hashFiles('mobile-release/atacte-android.apk') != '' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: v0.0.${{ github.run_number }}
-        run: gh release upload "$RELEASE_TAG" mobile-release/atacte-android.apk --clobber
