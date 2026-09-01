@@ -26,10 +26,12 @@ O instalador cria `~/.atacte`, baixa o Compose e imagens prontas para sua arquit
 
 Depois, abra **http://localhost:3456**. Em um banco vazio, o primeiro visitante verá o cadastro inicial; essa conta passa a ser a administradora. Se já existir um banco, faça backup antes de apontar o Compose para ele.
 
-Para instalar uma versão específica:
+Valide os serviços e a API com:
 
 ```sh
-ATACTE_RELEASE_REF=v1.2.3 curl -fsSL https://atacte.vercel.app/install.sh | sh
+cd ~/.atacte
+docker compose ps
+curl -fsS http://localhost:3457/health
 ```
 
 Os arquivos da instalação ficam em `~/.atacte`. O PostgreSQL é publicado somente em `127.0.0.1` por padrão. Quando o reverse proxy estiver em outro host ou container, publique a API na interface de rede privada e restrinja a porta no firewall:
@@ -40,6 +42,16 @@ BACKEND_PORT=3457
 ```
 
 Não exponha PostgreSQL nem a porta do updater à internet.
+
+## Instalação assistida por IA
+
+Agentes de IA e ferramentas de automação devem ler [AGENTS.md](AGENTS.md) antes de instalar ou atualizar o projeto. O arquivo separa produção de desenvolvimento, define verificações esperadas e evita sobrescrever `.env`, expor segredos ou remover volumes.
+
+Prompt sugerido:
+
+> Leia o AGENTS.md deste repositório, identifique se o objetivo é produção ou desenvolvimento, execute somente o procedimento correspondente e valide os serviços sem exibir segredos.
+
+O instalador rápido acompanha as imagens `latest`. Para fixar uma release, não use apenas `ATACTE_RELEASE_REF`: registre também `BACKEND_IMAGE`, `FRONT_IMAGE` e `UPDATER_IMAGE` com a mesma tag no `.env`, conforme o guia para agentes.
 
 ## Uso diário
 
@@ -59,7 +71,7 @@ docker compose pull backend front updater
 docker compose up -d --no-build --remove-orphans
 ```
 
-O instalador também pode ser executado novamente para buscar a release configurada. Para voltar, edite o `ATACTE_RELEASE_REF`/as tags de imagem no Compose para uma versão conhecida e execute `docker compose pull` e `docker compose up -d`. Valide a API com:
+O instalador também pode ser executado novamente para buscar a release configurada. Para voltar, defina `BACKEND_IMAGE`, `FRONT_IMAGE` e `UPDATER_IMAGE` no `.env` com uma tag conhecida e execute `docker compose pull` e `docker compose up -d`. Valide a API com:
 
 ```sh
 curl -fsS http://localhost:3457/health
@@ -118,32 +130,32 @@ O updater aplica as migrations versionadas do Prisma durante uma atualização. 
 
 ## Desenvolvimento
 
-Cada parte possui seu próprio `package.json` e lockfile. Node.js 18+ e npm são recomendados.
+Cada parte possui seu próprio `package.json` e lockfile. Use Node.js 20 e npm; o updater requer Go 1.24.
 
 ```sh
-# API
-cd backend
-npm ci
-npm run db:generate
-npm run dev
+# Dependências e Prisma
+npm --prefix backend ci
+npm --prefix backend run db:generate
+npm --prefix web ci
+
+# API (um terminal)
+npm --prefix backend run dev
 
 # Web (outro terminal)
-cd web
-npm ci
-npm run dev
+npm --prefix web run dev
 
-# Verificação e builds
-npm run type-check
-npm run build:manager
-npm run build:landing
+# Mobile (opcional, outro terminal)
+npm --prefix mobile ci
+npm --prefix mobile start
 
-# Mobile (opcional)
-cd mobile
-npm ci
-npx expo start
+# Verificação do web
+npm --prefix web run type-check
+npm --prefix web run build
 ```
 
-Para subir tudo localmente com containers, copie `backend/.env.example` para `backend/.env`, preencha os segredos e execute `docker compose up -d --build`. Os workflows de CI executam testes e builds, mas nunca fazem migração automática do banco.
+Para desenvolvimento com os processos Node locais, suba apenas o PostgreSQL com Docker, copie `backend/.env.example` para `backend/.env`, use a porta publicada `5435` na `DATABASE_URL` e aplique `npm --prefix backend run db:migrate:deploy`. Não sobrescreva um `.env` existente.
+
+Para construir toda a aplicação com Compose, crie um `.env` na raiz com `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `UPDATER_TOKEN` antes de executar `docker compose up -d --build`. O roteiro completo e os comandos de validação estão em [AGENTS.md](AGENTS.md). Os workflows de CI executam testes e builds, mas nunca fazem migração automática do banco.
 
 ## Links
 
@@ -151,6 +163,7 @@ Para subir tudo localmente com containers, copie `backend/.env.example` para `ba
 - [Documentação](https://atacte.vercel.app/docs/)
 - [Releases e APK](https://github.com/ferforastieri/atacte/releases)
 - [Código-fonte](https://github.com/ferforastieri/atacte)
+- [Guia para agentes de IA](AGENTS.md)
 
 ## Contribuição e licença
 

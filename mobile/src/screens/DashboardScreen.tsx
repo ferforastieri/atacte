@@ -576,8 +576,6 @@ export default function DashboardScreen() {
             onChangeText={setSearchQuery}
             onSearch={handleSearch}
             placeholder="Buscar senhas..."
-            debounceMs={300}
-            minLength={2}
           />
         </View>
 

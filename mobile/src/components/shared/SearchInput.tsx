@@ -22,11 +22,11 @@ interface SearchInputProps {
 export const SearchInput: React.FC<SearchInputProps> = ({
   value = '',
   placeholder = 'Pesquisar...',
-  debounceMs = 300,
+  debounceMs = 500,
   disabled = false,
   autoFocus = false,
   showClearButton = true,
-  minLength = 1,
+  minLength = 2,
   onChangeText,
   onSearch,
   onClear,

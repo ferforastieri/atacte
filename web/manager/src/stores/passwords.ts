@@ -61,8 +61,10 @@ export const usePasswordsStore = defineStore('passwords', () => {
   const fetchPasswords = async (filters?: Partial<PasswordSearchFilters>) => {
     isLoading.value = true
     try {
-      const currentFilters = { ...searchFilters.value, ...filters }
-      const response = await passwordsApi.searchPasswords(currentFilters)
+      if (filters) {
+        searchFilters.value = { ...searchFilters.value, ...filters }
+      }
+      const response = await passwordsApi.searchPasswords(searchFilters.value)
       
       if (response.success) {
         passwords.value = response.data

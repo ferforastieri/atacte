@@ -16,7 +16,7 @@
               <DocumentTextIcon class="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
             <div class="ml-3 sm:ml-4">
-              <p class="text-blue-100 text-xs sm:text-sm">Total de Notas</p>
+              <p class="text-blue-100 text-xs sm:text-sm">Nesta página</p>
               <p class="text-lg sm:text-2xl font-bold">{{ notes.length }}</p>
             </div>
           </div>
@@ -52,8 +52,8 @@
               <DocumentTextIcon class="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
             <div class="ml-3 sm:ml-4">
-              <p class="text-green-100 text-xs sm:text-sm">Filtradas</p>
-              <p class="text-lg sm:text-2xl font-bold">{{ filteredNotes.length }}</p>
+              <p class="text-green-100 text-xs sm:text-sm">Resultados</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ secureNotesStore.pagination.total }}</p>
             </div>
           </div>
         </BaseCard>
@@ -78,10 +78,7 @@
             <SearchInput
               v-model="searchQuery"
               placeholder="Buscar notas..."
-              :debounce-ms="300"
-              :min-length="2"
               @search="handleSearch"
-              @clear="handleSearchClear"
             />
           </div>
           
@@ -113,7 +110,7 @@
       <!-- Notes List -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <BaseCard
-          v-for="note in filteredNotes"
+          v-for="note in notes"
           :key="note.id"
           class="hover:shadow-lg transition-shadow cursor-pointer"
           @click="viewNote(note)"
@@ -162,14 +159,39 @@
         </BaseCard>
       </div>
 
+      <!-- Paginação -->
+      <div v-if="secureNotesStore.pagination.total > secureNotesStore.pagination.limit" class="mt-6 sm:mt-8">
+        <div class="flex flex-col sm:flex-row items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 gap-4">
+          <div class="text-sm text-gray-700 dark:text-gray-300 text-center sm:text-left">
+            Mostrando {{ secureNotesStore.pagination.offset + 1 }} a {{ Math.min(secureNotesStore.pagination.offset + secureNotesStore.pagination.limit, secureNotesStore.pagination.total) }} de {{ secureNotesStore.pagination.total }} notas
+          </div>
+          <div class="flex space-x-2">
+            <BaseButton
+              variant="ghost"
+              @click="secureNotesStore.fetchNotes({ offset: secureNotesStore.pagination.offset - secureNotesStore.pagination.limit })"
+              :disabled="secureNotesStore.pagination.offset === 0"
+            >
+              ← Anterior
+            </BaseButton>
+            <BaseButton
+              variant="ghost"
+              @click="secureNotesStore.fetchNotes({ offset: secureNotesStore.pagination.offset + secureNotesStore.pagination.limit })"
+              :disabled="secureNotesStore.pagination.offset + secureNotesStore.pagination.limit >= secureNotesStore.pagination.total"
+            >
+              Próximo →
+            </BaseButton>
+          </div>
+        </div>
+      </div>
+
       <!-- Empty State -->
-      <div v-if="filteredNotes.length === 0" class="text-center py-12">
+      <div v-if="notes.length === 0" class="text-center py-12">
         <DocumentTextIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
         <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhuma nota encontrada</h3>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {{ notes.length === 0 ? 'Comece criando sua primeira nota.' : 'Tente ajustar os filtros de busca.' }}
+          {{ hasActiveFilters ? 'Tente ajustar os filtros de busca.' : 'Comece criando sua primeira nota.' }}
         </p>
-        <div v-if="notes.length === 0" class="mt-6">
+        <div v-if="!hasActiveFilters" class="mt-6">
           <BaseButton
             variant="primary"
             @click="showCreateModal = true"
@@ -211,7 +233,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSecureNotesStore } from '@/stores/secureNotes'
 import type { SecureNote } from '@/api/secureNotes'
@@ -237,35 +259,14 @@ const showViewModal = ref(false)
 const showEditModal = ref(false)
 const selectedNote = ref<SecureNote | null>(null)
 const isRefreshing = ref(false)
-const searchQuery = ref('')
-const selectedFolder = ref('')
-const showOnlyFavorites = ref(false)
+const searchQuery = ref(secureNotesStore.searchFilters.query || '')
+const selectedFolder = ref(secureNotesStore.searchFilters.folder || '')
+const showOnlyFavorites = ref(secureNotesStore.searchFilters.isFavorite === true)
 
 const folders = computed(() => secureNotesStore.folders)
 const notes = computed(() => secureNotesStore.notes)
 const favoriteCount = computed(() => notes.value.filter(n => n.isFavorite).length)
-
-const filteredNotes = computed(() => {
-  let filtered = [...notes.value]
-
-  if (showOnlyFavorites.value) {
-    filtered = filtered.filter(note => note.isFavorite)
-  }
-
-  if (selectedFolder.value) {
-    filtered = filtered.filter(note => note.folder === selectedFolder.value)
-  }
-
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(note =>
-      note.title.toLowerCase().includes(query) ||
-      note.content.toLowerCase().includes(query)
-    )
-  }
-
-  return filtered
-})
+const hasActiveFilters = computed(() => Boolean(searchQuery.value || selectedFolder.value || showOnlyFavorites.value))
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -289,23 +290,20 @@ const refreshNotes = async () => {
   }
 }
 
-const handleSearch = () => {
-  secureNotesStore.setFilter({ query: searchQuery.value })
-  secureNotesStore.fetchNotes()
-}
-
-const handleSearchClear = async () => {
-  searchQuery.value = ''
+const handleSearch = async (query: string) => {
+  secureNotesStore.setFilter({ query, offset: 0 })
   await secureNotesStore.fetchNotes()
 }
 
-const handleFolderFilter = () => {
-  secureNotesStore.setFilter({ folder: selectedFolder.value || undefined })
-  secureNotesStore.fetchNotes()
+const handleFolderFilter = async () => {
+  secureNotesStore.setFilter({ folder: selectedFolder.value || undefined, offset: 0 })
+  await secureNotesStore.fetchNotes()
 }
 
-const toggleFavorites = () => {
+const toggleFavorites = async () => {
   showOnlyFavorites.value = !showOnlyFavorites.value
+  secureNotesStore.setFilter({ isFavorite: showOnlyFavorites.value || undefined, offset: 0 })
+  await secureNotesStore.fetchNotes()
 }
 
 const handleNoteCreated = async () => {
@@ -347,13 +345,10 @@ const handleNoteDeleted = async () => {
 const toggleFavorite = async (note: SecureNote) => {
   try {
     await secureNotesStore.toggleFavorite(note.id)
+    if (showOnlyFavorites.value) await secureNotesStore.fetchNotes()
   } catch (error) {
   }
 }
-
-watch(searchQuery, () => {
-  handleSearch()
-})
 
 onMounted(async () => {
   try {

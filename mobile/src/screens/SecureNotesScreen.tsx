@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -19,14 +19,18 @@ interface SecureNote {
   updatedAt: string;
 }
 
+const NOTES_PAGE_SIZE = 50;
+
 export default function SecureNotesScreen() {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'SecureNotes'>>();
   const [notes, setNotes] = useState<SecureNote[]>([]);
-  const [allNotes, setAllNotes] = useState<SecureNote[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentOffset, setCurrentOffset] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -40,16 +44,12 @@ export default function SecureNotesScreen() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const activeSearchQuery = useRef('');
+  const activeFolder = useRef<string | null>(null);
+  const requestGeneration = useRef(0);
+  const isReplacingNotes = useRef(false);
+  const isLoadingMoreRef = useRef(false);
   const { isDark, toggleTheme } = useTheme();
-
-  useEffect(() => {
-    loadFolders();
-    loadNotes();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [allNotes, searchQuery, selectedFolder]);
 
   const loadFolders = async () => {
     try {
@@ -62,62 +62,109 @@ export default function SecureNotesScreen() {
     }
   };
 
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async (
+    offset = 0,
+    append = false,
+    query = activeSearchQuery.current,
+    folder = activeFolder.current,
+  ) => {
+    if (append) {
+      if (isReplacingNotes.current || isLoadingMoreRef.current) return;
+      isLoadingMoreRef.current = true;
+      setIsLoadingMore(true);
+    } else {
+      requestGeneration.current += 1;
+      isReplacingNotes.current = true;
+      isLoadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+    const currentRequestGeneration = requestGeneration.current;
+
     try {
       const filters: {
         limit?: number;
+        offset?: number;
         folder?: string;
         query?: string;
       } = {
-        limit: 1000,
+        limit: NOTES_PAGE_SIZE,
+        offset,
       };
       
-      if (selectedFolder) {
-        filters.folder = selectedFolder;
+      if (folder) {
+        filters.folder = folder;
       }
       
-      if (searchQuery) {
-        filters.query = searchQuery;
+      if (query) {
+        filters.query = query;
       }
 
       const response = await secureNoteService.getNotes(filters);
+      if (currentRequestGeneration !== requestGeneration.current) return;
       
       if (response.success && response.data) {
         const notesList = Array.isArray(response.data) ? response.data : [];
-        setAllNotes(notesList);
+        if (append) {
+          setNotes((currentNotes) => {
+            const existingIds = new Set(currentNotes.map((note) => note.id));
+            const newNotes = notesList.filter((note) => !existingIds.has(note.id));
+            return [...currentNotes, ...newNotes];
+          });
+        } else {
+          setNotes(notesList);
+        }
+
+        const loadedCount = offset + notesList.length;
+        setCurrentOffset(loadedCount);
+        setHasMore(response.pagination ? loadedCount < response.pagination.total : false);
       } else {
-        setAllNotes([]);
+        if (!append) setNotes([]);
+        setHasMore(false);
       }
     } catch (error) {
-      setAllNotes([]);
+      if (currentRequestGeneration !== requestGeneration.current) return;
+      if (!append) setNotes([]);
+      setHasMore(false);
     } finally {
-      setIsLoading(false);
+      if (currentRequestGeneration === requestGeneration.current) {
+        isReplacingNotes.current = false;
+        isLoadingMoreRef.current = false;
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
     }
-  };
+  }, []);
 
-  const applyFilters = () => {
-    let filtered = [...allNotes];
+  useEffect(() => {
+    loadFolders();
+    loadNotes();
+  }, [loadNotes]);
 
-    if (selectedFolder) {
-      filtered = filtered.filter(note => note.folder === selectedFolder);
-    }
+  const handleSearch = useCallback(async (query: string) => {
+    activeSearchQuery.current = query;
+    setCurrentOffset(0);
+    await loadNotes(0, false, query, activeFolder.current);
+  }, [loadNotes]);
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(note =>
-        note.title.toLowerCase().includes(query) ||
-        note.content.toLowerCase().includes(query)
-      );
-    }
-
-    setNotes(filtered);
-  };
+  const handleFolderSelect = useCallback(async (folder: string | null) => {
+    activeFolder.current = folder;
+    setSelectedFolder(folder);
+    setCurrentOffset(0);
+    await loadNotes(0, false, activeSearchQuery.current, folder);
+  }, [loadNotes]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([loadFolders(), loadNotes()]);
+    setCurrentOffset(0);
+    await Promise.all([loadFolders(), loadNotes(0, false)]);
     setIsRefreshing(false);
   };
+
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && hasMore && notes.length > 0) {
+      loadNotes(currentOffset, true);
+    }
+  }, [currentOffset, hasMore, isLoadingMore, loadNotes, notes.length]);
 
   const handleCreateNote = () => {
     setFormData({
@@ -222,16 +269,6 @@ export default function SecureNotesScreen() {
     }
   };
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (!isLoading) {
-        loadNotes();
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, selectedFolder]);
-
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -307,6 +344,10 @@ export default function SecureNotesScreen() {
       fontSize: 16,
       color: isDark ? '#9ca3af' : '#6b7280',
       marginTop: 16,
+    },
+    loadingMore: {
+      alignItems: 'center',
+      paddingVertical: 20,
     },
     modalContent: {
       padding: 20,
@@ -396,6 +437,26 @@ export default function SecureNotesScreen() {
     </Card>
   );
 
+  const renderFooter = () => {
+    if (isLoadingMore) {
+      return (
+        <View style={styles.loadingMore}>
+          <Text style={styles.loadingText}>Carregando mais notas...</Text>
+        </View>
+      );
+    }
+
+    if (!hasMore && notes.length > 0) {
+      return (
+        <View style={styles.loadingMore}>
+          <Text style={styles.loadingText}>Todas as notas foram carregadas</Text>
+        </View>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <View style={styles.container}>
       <Header title="Notas Seguras" onThemeToggle={toggleTheme} />
@@ -407,6 +468,7 @@ export default function SecureNotesScreen() {
             placeholder="Buscar notas..."
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSearch={handleSearch}
           />
         </View>
 
@@ -415,12 +477,12 @@ export default function SecureNotesScreen() {
           <FolderSelector
             folders={folders}
             selectedFolder={selectedFolder}
-            onSelectFolder={setSelectedFolder}
+            onSelectFolder={handleFolderSelect}
           />
           {selectedFolder && (
             <TouchableOpacity
               style={styles.clearFilterButton}
-              onPress={() => setSelectedFolder(null)}
+              onPress={() => handleFolderSelect(null)}
             >
               <Ionicons name="close" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
             </TouchableOpacity>
@@ -435,6 +497,9 @@ export default function SecureNotesScreen() {
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
           }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={renderFooter}
           ListEmptyComponent={renderEmpty}
           showsVerticalScrollIndicator={false}
           style={styles.listStyle}

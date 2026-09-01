@@ -50,8 +50,10 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
   const fetchNotes = async (filters?: Partial<SecureNoteSearchFilters>) => {
     isLoading.value = true
     try {
-      const currentFilters = { ...searchFilters.value, ...filters }
-      const response = await secureNotesApi.searchNotes(currentFilters)
+      if (filters) {
+        searchFilters.value = { ...searchFilters.value, ...filters }
+      }
+      const response = await secureNotesApi.searchNotes(searchFilters.value)
       
       if (response.success) {
         notes.value = response.data
@@ -204,4 +206,3 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
     setFilter
   }
 })
-

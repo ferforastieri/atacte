@@ -69,10 +69,7 @@
             <SearchInput
               v-model="searchQuery"
               placeholder="Buscar senhas..."
-              :debounce-ms="300"
-              :min-length="2"
               @search="handleSearch"
-              @clear="handleSearchClear"
             />
           </div>
           
@@ -304,9 +301,9 @@ const showCreateModal = ref(false)
 const showImportModal = ref(false)
 const showDetailModal = ref(false)
 const selectedPassword = ref<PasswordEntry | null>(null)
-const searchQuery = ref('')
-const selectedFolder = ref('')
-const showOnlyFavorites = ref(false)
+const searchQuery = ref(passwordsStore.searchFilters.query || '')
+const selectedFolder = ref(passwordsStore.searchFilters.folder || '')
+const showOnlyFavorites = ref(passwordsStore.searchFilters.isFavorite === true)
 const isRefreshing = ref(false)
 const totpSecrets = ref<Record<string, string>>({})
 
@@ -354,16 +351,6 @@ const handleSearch = async (query: string) => {
     await passwordsStore.fetchPasswords({ 
       query: query,
       offset: 0 
-    })
-  } catch (error) {
-  }
-}
-
-const handleSearchClear = async () => {
-  try {
-    await passwordsStore.fetchPasswords({ 
-      query: '',
-      offset: 0
     })
   } catch (error) {
   }
@@ -428,6 +415,9 @@ const toggleFavorite = async (password: PasswordEntry) => {
     
     if (passwordsStore.statsLoaded) {
       await passwordsStore.loadCompleteStats()
+    }
+    if (showOnlyFavorites.value) {
+      await passwordsStore.fetchPasswords()
     }
     
   } catch (error) {
