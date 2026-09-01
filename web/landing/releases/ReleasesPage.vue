@@ -11,7 +11,7 @@
       <section class="border-t border-gray-200 py-12 dark:border-gray-700 sm:py-16" aria-labelledby="history-title"><div class="flex flex-wrap items-end justify-between gap-4"><div><p class="text-sm font-semibold text-primary-600 dark:text-primary-400">Histórico</p><h2 id="history-title" class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">O que mudou.</h2></div><a href="https://github.com/ferforastieri/atacte/releases" target="_blank" rel="noreferrer" class="text-sm font-medium text-primary-700 hover:text-primary-600 dark:text-primary-300">Ver todas no GitHub <span aria-hidden="true">↗</span></a></div>
         <div v-if="loading" class="mt-8 rounded-lg border border-gray-200 bg-white p-6 text-gray-500 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Carregando releases...</div>
         <div v-else-if="!releases.length" class="mt-8 rounded-lg border border-gray-200 bg-white p-6 text-gray-500 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Nenhuma release disponível no momento. Consulte o histórico no GitHub.</div>
-        <div v-else class="mt-8 grid gap-4 lg:grid-cols-2"><article v-for="release in releases" :key="release.tag_name" class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"><div class="flex items-center justify-between gap-4 text-xs text-gray-500 dark:text-gray-400"><span class="rounded-full bg-primary-100 px-2.5 py-1 font-mono font-semibold text-primary-700 dark:bg-primary-900 dark:text-primary-300">{{ release.tag_name }}</span><time :datetime="release.published_at">{{ formatDate(release.published_at) }}</time></div><h3 class="mt-4 text-lg font-semibold">{{ release.name || release.tag_name }}</h3><p class="mt-2 line-clamp-4 text-sm leading-6 text-gray-600 dark:text-gray-300">{{ (release.body || 'Release publicado automaticamente pela pipeline.').slice(0, 360) }}</p><div class="mt-5 flex flex-wrap gap-4 text-sm font-medium"><a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" :href="release.html_url" target="_blank" rel="noreferrer">Ver release <span aria-hidden="true">↗</span></a><a v-if="release.assets?.some((asset) => asset.name.toLowerCase().endsWith('.apk'))" class="text-primary-700 hover:text-primary-600 dark:text-primary-300" :href="release.assets.find((asset) => asset.name.toLowerCase().endsWith('.apk'))?.browser_download_url">Baixar APK <span aria-hidden="true">↓</span></a></div></article></div>
+        <div v-else class="mt-8 grid gap-4 lg:grid-cols-2"><article v-for="release in releases" :key="release.tag_name" class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"><div class="flex items-center justify-between gap-4 text-xs text-gray-500 dark:text-gray-400"><span class="rounded-full bg-primary-100 px-2.5 py-1 font-mono font-semibold text-primary-700 dark:bg-primary-900 dark:text-primary-300">{{ release.tag_name }}</span><time :datetime="release.published_at">{{ formatDate(release.published_at) }}</time></div><h3 class="mt-4 text-lg font-semibold">{{ release.name || release.tag_name }}</h3><p class="mt-2 line-clamp-4 text-sm leading-6 text-gray-600 dark:text-gray-300">{{ (release.body || 'Release publicado automaticamente pela pipeline.').slice(0, 360) }}</p><div class="mt-5 flex flex-wrap gap-4 text-sm font-medium"><a class="text-primary-700 hover:text-primary-600 dark:text-primary-300" :href="release.html_url" target="_blank" rel="noreferrer">Ver release <span aria-hidden="true">↗</span></a><a v-if="getApkDownloadUrl(release)" class="text-primary-700 hover:text-primary-600 dark:text-primary-300" :href="getApkDownloadUrl(release) || undefined">{{ getReleaseApkUrl(release) ? 'Baixar APK' : 'Baixar APK mais recente' }} <span aria-hidden="true">↓</span></a></div></article></div>
       </section>
     </main>
 
@@ -24,14 +24,47 @@ import { onMounted, ref } from 'vue'
 import PublicHeader from '../PublicHeader.vue'
 import PublicLogo from '../PublicLogo.vue'
 import { ArrowDownTrayIcon, ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline'
-const releases = ref<Array<{ tag_name: string; name: string; html_url: string; published_at: string; body: string | null; assets?: Array<{ name: string; browser_download_url: string }> }>>([])
+
+interface ReleaseAsset {
+  name: string
+  browser_download_url: string
+}
+
+interface GitHubRelease {
+  tag_name: string
+  name: string
+  html_url: string
+  published_at: string
+  body: string | null
+  assets?: ReleaseAsset[]
+}
+
+const releases = ref<GitHubRelease[]>([])
+const latestApkUrl = ref<string | null>(null)
 const loading = ref(true)
 const formatDate = (value: string) => new Date(value).toLocaleDateString('pt-BR')
+const getReleaseApkUrl = (release: GitHubRelease) => release.assets
+  ?.find((asset) => asset.name.toLowerCase().endsWith('.apk'))
+  ?.browser_download_url || null
+const getApkDownloadUrl = (release: GitHubRelease) => getReleaseApkUrl(release) || latestApkUrl.value
 
 onMounted(async () => {
   try {
-    const response = await fetch('https://api.github.com/repos/ferforastieri/atacte/releases?per_page=30', { headers: { Accept: 'application/vnd.github+json' } })
-    if (response.ok) releases.value = await response.json()
+    let page = 1
+    let hasMoreReleases = true
+
+    while (!latestApkUrl.value && hasMoreReleases) {
+      const response = await fetch(`https://api.github.com/repos/ferforastieri/atacte/releases?per_page=100&page=${page}`, { headers: { Accept: 'application/vnd.github+json' } })
+      if (!response.ok) break
+
+      const publishedReleases: GitHubRelease[] = await response.json()
+      if (page === 1) releases.value = publishedReleases.slice(0, 30)
+      latestApkUrl.value = publishedReleases
+        .map(getReleaseApkUrl)
+        .find((url): url is string => Boolean(url)) || null
+      hasMoreReleases = publishedReleases.length === 100
+      page += 1
+    }
   } catch { /* public page remains useful offline */ } finally { loading.value = false }
 })
 </script>
