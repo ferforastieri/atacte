@@ -7,8 +7,10 @@ let connecting: Promise<unknown> | undefined;
 export async function getRedis() {
   if (!client.isOpen) {
     connecting ??= client.connect().finally(() => { connecting = undefined; });
-    await connecting;
   }
+  // isOpen becomes true before the handshake finishes. Concurrent callers
+  // must await the same connection promise before checking readiness.
+  if (connecting) await connecting;
   if (!client.isReady) throw new Error('Serviço de segurança temporariamente indisponível');
   return client;
 }
