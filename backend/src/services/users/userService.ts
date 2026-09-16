@@ -1,5 +1,8 @@
 import { Request } from 'express';
 import bcrypt from 'bcryptjs';
+import { changePassword } from '../auth/securityService';
+import { prisma } from '../../infrastructure/prisma';
+import { invalidateCredentials, lockUser } from '../auth/securityService';
 import { AuditUtil } from '../../utils/auditUtil';
 import { UserRepository } from '../../repositories/users/userRepository';
 import { CryptoUtil } from '../../utils/cryptoUtil';
@@ -129,7 +132,11 @@ export class UserService {
       throw new Error('Usuário não encontrado');
     }
 
-    await this.userRepository.update(userId, data);
+    const allowed = ['name', 'phoneNumber', 'profilePicture'];
+    if (!data || Object.keys(data).some(key => !allowed.includes(key)) || Object.values(data).some(value => typeof value !== 'string')) {
+      throw new Error('Campos de perfil inválidos');
+    }
+    await this.userRepository.updateProfile(userId, { name: data.name, phoneNumber: data.phoneNumber, profilePicture: data.profilePicture });
 
     await AuditUtil.log(
       userId,
@@ -364,7 +371,12 @@ export class UserService {
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.role !== undefined) updateData.role = data.role;
 
-    const updatedUser = await this.userRepository.update(userId, updateData);
+    const updatedUser = await prisma.$transaction(async tx => {
+      await lockUser(tx, userId);
+      const updated = await tx.user.update({ where: { id: userId }, data: updateData });
+      if (data.email !== undefined || data.role !== undefined || data.isActive !== undefined) await invalidateCredentials(tx, userId);
+      return updated;
+    });
 
     await AuditUtil.log(
       adminUserId,
@@ -399,13 +411,7 @@ export class UserService {
       throw new Error('Usuário não encontrado');
     }
 
-    const salt = await bcrypt.genSalt(12);
-    const masterPasswordHash = await bcrypt.hash(newPassword, salt);
-
-    await this.userRepository.update(userId, {
-      masterPasswordHash,
-      masterPasswordSalt: salt
-    });
+    await changePassword(userId, newPassword);
 
     await AuditUtil.log(
       adminUserId,

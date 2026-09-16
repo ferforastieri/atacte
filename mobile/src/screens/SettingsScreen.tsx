@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput, BackHandler, Image } from 'react-native';
+import { useBiometricLock } from '../components/auth/BiometricLock';
+import { Alert } from 'react-native';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -13,6 +15,7 @@ import axios from '../lib/axios';
 
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { enabled, changeEnabled } = useBiometricLock();
   const { isDark, toggleTheme } = useTheme();
   const { user, refreshUser } = useAuth();
 
@@ -396,6 +399,13 @@ const SettingsScreen: React.FC = () => {
       />
       
       <ScrollView style={styles.scrollView}>
+        <View style={[styles.sectionContent, isDark && styles.sectionContentDark]}>
+          <View style={styles.settingItem}>
+            <Text style={[styles.settingLabel, isDark && styles.settingLabelDark]}>Desbloquear com biometria</Text>
+            <Switch value={enabled} onValueChange={value => { void changeEnabled(value).catch(error => Alert.alert('Biometria', error.message || 'Não foi possível alterar a opção.')); }} />
+          </View>
+          <Text style={{ padding: 16, color: isDark ? '#9ca3af' : '#6b7280' }}>Bloqueia este aplicativo ao abrir ou voltar para ele. Você também pode desbloquear com a senha da conta.</Text>
+        </View>
         {settingsSections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
             <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>

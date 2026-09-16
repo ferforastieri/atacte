@@ -4,7 +4,7 @@ Aplicativo desktop do Atacte construído com Electron.
 
 ## 📋 Pré-requisitos
 
-- Node.js 18+
+- Node.js 24 (versão usada pelo projeto)
 - npm 8+
 - Backend do Atacte rodando (ou configurar URL remota)
 

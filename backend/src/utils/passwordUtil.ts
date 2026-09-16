@@ -33,6 +33,7 @@ export class PasswordUtil {
     } = options;
 
     
+    if (!Number.isInteger(length) || length < 1 || length > 128) throw new Error('Comprimento inválido');
     let charset = '';
     if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
     if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { authenticateToken, requireAdmin } from '../../middleware/auth';
+import { authenticateToken, requireRecentAuth, requireAdmin } from '../../middleware/auth';
 import { asAuthenticatedHandler } from '../../types/express';
 import { UserService } from '../../services/users/userService';
 
@@ -70,8 +70,8 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
   try {
     const queryParams = req.query;
     
-    const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
-    const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
+    const limit = queryParams['limit'] ? Math.min(100, Math.max(1, parseInt(queryParams['limit'] as string) || 50)) : 50;
+    const offset = queryParams['offset'] ? Math.min(1000000, Math.max(0, parseInt(queryParams['offset'] as string) || 0)) : 0;
     const query = queryParams['query'] as string | undefined;
     const action = queryParams['action'] as string | undefined;
     const filterUserId = queryParams['userId'] as string | undefined;
@@ -111,7 +111,7 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
       }
     });
   } catch (error: unknown) {
-    console.error('[AUDIT LOGS CONTROLLER] Error:', error);
+    console.error('Audit log query failed');
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -120,7 +120,7 @@ router.get('/audit-logs', asAuthenticatedHandler(async (req, res) => {
 }));
 
 
-router.post('/export', asAuthenticatedHandler(async (req, res) => {
+router.post('/export', requireRecentAuth, asAuthenticatedHandler(async (req, res) => {
   try {
     const exportData = await userService.exportUserData(req.user.id, req);
 
@@ -169,6 +169,7 @@ router.delete('/account', asAuthenticatedHandler(async (req, res) => {
 router.patch(
   '/profile',
   [
+    body().custom(value => value && !Array.isArray(value) && Object.keys(value).every(key => ['name', 'phoneNumber', 'profilePicture'].includes(key)) && Object.values(value).every(field => typeof field === 'string')).withMessage('Campos de perfil inválidos'),
     body('name').optional().trim().isLength({ max: 255 }).withMessage('Nome deve ter até 255 caracteres'),
     body('phoneNumber').optional().trim().isMobilePhone('any').withMessage('Número de telefone inválido'),
     body('profilePicture').optional().custom((value) => {
@@ -242,8 +243,8 @@ router.patch(
 router.get('/admin/users', requireAdmin, asAuthenticatedHandler(async (req, res) => {
   try {
     const queryParams = req.query;
-    const limit = queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50;
-    const offset = queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0;
+    const limit = queryParams['limit'] ? Math.min(100, Math.max(1, parseInt(queryParams['limit'] as string) || 50)) : 50;
+    const offset = queryParams['offset'] ? Math.min(1000000, Math.max(0, parseInt(queryParams['offset'] as string) || 0)) : 0;
     
     const result = await userService.getAllUsers(limit, offset);
     res.json({
@@ -267,7 +268,7 @@ router.get('/admin/users', requireAdmin, asAuthenticatedHandler(async (req, res)
 
 router.patch(
   '/admin/users/:userId',
-  requireAdmin,
+  requireAdmin, requireRecentAuth,
   [
     body('email').optional().isEmail().withMessage('Email inválido'),
     body('name').optional().trim().isLength({ max: 255 }).withMessage('Nome deve ter até 255 caracteres'),
@@ -315,7 +316,7 @@ router.patch(
 
 router.post(
   '/admin/users/:userId/change-password',
-  requireAdmin,
+  requireAdmin, requireRecentAuth,
   [
     body('newPassword').notEmpty().isLength({ min: 8 }).withMessage('Nova senha deve ter pelo menos 8 caracteres'),
   ],
@@ -358,7 +359,7 @@ router.post(
 
 router.delete(
   '/admin/users/:userId',
-  requireAdmin,
+  requireAdmin, requireRecentAuth,
   asAuthenticatedHandler(async (req, res) => {
     try {
       const userId = req.params['userId'];

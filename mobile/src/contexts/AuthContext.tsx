@@ -17,7 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isAdmin: boolean;
-  login: (email: string, masterPassword: string, deviceName?: string, deviceFingerprint?: string) => Promise<{ success: boolean; message?: string; requiresTrust?: boolean; sessionId?: string }>;
+  login: (email: string, masterPassword: string, deviceName?: string) => Promise<{ success: boolean; message?: string; sessionId?: string }>;
   register: (email: string, masterPassword: string, name?: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -30,14 +30,20 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { clearServer } = useServer();
+  const { clearServer, serverUrl, isLoading: isServerLoading } = useServer();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    if (isServerLoading) return;
+    if (!serverUrl) {
+      setUser(null); setIsAuthenticated(false); setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    void checkAuthStatus();
+  }, [serverUrl, isServerLoading]);
 
   const checkAuthStatus = async () => {
     try {
@@ -75,23 +81,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const login = async (email: string, masterPassword: string, deviceName?: string, deviceFingerprint?: string): Promise<{ success: boolean; message?: string; requiresTrust?: boolean; sessionId?: string }> => {
+  const login = async (email: string, masterPassword: string, deviceName?: string): Promise<{ success: boolean; message?: string; sessionId?: string }> => {
     try {
-      const response = await authService.login({ email, masterPassword, deviceName, deviceFingerprint });
+      const response = await authService.login({ email, masterPassword, deviceName });
       if (response.success && response.data) {
         if (response.data.user) {
           setUser(response.data.user);
           setIsAuthenticated(true);
         }
         
-        if (response.data.requiresTrust && response.data.sessionId) {
-          return { 
-            success: true, 
-            requiresTrust: true, 
-            sessionId: response.data.sessionId,
-            message: 'Dispositivo não confiável. Por favor, confirme este dispositivo.'
-          };
-        }
+
         
         return { success: true };
       } else {

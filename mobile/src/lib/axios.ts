@@ -12,6 +12,8 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
+let csrfRequest: Promise<unknown> | null = null;
+
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
@@ -28,14 +30,18 @@ apiClient.interceptors.request.use(
         const csrfCookies = await CookieManager.get(serverUrl);
         const csrf = csrfCookies.atacte_csrf?.value;
         if (!csrf) {
-          await apiClient.get('/auth/csrf');
+          csrfRequest ??= apiClient.get('/auth/csrf').finally(() => { csrfRequest = null; });
+          await csrfRequest;
           const refreshed = await CookieManager.get(serverUrl);
+          const updatedCookies = await CookieManager.getCookieHeader(serverUrl);
+          if (updatedCookies) config.headers.Cookie = updatedCookies;
           if (refreshed.atacte_csrf?.value) config.headers['X-CSRF-Token'] = refreshed.atacte_csrf.value;
         } else {
           config.headers['X-CSRF-Token'] = csrf;
         }
       }
     } catch (error) {
+      return Promise.reject(error);
     }
     return config;
   },
@@ -43,6 +49,8 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+let reauthentication: Promise<boolean> | null = null
 
 apiClient.interceptors.response.use(
   async (response: AxiosResponse) => {
@@ -60,20 +68,18 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     if (error.response) {
-      const { status, data } = error.response;
+      const { status, data } = error.response
+      if (status === 403 && data?.requiresReauthentication && !error.config?._securityRetry) {
+        reauthentication ??= new Promise<boolean>(resolve => { DeviceEventEmitter.emit('reauthentication-required', resolve) }).finally(() => { reauthentication = null })
+        if (await reauthentication) return apiClient({ ...error.config, _securityRetry: true })
+        return Promise.reject(error)
+      };
 
       if (typeof data?.message === 'string') {
         DeviceEventEmitter.emit('api-response-toast', { type: 'error', message: data.message });
       }
       
-      if ((status === 401 || status === 403) && data?.requiresTrust && data?.sessionId) {
-        DeviceEventEmitter.emit('device-trust-required', {
-          sessionId: data.sessionId,
-          deviceName: data.deviceName || 'Desconhecido',
-          ipAddress: data.ipAddress || 'Desconhecido',
-        });
-        return Promise.reject(error);
-      }
+
       
       if (status === 401) {
         const path = error.config?.url || '';

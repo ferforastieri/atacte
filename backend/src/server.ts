@@ -5,28 +5,14 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { PORT, CORS_ORIGIN, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS, NODE_ENV, TRUST_PROXY, BUILD_VERSION } from './infrastructure/config';
 import { csrfProtection } from './middleware/csrf';
+import { redisRateLimitStore } from './middleware/rateLimitStore';
 import { mutationLimiter } from './middleware/auth';
 
 const app = express();
 
 app.set('trust proxy', TRUST_PROXY);
+app.set('query parser', 'simple');
 const allowedOrigins = new Set(CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean));
-function requestOrigin(req: express.Request): string {
-  const forwardedProto = req.get('X-Forwarded-Proto')?.split(',')[0]?.trim();
-  const protocol = forwardedProto || req.protocol;
-  return `${protocol}://${req.get('host')}`;
-}
-
-// Requests routed through the same public origin do not need CORS negotiation.
-// Strip their Origin before cors() while preserving cross-origin checks.
-app.use((req, _res, next) => {
-  const origin = req.get('Origin');
-  if (origin && origin === requestOrigin(req)) {
-    delete req.headers.origin;
-  }
-  next();
-});
-
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
@@ -40,11 +26,14 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(morgan(NODE_ENV === 'production' ? 'combined' : 'dev'));
+// Do not log query strings: reset links and searches may contain sensitive data.
+app.use(morgan(':remote-addr :method :status :response-time ms'));
+app.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 app.use(express.json({ limit: '1mb' }));
 
 
 const limiter = rateLimit({
+  store: NODE_ENV === 'test' ? undefined : redisRateLimitStore('global-ip'),
   windowMs: RATE_LIMIT_WINDOW_MS,
   max: RATE_LIMIT_MAX_REQUESTS,
   message: { 
@@ -95,10 +84,10 @@ app.use('/api/secure-notes', secureNoteRoutes);
 app.use('/api', systemRoutes);
 
 
-app.use((_err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  res.status(500).json({
+app.use((_err: Error & { status?: number }, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  res.status(_err.status && [400, 413].includes(_err.status) ? _err.status : 500).json({
     success: false,
-    message: 'Erro interno do servidor'
+    message: 'Não foi possível processar a solicitação'
   });
 });
 

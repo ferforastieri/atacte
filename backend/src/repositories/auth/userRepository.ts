@@ -1,6 +1,6 @@
-import { PrismaClient, User, UserSession } from '../../../node_modules/.prisma/client';
+import { User, UserSession } from '../../../node_modules/.prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from '../../infrastructure/prisma';
 
 export interface CreateUserData {
   email: string;
@@ -17,14 +17,12 @@ export interface CreateUserSessionData {
   ipAddress?: string;
   userAgent?: string;
   expiresAt?: Date | null;
-  isTrusted?: boolean;
 }
 
 export interface UpdateUserSessionData {
   tokenHash?: string;
   lastUsed?: Date;
   deviceName?: string;
-  isTrusted?: boolean;
 }
 
 export class UserRepository {
@@ -80,7 +78,6 @@ export class UserRepository {
       deviceFingerprint: data.deviceFingerprint,
       ipAddress: data.ipAddress,
       userAgent: data.userAgent,
-      isTrusted: data.isTrusted ?? false,
         expiresAt: data.expiresAt,
       },
     });
@@ -117,54 +114,6 @@ export class UserRepository {
     ]);
     
     return { sessions, total };
-  }
-
-  async hasTrustedDevice(userId: string, deviceFingerprint: string): Promise<boolean> {
-    if (!deviceFingerprint) {
-      return false;
-    }
-    const trustedDevice = await prisma.trustedDevice.findUnique({
-      where: {
-        userId_deviceFingerprint: {
-          userId,
-          deviceFingerprint,
-        },
-      },
-    });
-    return !!trustedDevice;
-  }
-
-  async addTrustedDevice(userId: string, deviceName: string, deviceFingerprint: string | null | undefined): Promise<void> {
-    if (!deviceFingerprint) {
-      return;
-    }
-    await prisma.trustedDevice.upsert({
-      where: {
-        userId_deviceFingerprint: {
-          userId,
-          deviceFingerprint,
-        },
-      },
-      update: {
-        deviceName,
-        lastUsed: new Date(),
-      },
-      create: {
-        userId,
-        deviceName,
-        deviceFingerprint,
-        lastUsed: new Date(),
-      },
-    });
-  }
-
-  async removeTrustedDevice(userId: string, deviceFingerprint: string): Promise<void> {
-    await prisma.trustedDevice.deleteMany({
-      where: {
-        userId,
-        deviceFingerprint,
-      },
-    });
   }
 
   async updateSession(id: string, data: UpdateUserSessionData): Promise<UserSession> {

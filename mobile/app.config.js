@@ -1,3 +1,4 @@
+
 export default {
   expo: {
     name: "Atacte",
@@ -9,7 +10,7 @@ export default {
     splash: {
       image: "./assets/logo.png",
       resizeMode: "contain",
-      backgroundColor: "#f9fafb"
+      backgroundColor: "#111827"
     },
     assetBundlePatterns: [
       "**/*"
@@ -17,7 +18,7 @@ export default {
     updates: {
       url: "https://u.expo.dev/cc7a6220-07d6-4d4c-bacd-ae79706d8de5"
     },
-    runtimeVersion: "3.0.0",
+    runtimeVersion: "4.0.0",
     ios: {
       bundleIdentifier: "com.atacte.mobile",
       supportsTablet: true,
@@ -28,6 +29,7 @@ export default {
         usesNonExemptEncryption: false
       },
       infoPlist: {
+        NSFaceIDUsageDescription: "Use o Face ID para desbloquear seu cofre Atacte.",
         NSAppTransportSecurity: {
           NSAllowsArbitraryLoads: false
         },
@@ -42,7 +44,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/logo.png",
-        backgroundColor: "#ffffff"
+        backgroundColor: "#111827"
       },
       package: "atacte.seguranca",
       permissions: [
@@ -66,6 +68,8 @@ export default {
       }
     },
     plugins: [
+      ["expo-splash-screen", { backgroundColor: "#111827", image: "./assets/logo.png", imageWidth: 180, dark: { backgroundColor: "#111827" } }],
+      ["expo-local-authentication", { faceIDPermission: "Use o Face ID para desbloquear seu cofre Atacte." }],
       "expo-router",
       "expo-font",
       "expo-secure-store",

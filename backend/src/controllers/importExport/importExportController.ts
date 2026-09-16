@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import importExportService from '../../services/importExport/importExportService'
 import { ImportExportRepository } from '../../repositories/importExport/importExportRepository'
-import { authenticateToken } from '../../middleware/auth'
+import { authenticateToken, requireRecentAuth } from '../../middleware/auth'
 import { asAuthenticatedHandler } from '../../types/express'
 
 const router = Router()
@@ -62,7 +62,7 @@ router.post('/import', asAuthenticatedHandler(async (req, res) => {
 
 
 
-router.get('/export/bitwarden', asAuthenticatedHandler(async (req, res) => {
+router.get('/export/bitwarden', requireRecentAuth, asAuthenticatedHandler(async (req, res) => {
   try {
     const userId = req.user.id
 
@@ -100,7 +100,7 @@ router.get('/export/bitwarden', asAuthenticatedHandler(async (req, res) => {
 }))
 
 
-router.get('/export/csv', asAuthenticatedHandler(async (req, res) => {
+router.get('/export/csv', requireRecentAuth, asAuthenticatedHandler(async (req, res) => {
   try {
     const userId = req.user.id
 

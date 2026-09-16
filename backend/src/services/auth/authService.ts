@@ -1,9 +1,11 @@
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto-js';
 import { randomBytes } from 'node:crypto';
-import { UserRepository, CreateUserData, CreateUserSessionData } from '../../repositories/auth/userRepository';
-import { PasswordResetRepository } from '../../repositories/auth/passwordResetRepository';
+import { prisma } from '../../infrastructure/prisma';
+import { hashPassword, tokenHash, verifyPassword } from '../../utils/credentialUtil';
+import { changePassword, invalidateCredentials, lockUser } from './securityService';
+import { AuditUtil } from '../../utils/auditUtil';
+import { UserRepository } from '../../repositories/auth/userRepository';
 import { COOKIE_MAX_AGE_MS, JWT_AUDIENCE, JWT_EXPIRES_IN, JWT_ISSUER, JWT_SECRET, PASSWORD_RESET_URL } from '../../infrastructure/config';
 import { emailService } from '../email/emailService';
 
@@ -23,7 +25,6 @@ export interface LoginRequest {
   email: string;
   masterPassword: string;
   deviceName?: string;
-  deviceFingerprint?: string;
 }
 
 export interface RegisterRequest {
@@ -35,78 +36,47 @@ export interface LoginResponse {
   user: UserDto;
   token: string;
   sessionId: string;
-  requiresTrust?: boolean;
 }
 
 export class AuthService {
   private userRepository: UserRepository;
-  private passwordResetRepository: PasswordResetRepository;
 
   constructor() {
     this.userRepository = new UserRepository();
-    this.passwordResetRepository = new PasswordResetRepository();
   }
 
   async hasUsers(): Promise<boolean> {
-    return (await this.userRepository.countUsers()) > 0;
+    return (await prisma.securityState.findUnique({ where: { id: 1 } }))?.initialized ?? true;
   }
 
   async register(data: RegisterRequest): Promise<UserDto> {
-    const firstUser = !(await this.hasUsers());
-    if (!firstUser) {
-      throw new Error('O cadastro público já foi encerrado; peça a um administrador para criar usuários.');
-    }
-    const email = data.email?.trim().toLowerCase();
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) throw new Error('Email inválido');
-    if (!data.masterPassword || data.masterPassword.length < 8 || data.masterPassword.length > 256) {
-      throw new Error('A senha deve ter entre 8 e 256 caracteres');
-    }
-    const existingUser = await this.userRepository.findByEmail(email);
-    if (existingUser) {
-      throw new Error('Email já está em uso');
-    }
-
-    
-    const salt = await bcrypt.genSalt(12);
-    const masterPasswordHash = await bcrypt.hash(data.masterPassword, salt);
-
-    
-    const userData: CreateUserData = {
-      email,
-      masterPasswordHash,
-      masterPasswordSalt: salt,
-      role: firstUser ? 'ADMIN' : undefined,
-    };
-
-    const user = await this.userRepository.create(userData);
+    const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';
+    if (!email || email.length > 254 || !/^\S+@\S+\.\S+$/.test(email)) throw new Error('Email inválido');
+    const hash = await hashPassword(data.masterPassword);
+    const user = await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM security_state WHERE id = 1 FOR UPDATE`;
+      const state = await tx.securityState.findUnique({ where: { id: 1 } });
+      if (!state || state.initialized || !state.bootstrapExpiresAt || state.bootstrapExpiresAt <= new Date() || state.bootstrapEmail !== email) {
+        throw new Error('Cadastro encerrado ou email não autorizado');
+      }
+      if (await tx.user.count()) throw new Error('Cadastro encerrado');
+      const created = await tx.user.create({ data: { email, ...hash, role: 'ADMIN' } });
+      await tx.securityState.update({ where: { id: 1 }, data: { initialized: true, bootstrapEmail: null, bootstrapExpiresAt: null } });
+      return created;
+    });
+    await AuditUtil.log(user.id, 'USER_REGISTERED', 'USER', user.id);
     return this.mapToDto(user);
   }
 
   async login(data: LoginRequest, ipAddress?: string, userAgent?: string): Promise<LoginResponse> {
-    const email = data.email?.trim().toLowerCase();
-    if (!email || !data.masterPassword || data.masterPassword.length > 256) throw new Error('Credenciais inválidas');
+    const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';
+    if (!email || email.length > 254) throw new Error('Credenciais inválidas');
     const user = await this.userRepository.findByEmail(email);
-    if (!user) {
+    const valid = await verifyPassword(data.masterPassword, user?.masterPasswordHash);
+    if (!user || !valid || !user.isActive) {
+      await AuditUtil.log(user?.id ?? null, 'LOGIN_FAILED');
       throw new Error('Credenciais inválidas');
     }
-
-    if (!user.isActive) {
-      throw new Error('Conta desativada');
-    }
-
-    const isValidPassword = await bcrypt.compare(data.masterPassword, user.masterPasswordHash);
-    if (!isValidPassword) {
-      throw new Error('Credenciais inválidas');
-    }
-
-    
-    await this.userRepository.updateLastLogin(user.id);
-
-    
-    if (!JWT_SECRET) {
-      throw new Error('JWT_SECRET não configurado');
-    }
-    
     const token = jwt.sign(
       { 
         userId: user.id, 
@@ -121,31 +91,24 @@ export class AuthService {
     expiresAt.setTime(expiresAt.getTime() + COOKIE_MAX_AGE_MS);
     const tokenHash = crypto.SHA256(token).toString();
     const deviceName = data.deviceName || 'Dispositivo Web';
-    const deviceFingerprint = data.deviceFingerprint || undefined;
 
-    let isTrusted = false;
-    if (deviceFingerprint) {
-      isTrusted = await this.userRepository.hasTrustedDevice(user.id, deviceFingerprint);
-    }
-
-    const sessionData: CreateUserSessionData = {
-      userId: user.id,
-      tokenHash: tokenHash,
-      deviceName: deviceName,
-      deviceFingerprint: deviceFingerprint,
-      ipAddress: ipAddress || 'unknown',
-      userAgent: userAgent || 'unknown',
-      expiresAt: expiresAt,
-      isTrusted: isTrusted,
-    };
-
-    const session = await this.userRepository.createSession(sessionData);
+    const session = await prisma.$transaction(async tx => {
+      await lockUser(tx, user.id);
+      const current = await tx.user.findUnique({ where: { id: user.id } });
+      if (!current?.isActive || current.masterPasswordHash !== user.masterPasswordHash) throw new Error('Credenciais inválidas');
+      await tx.user.update({ where: { id: user.id }, data: { lastLogin: new Date() } });
+      return tx.userSession.create({ data: {
+        userId: user.id, tokenHash: tokenHash, deviceName: typeof deviceName === 'string' ? deviceName.slice(0, 255) : 'Dispositivo',
+        ipAddress: ipAddress || 'unknown', userAgent: userAgent?.slice(0, 512) || 'unknown', expiresAt,
+        reauthenticatedAt: new Date(),
+      } });
+    });
+    await AuditUtil.log(user.id, 'LOGIN_SUCCESS', 'SESSION', session.id);
 
     return {
       user: this.mapToDto(user),
       token,
       sessionId: session.id,
-      requiresTrust: !(session.isTrusted ?? false),
     };
   }
 
@@ -194,36 +157,8 @@ export class AuthService {
   }
 
   async changeMasterPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    if (!user.isActive) {
-      throw new Error('Conta desativada');
-    }
-
-    const isValidPassword = await bcrypt.compare(currentPassword, user.masterPasswordHash);
-    if (!isValidPassword) {
-      throw new Error('Senha atual incorreta');
-    }
-
-    if (newPassword.length < 8) {
-      throw new Error('A nova senha deve ter pelo menos 8 caracteres');
-    }
-
-    const salt = await bcrypt.genSalt(12);
-    const masterPasswordHash = await bcrypt.hash(newPassword, salt);
-    
-    await this.userRepository.update(user.id, {
-      masterPasswordHash,
-      masterPasswordSalt: salt,
-    });
-
-    const result = await this.userRepository.findUserSessions(userId);
-    for (const session of result.sessions) {
-      await this.userRepository.deleteSession(session.id);
-    }
+    await changePassword(userId, newPassword, currentPassword);
+    await AuditUtil.log(userId, 'PASSWORD_CHANGED', 'USER', userId);
   }
 
   async getUserSessions(userId: string, currentTokenHash?: string, limit?: number, offset?: number): Promise<{ sessions: Array<{
@@ -235,7 +170,6 @@ export class AuthService {
     lastUsed: Date;
     expiresAt: Date | null;
     isCurrent: boolean;
-    isTrusted: boolean;
   }>; total: number }> {
     const result = await this.userRepository.findUserSessions(userId, limit, offset);
     return {
@@ -248,23 +182,9 @@ export class AuthService {
         lastUsed: session.lastUsed,
         expiresAt: session.expiresAt,
         isCurrent: currentTokenHash ? session.tokenHash === currentTokenHash : false,
-        isTrusted: session.isTrusted ?? false,
       })),
       total: result.total
     };
-  }
-
-  async trustDevice(userId: string, sessionId: string): Promise<void> {
-    const session = await this.userRepository.findSessionById(sessionId);
-    if (!session || session.userId !== userId) {
-      throw new Error('Sessão não encontrada ou não pertence ao usuário');
-    }
-    await this.userRepository.updateSession(sessionId, { isTrusted: true });
-    
-    if (session.deviceFingerprint && session.deviceName) {
-      await this.userRepository.addTrustedDevice(userId, session.deviceName, session.deviceFingerprint);
-    }
-    
   }
 
   async revokeSession(userId: string, sessionId: string): Promise<void> {
@@ -278,76 +198,38 @@ export class AuthService {
     await this.userRepository.deleteSession(sessionId);
   }
 
-  async untrustDevice(userId: string, deviceName: string): Promise<void> {
-    await this.userRepository.removeTrustedDevice(userId, deviceName);
-    
-    const result = await this.userRepository.findUserSessions(userId);
-    const sessionsToUpdate = result.sessions.filter((s) => s.deviceName === deviceName && s.isTrusted);
-    
-    for (const session of sessionsToUpdate) {
-      await this.userRepository.updateSession(session.id, { isTrusted: false });
-    }
-    
-  }
-
-  async requestPasswordReset(email: string): Promise<{ token: string | undefined; expiresAt: Date }> {
+  async requestPasswordReset(email: string): Promise<void> {
+    if (typeof email !== 'string' || email.length > 254) return;
     const user = await this.userRepository.findByEmail(email.trim().toLowerCase());
-    if (!user) {
-      throw new Error('Se o email existir, você receberá um link de recuperação');
-    }
-
+    if (!user?.isActive) return;
     const token = randomBytes(32).toString('hex');
-    
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1);
-
-    await this.passwordResetRepository.create({
-      userId: user.id,
-      token,
-      expiresAt,
+    await prisma.$transaction(async tx => {
+      await lockUser(tx, user.id);
+      await tx.passwordResetToken.deleteMany({ where: { userId: user.id } });
+      await tx.passwordResetToken.create({ data: { userId: user.id, token: tokenHash(token), expiresAt: new Date(Date.now() + 3600000) } });
     });
-
-    await emailService.sendPasswordResetEmail(user.email, token, PASSWORD_RESET_URL);
-
-    return { 
-      token: undefined,
-      expiresAt 
-    };
+    try {
+      await emailService.sendPasswordResetEmail(user.email, token, PASSWORD_RESET_URL);
+      await AuditUtil.log(user.id, 'PASSWORD_RESET_REQUESTED');
+    } catch {
+      await AuditUtil.log(user.id, 'PASSWORD_RESET_DELIVERY_FAILED');
+    }
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    if (newPassword.length < 8 || newPassword.length > 256) {
-      throw new Error('A senha deve ter entre 8 e 256 caracteres');
-    }
-    const resetToken = await this.passwordResetRepository.findByToken(token);
-    
-    if (!resetToken) {
-      throw new Error('Token inválido');
-    }
-
-    if (resetToken.used) {
-      throw new Error('Token já foi utilizado');
-    }
-
-    if (resetToken.expiresAt < new Date()) {
-      throw new Error('Token expirado');
-    }
-
-    const user = resetToken.user;
-    
-    const salt = await bcrypt.genSalt(12);
-    const masterPasswordHash = await bcrypt.hash(newPassword, salt);
-    
-    await this.userRepository.update(user.id, {
-      masterPasswordHash,
-      masterPasswordSalt: salt,
+    if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) throw new Error('Token inválido ou expirado');
+    const hash = await hashPassword(newPassword);
+    const digest = tokenHash(token);
+    await prisma.$transaction(async tx => {
+      const reset = await tx.passwordResetToken.findUnique({ where: { token: digest } });
+      if (!reset) throw new Error('Token inválido ou expirado');
+      await lockUser(tx, reset.userId);
+      const consumed = await tx.passwordResetToken.updateMany({ where: { token: digest, used: false, expiresAt: { gt: new Date() } }, data: { used: true } });
+      if (consumed.count !== 1) throw new Error('Token inválido ou expirado');
+      await tx.user.update({ where: { id: reset.userId }, data: hash });
+      await invalidateCredentials(tx, reset.userId);
+      await tx.auditLog.create({ data: { userId: reset.userId, action: 'PASSWORD_RESET_COMPLETED' } });
     });
-
-    await this.passwordResetRepository.markAsUsed(token);
-    const result = await this.userRepository.findUserSessions(user.id);
-    for (const session of result.sessions) {
-      await this.userRepository.deleteSession(session.id);
-    }
   }
 
   private mapToDto(user: { id: string; email: string; createdAt: Date; updatedAt: Date; lastLogin: Date | null; isActive: boolean; role: 'USER' | 'ADMIN'; name?: string | null; phoneNumber?: string | null }): UserDto {

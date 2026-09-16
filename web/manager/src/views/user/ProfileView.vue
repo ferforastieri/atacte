@@ -121,7 +121,7 @@
               </div>
               
               <div class="text-center p-6 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <p class="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">{{ passwordsStore.allFavoritePasswords.length }}</p>
+                <p class="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">{{ passwordsStore.favoriteCount }}</p>
                 <p class="text-sm text-gray-600 dark:text-gray-400">Favoritas</p>
               </div>
               
@@ -147,7 +147,7 @@ const authStore = useAuthStore()
 const passwordsStore = usePasswordsStore()
 
 const totpEnabledCount = computed(() => {
-  return passwordsStore.allTotpEnabledPasswords.length
+  return passwordsStore.totpCount
 })
 
 const userInitials = computed(() => {

@@ -53,6 +53,7 @@ export function issueCsrfCookie(res: Response): string {
 }
 
 export function secureTokenEqual(left: string | undefined, right: string | undefined): boolean {
-  if (!left || !right || left.length !== right.length) return false;
-  return timingSafeEqual(Buffer.from(left), Buffer.from(right));
+  if (!left || !right) return false;
+  const a = Buffer.from(left); const b = Buffer.from(right);
+  return a.length === b.length && timingSafeEqual(a, b);
 }

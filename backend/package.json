@@ -7,11 +7,13 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "test": "tsx --test src/server.test.ts",
+    "test": "tsx --test src/server.test.ts src/security.test.ts",
     "db:generate": "prisma generate --schema=src/infrastructure/prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema=src/infrastructure/prisma/schema.prisma",
     "db:migrate:deploy": "prisma migrate deploy --schema=src/infrastructure/prisma/schema.prisma",
-    "db:studio": "prisma studio --schema=src/infrastructure/prisma/schema.prisma"
+    "db:studio": "prisma studio --schema=src/infrastructure/prisma/schema.prisma",
+    "security:allow-registration": "node dist/infrastructure/scripts/security.js allow-registration",
+    "test:integration": "tsx --test src/security.integration.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.2.0",
@@ -20,15 +22,17 @@
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-rate-limit": "^6.8.1",
+    "express": "^4.22.3",
+    "express-rate-limit": "^8.7.0",
     "express-validator": "^7.0.1",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.1",
     "morgan": "^1.10.0",
-    "nodemailer": "^9.1.0",
+    "nodemailer": "^9.1.1",
     "prisma": "^5.2.0",
     "qrcode": "^1.5.3",
+    "rate-limit-redis": "^6.0.1",
+    "redis": "^6.2.1",
     "speakeasy": "^2.0.0",
     "zxcvbn": "^4.4.2"
   },
@@ -45,7 +49,7 @@
     "@types/supertest": "^7.2.1",
     "@types/zxcvbn": "^4.4.5",
     "supertest": "^7.2.2",
-    "tsx": "^3.12.7",
+    "tsx": "^4.23.13",
     "typescript": "^5.1.6"
   },
   "keywords": [

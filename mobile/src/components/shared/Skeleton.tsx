@@ -19,7 +19,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(animatedValue, {
           toValue: 1,
@@ -32,7 +32,9 @@ export const Skeleton: React.FC<SkeletonProps> = ({
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    animation.start();
+    return () => animation.stop();
   }, [animatedValue]);
 
   const opacity = animatedValue.interpolate({

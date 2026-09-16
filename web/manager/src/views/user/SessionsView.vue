@@ -59,9 +59,7 @@
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Confiança
-                </th>
+
                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Ações
                 </th>
@@ -108,27 +106,10 @@
                   </span>
                 </td>
                 
-                <td class="px-4 py-3 whitespace-nowrap">
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                    :class="session.isTrusted ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'"
-                  >
-                    {{ session.isTrusted ? 'Confiável' : 'Não Confiável' }}
-                  </span>
-                </td>
+
                 
                 <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                   <div class="flex items-center justify-end gap-1.5">
-                    <BaseButton
-                      v-if="session.isTrusted && session.deviceName"
-                      variant="ghost"
-                      size="sm"
-                      @click="openUntrustModal(session.deviceName)"
-                      class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300 p-1.5"
-                      title="Remover confiança do dispositivo"
-                    >
-                      <ShieldExclamationIcon class="w-4 h-4" />
-                    </BaseButton>
                     <BaseButton
                       v-if="!session.isCurrent"
                       variant="ghost"
@@ -166,17 +147,6 @@
       </BaseCard>
     </div>
 
-    <!-- Untrust Device Confirmation Modal -->
-    <ConfirmModal
-      :show="showUntrustModal"
-      title="Remover Confiança do Dispositivo"
-      :message="untrustDeviceMessage"
-      confirm-text="Remover Confiança"
-      cancel-text="Cancelar"
-      :loading="isUntrusting"
-      @confirm="confirmUntrustDevice"
-      @cancel="closeUntrustModal"
-    />
 
     <!-- Revoke All Sessions Confirmation Modal -->
     <ConfirmModal
@@ -209,10 +179,7 @@ const router = useRouter()
 const sessions = ref<Session[]>([])
 const isLoading = ref(false)
 const isRevokingAll = ref(false)
-const showUntrustModal = ref(false)
 const showRevokeAllModal = ref(false)
-const untrustingDeviceName = ref<string>('')
-const isUntrusting = ref(false)
 const pagination = ref({
   currentPage: 1,
   totalPages: 1,
@@ -220,9 +187,6 @@ const pagination = ref({
   limit: 10
 })
 
-const untrustDeviceMessage = computed(() => {
-  return `Tem certeza que deseja remover a confiança do dispositivo "${untrustingDeviceName.value}"? Na próxima vez que você fizer login neste dispositivo, será necessário confiar novamente.`
-})
 
 const currentSession = computed(() => {
   return sessions.value.find(s => s.isCurrent)
@@ -246,33 +210,6 @@ const revokeSession = async (sessionId: string) => {
     const errorMessage = error && typeof error === 'object' && 'response' in error
       ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
       : undefined;
-  }
-}
-
-const openUntrustModal = (deviceName: string) => {
-  untrustingDeviceName.value = deviceName
-  showUntrustModal.value = true
-}
-
-const closeUntrustModal = () => {
-  showUntrustModal.value = false
-  untrustingDeviceName.value = ''
-}
-
-const confirmUntrustDevice = async () => {
-  if (!untrustingDeviceName.value) return
-
-  isUntrusting.value = true
-  try {
-    await authApi.untrustDevice(untrustingDeviceName.value)
-    closeUntrustModal()
-    await fetchSessions()
-  } catch (error: unknown) {
-    const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
-  } finally {
-    isUntrusting.value = false
   }
 }
 

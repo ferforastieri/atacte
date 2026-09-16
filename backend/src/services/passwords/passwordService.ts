@@ -230,28 +230,15 @@ export class PasswordService {
     }
 
     
-    await this.passwordRepository.update(passwordId, updateData);
-
-    
-    if (data.customFields) {
-      
-      await this.passwordRepository.deleteCustomFieldsByPasswordEntryId(passwordId);
-
-      
-      for (const field of data.customFields) {
-        await this.passwordRepository.createCustomField({
-          passwordEntryId: passwordId,
-          fieldName: field.fieldName,
-          encryptedValue: CryptoUtil.encrypt(field.value, ENCRYPTION_KEY),
-          fieldType: field.fieldType
-        });
-      }
+    if (data.customFields !== undefined) {
+      updateData.customFields = data.customFields.map(field => ({
+        fieldName: field.fieldName,
+        encryptedValue: CryptoUtil.encrypt(field.value, ENCRYPTION_KEY),
+        fieldType: field.fieldType
+      }));
     }
+    const finalPassword = await this.passwordRepository.update(passwordId, updateData);
 
-    
-    const finalPassword = await this.passwordRepository.findById(passwordId);
-
-    
     await AuditUtil.log(
       userId, 
       'PASSWORD_UPDATED', 
@@ -294,14 +281,7 @@ export class PasswordService {
 
   
   async getUserFolders(userId: string): Promise<string[]> {
-    const passwords = await this.passwordRepository.findByUserId(userId);
-    
-    const folders = passwords
-      .map(item => item.folder)
-      .filter(folder => folder)
-      .sort();
-    
-    return [...new Set(folders)] as string[];
+    return this.passwordRepository.findFolders(userId);
   }
 
 

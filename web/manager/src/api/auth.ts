@@ -18,13 +18,11 @@ export interface LoginRequest {
   email: string
   masterPassword: string
   deviceName?: string
-  deviceFingerprint?: string
 }
 
 export interface LoginResponse {
   user: User
   sessionId?: string
-  requiresTrust?: boolean
 }
 
 export interface RegisterRequest {
@@ -40,7 +38,6 @@ export interface Session {
   createdAt: string
   lastUsed: string
   expiresAt: string
-  isTrusted?: boolean
   isCurrent?: boolean
 }
 
@@ -106,15 +103,7 @@ const authApi = {
     return response.data
   },
 
-  async trustDevice(sessionId: string) {
-    const response = await api.post('/auth/trust-device', { sessionId })
-    return response.data
-  },
 
-  async untrustDevice(deviceName: string) {
-    const response = await api.post('/auth/untrust-device', { deviceName })
-    return response.data
-  }
 }
 
 export default authApi

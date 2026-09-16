@@ -57,7 +57,7 @@ const features = [
 const steps = [
   { title: 'Instale', description: 'Um comando baixa a configuração e sobe os containers.' },
   { title: 'Organize', description: 'Acesse o manager pela web, mobile ou desktop.' },
-  { title: 'Atualize', description: 'O updater avisa sobre releases e mantém seu volume.' }
+  { title: 'Atualize', description: 'Web e mobile avisam sobre novas releases. Atualize manualmente no servidor.' }
 ]
 
 onMounted(() => {

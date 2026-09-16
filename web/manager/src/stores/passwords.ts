@@ -1,3 +1,4 @@
+import api from '@/api/index'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import passwordsApi, { type PasswordEntry, type CreatePasswordRequest, type UpdatePasswordRequest, type PasswordSearchFilters } from '@/api/passwords'
@@ -31,8 +32,8 @@ export const usePasswordsStore = defineStore('passwords', () => {
   )
 
   
-  const allFavoritePasswords = ref<PasswordEntry[]>([])
-  const allTotpEnabledPasswords = ref<PasswordEntry[]>([])
+  const favoriteCount = ref(0)
+  const totpCount = ref(0)
   const statsLoaded = ref(false)
 
   const passwordsByFolder = computed(() => {
@@ -315,34 +316,13 @@ export const usePasswordsStore = defineStore('passwords', () => {
   
   const loadCompleteStats = async () => {
     try {
-      
-      const favoritesResponse = await passwordsApi.searchPasswords({
-        isFavorite: true,
-        limit: 1000, 
-        offset: 0
-      })
-      
-      if (favoritesResponse.success) {
-        allFavoritePasswords.value = favoritesResponse.data
-      }
-
-      
-      const totpResponse = await passwordsApi.searchPasswords({
-        totpEnabled: true,
-        limit: 1000, 
-        offset: 0
-      })
-      
-      if (totpResponse.success) {
-        allTotpEnabledPasswords.value = totpResponse.data
-      }
-
+      const response = await api.get('/passwords/counts')
+      favoriteCount.value = response.data.data.favorites
+      totpCount.value = response.data.data.totp
       statsLoaded.value = true
-    } catch (error) {
-    }
+    } catch { statsLoaded.value = false }
   }
 
-  
   const setSearchFilters = (filters: Partial<PasswordSearchFilters>) => {
     searchFilters.value = { ...searchFilters.value, ...filters }
   }
@@ -386,7 +366,15 @@ export const usePasswordsStore = defineStore('passwords', () => {
   }
 
 
+  const clearData = () => {
+    passwords.value = []; currentPassword.value = null; folders.value = [];
+    favoriteCount.value = 0; totpCount.value = 0; statsLoaded.value = false;
+    pagination.value = { total: 0, limit: 50, offset: 0, currentPage: 1 };
+    clearSearch()
+  }
+
   return {
+    clearData,
     
     passwords,
     currentPassword,
@@ -402,8 +390,8 @@ export const usePasswordsStore = defineStore('passwords', () => {
     searchResults,
     
     
-    allFavoritePasswords,
-    allTotpEnabledPasswords,
+    favoriteCount,
+    totpCount,
     statsLoaded,
     loadCompleteStats,
     

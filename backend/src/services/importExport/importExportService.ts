@@ -62,6 +62,11 @@ export interface ExportResult {
   total: number
 }
 
+export function csvCell(value: string): string {
+  const safe = /^[\s]*[=+@-]/.test(value) || /^[\t\r\n]/.test(value) ? "'" + value : value;
+  return '"' + safe.replace(/"/g, '""') + '"';
+}
+
 class ImportExportService {
   private importExportRepository: ImportExportRepository;
 
@@ -123,8 +128,7 @@ class ImportExportService {
         imported++
 
       } catch (itemError: unknown) {
-        const errorMessage = itemError instanceof Error ? itemError.message : 'Erro desconhecido';
-        errors.push(`Erro ao importar "${item.name || 'Item sem nome'}": ${errorMessage}`)
+        errors.push('Não foi possível importar um item. Confira seu formato.')
       }
     }
 
@@ -206,17 +210,12 @@ class ImportExportService {
     
     passwords.forEach(password => {
       const row = [
-        `"${password.name}"`,
-        `"${password.website || ''}"`,
-        `"${password.username || ''}"`,
-        `"${CryptoUtil.decrypt(password.encryptedPassword, ENCRYPTION_KEY)}"`,
-        `"${password.notes ? CryptoUtil.decrypt(password.notes, ENCRYPTION_KEY) : ''}"`,
-        `"${password.folder || ''}"`,
-        password.isFavorite ? 'Sim' : 'Não',
-        password.totpEnabled ? 'Sim' : 'Não',
-        password.createdAt.toISOString(),
-        password.updatedAt.toISOString()
-      ]
+        password.name, password.website || '', password.username || '',
+        CryptoUtil.decrypt(password.encryptedPassword, ENCRYPTION_KEY),
+        password.notes ? CryptoUtil.decrypt(password.notes, ENCRYPTION_KEY) : '', password.folder || '',
+        password.isFavorite ? 'Sim' : 'Não', password.totpEnabled ? 'Sim' : 'Não',
+        password.createdAt.toISOString(), password.updatedAt.toISOString()
+      ].map(csvCell)
       csvRows.push(row.join(','))
     })
 

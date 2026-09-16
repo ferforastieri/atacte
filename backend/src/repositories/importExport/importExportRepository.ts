@@ -1,6 +1,6 @@
-import { PrismaClient, PasswordEntry, CustomField, Prisma } from '../../../node_modules/.prisma/client';
+import { PasswordEntry, CustomField, Prisma } from '../../../node_modules/.prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from '../../infrastructure/prisma';
 
 export interface CreatePasswordEntryData {
   userId: string;

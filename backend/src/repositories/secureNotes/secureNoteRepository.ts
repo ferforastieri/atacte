@@ -1,6 +1,6 @@
-import { PrismaClient, SecureNote } from '../../../node_modules/.prisma/client';
+import { SecureNote } from '../../../node_modules/.prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from '../../infrastructure/prisma';
 
 export interface CreateSecureNoteData {
   userId: string;
@@ -49,6 +49,11 @@ export class SecureNoteRepository {
         ...(userId && { userId })
       },
     });
+  }
+
+  async findFolders(userId: string): Promise<string[]> {
+    const rows = await prisma.secureNote.groupBy({ by: ['folder'], where: { userId, folder: { not: null } }, orderBy: { folder: 'asc' } });
+    return rows.flatMap(row => row.folder ? [row.folder] : []);
   }
 
   async findByUserId(userId: string): Promise<SecureNote[]> {

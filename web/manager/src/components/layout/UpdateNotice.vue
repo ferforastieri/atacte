@@ -1,63 +1,24 @@
 <template>
   <aside v-if="available" class="update-toast" role="status" aria-live="polite">
-    <div class="update-toast__copy">
-      <strong>Atualização disponível</strong>
-      <span>{{ message || 'Uma nova versão da interface e do servidor está pronta.' }}</span>
-    </div>
-    <div class="update-toast__actions">
-      <button v-if="authStore.isAdmin" type="button" class="update-toast__confirm" :disabled="updating" @click="startUpdate">
-        {{ updating ? 'Atualizando…' : 'Atualizar' }}
-      </button>
-      <button type="button" class="update-toast__dismiss" @click="dismiss">Agora não</button>
-    </div>
+    <div class="update-toast__copy"><strong>Nova versão disponível: {{ latestVersion }}</strong><span>A atualização deve ser feita pelo responsável no servidor.</span></div>
+    <div class="update-toast__actions"><a :href="releaseUrl" target="_blank" rel="noopener noreferrer">Ver release</a><button type="button" @click="dismiss">Agora não</button></div>
   </aside>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { onMounted, onUnmounted, ref } from 'vue'
 import systemApi from '@/api/system'
-import { env } from '@/config/environment'
-
-const authStore = useAuthStore()
-const available = ref(false)
-const updating = ref(false)
-const message = ref('')
-const latestVersion = ref('')
-function dismiss() { available.value = false; try { sessionStorage.setItem('atacte-dismissed-update', latestVersion.value) } catch { /* optional */ } }
-
-function isPublishedVersion(value: unknown): value is string {
-  return typeof value === 'string' && value !== 'development' && /^[a-zA-Z0-9._-]{7,64}$/.test(value)
-}
-
-async function fetchLatestReleaseVersion(): Promise<string | null> {
-  try {
-    const response = await fetch(`https://api.github.com/repos/${env.githubRepository}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' })
-    if (!response.ok) return null
-    const release = await response.json() as { target_commitish?: unknown; draft?: unknown; prerelease?: unknown }
-    if (release.draft === true || release.prerelease === true) return null
-    return isPublishedVersion(release.target_commitish) ? release.target_commitish : null
-  } catch {
-    return null
-  }
-}
-
+const available = ref(false), latestVersion = ref(''), releaseUrl = ref('')
+let timer: ReturnType<typeof setInterval> | undefined
+function dismiss() { available.value = false; sessionStorage.setItem('atacte-dismissed-update', latestVersion.value) }
 async function check() {
   try {
-    const current = await systemApi.version()
-    if (!isPublishedVersion(current)) return
-    const latest = await fetchLatestReleaseVersion()
-    if (!latest || current === latest) return
-    if (latestVersion.value === latest) return
-    latestVersion.value = latest
-    try { if (sessionStorage.getItem('atacte-dismissed-update') === latest) return } catch { /* optional */ }
-    available.value = true
-  } catch { /* update checks must never break the manager */ }
+    const info = await systemApi.updates()
+    latestVersion.value = info.latestVersion || ''; releaseUrl.value = info.releaseUrl || ''
+    available.value = info.updateAvailable && sessionStorage.getItem('atacte-dismissed-update') !== latestVersion.value
+  } catch { /* An unavailable release service must not interrupt vault access. */ }
 }
-async function startUpdate() {
-  updating.value = true; message.value = ''
-  try { await systemApi.update(); message.value = 'Atualização iniciada. O serviço será reiniciado; recarregando em alguns segundos.'; window.setTimeout(() => window.location.reload(), 8000) } catch { message.value = 'Não foi possível iniciar agora. Verifique o updater e tente novamente.'; updating.value = false }
-}
-onMounted(() => { void check(); window.setInterval(() => void check(), 30 * 60 * 1000) })
+onMounted(() => { void check(); timer = setInterval(check, 30 * 60000) })
+onUnmounted(() => clearInterval(timer))
 </script>
 
 <style scoped>

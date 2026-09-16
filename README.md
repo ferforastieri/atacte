@@ -8,7 +8,7 @@ Gerenciador self-hosted de senhas, códigos TOTP e notas privadas. O Atacte foi 
 - gerar e consultar códigos de autenticação TOTP;
 - criar notas privadas e pastas;
 - importar e exportar seus dados em JSON;
-- revisar sessões, dispositivos confiáveis e auditoria;
+- revisar sessões conectadas e auditoria;
 - usar o mesmo servidor pela web, pelo aplicativo Android/Expo ou pelo desktop;
 - receber um aviso no gerenciador quando uma nova versão estiver disponível.
 
@@ -22,9 +22,9 @@ Requisitos: Docker Engine com Docker Compose v2, `curl` e um host Linux ou macOS
 curl -fsSL https://atacte.vercel.app/install.sh | sh
 ```
 
-O instalador cria `~/.atacte`, baixa o Compose e imagens prontas para sua arquitetura, gera os segredos locais e inicia PostgreSQL, API, manager e updater. Nenhuma variável é necessária na primeira instalação. O volume do banco e o arquivo `.env` são preservados ao executar o comando novamente.
+O instalador cria `~/.atacte`, baixa o Compose e imagens prontas para sua arquitetura, gera os segredos locais e inicia PostgreSQL, Redis, API e manager. Para HTTPS, configure a origem e o domínio público conforme o guia de segurança. O volume do banco e o arquivo `.env` são preservados ao executar o comando novamente.
 
-Depois, abra **http://localhost:3456**. Em um banco vazio, o primeiro visitante verá o cadastro inicial; essa conta passa a ser a administradora. Se já existir um banco, faça backup antes de apontar o Compose para ele.
+Depois, autorize o email da primeira conta com `docker compose exec backend npm run security:allow-registration -- seu@email.com` e abra **http://localhost:3456** para criá-la manualmente. O cadastro exige autorização, expira em 15 minutos e só pode ser concluído uma vez. Se já existir um banco, mantenha o mesmo volume e o `.env` da instalação.
 
 Valide os serviços e a API com:
 
@@ -34,14 +34,14 @@ docker compose ps
 curl -fsS http://localhost:3457/health
 ```
 
-Os arquivos da instalação ficam em `~/.atacte`. O PostgreSQL é publicado somente em `127.0.0.1` por padrão. Quando o reverse proxy estiver em outro host ou container, publique a API na interface de rede privada e restrinja a porta no firewall:
+Os arquivos da instalação ficam em `~/.atacte`. O PostgreSQL é publicado somente em `127.0.0.1` por padrão. Quando o reverse proxy estiver em outro host ou container, publique o frontend na interface de rede privada e restrinja a porta no firewall:
 
 ```env
-BACKEND_BIND=0.0.0.0
-BACKEND_PORT=3457
+FRONT_BIND=IP_DA_INTERFACE_PRIVADA
+FRONT_PORT=3456
 ```
 
-Não exponha PostgreSQL nem a porta do updater à internet.
+Não exponha PostgreSQL nem Redis à internet.
 
 ## Instalação assistida por IA
 
@@ -51,15 +51,19 @@ Prompt sugerido:
 
 > Leia o AGENTS.md deste repositório, identifique se o objetivo é produção ou desenvolvimento, execute somente o procedimento correspondente e valide os serviços sem exibir segredos.
 
-O instalador rápido acompanha as imagens `latest`. Para fixar uma release, não use apenas `ATACTE_RELEASE_REF`: registre também `BACKEND_IMAGE`, `FRONT_IMAGE` e `UPDATER_IMAGE` com a mesma tag no `.env`, conforme o guia para agentes.
+O instalador rápido acompanha as imagens `latest`. Para fixar uma release, não use apenas `ATACTE_RELEASE_REF`: registre também `BACKEND_IMAGE` e `FRONT_IMAGE` com a mesma tag no `.env`, conforme o guia para agentes.
 
 ## Uso diário
 
-1. Abra o endereço do seu manager e crie a primeira conta, se a instalação for nova.
+1. Se a instalação estiver vazia, execute no diretório da instalação `docker compose exec backend npm run security:allow-registration -- seu@email.com`. Abra o manager e crie a conta manualmente em até 15 minutos. Contas existentes entram normalmente com email e senha.
 2. Cadastre uma senha, nota ou TOTP; use pastas e favoritos para encontrar tudo rapidamente.
 3. Em **Sessões**, confira os dispositivos e encerre acessos que você não reconhece.
 4. Em **Configurações**, faça exportações somente para um local protegido e apague o arquivo depois de conferi-lo.
-5. Quando o aviso de atualização aparecer, um administrador pode iniciar a atualização pelo botão do manager. O updater baixa as imagens e recria os serviços sem apagar o volume do PostgreSQL.
+5. Web e mobile consultam `GET /api/updates` e mostram um link para a nova release. Atualize manualmente no servidor; a aplicação não controla Docker nem altera o `.env`.
+
+No mobile, **Configurações → Desbloquear com biometria** oferece bloqueio local opcional ao abrir ou retomar o aplicativo, com alternativa pela senha da conta. A opção começa desativada e requer uma nova build nativa; consulte [o guia de implantação](SECURITY_DEPLOYMENT.md).
+
+As configurações da instalação são alteradas pelo `.env` no servidor e aplicadas com `docker compose up -d`. Email continua opcional.
 
 ## Atualizar e voltar uma versão
 
@@ -67,17 +71,19 @@ Atualização normal, a partir do host:
 
 ```sh
 cd ~/.atacte
-docker compose pull backend front updater
+docker compose pull backend front redis
+docker compose up -d --wait postgres redis
+docker compose run --rm --no-deps backend ./node_modules/.bin/prisma migrate deploy --schema=src/infrastructure/prisma/schema.prisma
 docker compose up -d --no-build --remove-orphans
 ```
 
-O instalador também pode ser executado novamente para buscar a release configurada. Para voltar, defina `BACKEND_IMAGE`, `FRONT_IMAGE` e `UPDATER_IMAGE` no `.env` com uma tag conhecida e execute `docker compose pull` e `docker compose up -d`. Valide a API com:
+O instalador também pode ser executado novamente para buscar a release configurada. Para voltar, defina `BACKEND_IMAGE` e `FRONT_IMAGE` no `.env` com uma tag conhecida e execute `docker compose pull` e `docker compose up -d`. Valide a API com:
 
 ```sh
 curl -fsS http://localhost:3457/health
 ```
 
-O updater executa as migrations versionadas do Prisma com `prisma migrate deploy` antes de substituir o backend. Ele não executa `db push` nem alterações de schema fora dos arquivos de migration. Faça um backup antes de qualquer troca de versão.
+O instalador atualiza a instalação existente e aplica migrations sem executar ou exigir backup. O banco existente continua em uso, com o mesmo volume e `.env`. Backup manual é opcional; voltar somente a imagem não reverte migrations.
 
 ## Backup e restauração
 
@@ -97,7 +103,7 @@ Os valores abaixo ficam em `~/.atacte/.env` e só precisam ser alterados quando 
 | Variável | Finalidade | Padrão |
 | --- | --- | --- |
 | `FRONT_PORT` | Porta HTTP do manager | `3456` |
-| `BACKEND_BIND` / `BACKEND_PORT` | Interface e porta da API | `0.0.0.0` / `3457` |
+| `BACKEND_BIND` / `BACKEND_PORT` | Interface e porta da API | `127.0.0.1` / `3457` |
 | `CORS_ORIGIN` | Origens permitidas, separadas por vírgula | origem local |
 | `COOKIE_SECURE` | Exigir HTTPS no cookie de sessão | `false` local, `true` em produção |
 | `COOKIE_SAME_SITE` | Política SameSite (`lax`, `strict` ou `none`) | `lax` |
@@ -106,7 +112,7 @@ Os valores abaixo ficam em `~/.atacte/.env` e só precisam ser alterados quando 
 | `JWT_EXPIRES_IN` | Duração da sessão | `7d` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Envio de recuperação de senha | vazio |
 
-Mantenha `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `UPDATER_TOKEN` privados. Não os publique em issues, logs, imagens ou repositórios.
+Mantenha `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` privados. Não os publique em issues, logs, imagens ou repositórios.
 
 ## Clientes
 
@@ -124,13 +130,13 @@ O cliente Electron está em `desktop/` e pode ser empacotado para Windows, macOS
 
 ## Segurança
 
-As sessões usam cookies `HttpOnly`, `Secure` em HTTPS e proteção CSRF; tokens de sessão não são gravados em `localStorage`. A API aplica CORS por lista explícita de origens, rate limit, validação de entrada e headers de segurança. Use sempre HTTPS para acesso remoto, firewall para as portas internas e backups criptografados.
+As sessões usam cookies `HttpOnly`, `Secure` em HTTPS e proteção CSRF; tokens de sessão não são gravados em `localStorage`. A API aplica CORS por lista explícita de origens, rate limit, validação de entrada e headers de segurança. Use HTTPS para acesso remoto e firewall para as portas internas. Backups são opcionais; se os fizer, mantenha-os criptografados.
 
-O updater aplica as migrations versionadas do Prisma durante uma atualização. O rate limit padrão fica na memória do processo e, portanto, não é compartilhado entre múltiplas réplicas.
+O rate limit e o cache de atualizações ficam no Redis, compartilhados entre réplicas e sem liberação de acesso se Redis estiver indisponível. A chave de criptografia permanece no backend: o cofre tem criptografia em repouso, não é zero knowledge. Consulte [SECURITY_DEPLOYMENT.md](SECURITY_DEPLOYMENT.md) para autenticação, biometria e migração segura.
 
 ## Desenvolvimento
 
-Cada parte possui seu próprio `package.json` e lockfile. Use Node.js 20 e npm; o updater requer Go 1.24.
+Cada parte possui seu próprio `package.json` e lockfile. Use Node.js 24, npm e Redis.
 
 ```sh
 # Dependências e Prisma
@@ -153,9 +159,9 @@ npm --prefix web run type-check
 npm --prefix web run build
 ```
 
-Para desenvolvimento com os processos Node locais, suba apenas o PostgreSQL com Docker, copie `backend/.env.example` para `backend/.env`, use a porta publicada `5435` na `DATABASE_URL` e aplique `npm --prefix backend run db:migrate:deploy`. Não sobrescreva um `.env` existente.
+Para desenvolvimento com os processos Node locais, suba PostgreSQL e uma instância Redis local dedicada, copie `backend/.env.example` para `backend/.env`, use a porta publicada `5435` na `DATABASE_URL` e aplique `npm --prefix backend run db:migrate:deploy`. Não sobrescreva um `.env` existente.
 
-Para construir toda a aplicação com Compose, crie um `.env` na raiz com `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` e `UPDATER_TOKEN` antes de executar `docker compose up -d --build`. O roteiro completo e os comandos de validação estão em [AGENTS.md](AGENTS.md). Os workflows de CI executam testes e builds, mas nunca fazem migração automática do banco.
+Para construir toda a aplicação com Compose, crie um `.env` na raiz com `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` antes de executar `docker compose up -d --build`. O roteiro completo e os comandos de validação estão em [AGENTS.md](AGENTS.md). Os workflows de CI executam testes e builds, mas nunca fazem migração automática do banco.
 
 ## Links
 

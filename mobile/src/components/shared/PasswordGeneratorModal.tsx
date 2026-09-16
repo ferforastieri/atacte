@@ -1,3 +1,4 @@
+import { secureRandomInt } from '../../utils/secureRandom';
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -61,7 +62,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
     
     let newPassword = '';
     for (let i = 0; i < lengthNum; i++) {
-      newPassword += charset.charAt(Math.floor(Math.random() * charset.length));
+      newPassword += charset.charAt(secureRandomInt(charset.length));
     }
     
     setPassword(newPassword);

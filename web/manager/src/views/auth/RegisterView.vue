@@ -18,6 +18,7 @@
 
       <BaseCard>
         <form @submit.prevent="handleRegister" class="space-y-6">
+          <p class="text-sm">O responsável pelo servidor deve autorizar previamente seu email para o cadastro inicial.</p>
           <BaseInput
             v-model="form.email"
             type="email"
@@ -90,7 +91,7 @@
           <ShieldCheckIcon class="mx-auto h-8 w-8 text-green-600 dark:text-green-400" />
           <h3 class="mt-2 text-sm font-medium text-green-800 dark:text-green-200">Segurança</h3>
           <p class="mt-1 text-sm text-green-600 dark:text-green-300">
-            Suas senhas são criptografadas e apenas você tem acesso a elas.
+            Seus dados são criptografados no armazenamento. A segurança do servidor também protege o seu cofre.
           </p>
         </div>
       </BaseCard>

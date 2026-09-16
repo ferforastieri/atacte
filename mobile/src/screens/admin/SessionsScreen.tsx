@@ -17,7 +17,6 @@ interface Session {
   userAgent?: string;
   createdAt: string;
   lastUsed: string;
-  isTrusted?: boolean;
   isCurrent?: boolean;
 }
 
@@ -48,7 +47,6 @@ export default function SessionsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRevokingAll, setIsRevokingAll] = useState(false);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
-  const [showUntrustModal, setShowUntrustModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
   useEffect(() => {
@@ -110,16 +108,6 @@ export default function SessionsScreen() {
     }
   };
 
-  const untrustDevice = async (deviceName: string) => {
-    try {
-      const response = await authService.untrustDevice(deviceName);
-      if (response.success) {
-        await fetchSessions(pagination.currentPage);
-      } else {
-      }
-    } catch (error) {
-    }
-  };
 
   const revokeAllSessions = async () => {
     setIsRevokingAll(true);
@@ -396,14 +384,6 @@ export default function SessionsScreen() {
                       {session.isCurrent ? 'Atual' : 'Ativa'}
                     </Text>
                   </View>
-                  <View style={[
-                    styles.statusBadge,
-                    { backgroundColor: session.isTrusted ? '#3b82f6' : '#f59e0b' }
-                  ]}>
-                    <Text style={[styles.statusBadgeText, { color: '#ffffff' }]}>
-                      {session.isTrusted ? 'Confiável' : 'Não Confiável'}
-                    </Text>
-                  </View>
                 </View>
               </View>
 
@@ -425,20 +405,6 @@ export default function SessionsScreen() {
               </View>
 
               <View style={styles.actions}>
-                {session.isTrusted && session.deviceName && !session.isCurrent && (
-                  <TouchableOpacity
-                    style={[styles.actionButton, { borderColor: '#f59e0b', flex: 1 }]}
-                    onPress={() => {
-                      setSelectedSession(session);
-                      setShowUntrustModal(true);
-                    }}
-                  >
-                    <Ionicons name="shield-outline" size={16} color="#f59e0b" />
-                    <Text style={[styles.actionButtonText, { color: '#f59e0b' }]}>
-                      Remover Confiança
-                    </Text>
-                  </TouchableOpacity>
-                )}
                 {!session.isCurrent && (
                   <TouchableOpacity
                     style={[styles.actionButton, { borderColor: '#dc2626', flex: 1 }]}
@@ -527,26 +493,7 @@ export default function SessionsScreen() {
         }}
       />
 
-      <Modal
-        visible={showUntrustModal}
-        onClose={() => {
-          setShowUntrustModal(false);
-          setSelectedSession(null);
-        }}
-        type="confirm"
-        title="Remover Confiança do Dispositivo"
-        message={`Tem certeza que deseja remover a confiança do dispositivo "${selectedSession?.deviceName || 'Desconhecido'}"? Na próxima vez que você fizer login neste dispositivo, será necessário confiar novamente.`}
-        confirmText="Remover Confiança"
-        cancelText="Cancelar"
-        confirmVariant="danger"
-        onConfirm={() => {
-          if (selectedSession?.deviceName) {
-            untrustDevice(selectedSession.deviceName);
-            setShowUntrustModal(false);
-            setSelectedSession(null);
-          }
-        }}
-      />
+
     </View>
   );
 }

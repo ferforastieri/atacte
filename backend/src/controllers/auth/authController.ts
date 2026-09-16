@@ -2,7 +2,10 @@ import express from 'express';
 import crypto from 'crypto-js';
 import { AuthService } from '../../services/auth/authService';
 import { UserService } from '../../services/users/userService';
-import { authenticateToken } from '../../middleware/auth';
+import { authenticateToken, accountLimiter } from '../../middleware/auth';
+import { verifyPassword } from '../../utils/credentialUtil';
+import { prisma } from '../../infrastructure/prisma';
+import { AuditUtil } from '../../utils/auditUtil';
 import { AuthenticatedRequest } from '../../types/express';
 import { authLimiter } from '../../middleware/auth';
 import { clearSessionCookie, issueCsrfCookie, parseCookies, SESSION_COOKIE_NAME, setSessionCookie } from '../../middleware/cookies';
@@ -49,9 +52,9 @@ router.post('/register', authLimiter, async (req, res) => {
 });
 
 
-router.post('/login', authLimiter, async (req, res) => {
+router.post('/login', authLimiter, accountLimiter, async (req, res) => {
   try {
-    const { email, masterPassword, deviceName, deviceFingerprint } = req.body;
+    const { email, masterPassword, deviceName } = req.body;
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('User-Agent');
 
@@ -59,7 +62,6 @@ router.post('/login', authLimiter, async (req, res) => {
       email,
       masterPassword,
       deviceName,
-      deviceFingerprint,
     }, ipAddress, userAgent);
 
     setSessionCookie(res, result.token);
@@ -68,7 +70,6 @@ router.post('/login', authLimiter, async (req, res) => {
       data: {
         user: result.user,
         sessionId: result.sessionId,
-        requiresTrust: result.requiresTrust,
       },
       message: 'Login realizado com sucesso'
     });
@@ -180,34 +181,6 @@ router.get('/sessions', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/trust-device', authenticateToken, async (req, res) => {
-  const authReq = req as AuthenticatedRequest;
-  try {
-    const { sessionId } = req.body;
-    if (!sessionId) {
-      res.status(400).json({
-        success: false,
-        message: 'ID da sessão é obrigatório'
-      });
-      return;
-    }
-
-    await authService.trustDevice(authReq.user.id, sessionId);
-
-    res.json({
-      success: true,
-      message: 'Dispositivo confiado com sucesso'
-    });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    res.status(400).json({
-      success: false,
-      message: errorMessage
-    });
-  }
-});
-
-
 router.delete('/sessions/:sessionId', authenticateToken, async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   try {
@@ -231,34 +204,7 @@ router.delete('/sessions/:sessionId', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/untrust-device', authenticateToken, async (req, res) => {
-  const authReq = req as AuthenticatedRequest;
-  try {
-    const { deviceName } = req.body;
-    if (!deviceName) {
-      res.status(400).json({
-        success: false,
-        message: 'Nome do dispositivo é obrigatório'
-      });
-      return;
-    }
-
-    await authService.untrustDevice(authReq.user.id, deviceName);
-
-    res.json({
-      success: true,
-      message: 'Confiança removida do dispositivo com sucesso'
-    });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    res.status(400).json({
-      success: false,
-      message: errorMessage
-    });
-  }
-});
-
-router.post('/forgot-password', authLimiter, async (req, res) => {
+router.post('/forgot-password', authLimiter, accountLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     
@@ -275,16 +221,12 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
       success: true,
       message: 'Se o email existir, você receberá um link de recuperação'
     });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    return res.status(400).json({
-      success: false,
-      message: errorMessage
-    });
+  } catch {
+    return res.json({ success: true, message: 'Se o email existir, você receberá um link de recuperação' });
   }
 });
 
-router.post('/reset-password', authLimiter, async (req, res) => {
+router.post('/reset-password', authLimiter, accountLimiter, async (req, res) => {
   try {
     const { token, newPassword } = req.body;
     
@@ -317,7 +259,7 @@ router.post('/reset-password', authLimiter, async (req, res) => {
   }
 });
 
-router.post('/change-password', authLimiter, authenticateToken, async (req, res) => {
+router.post('/change-password', authenticateToken, authLimiter, accountLimiter, async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   try {
     const { currentPassword, newPassword } = req.body;
@@ -349,6 +291,20 @@ router.post('/change-password', authLimiter, authenticateToken, async (req, res)
       message: errorMessage
     });
   }
+});
+
+
+router.post('/reauthenticate', authenticateToken, authLimiter, accountLimiter, async (req, res, next) => {
+  try {
+  if (!(await verifyPassword(req.body?.password, req.user!.masterPasswordHash))) {
+    res.status(403).json({ success: false, message: 'Senha incorreta' });
+    return;
+  }
+  const result = await prisma.userSession.updateMany({ where: { id: req.sessionId!, userId: req.user!.id, user: { masterPasswordHash: req.user!.masterPasswordHash, isActive: true } }, data: { reauthenticatedAt: new Date() } });
+  if (result.count !== 1) { res.status(401).json({ success: false, message: 'Sessão inválida' }); return; }
+  await AuditUtil.log(req.user!.id, 'REAUTHENTICATED', 'SESSION', req.sessionId, null, req);
+  res.json({ success: true, message: 'Identidade confirmada por 5 minutos' });
+  } catch (error) { next(error); }
 });
 
 export default router;

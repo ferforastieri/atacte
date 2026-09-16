@@ -1,3 +1,6 @@
+import { usePasswordsStore } from './passwords'
+import { useSecureNotesStore } from './secureNotes'
+import { invalidatePendingRequests } from '@/api/index'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
@@ -23,6 +26,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const clearAuth = () => {
+    invalidatePendingRequests()
+    usePasswordsStore().clearData()
+    useSecureNotesStore().clearData()
     token.value = null
     user.value = null
     userPreferences.value = null
@@ -62,9 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.success && response.data) {
         if (response.data.user) {
           setAuth(response.data.user)
-          if (!response.data.requiresTrust) {
-            await loadUserPreferences()
-          }
+          await loadUserPreferences()
         }
         return response
       }
@@ -113,16 +117,13 @@ export const useAuthStore = defineStore('auth', () => {
     return false
   }
 
-  const initialize = async () => {
-    loadUserFromStorage()
-
-    if (token.value && user.value) {
-      refreshUser().then(() => {
-        if (user.value) {
-          loadUserPreferences()
-        }
-      })
-    }
+  let initialization: Promise<void> | undefined
+  const initialize = (): Promise<void> => {
+    initialization ??= (async () => {
+      loadUserFromStorage()
+      if (user.value && await refreshUser()) await loadUserPreferences()
+    })()
+    return initialization
   }
 
   return {

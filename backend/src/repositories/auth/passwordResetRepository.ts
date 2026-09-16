@@ -1,6 +1,6 @@
-import { PrismaClient, PasswordResetToken } from '@prisma/client';
+import { PasswordResetToken } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from '../../infrastructure/prisma';
 
 export interface CreatePasswordResetTokenData {
   userId: string;

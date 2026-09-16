@@ -11,13 +11,14 @@ function get(key: string, def: string): string {
 function getNum(key: string, def: number): number {
   const v = process.env[key]
   if (v === undefined) return def
-  const n = parseInt(v, 10)
-  if (Number.isNaN(n)) throw new Error(`Env ${key} must be a number`)
+  const n = Number(v)
+  if (!/^-?\d+$/.test(v) || !Number.isSafeInteger(n)) throw new Error(`Env ${key} must be a number`)
   return n
 }
 
 const PORT = getNum('PORT', 3001)
 const NODE_ENV = get('NODE_ENV', 'development') as 'development' | 'production' | 'test'
+const REDIS_URL = get('REDIS_URL', 'redis://127.0.0.1:6379')
 const DATABASE_URL = get('DATABASE_URL', 'postgresql://localhost:5432/atacte')
 const JWT_SECRET = get('JWT_SECRET', '')
 const JWT_EXPIRES_IN = get('JWT_EXPIRES_IN', '7d')
@@ -38,8 +39,6 @@ const COOKIE_MAX_AGE_MS = getNum('COOKIE_MAX_AGE_MS', 30 * 24 * 60 * 60 * 1000)
 const JWT_ISSUER = get('JWT_ISSUER', 'atacte-api')
 const JWT_AUDIENCE = get('JWT_AUDIENCE', 'atacte-clients')
 const BUILD_VERSION = get('BUILD_VERSION', 'development')
-const UPDATER_URL = get('UPDATER_URL', 'http://atacte-updater:8080')
-const UPDATER_TOKEN = get('UPDATER_TOKEN', '')
 const LOG_LEVEL = get('LOG_LEVEL', 'info') as 'error' | 'warn' | 'info' | 'debug'
 const SMTP_HOST = get('SMTP_HOST', '')
 const SMTP_PORT = get('SMTP_PORT', '')
@@ -49,6 +48,11 @@ const EMAIL_FROM = get('EMAIL_FROM', '')
 const EMAIL_FROM_NAME = get('EMAIL_FROM_NAME', '')
 const PASSWORD_RESET_URL = get('PASSWORD_RESET_URL', '')
 
+if (!/^rediss?:\/\//.test(REDIS_URL)) throw new Error('REDIS_URL inválida')
+if (BCRYPT_ROUNDS < 10 || BCRYPT_ROUNDS > 16) throw new Error('BCRYPT_ROUNDS deve estar entre 10 e 16')
+if (TRUST_PROXY < 0 || TRUST_PROXY > 8) throw new Error('TRUST_PROXY inválido')
+for (const limit of [RATE_LIMIT_MAX_REQUESTS, AUTH_RATE_LIMIT_MAX, MUTATION_RATE_LIMIT_MAX]) { if (limit < 1 || limit > 100000) throw new Error('Limite de requisições inválido') }
+for (const window of [RATE_LIMIT_WINDOW_MS, AUTH_RATE_LIMIT_WINDOW_MS, MUTATION_RATE_LIMIT_WINDOW_MS]) { if (window < 1000 || window > 86400000) throw new Error('Janela de rate limit inválida') }
 if (!DATABASE_URL.startsWith('postgresql://'))
   throw new Error('DATABASE_URL must be a PostgreSQL URL')
 if (!JWT_SECRET || JWT_SECRET.length < 32)
@@ -66,6 +70,7 @@ export const env = {
   PORT,
   NODE_ENV,
   DATABASE_URL,
+  REDIS_URL,
   JWT_SECRET,
   JWT_EXPIRES_IN,
   ENCRYPTION_KEY,
@@ -85,8 +90,6 @@ export const env = {
   JWT_ISSUER,
   JWT_AUDIENCE,
   BUILD_VERSION,
-  UPDATER_URL,
-  UPDATER_TOKEN,
   LOG_LEVEL,
   SMTP_HOST,
   SMTP_PORT,
@@ -102,4 +105,4 @@ export const env = {
 
 export default env
 export type EnvironmentConfig = typeof env
-export { PORT, NODE_ENV, DATABASE_URL, JWT_SECRET, JWT_EXPIRES_IN, ENCRYPTION_KEY, BCRYPT_ROUNDS, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS, AUTH_RATE_LIMIT_MAX, AUTH_RATE_LIMIT_WINDOW_MS, MUTATION_RATE_LIMIT_MAX, MUTATION_RATE_LIMIT_WINDOW_MS, CORS_ORIGIN, TRUST_PROXY, COOKIE_SECURE, COOKIE_SAME_SITE, COOKIE_DOMAIN, COOKIE_MAX_AGE_MS, JWT_ISSUER, JWT_AUDIENCE, BUILD_VERSION, UPDATER_URL, UPDATER_TOKEN, LOG_LEVEL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM, EMAIL_FROM_NAME, PASSWORD_RESET_URL }
+export { PORT, NODE_ENV, DATABASE_URL, REDIS_URL, JWT_SECRET, JWT_EXPIRES_IN, ENCRYPTION_KEY, BCRYPT_ROUNDS, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS, AUTH_RATE_LIMIT_MAX, AUTH_RATE_LIMIT_WINDOW_MS, MUTATION_RATE_LIMIT_MAX, MUTATION_RATE_LIMIT_WINDOW_MS, CORS_ORIGIN, TRUST_PROXY, COOKIE_SECURE, COOKIE_SAME_SITE, COOKIE_DOMAIN, COOKIE_MAX_AGE_MS, JWT_ISSUER, JWT_AUDIENCE, BUILD_VERSION, LOG_LEVEL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM, EMAIL_FROM_NAME, PASSWORD_RESET_URL }

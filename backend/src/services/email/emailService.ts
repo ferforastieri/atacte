@@ -35,9 +35,12 @@ export class EmailService {
           user: smtpUser,
           pass: smtpPass,
         },
-        tls: {
-          rejectUnauthorized: false
-        }
+        requireTLS: true,
+        tls: { rejectUnauthorized: true },
+        connectionTimeout: 10000,
+        socketTimeout: 10000,
+        disableFileAccess: true,
+        disableUrlAccess: true
       });
       
       this.transporter.verify(() => {});
@@ -60,8 +63,7 @@ export class EmailService {
 
       return true;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      throw new Error(`Erro ao enviar email: ${errorMessage}`);
+      throw new Error('Não foi possível enviar o email');
     }
   }
 

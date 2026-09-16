@@ -29,7 +29,7 @@
             </div>
             <div class="ml-3 sm:ml-4">
               <p class="text-green-100 text-xs sm:text-sm">Favoritas</p>
-              <p class="text-lg sm:text-2xl font-bold">{{ passwordsStore.allFavoritePasswords.length }}</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ passwordsStore.favoriteCount }}</p>
             </div>
           </div>
         </BaseCard>
@@ -309,7 +309,7 @@ const totpSecrets = ref<Record<string, string>>({})
 
 
 const totpEnabledCount = computed(() => {
-  return passwordsStore.allTotpEnabledPasswords.length
+  return passwordsStore.totpCount
 })
 
 
@@ -461,8 +461,7 @@ onMounted(async () => {
   
   if (passwordsStore.passwords.length === 0 && authStore.isAuthenticated) {
     try {
-      await passwordsStore.fetchPasswords()
-      await passwordsStore.fetchFolders()
+      await Promise.all([passwordsStore.fetchPasswords(), passwordsStore.fetchFolders()])
     } catch (error) {
     }
   }

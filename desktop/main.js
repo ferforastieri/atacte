@@ -90,7 +90,7 @@ function createWindow() {
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    openExternalHttp(url);
     return { action: 'deny' };
   });
 
@@ -107,7 +107,7 @@ function createWindow() {
     }
     if (!allowedOrigins.includes(parsedUrl.origin)) {
       event.preventDefault();
-      shell.openExternal(navigationUrl);
+      openExternalHttp(navigationUrl);
     }
   });
 
@@ -147,7 +147,7 @@ ipcMain.handle('show-save-dialog', async (event, options) => {
 });
 
 ipcMain.handle('open-external', async (event, url) => {
-  await shell.openExternal(url);
+  await openExternalHttp(url);
 });
 
 ipcMain.handle('minimize-window', () => {
@@ -192,10 +192,21 @@ app.on('window-all-closed', () => {
 app.on('web-contents-created', (event, contents) => {
   contents.on('new-window', (event, navigationUrl) => {
     event.preventDefault();
-    shell.openExternal(navigationUrl);
+    openExternalHttp(navigationUrl);
   });
 });
 
 process.on('uncaughtException', (error) => {
   console.error('Erro não capturado:', error);
 });
+
+
+// Only web links may be delegated to the operating system. Never launch custom protocols.
+async function openExternalHttp(value) {
+  if (typeof value !== 'string') return;
+  try {
+    const url = new URL(value);
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) return;
+    await shell.openExternal(url.href);
+  } catch { /* Invalid links are ignored. */ }
+}

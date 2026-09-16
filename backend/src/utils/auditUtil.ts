@@ -3,6 +3,7 @@ import { prisma } from '../infrastructure/prisma';
 import { Prisma } from '@prisma/client';
 
 export type AuditAction = 
+  | 'PASSWORD_CHANGED' | 'PASSWORD_RESET_REQUESTED' | 'PASSWORD_RESET_DELIVERY_FAILED' | 'DEVICE_CHALLENGE_SENT' | 'DEVICE_APPROVED' | 'DEVICE_REVOKED' | 'REAUTHENTICATED' | 'SYSTEM_UPDATE_REQUESTED' | 'SYSTEM_CONFIG_CHANGED'
   | 'USER_REGISTERED'
   | 'LOGIN_SUCCESS'
   | 'LOGIN_FAILED'

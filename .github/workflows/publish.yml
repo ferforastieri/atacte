@@ -49,20 +49,6 @@ jobs:
             architecture: arm64
             platform: linux/arm64
             runner: ubuntu-24.04-arm
-          - image: updater
-            image_name: atacte-updater
-            context: updater
-            dockerfile: updater/Dockerfile
-            architecture: amd64
-            platform: linux/amd64
-            runner: ubuntu-latest
-          - image: updater
-            image_name: atacte-updater
-            context: updater
-            dockerfile: updater/Dockerfile
-            architecture: arm64
-            platform: linux/arm64
-            runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     permissions:
@@ -126,7 +112,6 @@ jobs:
         env:
           BACKEND_IMAGE: ${{ env.REGISTRY }}/${{ env.OWNER }}/atacte-backend
           FRONTEND_IMAGE: ${{ env.REGISTRY }}/${{ env.OWNER }}/atacte-frontend
-          UPDATER_IMAGE: ${{ env.REGISTRY }}/${{ env.OWNER }}/atacte-updater
           COMMIT_SHA: ${{ github.sha }}
           REF_NAME: ${{ github.ref_name }}
           REF_TYPE: ${{ github.ref_type }}
@@ -135,20 +120,16 @@ jobs:
 
           backend_sources="${BACKEND_IMAGE}:arch-amd64-${COMMIT_SHA} ${BACKEND_IMAGE}:arch-arm64-${COMMIT_SHA}"
           frontend_sources="${FRONTEND_IMAGE}:arch-amd64-${COMMIT_SHA} ${FRONTEND_IMAGE}:arch-arm64-${COMMIT_SHA}"
-          updater_sources="${UPDATER_IMAGE}:arch-amd64-${COMMIT_SHA} ${UPDATER_IMAGE}:arch-arm64-${COMMIT_SHA}"
 
           backend_tags="${BACKEND_IMAGE}:sha-${COMMIT_SHA}"
           frontend_tags="${FRONTEND_IMAGE}:sha-${COMMIT_SHA}"
-          updater_tags="${UPDATER_IMAGE}:sha-${COMMIT_SHA}"
           if [ "$REF_TYPE" = "branch" ] && [ "$REF_NAME" = "main" ]; then
             backend_tags="$backend_tags ${BACKEND_IMAGE}:latest"
             frontend_tags="$frontend_tags ${FRONTEND_IMAGE}:latest"
-            updater_tags="$updater_tags ${UPDATER_IMAGE}:latest"
           fi
           if [ "$REF_TYPE" = "tag" ]; then
             backend_tags="$backend_tags ${BACKEND_IMAGE}:${REF_NAME}"
             frontend_tags="$frontend_tags ${FRONTEND_IMAGE}:${REF_NAME}"
-            updater_tags="$updater_tags ${UPDATER_IMAGE}:${REF_NAME}"
           fi
 
           for tag in $backend_tags; do
@@ -156,9 +137,6 @@ jobs:
           done
           for tag in $frontend_tags; do
             docker buildx imagetools create --tag "$tag" $frontend_sources
-          done
-          for tag in $updater_tags; do
-            docker buildx imagetools create --tag "$tag" $updater_sources
           done
 
   mobile:
@@ -205,7 +183,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         if: ${{ steps.mobile_changes.outputs.changed == 'true' }}
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: mobile/package-lock.json
       - name: Detect Expo credentials
@@ -272,7 +250,7 @@ jobs:
               --title "Atacte $RELEASE_TAG" \
               --notes $'Instalação rápida:\n\n```bash\ncurl -fsSL https://atacte.vercel.app/install.sh | sh\n```' \
               --generate-notes \
-              docker-compose.yml README.md LICENSE web/public/install.sh updater/Dockerfile updater/go.mod updater/go.sum updater/main.go
+              docker-compose.yml README.md LICENSE web/public/install.sh
           fi
       - name: Download APK artifact when available
         if: ${{ always() && needs.mobile.outputs.apk_available == 'true' }}

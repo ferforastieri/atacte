@@ -1,6 +1,6 @@
-import { PrismaClient, PasswordEntry, CustomField } from '../../../node_modules/.prisma/client';
+import { PasswordEntry, CustomField } from '../../../node_modules/.prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from '../../infrastructure/prisma';
 
 export interface CreatePasswordEntryData {
   userId: string;
@@ -29,6 +29,7 @@ export interface UpdatePasswordEntryData {
   folder?: string;
   isFavorite?: boolean;
   lastUsed?: Date;
+  customFields?: { fieldName: string; encryptedValue: string; fieldType: string }[];
   totpSecret?: string;
   totpEnabled?: boolean;
 }
@@ -88,6 +89,11 @@ export class PasswordRepository {
         customFields: true,
       },
     });
+  }
+
+  async findFolders(userId: string): Promise<string[]> {
+    const rows = await prisma.passwordEntry.groupBy({ by: ['folder'], where: { userId, folder: { not: null } }, orderBy: { folder: 'asc' } });
+    return rows.flatMap(row => row.folder ? [row.folder] : []);
   }
 
   async findByUserId(userId: string): Promise<PasswordEntry[]> {
@@ -170,6 +176,7 @@ export class PasswordRepository {
       where: { id },
       data: {
         ...data,
+        customFields: data.customFields === undefined ? undefined : { deleteMany: {}, create: data.customFields },
         updatedAt: new Date(),
       },
       include: {

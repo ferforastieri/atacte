@@ -15,7 +15,7 @@ export function asAuthenticatedHandler(
       return;
     }
     
-    return handler(req as AuthenticatedRequest, res, next);
+    return Promise.resolve(handler(req as AuthenticatedRequest, res, next)).catch(next);
   };
 }
 

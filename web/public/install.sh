@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+umask 077
 
 RELEASE_REF="${ATACTE_RELEASE_REF:-main}"
 REPOSITORY="${ATACTE_REPOSITORY:-https://raw.githubusercontent.com/ferforastieri/atacte/$RELEASE_REF}"
@@ -26,6 +27,11 @@ download() {
   mv "$tmp" "$2"
 }
 
+
+compose() {
+  docker compose --project-name atacte --project-directory "$INSTALL_DIR" -f "$COMPOSE_FILE" "$@"
+}
+
 download "$REPOSITORY/docker-compose.yml" "$COMPOSE_FILE"
 
 random_hex() {
@@ -50,21 +56,16 @@ fi
 if ! grep -q '^CORS_ORIGIN=' "$ENV_FILE" 2>/dev/null; then
   printf 'CORS_ORIGIN=http://localhost:%s\n' "${FRONT_PORT:-3456}" >> "$ENV_FILE"
 fi
-if ! grep -q '^UPDATER_TOKEN=[^[:space:]]' "$ENV_FILE" 2>/dev/null; then
-  umask 077
-  printf '%s\n' "UPDATER_TOKEN=$(random_hex 32)" >> "$ENV_FILE"
-  echo "Gerado token exclusivo do updater em $ENV_FILE."
-fi
 
-compose() {
-  docker compose --project-name atacte --project-directory "$INSTALL_DIR" -f "$COMPOSE_FILE" "$@"
-}
 
 # Todos os serviços são artefatos publicados. O instalador baixa somente o
 # Compose e nunca depende do código-fonte ou de Dockerfiles no servidor.
-compose pull postgres backend front updater
-compose up -d postgres
+compose pull postgres redis backend front
+compose up -d --wait postgres redis
 compose run --rm --no-deps backend ./node_modules/.bin/prisma migrate deploy --schema=src/infrastructure/prisma/schema.prisma
 compose up -d --no-build --remove-orphans
 echo "Atacte instalado/atualizado em http://localhost:${FRONT_PORT:-3456}"
 echo "Arquivos preservados em $INSTALL_DIR (o volume PostgreSQL não é alterado)."
+
+echo "Na primeira instalação: docker compose --project-directory $INSTALL_DIR exec backend npm run security:allow-registration -- SEU_EMAIL"
+echo "Entre com email e senha. Atualizações são manuais."

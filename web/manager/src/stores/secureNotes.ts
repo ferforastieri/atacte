@@ -184,7 +184,14 @@ export const useSecureNotesStore = defineStore('secureNotes', () => {
     searchFilters.value = { ...searchFilters.value, ...filter }
   }
 
+  const clearData = () => {
+    notes.value = []; currentNote.value = null; folders.value = [];
+    pagination.value = { total: 0, limit: 50, offset: 0, currentPage: 1 };
+    resetFilters()
+  }
+
   return {
+    clearData,
     notes,
     currentNote,
     folders,

@@ -61,8 +61,8 @@ router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
       query: queryParams['query'] as string | undefined,
       folder: queryParams['folder'] as string | undefined,
       isFavorite: queryParams['isFavorite'] ? queryParams['isFavorite'] === 'true' : undefined,
-      limit: queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50,
-      offset: queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0,
+      limit: queryParams['limit'] ? Math.min(100, Math.max(1, parseInt(queryParams['limit'] as string) || 50)) : 50,
+      offset: queryParams['offset'] ? Math.min(1000000, Math.max(0, parseInt(queryParams['offset'] as string) || 0)) : 0,
       sortBy: (sortByValue === 'title' || sortByValue === 'createdAt' || sortByValue === 'updatedAt') ? (sortByValue as 'title' | 'createdAt' | 'updatedAt') : ('title' as const),
       sortOrder: (sortOrderValue === 'asc' || sortOrderValue === 'desc') ? (sortOrderValue as 'asc' | 'desc') : ('asc' as const)
     };

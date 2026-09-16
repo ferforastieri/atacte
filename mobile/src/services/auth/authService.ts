@@ -6,7 +6,6 @@ interface LoginRequest {
   email: string;
   masterPassword: string;
   deviceName?: string;
-  deviceFingerprint?: string;
 }
 
 interface RegisterRequest {
@@ -25,7 +24,6 @@ interface AuthResponse {
       profilePicture?: string;
       role?: 'USER' | 'ADMIN';
     };
-    requiresTrust?: boolean;
     sessionId?: string;
   };
   message?: string;
@@ -61,7 +59,7 @@ class AuthService {
   }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    await this.clearLocalSession();
+    await AsyncStorage.removeItem('user');
     
     const response = await this.makeRequest('/auth/login', {
       method: 'POST',
@@ -137,13 +135,6 @@ class AuthService {
     });
   }
 
-  async trustDevice(sessionId: string): Promise<AuthResponse> {
-    return this.makeRequest('/auth/trust-device', {
-      method: 'POST',
-      data: { sessionId },
-    });
-  }
-
   async getSessions(limit = 10, offset = 0): Promise<any> {
     const params = new URLSearchParams({
       limit: limit.toString(),
@@ -158,12 +149,7 @@ class AuthService {
     });
   }
 
-  async untrustDevice(deviceName: string): Promise<any> {
-    return this.makeRequest('/auth/untrust-device', {
-      method: 'POST',
-      data: { deviceName },
-    });
-  }
+
 }
 
 export const authService = new AuthService();

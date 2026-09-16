@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { NODE_ENV } from '../config';
 
 
 class PrismaService {
@@ -10,7 +9,7 @@ class PrismaService {
   public static getInstance(): PrismaClient {
     if (!PrismaService.instance) {
       PrismaService.instance = new PrismaClient({
-        log: NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
+        log: [], // Query/error logging can expose user-supplied secrets.
         errorFormat: 'pretty',
       });
 

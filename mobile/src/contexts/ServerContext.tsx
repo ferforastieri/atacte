@@ -27,6 +27,8 @@ export function normalizeServerUrl(value: string): string {
     throw new Error('Use uma URL iniciada por http:// ou https://');
   }
 
+  if (parsed.username || parsed.password) throw new Error('Não inclua credenciais na URL do servidor');
+
   if (!parsed.hostname) {
     throw new Error('Informe um endereço de servidor válido');
   }
@@ -46,6 +48,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(SERVER_URL_STORAGE_KEY)
       .then(setServerUrl)
+      .catch(() => setServerUrl(null))
       .finally(() => setIsLoading(false));
   }, []);
 

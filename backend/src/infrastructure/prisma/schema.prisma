@@ -38,23 +38,8 @@ model User {
   auditLogs            AuditLog[]
   preferences          UserPreferences?
   passwordResetTokens  PasswordResetToken[]
-  trustedDevices       TrustedDevice[]
   
   @@map("users")
-}
-
-model TrustedDevice {
-  id              String   @id @default(cuid())
-  userId          String   @map("user_id")
-  deviceName      String   @map("device_name")
-  deviceFingerprint String? @map("device_fingerprint")
-  createdAt       DateTime @default(now()) @map("created_at")
-  lastUsed        DateTime @default(now()) @map("last_used")
-  
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, deviceFingerprint])
-  @@map("trusted_devices")
 }
 
 model PasswordEntry {
@@ -77,6 +62,7 @@ model PasswordEntry {
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   customFields      CustomField[]
   
+  @@index([userId, name])
   @@map("password_entries")
 }
 
@@ -90,6 +76,7 @@ model CustomField {
   
   passwordEntry     PasswordEntry @relation(fields: [passwordEntryId], references: [id], onDelete: Cascade)
   
+  @@index([passwordEntryId])
   @@map("custom_fields")
 }
 
@@ -106,6 +93,7 @@ model SecureNote {
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId, createdAt])
+  @@index([userId, title])
   @@map("secure_notes")
 }
 
@@ -118,12 +106,14 @@ model UserSession {
   ipAddress       String?   @map("ip_address")
   userAgent       String?   @map("user_agent")
   expiresAt       DateTime? @map("expires_at")
-  isTrusted       Boolean   @default(false) @map("is_trusted")
+  reauthenticatedAt DateTime? @map("reauthenticated_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   lastUsed        DateTime  @default(now()) @map("last_used")
   
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  @@index([userId, tokenHash])
+  @@index([userId, lastUsed])
   @@map("user_sessions")
 }
 
@@ -140,6 +130,7 @@ model AuditLog {
   
   user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   
+  @@index([userId, createdAt])
   @@map("audit_logs")
 }
 
@@ -168,4 +159,12 @@ model PasswordResetToken {
   @@index([token])
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+model SecurityState {
+  id Int @id
+  initialized Boolean @default(false)
+  bootstrapEmail String?
+  bootstrapExpiresAt DateTime?
+  @@map("security_state")
 }

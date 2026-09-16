@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - atacte-network
+      - data-network
     healthcheck:
       test:
         [
@@ -25,6 +25,23 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7.4-alpine
+    container_name: atacte-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - data-network
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/ferforastieri/atacte-backend:latest}
     build:
@@ -33,6 +50,7 @@ services:
     container_name: atacte-backend
     restart: unless-stopped
     environment:
+      REDIS_URL: redis://redis:6379
       DATABASE_URL: postgresql://${POSTGRES_USER:-atacte}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-atacte}?sslmode=disable
       PORT: 3001
       NODE_ENV: production
@@ -62,18 +80,21 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Atacte}
       PASSWORD_RESET_URL: ${PASSWORD_RESET_URL:-}
-      UPDATER_URL: ${UPDATER_URL:-http://atacte-updater:8080}
-      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
     ports:
-      # The reverse proxy may run in another container/VM (for example Caddy
-      # in a separate Proxmox CT), so the API must listen on the host network.
-      # Restrict this port with the host firewall to the proxy network.
-      - "${BACKEND_BIND:-0.0.0.0}:${BACKEND_PORT:-3457}:3001"
+      # Set BACKEND_BIND explicitly only when a trusted external proxy needs it.
+      - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-3457}:3001"
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     networks:
       - atacte-network
+      - data-network
 
   front:
     image: ${FRONT_IMAGE:-ghcr.io/ferforastieri/atacte-frontend:latest}
@@ -85,43 +106,19 @@ services:
     container_name: atacte-front
     restart: unless-stopped
     ports:
-      - "${FRONT_PORT:-3456}:80"
+      - "${FRONT_BIND:-127.0.0.1}:${FRONT_PORT:-3456}:80"
     depends_on:
       - backend
     networks:
       - atacte-network
 
-  updater:
-    image: ${UPDATER_IMAGE:-ghcr.io/ferforastieri/atacte-updater:latest}
-    build:
-      context: ./updater
-    container_name: atacte-updater
-    restart: unless-stopped
-    init: true
-    read_only: true
-    tmpfs:
-      - "/tmp:rw,noexec,nosuid,size=16m"
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    environment:
-      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
-      ATACTE_INSTALL_DIR: ${ATACTE_INSTALL_DIR:-/workspace}
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/workspace:rw
-    networks:
-      - atacte-network
 
 networks:
+  data-network:
+    internal: true
   atacte-network:
     driver: bridge
 
 volumes:
+  redis_data:
   postgres_data:

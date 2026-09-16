@@ -70,7 +70,6 @@ function MainTabNavigator() {
 
   return (
     <Tab.Navigator
-      key={user?.profilePicture || 'default'}
       screenOptions={({ route }) => {
         return {
           tabBarIcon: ({ focused, color, size }) => {
@@ -187,7 +186,7 @@ export default function AppNavigator() {
   const { isDark } = useTheme();
 
   if (isLoading || isServerLoading) {
-    return <SkeletonLoader variant="default" />;
+    return <SkeletonLoader variant="dashboard" />;
   }
 
   if (!serverUrl) {

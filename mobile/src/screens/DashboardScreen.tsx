@@ -1,3 +1,5 @@
+import { secureRandomInt } from '../utils/secureRandom';
+import { useAuth } from '../contexts/AuthContext';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,7 +37,7 @@ export default function DashboardScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [user, setUser] = useState<{ id: string; email: string; name?: string } | null>(null);
+  const { user } = useAuth();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPasswordGeneratorModal, setShowPasswordGeneratorModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -57,6 +59,8 @@ export default function DashboardScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentOffset, setCurrentOffset] = useState(0);
+  const requestGeneration = useRef(0);
+  const loadingPage = useRef(false);
   const activeSearchQuery = useRef('');
   const { isDark, toggleTheme } = useTheme();
 
@@ -249,16 +253,14 @@ export default function DashboardScreen() {
   });
 
   useEffect(() => {
-    loadUser();
     loadPasswords();
   }, []);
 
-  const loadUser = async () => {
-    const userData = await authService.getStoredUser();
-    setUser(userData);
-  };
-
   const loadPasswords = useCallback(async (offset = 0, append = false, query = activeSearchQuery.current) => {
+    if (append && loadingPage.current) return;
+    if (!append) requestGeneration.current++;
+    const generation = requestGeneration.current;
+    loadingPage.current = true;
     if (offset === 0) {
       setIsLoading(true);
     } else {
@@ -272,6 +274,7 @@ export default function DashboardScreen() {
         limit: 50,
       });
       
+      if (generation !== requestGeneration.current) return;
       if (response.success && response.data) {
         if (append) {
           setPasswords(prev => {
@@ -300,15 +303,19 @@ export default function DashboardScreen() {
         setHasMore(false);
       }
     } catch (error) {
+      if (generation !== requestGeneration.current) return;
       if (!append) {
         setPasswords([]);
       }
       setHasMore(false);
       Alert.alert('Erro', 'Erro ao carregar senhas');
     } finally {
+      if (generation === requestGeneration.current) {
+      loadingPage.current = false;
       setIsLoading(false);
       setIsLoadingMore(false);
       setIsRefreshing(false);
+      }
     }
   }, []);
 
@@ -410,7 +417,7 @@ export default function DashboardScreen() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     let secret = '';
     for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(Math.floor(Math.random() * chars.length));
+      secret += chars.charAt(secureRandomInt(chars.length));
     }
     setFormData({ ...formData, totpSecret: secret });
   };

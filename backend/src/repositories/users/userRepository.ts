@@ -1,6 +1,6 @@
-import { PrismaClient, User } from '../../../node_modules/.prisma/client';
+import { User } from '../../../node_modules/.prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from '../../infrastructure/prisma';
 
 export interface UpdateUserData {
   email?: string;
@@ -26,6 +26,10 @@ export class UserRepository {
     return await prisma.user.findUnique({
       where: { email },
     });
+  }
+
+  async updateProfile(id: string, data: { name?: string; phoneNumber?: string; profilePicture?: string }): Promise<User> {
+    return prisma.user.update({ where: { id }, data: { name: data.name, phoneNumber: data.phoneNumber, profilePicture: data.profilePicture } });
   }
 
   async update(id: string, data: UpdateUserData): Promise<User> {

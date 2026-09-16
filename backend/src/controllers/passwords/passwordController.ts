@@ -1,3 +1,4 @@
+import { prisma } from '../../infrastructure/prisma';
 import { Router } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { authenticateToken } from '../../middleware/auth';
@@ -93,6 +94,18 @@ const searchValidation = [
 router.use(authenticateToken);
 
 
+router.get('/counts', asAuthenticatedHandler(async (req, res) => {
+  const rows = await prisma.passwordEntry.groupBy({
+    by: ['isFavorite', 'totpEnabled'], where: { userId: req.user.id }, _count: { _all: true }
+  });
+  const counts = rows.reduce((result, row) => ({
+    total: result.total + row._count._all,
+    favorites: result.favorites + (row.isFavorite ? row._count._all : 0),
+    totp: result.totp + (row.totpEnabled ? row._count._all : 0)
+  }), { total: 0, favorites: 0, totp: 0 });
+  res.json({ success: true, data: counts });
+}));
+
 router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -113,8 +126,8 @@ router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
       folder: queryParams['folder'] as string | undefined,
       isFavorite: queryParams['isFavorite'] ? queryParams['isFavorite'] === 'true' : undefined,
       totpEnabled: queryParams['totpEnabled'] ? queryParams['totpEnabled'] === 'true' : undefined,
-      limit: queryParams['limit'] ? parseInt(queryParams['limit'] as string) : 50,
-      offset: queryParams['offset'] ? parseInt(queryParams['offset'] as string) : 0,
+      limit: queryParams['limit'] ? Math.min(100, Math.max(1, parseInt(queryParams['limit'] as string) || 50)) : 50,
+      offset: queryParams['offset'] ? Math.min(1000000, Math.max(0, parseInt(queryParams['offset'] as string) || 0)) : 0,
       sortBy: (sortByValue === 'name' || sortByValue === 'createdAt' || sortByValue === 'updatedAt' || sortByValue === 'lastUsed') ? (sortByValue as 'name' | 'createdAt' | 'updatedAt' | 'lastUsed') : ('name' as const),
       sortOrder: (sortOrderValue === 'asc' || sortOrderValue === 'desc') ? (sortOrderValue as 'asc' | 'desc') : ('asc' as const)
     };
@@ -129,6 +142,40 @@ router.get('/', searchValidation, asAuthenticatedHandler(async (req, res) => {
         total: result.total,
         limit: filters.limit,
         offset: filters.offset
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
+}));
+
+
+router.get('/generate', asAuthenticatedHandler(async (req, res) => {
+  try {
+    const queryParams = req.query;
+    const options = {
+      length: queryParams['length'] ? parseInt(queryParams['length'] as string) : 16,
+      includeUppercase: queryParams['includeUppercase'] !== 'false',
+      includeLowercase: queryParams['includeLowercase'] !== 'false',
+      includeNumbers: queryParams['includeNumbers'] !== 'false',
+      includeSymbols: queryParams['includeSymbols'] !== 'false',
+    };
+
+    if (!Number.isInteger(options.length) || options.length < 1 || options.length > 128) {
+      res.status(400).json({ success: false, message: 'Comprimento deve estar entre 1 e 128' });
+      return;
+    }
+    const generatedPassword = await passwordService.generateSecurePassword(options);
+
+    res.json({
+      success: true,
+      message: 'Senha gerada com sucesso',
+      data: {
+        password: generatedPassword.password,
+        strength: generatedPassword.strength
       }
     });
   } catch (error) {
@@ -283,34 +330,6 @@ router.delete('/:id', asAuthenticatedHandler(async (req, res) => {
 }));
 
 
-router.get('/generate', asAuthenticatedHandler(async (req, res) => {
-  try {
-    const queryParams = req.query;
-    const options = {
-      length: queryParams['length'] ? parseInt(queryParams['length'] as string) : 16,
-      includeUppercase: queryParams['includeUppercase'] !== 'false',
-      includeLowercase: queryParams['includeLowercase'] !== 'false',
-      includeNumbers: queryParams['includeNumbers'] !== 'false',
-      includeSymbols: queryParams['includeSymbols'] !== 'false',
-    };
-
-    const generatedPassword = await passwordService.generateSecurePassword(options);
-
-    res.json({
-      success: true,
-      message: 'Senha gerada com sucesso',
-      data: {
-        password: generatedPassword.password,
-        strength: generatedPassword.strength
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
-  }
-}));
 
 
 export default router;

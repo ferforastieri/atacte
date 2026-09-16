@@ -6,9 +6,9 @@ Este arquivo é o roteiro operacional para agentes que precisam instalar, atuali
 
 - Confirme com o usuário se o objetivo é **produção** ou **desenvolvimento** quando isso não estiver explícito.
 - Não sobrescreva um `.env` existente e não remova volumes Docker.
-- Antes de atualizar uma instalação existente, faça um backup lógico do PostgreSQL.
-- Nunca mostre em logs ou respostas os valores de `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY` ou `UPDATER_TOKEN`.
-- Não exponha PostgreSQL (`5435`) nem o updater à internet. Restrinja a porta da API (`3457`) à rede do reverse proxy.
+- Backup lógico é opcional; não exija nem execute backup automático antes de atualizar. Preserve o volume PostgreSQL e o `.env` existentes.
+- Nunca mostre em logs ou respostas os valores de `POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY`.
+- Não exponha PostgreSQL (`5435`) nem Redis à internet. Restrinja a porta da API (`3457`) à rede do reverse proxy.
 - A primeira conta administrativa precisa ser criada por uma pessoa no navegador; não automatize credenciais do cofre.
 
 ## Escolha rápida
@@ -17,7 +17,7 @@ Este arquivo é o roteiro operacional para agentes que precisam instalar, atuali
 | --- | --- |
 | Executar o Atacte em um servidor | Instalador com Docker, descrito abaixo |
 | Alterar ou testar o código | Ambiente de desenvolvimento |
-| Atualizar uma instalação | Backup, `docker compose pull` e `docker compose up` |
+| Atualizar uma instalação | `docker compose pull`, migrations e `docker compose up` |
 | Diagnosticar uma instalação | Checklist de validação e logs |
 
 ## Instalação de servidor com Docker
@@ -43,7 +43,7 @@ O instalador:
 - cria `~/.atacte` ou o diretório definido em `ATACTE_DIR`;
 - preserva `.env` e o volume PostgreSQL existentes;
 - gera os segredos ausentes com permissão `0600`;
-- baixa as imagens de PostgreSQL, backend, frontend e updater;
+- baixa as imagens de PostgreSQL, Redis, backend e frontend;
 - aplica as migrations versionadas com `prisma migrate deploy`;
 - publica o manager em `http://localhost:3456` e a API em `3457`.
 
@@ -64,12 +64,12 @@ curl -fsS http://localhost:3457/health
 curl -fsS http://localhost:3456/ >/dev/null
 ```
 
-Resultado esperado: `postgres`, `backend`, `front` e `updater` em execução; o health check da API deve retornar sucesso. Depois, informe ao usuário que ele deve abrir `http://localhost:3456` e criar a primeira conta.
+Resultado esperado: `postgres`, `redis`, `backend` e `front` em execução; o health check da API deve retornar sucesso. Para a primeira conta, autorize o email informado pela pessoa com `docker compose exec backend npm run security:allow-registration -- EMAIL`; ela deve abrir `http://localhost:3456` e concluir o cadastro no navegador em até 15 minutos. Instalações existentes não precisam dessa autorização.
 
 Se a validação falhar, colete somente logs sem segredos:
 
 ```sh
-docker compose logs --tail=100 postgres backend front updater
+docker compose logs --tail=100 postgres redis backend front
 ```
 
 Não inclua o conteúdo de `.env` no diagnóstico.
@@ -96,17 +96,19 @@ O reverse proxy deve encaminhar o domínio público para o frontend na porta `34
 
 ## Atualização e backup
 
-Crie o backup antes de atualizar:
+Se desejar um backup manual, execute:
 
 ```sh
 cd ~/.atacte
 docker compose exec -T postgres pg_dump -U atacte -d atacte > atacte-backup.sql
 ```
 
-Confirme que o arquivo existe e não está vazio. Em seguida:
+Se optar pelo backup, confirme que o arquivo existe e não está vazio. A atualização independe desse passo:
 
 ```sh
-docker compose pull backend front updater
+docker compose pull backend front redis
+docker compose up -d --wait postgres redis
+docker compose run --rm --no-deps backend ./node_modules/.bin/prisma migrate deploy --schema=src/infrastructure/prisma/schema.prisma
 docker compose up -d --no-build --remove-orphans
 curl -fsS http://localhost:3457/health
 ```
@@ -115,19 +117,18 @@ O instalador também pode ser executado novamente. Ele preserva o `.env` e o vol
 
 ### Fixar uma release
 
-`ATACTE_RELEASE_REF` escolhe a revisão do `docker-compose.yml`; ele não fixa sozinho as imagens. Para manter uma versão, grave no `.env` as três tags correspondentes:
+`ATACTE_RELEASE_REF` escolhe a revisão do `docker-compose.yml`; ele não fixa sozinho as imagens. Para manter uma versão, grave no `.env` as duas tags correspondentes:
 
 ```env
 BACKEND_IMAGE=ghcr.io/ferforastieri/atacte-backend:vX.Y.Z
 FRONT_IMAGE=ghcr.io/ferforastieri/atacte-frontend:vX.Y.Z
-UPDATER_IMAGE=ghcr.io/ferforastieri/atacte-updater:vX.Y.Z
 ```
 
 Substitua `vX.Y.Z` por uma tag existente na página de releases. Não invente uma tag. Depois execute `docker compose pull` e `docker compose up -d --no-build --remove-orphans`.
 
 ## Ambiente de desenvolvimento
 
-Requisitos: Node.js 20, npm, Docker Compose v2 e Go 1.24 apenas para trabalhar no updater.
+Requisitos: Node.js 24, npm, Docker Compose v2 e Redis.
 
 ### 1. Instale as dependências
 
@@ -193,8 +194,15 @@ npm --prefix backend test
 npm --prefix web run type-check
 npm --prefix web run build
 (cd mobile && npx tsc --noEmit)
-(cd updater && go test ./...)
 docker compose config --quiet
 ```
 
 Ao finalizar, relate o modo usado, o endereço de acesso, os checks executados e qualquer etapa manual restante. Nunca inclua segredos na resposta.
+
+## Autenticação e Redis
+
+Use [SECURITY_DEPLOYMENT.md](SECURITY_DEPLOYMENT.md) para a autorização inicial por email. A pessoa cria a conta no navegador; o agente não automatiza credenciais do cofre. A autorização no servidor é temporária e não exige envio de email nem código.
+
+O Compose atual não inclui atualizador nem socket Docker. Atualizações são manuais, com backup opcional. Redis não publica porta e usa rede interna. Para desenvolvimento fora dos containers, execute uma instância Redis dedicada em loopback e configure `REDIS_URL`.
+
+A migração de segurança encerra sessões antigas. O login usa email e senha; a biometria é uma opção local no aplicativo mobile.

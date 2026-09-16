@@ -1,20 +1,6 @@
 import api from './index'
-
+export interface UpdateInfo { currentVersion: string; latestVersion: string | null; updateAvailable: boolean; releaseUrl: string | null }
 export default {
-  async version(): Promise<string> {
-    const response = await api.get<{ data: { version: string } }>('/version')
-    return response.data.data.version
-  },
-  async update() {
-    const response = await api.post('/update', undefined, { headers: { 'X-Silent-Toast': 'true' } })
-    return response.data
-  },
-  async getConfig(): Promise<{ values: Record<string, string>; secretFields: string[] }> {
-    const response = await api.get('/config')
-    return response.data.data
-  },
-  async saveConfig(values: Record<string, string>) {
-    const response = await api.put('/config', { values })
-    return response.data
-  },
+  async version(): Promise<string> { return (await api.get('/version')).data.data.version },
+  async updates(): Promise<UpdateInfo> { return (await api.get('/updates', { headers: { 'X-Silent-Toast': 'true' } })).data.data },
 }

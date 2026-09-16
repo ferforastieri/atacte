@@ -68,7 +68,7 @@ import { LockClosedIcon, EnvelopeIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import authApi from '@/api/auth'
 import { BaseButton, BaseInput, BaseCard, Logo } from '@/components/ui'
-import { getDeviceFingerprint, getDeviceName } from '@/utils/deviceFingerprint'
+import { getDeviceName } from '@/utils/deviceName'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -97,26 +97,13 @@ const handleLogin = async () => {
 
   try {
     const deviceName = getDeviceName()
-    const deviceFingerprint = await getDeviceFingerprint()
     const response = await authStore.login({
       email: form.email,
       masterPassword: form.masterPassword,
       deviceName: deviceName,
-      deviceFingerprint: deviceFingerprint
     })
 
-    if (response?.data?.requiresTrust) {
-      const event = new CustomEvent('device-trust-required', {
-        detail: {
-          sessionId: response.data.sessionId,
-          deviceName: deviceName,
-          ipAddress: 'Desconhecido'
-        }
-      })
-      window.dispatchEvent(event)
-      isLoading.value = false
-      return
-    }
+
 
     if (response?.success && response?.data) {
       if (authStore.isAuthenticated) {

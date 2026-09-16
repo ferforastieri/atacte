@@ -59,10 +59,13 @@
             <pre class="overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300 shadow-inner dark:border-gray-600 dark:bg-black dark:text-green-200"><code>curl -fsSL https://atacte.vercel.app/install.sh | sh</code></pre>
             <ol class="mt-5 grid gap-3 text-sm leading-6 text-gray-600 dark:text-gray-400 sm:grid-cols-3">
               <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">1. Arquivos</strong><code class="font-mono">~/.atacte</code> recebe Compose e segredos.</li>
-              <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">2. Serviços</strong>PostgreSQL, API, manager e updater iniciam.</li>
-              <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">3. Primeiro acesso</strong>Abra <code class="font-mono">localhost:3456</code> e crie o administrador.</li>
+              <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">2. Serviços</strong>PostgreSQL, Redis, API e manager iniciam.</li>
+              <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">3. Primeiro acesso</strong>Autorize o email no servidor e crie o administrador no navegador.</li>
             </ol>
-            <p class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">O caminho rápido acompanha as imagens <code class="font-mono text-primary-700 dark:text-primary-300">latest</code>. Para fixar uma versão, configure as três imagens com a mesma tag; consulte o <a href="#agentes" class="font-medium text-primary-700 hover:text-primary-600 dark:text-primary-300">guia para agentes</a>.</p>
+            <p class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">Somente para uma instalação vazia, autorize o email por 15 minutos e depois abra <code class="font-mono">http://localhost:3456</code> para criar a conta manualmente:</p>
+            <pre class="mt-4 overflow-x-auto rounded-lg bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300"><code>cd ~/.atacte
+docker compose exec backend npm run security:allow-registration -- seu@email.com</code></pre>
+            <p class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">O caminho rápido acompanha as imagens <code class="font-mono text-primary-700 dark:text-primary-300">latest</code>. Para fixar uma versão, configure as imagens de backend e frontend com a mesma tag; consulte o <a href="#agentes" class="font-medium text-primary-700 hover:text-primary-600 dark:text-primary-300">guia para agentes</a>.</p>
           </div>
         </div>
       </section>
@@ -72,7 +75,7 @@
         <div class="mt-2 grid gap-8 lg:grid-cols-[.7fr_1.3fr]">
           <div>
             <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Local primeiro, HTTPS depois.</h2>
-            <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">A instalação inicial funciona em HTTP local. Antes de publicar o cofre, configure domínio, cookies seguros e confiança no reverse proxy.</p>
+            <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">Edite as opções no .env do servidor e aplique com docker compose up -d. A instalação inicial funciona em HTTP local. Antes de publicar o cofre, configure domínio, cookies seguros e confiança no reverse proxy.</p>
             <pre class="mt-5 overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300 shadow-inner dark:border-gray-600 dark:bg-black dark:text-green-200"><code>CORS_ORIGIN=https://cofre.exemplo.com
 COOKIE_SECURE=true
 COOKIE_SAME_SITE=lax
@@ -100,7 +103,7 @@ docker compose ps
 curl -fsS http://localhost:3457/health
 curl -fsS http://localhost:3456/ &gt;/dev/null</code></pre>
             <div class="rounded-lg border border-amber-200 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-950">
-              <p class="text-sm leading-7 text-gray-700 dark:text-gray-300">Se algo falhar, execute <code class="font-mono">docker compose logs --tail=100 postgres backend front updater</code>. Não compartilhe o conteúdo do <code class="font-mono">.env</code>.</p>
+              <p class="text-sm leading-7 text-gray-700 dark:text-gray-300">Se algo falhar, execute <code class="font-mono">docker compose logs --tail=100 postgres redis backend front</code>. Não compartilhe o conteúdo do <code class="font-mono">.env</code>.</p>
             </div>
           </div>
         </div>
@@ -111,14 +114,16 @@ curl -fsS http://localhost:3456/ &gt;/dev/null</code></pre>
         <div class="mt-2 grid gap-6 lg:grid-cols-[.7fr_1.3fr]">
           <div>
             <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Atualize com migrations versionadas.</h2>
-            <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">O updater pode ser acionado pelo manager ou pelo host. Faça backup antes de trocar imagens.</p>
+            <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">Web e mobile avisam quando há uma nova versão do servidor, com link para a release. A atualização é manual. Backup é opcional; preserve o volume PostgreSQL e o arquivo .env ao trocar imagens.</p>
           </div>
           <div>
             <pre class="overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300 shadow-inner dark:border-gray-600 dark:bg-black dark:text-green-200"><code>cd ~/.atacte
-docker compose pull backend front updater
+docker compose pull backend front redis
+docker compose up -d --wait postgres redis
+docker compose run --rm --no-deps backend ./node_modules/.bin/prisma migrate deploy --schema=src/infrastructure/prisma/schema.prisma
 docker compose up -d --no-build --remove-orphans
 curl -fsS http://localhost:3457/health</code></pre>
-            <p class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">As migrations usam <code class="font-mono text-primary-700 dark:text-primary-300">prisma migrate deploy</code> e não removem o volume PostgreSQL.</p>
+            <p class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">As migrations usam <code class="font-mono text-primary-700 dark:text-primary-300">prisma migrate deploy</code> e não removem o volume PostgreSQL. A migração de segurança encerra sessões antigas e remove a aprovação de dispositivos; contas, senhas e notas são preservadas. Entre novamente com email e senha, mantendo a mesma chave de criptografia.</p>
           </div>
         </div>
       </section>
@@ -127,8 +132,8 @@ curl -fsS http://localhost:3457/health</code></pre>
         <p class="text-sm font-semibold text-primary-600 dark:text-primary-400">06 · Continuidade</p>
         <div class="mt-2 grid gap-6 lg:grid-cols-[.7fr_1.3fr]">
           <div>
-            <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Faça backup antes de mudar.</h2>
-            <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">Um dump lógico facilita testar restaurações e migrar para outro host. Guarde-o em mídia criptografada.</p>
+            <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Backup manual, se desejar.</h2>
+            <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">Backup é opcional: o instalador não executa nem exige esse passo. Se optar por um dump lógico, guarde-o em mídia criptografada.</p>
           </div>
           <pre class="overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300 shadow-inner dark:border-gray-600 dark:bg-black dark:text-green-200"><code>cd ~/.atacte
 docker compose exec -T postgres pg_dump -U atacte -d atacte &gt; atacte-backup.sql
@@ -156,6 +161,12 @@ test -s atacte-backup.sql</code></pre>
         </div>
       </section>
 
+      <section id="biometria" class="border-t border-gray-200 py-12 dark:border-gray-700 sm:py-16">
+        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Biometria opcional no celular.</h2>
+        <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">O login usa email e senha da conta. No mobile, ative Configurações → Desbloquear com biometria para bloquear o aplicativo ao abrir ou retornar a ele. A opção começa desativada e também permite desbloquear confirmando a senha no servidor. A biometria protege o acesso local ao aplicativo; não é um segundo fator no servidor.</p>
+        <p class="mt-3 leading-7 text-gray-600 dark:text-gray-400">É necessária uma nova build nativa com o módulo de biometria, seguida de validação no aparelho. Em Sessões, você continua podendo revisar e desconectar acessos. Email permanece opcional para recuperação de senha. Redis mantém os limites de requisições e tentativas de login e o cache de atualizações.</p>
+      </section>
+
       <section id="seguranca" class="border-t border-gray-200 py-12 dark:border-gray-700 sm:py-16">
         <p class="text-sm font-semibold text-primary-600 dark:text-primary-400">08 · Segurança</p>
         <div class="mt-2 grid gap-6 lg:grid-cols-[.7fr_1.3fr]">
@@ -163,7 +174,7 @@ test -s atacte-backup.sql</code></pre>
           <div class="rounded-lg border border-green-200 bg-green-50 p-5 dark:border-green-900 dark:bg-green-950">
             <div class="flex gap-3">
               <ShieldCheckIcon class="h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" />
-              <p class="text-sm leading-7 text-gray-700 dark:text-gray-300">Use HTTPS, não exponha PostgreSQL ou updater e faça backups criptografados. As sessões usam cookies HttpOnly e CSRF. Mantenha <code class="font-mono">POSTGRES_PASSWORD</code>, <code class="font-mono">JWT_SECRET</code>, <code class="font-mono">ENCRYPTION_KEY</code> e <code class="font-mono">UPDATER_TOKEN</code> fora do repositório e dos logs.</p>
+              <p class="text-sm leading-7 text-gray-700 dark:text-gray-300">Use HTTPS e não exponha PostgreSQL ou Redis. Se fizer backups, mantenha-os criptografados. As sessões usam cookies HttpOnly e CSRF. Mantenha <code class="font-mono">POSTGRES_PASSWORD</code>, <code class="font-mono">JWT_SECRET</code>, <code class="font-mono">ENCRYPTION_KEY</code> fora do repositório e dos logs.</p>
             </div>
           </div>
         </div>

@@ -3,13 +3,12 @@ import { View, Text, ScrollView, Alert, StyleSheet, Platform } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Device from 'expo-device';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getDeviceFingerprint, getDeviceName } from '../utils/deviceFingerprint';
+import { getDeviceName } from '../utils/deviceName';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Card, Logo } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
-import { useTrustDevice } from '../contexts/TrustDeviceContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -19,7 +18,6 @@ export default function LoginScreen() {
   const { login, register } = useAuth();
   const { isDark } = useTheme();
   const navigation = useNavigation();
-  const { showTrustModal } = useTrustDevice();
 
 
   const handleLogin = async () => {
@@ -30,14 +28,9 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       const deviceName = await getDeviceName();
-      const deviceFingerprint = await getDeviceFingerprint();
-      const result = await login(email, masterPassword, deviceName, deviceFingerprint);
+      const result = await login(email, masterPassword, deviceName);
       
-      if (result.requiresTrust && result.sessionId) {
-        showTrustModal(result.sessionId, deviceName, 'Desconhecido');
-        setIsLoading(false);
-        return;
-      }
+
       
       if (result.success) {
       } else {
@@ -49,21 +42,7 @@ export default function LoginScreen() {
   };
 
   const handleRegister = async () => {
-    if (!email || !masterPassword) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await register(email, masterPassword);
-      
-      if (result.success) {
-      } else {
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
-    }
+    Alert.alert('Instalação inicial', 'Crie a primeira conta no navegador depois de autorizar o email no servidor.');
   };
 
   const styles = StyleSheet.create({

@@ -1,3 +1,4 @@
+import { secureRandomInt } from './secureRandom';
 export interface PasswordGeneratorOptions {
   length: number;
   includeUppercase: boolean;
@@ -202,7 +203,7 @@ export class PasswordGenerator {
 
     const selectedWords = [];
     for (let i = 0; i < wordCount; i++) {
-      const randomWord = words[Math.floor(Math.random() * words.length)];
+      const randomWord = words[secureRandomInt(words.length)];
       selectedWords.push(capitalize ? this.capitalizeFirst(randomWord) : randomWord);
     }
 
@@ -249,13 +250,13 @@ export class PasswordGenerator {
 
   
   private getRandomChar(chars: string): string {
-    return chars[Math.floor(Math.random() * chars.length)];
+    return chars[secureRandomInt(chars.length)];
   }
 
   private shuffleArray<T>(array: T[]): T[] {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = secureRandomInt((i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;

@@ -183,14 +183,7 @@ export class SecureNoteService {
   }
 
   async getUserFolders(userId: string): Promise<string[]> {
-    const notes = await this.secureNoteRepository.findByUserId(userId);
-    
-    const folders = notes
-      .map(item => item.folder)
-      .filter(folder => folder)
-      .sort();
-    
-    return [...new Set(folders)] as string[];
+    return this.secureNoteRepository.findFolders(userId);
   }
 
   private async decryptSecureNote(note: SecureNote, encryptionKey: string): Promise<SecureNoteDto> {

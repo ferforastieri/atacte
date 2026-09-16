@@ -1,3 +1,4 @@
+import { secureRandomInt } from '../utils/secureRandom';
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -187,7 +188,7 @@ export default function PasswordDetailScreen() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     let secret = '';
     for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(Math.floor(Math.random() * chars.length));
+      secret += chars.charAt(secureRandomInt(chars.length));
     }
     setFormData({ ...formData, totpSecret: secret });
   };
