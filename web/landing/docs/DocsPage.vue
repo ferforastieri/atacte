@@ -56,7 +56,7 @@
             <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">O instalador cria os segredos ausentes, baixa as imagens publicadas, aplica migrations e preserva o banco e o <code class="font-mono text-primary-700 dark:text-primary-300">.env</code> nas próximas execuções.</p>
           </div>
           <div>
-            <pre class="overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300 shadow-inner dark:border-gray-600 dark:bg-black dark:text-green-200"><code>curl -fsSL https://atacte.vercel.app/install.sh | sh</code></pre>
+            <pre class="overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300 shadow-inner dark:border-gray-600 dark:bg-black dark:text-green-200"><code>curl -fsSL https://atacte.vira.ia.br/install.sh | sh</code></pre>
             <ol class="mt-5 grid gap-3 text-sm leading-6 text-gray-600 dark:text-gray-400 sm:grid-cols-3">
               <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">1. Arquivos</strong><code class="font-mono">~/.atacte</code> recebe Compose e segredos.</li>
               <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">2. Serviços</strong>PostgreSQL, Redis, API e manager iniciam.</li>

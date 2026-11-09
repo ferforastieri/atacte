@@ -35,7 +35,7 @@ Requisitos: Docker Engine ativo, Docker Compose v2, `curl` e pelo menos 1 GB de 
 ### 2. Execute o instalador
 
 ```sh
-curl -fsSL https://atacte.vercel.app/install.sh | sh
+curl -fsSL https://atacte.vira.ia.br/install.sh | sh
 ```
 
 O instalador:
@@ -50,7 +50,7 @@ O instalador:
 Para escolher outro diretório em uma instalação nova:
 
 ```sh
-curl -fsSL https://atacte.vercel.app/install.sh | env ATACTE_DIR=/opt/atacte sh
+curl -fsSL https://atacte.vira.ia.br/install.sh | env ATACTE_DIR=/opt/atacte sh
 ```
 
 Não altere o diretório de uma instalação existente sem planejar a migração do volume e do `.env`.
