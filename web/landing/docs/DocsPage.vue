@@ -56,7 +56,7 @@
             <p class="mt-4 leading-7 text-gray-600 dark:text-gray-400">O instalador cria os segredos ausentes, baixa as imagens publicadas, aplica migrations e preserva o banco e o <code class="font-mono text-primary-700 dark:text-primary-300">.env</code> nas próximas execuções.</p>
           </div>
           <div>
-            <pre class="overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300 shadow-inner dark:border-gray-600 dark:bg-black dark:text-green-200"><code>curl -fsSL https://atacte.vira.ia.br/install.sh | sh</code></pre>
+            <pre class="overflow-x-auto rounded-lg border border-gray-700 bg-gray-950 px-5 py-4 font-mono text-sm leading-7 text-green-300 shadow-inner dark:border-gray-600 dark:bg-black dark:text-green-200"><code>curl -fsSL https://ferforastieri.github.io/atacte/install.sh | sh</code></pre>
             <ol class="mt-5 grid gap-3 text-sm leading-6 text-gray-600 dark:text-gray-400 sm:grid-cols-3">
               <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">1. Arquivos</strong><code class="font-mono">~/.atacte</code> recebe Compose e segredos.</li>
               <li class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><strong class="block text-gray-900 dark:text-gray-100">2. Serviços</strong>PostgreSQL, Redis, API e manager iniciam.</li>
@@ -189,8 +189,8 @@ test -s atacte-backup.sql</code></pre>
           <span aria-label="Direitos autorais">© 2026 Fernando Forastieri · Licença MIT</span>
         </div>
         <nav class="flex items-center justify-center gap-4" aria-label="Links do rodapé">
-          <a class="hover:text-primary-600 dark:hover:text-primary-400" href="/">Início</a>
-          <a class="hover:text-primary-600 dark:hover:text-primary-400" href="/releases/">Releases</a>
+          <a class="hover:text-primary-600 dark:hover:text-primary-400" :href="base">Início</a>
+          <a class="hover:text-primary-600 dark:hover:text-primary-400" :href="`${base}releases/`">Releases</a>
           <a class="hover:text-primary-600 dark:hover:text-primary-400" href="https://github.com/ferforastieri/atacte" rel="noreferrer">GitHub</a>
         </nav>
       </div>
@@ -201,6 +201,8 @@ test -s atacte-backup.sql</code></pre>
 <script setup lang="ts">
 import PublicHeader from '../PublicHeader.vue'
 import PublicLogo from '../PublicLogo.vue'
+
+const base = import.meta.env.BASE_URL
 import { BookOpenIcon, CloudIcon, LockClosedIcon, ServerIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
 
 const requirements = [

@@ -46,7 +46,7 @@ export default defineConfig(({ mode }) => {
   }
   
   return {
-    base: './',
+    base: isLanding ? '/atacte/' : './',
     plugins: [vue(), flattenHtmlEntry],
     resolve: {
       alias: {

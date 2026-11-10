@@ -248,7 +248,7 @@ jobs:
             gh release create "$RELEASE_TAG" \
               --target "$GITHUB_SHA" \
               --title "Atacte $RELEASE_TAG" \
-              --notes $'Instalação rápida:\n\n```bash\ncurl -fsSL https://atacte.vira.ia.br/install.sh | sh\n```' \
+              --notes $'Instalação rápida:\n\n```bash\ncurl -fsSL https://ferforastieri.github.io/atacte/install.sh | sh\n```' \
               --generate-notes \
               docker-compose.yml README.md LICENSE web/public/install.sh
           fi

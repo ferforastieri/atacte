@@ -19,7 +19,7 @@ O código é dividido em uma API Express/Prisma, um gerenciador Vue/Tailwind e c
 Requisitos: Docker Engine com Docker Compose v2, `curl` e um host Linux ou macOS. Para acesso fora da rede local, use HTTPS por meio de Caddy, Nginx ou outro reverse proxy.
 
 ```sh
-curl -fsSL https://atacte.vira.ia.br/install.sh | sh
+curl -fsSL https://ferforastieri.github.io/atacte/install.sh | sh
 ```
 
 O instalador cria `~/.atacte`, baixa o Compose e imagens prontas para sua arquitetura, gera os segredos locais e inicia PostgreSQL, Redis, API e manager. Para HTTPS, configure a origem e o domínio público conforme o guia de segurança. O volume do banco e o arquivo `.env` são preservados ao executar o comando novamente.
@@ -94,7 +94,7 @@ cd ~/.atacte
 docker compose exec -T postgres pg_dump -U atacte -d atacte > atacte-backup.sql
 ```
 
-Guarde o dump em mídia criptografada. Para restaurar, pare a API/manager, confirme o banco de destino e importe o arquivo com `psql`; não substitua o volume sem antes fazer uma cópia. Consulte a [documentação de backup](https://atacte.vira.ia.br/docs/#backup) para o procedimento completo.
+Guarde o dump em mídia criptografada. Para restaurar, pare a API/manager, confirme o banco de destino e importe o arquivo com `psql`; não substitua o volume sem antes fazer uma cópia. Consulte a [documentação de backup](https://ferforastieri.github.io/atacte/docs/#backup) para o procedimento completo.
 
 ## Configuração opcional
 
@@ -165,8 +165,8 @@ Para construir toda a aplicação com Compose, crie um `.env` na raiz com `POSTG
 
 ## Links
 
-- [Landing](https://atacte.vira.ia.br/)
-- [Documentação](https://atacte.vira.ia.br/docs/)
+- [Landing](https://ferforastieri.github.io/atacte/)
+- [Documentação](https://ferforastieri.github.io/atacte/docs/)
 - [Releases e APK](https://github.com/ferforastieri/atacte/releases)
 - [Código-fonte](https://github.com/ferforastieri/atacte)
 - [Guia para agentes de IA](AGENTS.md)
