@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 
 export interface EmailOptions {
   to: string;
@@ -8,7 +8,7 @@ export interface EmailOptions {
 }
 
 export class EmailService {
-  private transporter: nodemailer.Transporter | null = null;
+  private transporter: Transporter | null = null;
   private fromEmail: string;
   private fromName: string;
   private isEnabled: boolean;
