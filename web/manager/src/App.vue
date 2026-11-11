@@ -7,6 +7,7 @@
     
     <ToastContainer />
     <ReauthenticateModal />
+    <UpdateNotice v-if="authStore.isAuthenticated" />
 
 
   </div>
@@ -17,6 +18,10 @@ import { computed } from 'vue'
 import ToastContainer from '@/components/layout/ToastContainer.vue'
 import ReauthenticateModal from '@/components/auth/ReauthenticateModal.vue'
 import TitleBar from '@/components/layout/TitleBar.vue'
+import UpdateNotice from '@/components/layout/UpdateNotice.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 
 const isElectron = computed(() => {

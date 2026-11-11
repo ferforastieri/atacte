@@ -107,7 +107,8 @@ export const usePasswordsStore = defineStore('passwords', () => {
     try {
       const response = await passwordsApi.createPassword(passwordData)
       if (response.success) {
-        passwords.value.push(response.data)
+        passwords.value = [response.data, ...passwords.value.filter(p => p.id !== response.data.id)]
+        pagination.value.total += 1
         await fetchFolders() 
         return response.data
       }

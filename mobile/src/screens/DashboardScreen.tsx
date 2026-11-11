@@ -12,6 +12,7 @@ import { TotpCard } from '../components/totp/TotpCard';
 import { passwordService } from '../services/passwords/passwordService';
 import { authService } from '../services/auth/authService';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -38,6 +39,7 @@ export default function DashboardScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
+  const { showSuccess } = useToast();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPasswordGeneratorModal, setShowPasswordGeneratorModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -62,6 +64,9 @@ export default function DashboardScreen() {
   const requestGeneration = useRef(0);
   const loadingPage = useRef(false);
   const activeSearchQuery = useRef('');
+  const listRef = useRef<FlatList<PasswordEntry>>(null);
+  const [recentlyCreatedId, setRecentlyCreatedId] = useState<string | null>(null);
+  const recentlyCreatedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { isDark, toggleTheme } = useTheme();
 
   const styles = StyleSheet.create({
@@ -256,13 +261,23 @@ export default function DashboardScreen() {
     loadPasswords();
   }, []);
 
-  const loadPasswords = useCallback(async (offset = 0, append = false, query = activeSearchQuery.current) => {
+  useEffect(() => {
+    return () => {
+      if (recentlyCreatedTimeout.current) {
+        clearTimeout(recentlyCreatedTimeout.current);
+      }
+    };
+  }, []);
+
+  const loadPasswords = useCallback(async (offset = 0, append = false, query = activeSearchQuery.current, silent = false) => {
     if (append && loadingPage.current) return;
     if (!append) requestGeneration.current++;
     const generation = requestGeneration.current;
     loadingPage.current = true;
     if (offset === 0) {
-      setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+      }
     } else {
       setIsLoadingMore(true);
     }
@@ -476,7 +491,7 @@ export default function DashboardScreen() {
       }
 
       if (response.success) {
-        handlePasswordSaved();
+        await handlePasswordSaved(response.data);
       } else {
       }
     } catch (error) {
@@ -485,10 +500,37 @@ export default function DashboardScreen() {
     }
   };
 
-  const handlePasswordSaved = () => {
+  const handlePasswordSaved = async (createdPassword?: PasswordEntry) => {
+    const wasEditing = Boolean(editingPassword);
     setShowPasswordModal(false);
     setEditingPassword(null);
-    loadPasswords(0, false);
+
+    if (!wasEditing && createdPassword) {
+      // Limpa a busca para garantir que a senha criada apareça na lista.
+      setSearchQuery('');
+      activeSearchQuery.current = '';
+      setCurrentOffset(0);
+
+      await loadPasswords(0, false, '', true);
+
+      setPasswords(prev => [createdPassword, ...prev.filter(p => p.id !== createdPassword.id)]);
+      setRecentlyCreatedId(createdPassword.id);
+
+      if (recentlyCreatedTimeout.current) {
+        clearTimeout(recentlyCreatedTimeout.current);
+      }
+      recentlyCreatedTimeout.current = setTimeout(() => {
+        setRecentlyCreatedId(null);
+      }, 8000);
+
+      requestAnimationFrame(() => {
+        listRef.current?.scrollToOffset({ offset: 0, animated: true });
+      });
+      showSuccess(`A senha "${createdPassword.name}" foi criada e está no topo da lista.`);
+      return;
+    }
+
+    await loadPasswords(0, false);
   };
 
   const handleDeletePassword = (password: PasswordEntry) => {
@@ -515,6 +557,7 @@ export default function DashboardScreen() {
   const renderPasswordItem = ({ item }: { item: PasswordEntry }) => (
     <TotpCard
       password={item}
+      isNew={item.id === recentlyCreatedId}
       onPress={() => handlePasswordPress(item)}
       onEdit={() => handleEditPassword(item)}
       onDelete={() => handleDeletePassword(item)}
@@ -588,7 +631,9 @@ export default function DashboardScreen() {
 
         {}
         <FlatList
+          ref={listRef}
           data={passwords}
+          extraData={recentlyCreatedId}
           renderItem={renderPasswordItem}
           keyExtractor={(item) => item.id}
           refreshControl={

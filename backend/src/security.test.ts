@@ -1,14 +1,19 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'x'.repeat(32);
 process.env.ENCRYPTION_KEY = 'y'.repeat(32);
 process.env.CORS_ORIGIN = 'http://localhost:3000';
+process.env.UPDATE_DIR = mkdtempSync(join(tmpdir(), 'atacte-update-'));
 
 async function modules() {
   return {
     credentials: await import('./utils/credentialUtil'),
     system: await import('./controllers/system/systemController'),
+    updates: await import('./services/updates/updateService'),
     cookies: await import('./middleware/cookies'),
     csv: await import('./services/importExport/importExportService'),
   };
@@ -45,4 +50,24 @@ test('update notice only reports a release ahead of the installed revision', asy
     assert.equal(response.updateAvailable, status === 'ahead');
   }
   assert.equal((await system.checkUpdate('development', async () => { assert.fail('development must not query releases'); })).updateAvailable, false);
+});
+
+test('update requests use the host request/state files exactly once', async () => {
+  const { updates } = await modules();
+  writeFileSync(join(process.env.UPDATE_DIR!, 'updater.enabled'), '');
+  assert.equal(updates.updateSupported(), true);
+  assert.equal(updates.updateBusy(), false);
+
+  assert.equal(updates.requestUpdate('v1.2.3'), 'started');
+  assert.equal(updates.updateBusy(), true);
+  assert.equal(updates.requestUpdate('v1.2.3'), 'busy');
+
+  const state = {
+    status: 'running',
+    version: 'v1.2.3',
+    updatedAt: new Date().toISOString(),
+  };
+  writeFileSync(join(process.env.UPDATE_DIR!, 'update-state.json'), JSON.stringify(state));
+  assert.deepEqual(updates.readUpdateState(), state);
+  assert.equal(updates.updateCapabilities().autoUpdate, true);
 });

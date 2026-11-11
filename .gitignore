@@ -90,6 +90,7 @@ docker-compose.override.yml
 Dockerfile
 .bin/
 .docker/
+/update/
 
 # SSL
 nginx/ssl/

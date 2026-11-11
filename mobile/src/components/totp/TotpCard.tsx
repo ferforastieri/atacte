@@ -17,6 +17,7 @@ interface PasswordEntry {
 
 interface TotpCardProps {
   password: PasswordEntry;
+  isNew?: boolean;
   onPress: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -27,6 +28,7 @@ interface TotpCardProps {
 
 export const TotpCard: React.FC<TotpCardProps> = ({
   password,
+  isNew = false,
   onPress,
   onEdit,
   onDelete,
@@ -70,6 +72,23 @@ export const TotpCard: React.FC<TotpCardProps> = ({
   const styles = StyleSheet.create({
     card: {
       marginBottom: 16,
+    },
+    newCard: {
+      borderWidth: 2,
+      borderColor: '#16a34a',
+    },
+    newBadge: {
+      borderRadius: 999,
+      backgroundColor: isDark ? 'rgba(22, 163, 74, 0.25)' : '#dcfce7',
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      marginRight: 4,
+    },
+    newBadgeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      color: isDark ? '#86efac' : '#15803d',
     },
     header: {
       flexDirection: 'row',
@@ -141,7 +160,7 @@ export const TotpCard: React.FC<TotpCardProps> = ({
   });
 
   return (
-    <Card style={styles.card}>
+    <Card style={isNew ? { ...styles.card, ...styles.newCard } : styles.card}>
       <TouchableOpacity onPress={onPress}>
         <View style={styles.header}>
           <View style={styles.info}>
@@ -157,6 +176,11 @@ export const TotpCard: React.FC<TotpCardProps> = ({
             )}
           </View>
           <View style={styles.icons}>
+            {isNew && (
+              <View style={styles.newBadge}>
+                <Text style={styles.newBadgeText}>NOVA</Text>
+              </View>
+            )}
             {password.isFavorite && (
               <Ionicons name="heart" size={16} color="#dc2626" />
             )}

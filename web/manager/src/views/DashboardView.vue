@@ -5,7 +5,6 @@
       :show-logo="true"
       :show-navigation="true"
     />
-    <UpdateNotice />
 
     <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8 pb-24 md:pb-8">
       <!-- Stats Cards -->
@@ -132,6 +131,7 @@
           :key="password.id"
           padding="none"
           class="group self-start w-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+          :class="{ 'ring-2 ring-primary-500 ring-offset-2 dark:ring-primary-400 dark:ring-offset-gray-900': recentlyCreatedId === password.id }"
           @click="viewPassword(password)"
         >
           <div class="p-5 sm:p-6 min-h-[220px] flex flex-col">
@@ -141,8 +141,14 @@
               </div>
 
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">{{ password.name }}</h3>
+                  <span
+                    v-if="recentlyCreatedId === password.id"
+                    class="inline-flex items-center rounded-full bg-primary-100 dark:bg-primary-900/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300"
+                  >
+                    Nova
+                  </span>
                   <HeartIcon v-if="password.isFavorite" class="h-5 w-5 text-red-500 flex-shrink-0" />
                 </div>
                 <p v-if="password.website" class="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">{{ password.website }}</p>
@@ -264,7 +270,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   LockClosedIcon,
@@ -285,7 +291,7 @@ import { usePasswordsStore } from '@/stores/passwords'
 import { BaseButton, BaseCard, SearchInput, AppHeader, BaseSelect, TotpCode } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { copyToClipboard } from '@/utils/clipboard'
-import UpdateNotice from '@/components/layout/UpdateNotice.vue'
+import { useToast } from '@/hooks/useToast'
 
 
 import CreatePasswordModal from '@/components/passwords/CreatePasswordModal.vue'
@@ -295,6 +301,7 @@ import PasswordDetailModal from '@/components/passwords/PasswordDetailModal.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 const passwordsStore = usePasswordsStore()
+const toast = useToast()
 
 
 const showCreateModal = ref(false)
@@ -306,6 +313,8 @@ const selectedFolder = ref(passwordsStore.searchFilters.folder || '')
 const showOnlyFavorites = ref(passwordsStore.searchFilters.isFavorite === true)
 const isRefreshing = ref(false)
 const totpSecrets = ref<Record<string, string>>({})
+const recentlyCreatedId = ref<string | null>(null)
+let recentlyCreatedTimeout: ReturnType<typeof setTimeout> | null = null
 
 
 const totpEnabledCount = computed(() => {
@@ -439,9 +448,42 @@ const goToSecureNotes = () => {
   router.push('/secure-notes')
 }
 
-const handlePasswordCreated = () => {
+const handlePasswordCreated = async (createdPassword: PasswordEntry) => {
   showCreateModal.value = false
-  refreshPasswords()
+
+  // Limpa a busca e os filtros para garantir que a senha criada apareça na lista.
+  searchQuery.value = ''
+  selectedFolder.value = ''
+  showOnlyFavorites.value = false
+  passwordsStore.clearSearch()
+
+  try {
+    await passwordsStore.fetchPasswords()
+
+    const index = passwordsStore.passwords.findIndex(p => p.id === createdPassword.id)
+    if (index !== -1) {
+      const [entry] = passwordsStore.passwords.splice(index, 1)
+      if (entry) {
+        passwordsStore.passwords.unshift(entry)
+      }
+    } else {
+      passwordsStore.passwords.unshift(createdPassword)
+    }
+
+    await passwordsStore.loadCompleteStats()
+  } catch (error) {
+  }
+
+  recentlyCreatedId.value = createdPassword.id
+  if (recentlyCreatedTimeout) {
+    clearTimeout(recentlyCreatedTimeout)
+  }
+  recentlyCreatedTimeout = setTimeout(() => {
+    recentlyCreatedId.value = null
+  }, 8000)
+
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  toast.success(`A senha "${createdPassword.name}" foi criada e está no topo da lista.`)
 }
 
 const handlePasswordUpdated = () => {
@@ -471,6 +513,12 @@ onMounted(async () => {
       await passwordsStore.loadCompleteStats()
     } catch (error) {
     }
+  }
+})
+
+onUnmounted(() => {
+  if (recentlyCreatedTimeout) {
+    clearTimeout(recentlyCreatedTimeout)
   }
 })
 </script>

@@ -38,14 +38,13 @@ Requisitos: Docker Engine ativo, Docker Compose v2, `curl` e pelo menos 1 GB de 
 curl -fsSL https://ferforastieri.github.io/atacte/install.sh | sh
 ```
 
-O instalador:
-
-- cria `~/.atacte` ou o diretório definido em `ATACTE_DIR`;
-- preserva `.env` e o volume PostgreSQL existentes;
-- gera os segredos ausentes com permissão `0600`;
-- baixa as imagens de PostgreSQL, Redis, backend e frontend;
-- aplica as migrations versionadas com `prisma migrate deploy`;
-- publica o manager em `http://localhost:3456` e a API em `3457`.
+O instalador cria `~/.atacte` ou o diretório definido em `ATACTE_DIR`;
+preserva `.env` e o volume PostgreSQL existentes;
+gera os segredos ausentes com permissão `0600`;
+baixa as imagens de PostgreSQL, Redis, backend e frontend;
+aplica as migrations versionadas com `prisma migrate deploy`;
+instala o job de atualização automática no cron do usuário, quando disponível;
+publica o manager em `http://localhost:3456` e a API em `3457`.
 
 Para escolher outro diretório em uma instalação nova:
 
@@ -96,6 +95,13 @@ O reverse proxy deve encaminhar o domínio público para o frontend na porta `34
 
 ## Atualização e backup
 
+O manager consulta as releases e, quando há uma versão nova, o toast inicia a
+atualização automaticamente. O pedido é gravado em `~/.atacte/update/`; um job
+do usuário no cron (instalado pelo `install.sh`) executa o pull das imagens e as
+migrations fora do container, sem socket Docker exposto à API. Se o cron não
+estiver disponível ou as imagens estiverem fixadas no `.env`, o toast apenas
+mostra o link da release e a atualização permanece manual.
+
 Se desejar um backup manual, execute:
 
 ```sh
@@ -103,9 +109,10 @@ cd ~/.atacte
 docker compose exec -T postgres pg_dump -U atacte -d atacte > atacte-backup.sql
 ```
 
-Se optar pelo backup, confirme que o arquivo existe e não está vazio. A atualização independe desse passo:
+Se optar pelo backup, confirme que o arquivo existe e não está vazio. A atualização independe desse passo. Para atualizar manualmente:
 
 ```sh
+cd ~/.atacte
 docker compose pull backend front redis
 docker compose up -d --wait postgres redis
 docker compose run --rm --no-deps backend ./node_modules/.bin/prisma migrate deploy --schema=src/infrastructure/prisma/schema.prisma
@@ -113,7 +120,9 @@ docker compose up -d --no-build --remove-orphans
 curl -fsS http://localhost:3457/health
 ```
 
-O instalador também pode ser executado novamente. Ele preserva o `.env` e o volume do banco.
+O instalador também pode ser executado novamente. Ele preserva o `.env` e o volume do banco e instala/atualiza o job de atualização automática.
+
+Para desativar a atualização automática, acrescente `AUTO_UPDATE=false` ao `.env` e recrie o backend com `docker compose up -d --no-build`.
 
 ### Fixar uma release
 
@@ -203,6 +212,6 @@ Ao finalizar, relate o modo usado, o endereço de acesso, os checks executados e
 
 Use [SECURITY_DEPLOYMENT.md](SECURITY_DEPLOYMENT.md) para a autorização inicial por email. A pessoa cria a conta no navegador; o agente não automatiza credenciais do cofre. A autorização no servidor é temporária e não exige envio de email nem código.
 
-O Compose atual não inclui atualizador nem socket Docker. Atualizações são manuais, com backup opcional. Redis não publica porta e usa rede interna. Para desenvolvimento fora dos containers, execute uma instância Redis dedicada em loopback e configure `REDIS_URL`.
+O Compose monta somente `~/.atacte/update` no backend; a aplicação não tem acesso ao socket Docker. O pull de imagens e as migrations são executados pelo job de atualização no cron do usuário. Redis não publica porta e usa rede interna. Para desenvolvimento fora dos containers, execute uma instância Redis dedicada em loopback e configure `REDIS_URL`.
 
 A migração de segurança encerra sessões antigas. O login usa email e senha; a biometria é uma opção local no aplicativo mobile.

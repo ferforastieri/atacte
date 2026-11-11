@@ -80,6 +80,10 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Atacte}
       PASSWORD_RESET_URL: ${PASSWORD_RESET_URL:-}
+      UPDATE_DIR: /app/update
+      AUTO_UPDATE: ${AUTO_UPDATE:-true}
+    volumes:
+      - ./update:/app/update
     ports:
       # Set BACKEND_BIND explicitly only when a trusted external proxy needs it.
       - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-3457}:3001"

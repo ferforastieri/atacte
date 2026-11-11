@@ -66,7 +66,7 @@
           </BaseButton>
           
           <div class="text-sm text-gray-500 dark:text-gray-400">
-            <PasswordStrength v-if="form.password" :password="form.password" />
+            <PasswordStrength v-if="passwordStrength" :score="passwordStrength.score" :feedback="passwordStrength.feedback" />
           </div>
         </div>
       </div>
@@ -170,6 +170,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { KeyIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon } from '@heroicons/vue/24/outline'
+import zxcvbn from 'zxcvbn'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength, PasswordGeneratorModal } from '@/components/ui'
 import { type PasswordEntry, type UpdatePasswordRequest } from '@/api/passwords'
 import { usePasswordsStore } from '@/stores/passwords'
@@ -211,6 +212,19 @@ const errors = ref<Record<string, string>>({})
 
 const isFormValid = computed(() => {
   return form.value.name.trim() && form.value.password.trim()
+})
+
+const passwordStrength = computed(() => {
+  if (!form.value.password) return null
+
+  const result = zxcvbn(form.value.password)
+  return {
+    score: result.score,
+    feedback: {
+      warning: result.feedback.warning || '',
+      suggestions: result.feedback.suggestions || []
+    }
+  }
 })
 
 const handlePasswordGenerated = (generatedPassword: string) => {

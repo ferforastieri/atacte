@@ -10,7 +10,7 @@ Gerenciador self-hosted de senhas, códigos TOTP e notas privadas. O Atacte foi 
 - importar e exportar seus dados em JSON;
 - revisar sessões conectadas e auditoria;
 - usar o mesmo servidor pela web, pelo aplicativo Android/Expo ou pelo desktop;
-- receber um aviso no gerenciador quando uma nova versão estiver disponível.
+- receber e aplicar atualizações do servidor automaticamente pelo manager;
 
 O código é dividido em uma API Express/Prisma, um gerenciador Vue/Tailwind e clientes mobile/desktop. A landing, a documentação e o histórico de releases são publicados separadamente do gerenciador autenticado.
 
@@ -22,7 +22,7 @@ Requisitos: Docker Engine com Docker Compose v2, `curl` e um host Linux ou macOS
 curl -fsSL https://ferforastieri.github.io/atacte/install.sh | sh
 ```
 
-O instalador cria `~/.atacte`, baixa o Compose e imagens prontas para sua arquitetura, gera os segredos locais e inicia PostgreSQL, Redis, API e manager. Para HTTPS, configure a origem e o domínio público conforme o guia de segurança. O volume do banco e o arquivo `.env` são preservados ao executar o comando novamente.
+O instalador cria `~/.atacte`, baixa o Compose e imagens prontas para sua arquitetura, gera os segredos locais e inicia PostgreSQL, Redis, API e manager. Ele também instala um job no cron do usuário para aplicar atualizações automáticas pedidas pelo manager. Para HTTPS, configure a origem e o domínio público conforme o guia de segurança. O volume do banco e o arquivo `.env` são preservados ao executar o comando novamente.
 
 Depois, autorize o email da primeira conta com `docker compose exec backend npm run security:allow-registration -- seu@email.com` e abra **http://localhost:3456** para criá-la manualmente. O cadastro exige autorização, expira em 15 minutos e só pode ser concluído uma vez. Se já existir um banco, mantenha o mesmo volume e o `.env` da instalação.
 
@@ -59,7 +59,7 @@ O instalador rápido acompanha as imagens `latest`. Para fixar uma release, não
 2. Cadastre uma senha, nota ou TOTP; use pastas e favoritos para encontrar tudo rapidamente.
 3. Em **Sessões**, confira os dispositivos e encerre acessos que você não reconhece.
 4. Em **Configurações**, faça exportações somente para um local protegido e apague o arquivo depois de conferi-lo.
-5. Web e mobile consultam `GET /api/updates` e mostram um link para a nova release. Atualize manualmente no servidor; a aplicação não controla Docker nem altera o `.env`.
+5. Web e mobile consultam `GET /api/updates`; quando há uma release nova, o toast aplica a atualização no servidor automaticamente. O container da API não controla Docker nem altera o `.env`; quem executa o pull e as migrations é o job do cron instalado no host.
 
 No mobile, **Configurações → Desbloquear com biometria** oferece bloqueio local opcional ao abrir ou retomar o aplicativo, com alternativa pela senha da conta. A opção começa desativada e requer uma nova build nativa; consulte [o guia de implantação](SECURITY_DEPLOYMENT.md).
 
@@ -67,7 +67,14 @@ As configurações da instalação são alteradas pelo `.env` no servidor e apli
 
 ## Atualizar e voltar uma versão
 
-Atualização normal, a partir do host:
+Quando há uma release nova, o toast do manager atualiza o servidor
+automaticamente: ele grava um pedido em `~/.atacte/update/` e o job instalado no
+cron do usuário faz o pull das imagens, aplica as migrations e reinicia os
+serviços. A interface recarrega sozinha ao final. O container da API não recebe
+acesso ao socket Docker.
+
+Se o cron não estiver disponível ou o `.env` fixar `BACKEND_IMAGE`/`FRONT_IMAGE`,
+o toast mostra a release e a atualização continua manual:
 
 ```sh
 cd ~/.atacte
@@ -77,7 +84,7 @@ docker compose run --rm --no-deps backend ./node_modules/.bin/prisma migrate dep
 docker compose up -d --no-build --remove-orphans
 ```
 
-O instalador também pode ser executado novamente para buscar a release configurada. Para voltar, defina `BACKEND_IMAGE` e `FRONT_IMAGE` no `.env` com uma tag conhecida e execute `docker compose pull` e `docker compose up -d`. Valide a API com:
+O instalador também pode ser executado novamente para buscar a release configurada e reinstalar o job de atualização. Instalações criadas antes deste recurso precisam executar o instalador novamente uma vez para baixar o Compose com o diretório `update` e registrar o job. Para voltar, defina `BACKEND_IMAGE` e `FRONT_IMAGE` no `.env` com uma tag conhecida e execute `docker compose pull` e `docker compose up -d`. Valide a API com:
 
 ```sh
 curl -fsS http://localhost:3457/health
@@ -109,6 +116,7 @@ Os valores abaixo ficam em `~/.atacte/.env` e só precisam ser alterados quando 
 | `COOKIE_SAME_SITE` | Política SameSite (`lax`, `strict` ou `none`) | `lax` |
 | `COOKIE_DOMAIN` | Domínio explícito do cookie, se necessário | vazio |
 | `TRUST_PROXY` | Confiança no reverse proxy para IP/HTTPS | `0` |
+| `AUTO_UPDATE` | Permite que o toast aplique releases automaticamente | `true` |
 | `JWT_EXPIRES_IN` | Duração da sessão | `7d` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Envio de recuperação de senha | vazio |
 

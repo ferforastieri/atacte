@@ -60,8 +60,9 @@
           <button
             type="button"
             @click="showPasswordGenerator = true"
-            class="text-sm text-primary-600 hover:text-primary-700"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 transition-colors hover:bg-primary-100 dark:bg-primary-900/40 dark:text-primary-300 dark:hover:bg-primary-900/60"
           >
+            <SparklesIcon class="h-3.5 w-3.5" />
             Gerar senha
           </button>
         </div>
@@ -87,7 +88,7 @@
         </BaseInput>
         
         <!-- Password Strength Indicator -->
-        <PasswordStrength v-if="form.password" :password="form.password" class="mt-2" />
+        <PasswordStrength v-if="passwordStrength" :score="passwordStrength.score" :feedback="passwordStrength.feedback" class="mt-2" />
       </div>
 
       <!-- Pasta -->
@@ -201,10 +202,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { EyeIcon, EyeSlashIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon, KeyIcon } from '@heroicons/vue/24/outline'
+import { EyeIcon, EyeSlashIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon, KeyIcon, SparklesIcon } from '@heroicons/vue/24/outline'
+import zxcvbn from 'zxcvbn'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength, PasswordGeneratorModal } from '@/components/ui'
 import { usePasswordsStore } from '@/stores/passwords'
-import type { CreatePasswordRequest } from '@/api/passwords'
+import type { CreatePasswordRequest, PasswordEntry } from '@/api/passwords'
 
 interface Props {
   show: boolean
@@ -212,7 +214,7 @@ interface Props {
 
 interface Emits {
   (e: 'close'): void
-  (e: 'created'): void
+  (e: 'created', password: PasswordEntry): void
 }
 
 const props = defineProps<Props>()
@@ -243,6 +245,19 @@ const errors = ref<Record<string, string>>({})
 
 const isFormValid = computed(() => {
   return form.value.name.trim() && form.value.password.trim()
+})
+
+const passwordStrength = computed(() => {
+  if (!form.value.password) return null
+
+  const result = zxcvbn(form.value.password)
+  return {
+    score: result.score,
+    feedback: {
+      warning: result.feedback.warning || '',
+      suggestions: result.feedback.suggestions || []
+    }
+  }
 })
 
 const handlePasswordGenerated = (generatedPassword: string) => {
@@ -317,10 +332,9 @@ const handleSubmit = async () => {
       passwordData.totpSecret = form.value.totpSecret.trim()
     }
     
-    await passwordsStore.createPassword(passwordData)
+    const createdPassword = await passwordsStore.createPassword(passwordData)
     
-    emit('created')
-    
+    emit('created', createdPassword)
     
     resetForm()
   } catch (error: unknown) {
