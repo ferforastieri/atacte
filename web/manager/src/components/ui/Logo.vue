@@ -1,60 +1,16 @@
 <template>
   <div class="flex items-center space-x-2">
-    <!-- Logo SVG -->
-    <div class="flex-shrink-0">
-      <svg 
-        :width="size" 
-        :height="size" 
-        viewBox="0 0 32 32" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        class="transition-colors duration-200"
-      >
-        <!-- Círculo externo -->
-        <circle 
-          cx="16" 
-          cy="16" 
-          r="14" 
-          fill="rgb(var(--at-primary-500))"
-          stroke="rgb(var(--at-primary-700))"
-          stroke-width="2"
-        />
-        
-        <!-- Ícone de cadeado -->
-        <path 
-          d="M12 14v-2a4 4 0 1 1 8 0v2" 
-          stroke="white" 
-          stroke-width="2" 
-          stroke-linecap="round"
-        />
-        <rect 
-          x="10" 
-          y="14" 
-          width="12" 
-          height="8" 
-          rx="2" 
-          ry="2" 
-          fill="white"
-        />
-        
-        <!-- Texto "S" -->
-        <text 
-          x="16" 
-          y="26" 
-          font-family="Arial, sans-serif" 
-          font-size="8" 
-          font-weight="bold" 
-          text-anchor="middle" 
-          fill="rgb(var(--at-primary-700))"
-        >
-          A
-        </text>
-      </svg>
-    </div>
-    
-    <!-- Texto do logo -->
-    <span 
-      v-if="showText" 
+    <img
+      :src="symbolUrl"
+      :width="size"
+      :height="size"
+      :alt="showText ? '' : 'Atacte'"
+      :aria-hidden="showText ? 'true' : undefined"
+      class="flex-shrink-0 object-contain"
+    />
+
+    <span
+      v-if="showText"
       :class="[
         'font-bold transition-colors duration-200',
         textColor || (isDark ? 'text-white' : 'text-ink'),
@@ -86,4 +42,5 @@ const props = withDefaults(defineProps<Props>(), {
 
 const themeStore = useThemeStore()
 const isDark = computed(() => themeStore.isDarkMode)
+const symbolUrl = `${import.meta.env.BASE_URL}atacte-symbol.png`
 </script>
