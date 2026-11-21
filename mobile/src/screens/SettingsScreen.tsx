@@ -1,29 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput, BackHandler, Image } from 'react-native';
-import { useBiometricLock } from '../components/auth/BiometricLock';
-import { Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  BackHandler,
+  Image,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { Button, Card, Header, Input, Modal, SkeletonDetail } from '../components/shared';
+import { IconTile } from '../components/shared/IconTile';
+import { useBiometricLock } from '../components/auth/BiometricLock';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Header, Modal } from '../components/shared';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useToast } from '../contexts/ToastContext';
 import { userService } from '../services/users/userService';
-import { Ionicons } from '@expo/vector-icons';
-import axios from '../lib/axios';
+import { radii, spacing, touch, typography } from '../theme/tokens';
 
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { enabled, changeEnabled } = useBiometricLock();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, colors, toggleTheme } = useTheme();
   const { user, refreshUser } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isChangingBiometric, setIsChangingBiometric] = useState(false);
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
 
   const handleBack = () => {
@@ -38,38 +51,37 @@ const SettingsScreen: React.FC = () => {
         handleBack();
         return true;
       };
-
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       return () => subscription.remove();
-    }, [navigation])
+    }, [navigation]),
   );
 
   useEffect(() => {
-    loadUserProfile();
+    void loadUserProfile();
   }, []);
 
   const loadUserProfile = async () => {
+    setIsProfileLoading(true);
     try {
       const response = await userService.getUserProfile();
       if (response.success && response.data) {
-        const profileData = response.data;
-        setName(profileData.name || '');
-        setPhoneNumber(profileData.phoneNumber || '');
-        setProfilePicture(profileData.profilePicture || '');
+        setName(response.data.name || '');
+        setPhoneNumber(response.data.phoneNumber || '');
+        setProfilePicture(response.data.profilePicture || '');
       }
-    } catch (error) {
+    } catch {
       if (user) {
         setName(user.name || '');
         setPhoneNumber(user.phoneNumber || '');
         setProfilePicture(user.profilePicture || '');
       }
+    } finally {
+      setIsProfileLoading(false);
     }
   };
 
   const handleSaveProfile = async () => {
-    if (!name.trim()) {
-      return;
-    }
+    if (isLoading || !name.trim()) return;
 
     setIsLoading(true);
     try {
@@ -78,12 +90,14 @@ const SettingsScreen: React.FC = () => {
         phoneNumber: phoneNumber.trim() || undefined,
         profilePicture: profilePicture.trim() || undefined,
       });
-
       if (response.success) {
         await refreshUser();
+        showSuccess('Perfil atualizado.');
       } else {
+        showError('Não foi possível salvar o perfil.');
       }
-    } catch (error: unknown) {
+    } catch {
+      showError('Não foi possível salvar o perfil.');
     } finally {
       setIsLoading(false);
     }
@@ -91,14 +105,11 @@ const SettingsScreen: React.FC = () => {
 
   const requestImagePickerPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      return false;
-    }
-    return true;
+    return status === 'granted';
   };
 
   const handlePickImage = () => {
-    setShowImagePickerModal(true);
+    if (!isUploadingImage) setShowImagePickerModal(true);
   };
 
   const handleCameraPick = async () => {
@@ -107,9 +118,7 @@ const SettingsScreen: React.FC = () => {
     if (!hasPermission) return;
 
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-    if (cameraPermission.status !== 'granted') {
-      return;
-    }
+    if (cameraPermission.status !== 'granted') return;
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
@@ -117,10 +126,7 @@ const SettingsScreen: React.FC = () => {
       aspect: [1, 1],
       quality: 0.8,
     });
-
-    if (!result.canceled && result.assets[0]) {
-      await handleImageSelected(result.assets[0].uri);
-    }
+    if (!result.canceled && result.assets[0]) await handleImageSelected(result.assets[0].uri);
   };
 
   const handleGalleryPick = async () => {
@@ -134,539 +140,267 @@ const SettingsScreen: React.FC = () => {
       aspect: [1, 1],
       quality: 0.8,
     });
-
-    if (!result.canceled && result.assets[0]) {
-      await handleImageSelected(result.assets[0].uri);
-    }
+    if (!result.canceled && result.assets[0]) await handleImageSelected(result.assets[0].uri);
   };
 
   const handleImageSelected = async (uri: string) => {
     setIsUploadingImage(true);
     try {
       const fileInfo = await FileSystem.getInfoAsync(uri);
-      if (!fileInfo.exists) {
-        setIsUploadingImage(false);
-        return;
-      }
+      if (!fileInfo.exists) return;
 
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: 'base64',
-      });
-      
+      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
       const extension = uri.split('.').pop()?.toLowerCase();
       let mimeType = 'image/jpeg';
-      if (extension === 'png') {
-        mimeType = 'image/png';
-      } else if (extension === 'gif') {
-        mimeType = 'image/gif';
-      } else if (extension === 'webp') {
-        mimeType = 'image/webp';
-      }
-      
-      const base64data = `data:${mimeType};base64,${base64}`;
-      setProfilePicture(base64data);
-      setIsUploadingImage(false);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao processar imagem:', error);
+      if (extension === 'png') mimeType = 'image/png';
+      else if (extension === 'gif') mimeType = 'image/gif';
+      else if (extension === 'webp') mimeType = 'image/webp';
+
+      setProfilePicture(`data:${mimeType};base64,${base64}`);
+    } catch {
+      showError('Não foi possível processar a imagem.');
+    } finally {
       setIsUploadingImage(false);
     }
   };
 
-  const handleRemoveImage = () => {
-    setProfilePicture('');
+  const handleBiometricChange = async (value: boolean) => {
+    if (isChangingBiometric) return;
+    setIsChangingBiometric(true);
+    try {
+      await changeEnabled(value);
+    } catch (error) {
+      Alert.alert('Biometria', error instanceof Error ? error.message : 'Não foi possível alterar a opção.');
+    } finally {
+      setIsChangingBiometric(false);
+    }
   };
 
-  const settingsSections: Array<{ title: string; items: SettingItem[] }> = [
-    {
-      title: 'Perfil',
-      items: [
-        {
-          label: 'Nome',
-          type: 'input',
-          value: name,
-          onChangeText: setName,
-          placeholder: 'Digite seu nome',
-        },
-        {
-          label: 'Telefone',
-          type: 'input',
-          value: phoneNumber,
-          onChangeText: setPhoneNumber,
-          placeholder: 'Digite seu telefone',
-          keyboardType: 'phone-pad',
-        },
-        {
-          label: 'Foto de Perfil',
-          type: 'image',
-          value: profilePicture,
-          onPickImage: handlePickImage,
-          onRemoveImage: handleRemoveImage,
-          isUploading: isUploadingImage,
-        },
-        {
-          label: 'Salvar',
-          type: 'button',
-          onPress: handleSaveProfile,
-          isLoading: isLoading,
-        },
-      ],
-    },
-    {
-      title: 'Aparência',
-      items: [
-        {
-          label: 'Modo Escuro',
-          type: 'switch',
-          value: isDark,
-          onToggle: toggleTheme,
-        },
-      ],
-    },
-    {
-      title: 'Sobre',
-      items: [
-        {
-          label: 'Versão do App',
-          type: 'text',
-          value: Constants.expoConfig?.version || (typeof Constants.expoConfig?.runtimeVersion === 'string' ? Constants.expoConfig.runtimeVersion : 'N/A'),
-        },
-      ],
-    },
-  ];
-
-  interface SettingItem {
-    label: string;
-    type: 'switch' | 'text' | 'input' | 'image' | 'button';
-    value?: boolean | string;
-    onChangeText?: (text: string) => void;
-    onToggle?: (value: boolean) => void;
-    placeholder?: string;
-    keyboardType?: 'default' | 'phone-pad';
-    onPickImage?: () => void;
-    onRemoveImage?: () => void;
-    isUploading?: boolean;
-    onPress?: () => void;
-    isLoading?: boolean;
-    isDestructive?: boolean;
-  }
-
-  const renderSettingItem = (item: SettingItem, index: number, sectionItems: SettingItem[]) => {
-    const isLastItem = index === sectionItems.length - 1;
+  if (isProfileLoading) {
     return (
-      <View key={index} style={[
-        styles.settingItem, 
-        isDark && styles.settingItemDark,
-        isLastItem && styles.settingItemLast,
-        item.type === 'image' && styles.settingItemImage
-      ]}>
-        {item.type !== 'image' && (
-          <Text style={[styles.settingLabel, isDark && styles.settingLabelDark]}>
-            {item.label}
-          </Text>
-        )}
-        
-        {item.type === 'switch' && (
-          <Switch
-            value={item.value === true}
-            onValueChange={item.onToggle}
-            trackColor={{ 
-              false: isDark ? '#374151' : '#d1d5db', 
-              true: isDark ? '#22c55e' : '#22c55e' 
-            }}
-            thumbColor={item.value === true ? '#ffffff' : isDark ? '#6b7280' : '#ffffff'}
-            ios_backgroundColor={isDark ? '#374151' : '#d1d5db'}
-          />
-        )}
-        
-        {item.type === 'text' && (
-          <Text style={[styles.settingValue, isDark && styles.settingValueDark]}>
-            {item.value}
-          </Text>
-        )}
-        
-        {item.type === 'input' && (
-          <TextInput
-            style={[
-              styles.input,
-              isDark && styles.inputDark,
-            ]}
-            value={typeof item.value === 'string' ? item.value : ''}
-            onChangeText={item.onChangeText}
-            placeholder={item.placeholder}
-            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-            keyboardType={item.keyboardType || 'default'}
-            editable={true}
-          />
-        )}
-        
-        {item.type === 'image' && (
-          <View style={styles.imageRow}>
-            <Text style={[styles.settingLabel, isDark && styles.settingLabelDark]}>
-              {item.label}
-            </Text>
-            <View style={styles.imageContainer}>
-              {item.value ? (
-                <TouchableOpacity 
-                  onPress={item.onPickImage}
-                  disabled={item.isUploading}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.imagePreviewContainer}>
-                    <Image 
-                      source={{ uri: typeof item.value === 'string' ? item.value : '' }}
-                      style={styles.imagePreview}
-                    />
-                    <View style={styles.imageOverlay}>
-                      <Ionicons name="camera" size={24} color="#ffffff" />
-                      <Text style={styles.imageOverlayText}>Trocar foto</Text>
-                    </View>
-                    <TouchableOpacity 
-                      style={styles.removeImageButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        item.onRemoveImage?.();
-                      }}
-                    >
-                      <Ionicons name="close-circle" size={24} color="#ef4444" />
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity 
-                  style={[
-                    styles.imagePickerButton,
-                    isDark && styles.imagePickerButtonDark,
-                    item.isUploading && styles.imagePickerButtonDisabled
-                  ]}
-                  onPress={item.onPickImage}
-                  disabled={item.isUploading}
-                >
-                  {item.isUploading ? (
-                    <Text style={[styles.imagePickerButtonText, isDark && styles.imagePickerButtonTextDark]}>
-                      Processando...
-                    </Text>
-                  ) : (
-                    <>
-                      <Ionicons 
-                        name="camera-outline" 
-                        size={24} 
-                        color={isDark ? '#9ca3af' : '#6b7280'} 
-                      />
-                      <Text style={[styles.imagePickerButtonText, isDark && styles.imagePickerButtonTextDark]}>
-                        Selecionar Foto
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-        
-        {item.type === 'button' && (
-          <TouchableOpacity 
-            onPress={item.onPress}
-            disabled={item.isLoading}
-            style={[
-              styles.button,
-              item.isDestructive && styles.buttonDestructive,
-              item.isLoading && styles.buttonDisabled
-            ]}
-          >
-            <Text style={[
-              styles.buttonText,
-              isDark && styles.buttonTextDark,
-              item.isDestructive && styles.buttonTextDestructive,
-              item.isLoading && styles.buttonTextDisabled
-            ]}>
-              {item.isLoading ? 'Salvando...' : item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
+      <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+        <Header title="Configurações" showBackButton onBack={handleBack} onThemeToggle={toggleTheme} />
+        <SkeletonDetail showSecret={false} />
       </View>
     );
-  };
+  }
+
+  const settingRow = (
+    label: string,
+    description: string,
+    control: React.ReactNode,
+    icon: keyof typeof Ionicons.glyphMap,
+  ) => (
+    <View style={{ minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md }}>
+      <IconTile variant="muted" size={38}>
+        <Ionicons name={icon} size={19} color={colors.inkMuted} />
+      </IconTile>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={{ fontSize: typography.body, fontWeight: typography.weights.medium, color: colors.ink }}>{label}</Text>
+        <Text style={{ marginTop: 1, fontSize: typography.label, lineHeight: 17, color: colors.inkMuted }}>{description}</Text>
+      </View>
+      {control}
+    </View>
+  );
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
-      <Header 
-        title="Configurações" 
-        showBackButton={true}
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <Header
+        title="Configurações"
+        subtitle="Perfil, segurança e aparência"
+        showBackButton
         onBack={handleBack}
-        showThemeToggle={true}
         onThemeToggle={toggleTheme}
+        icon={<Ionicons name="settings-outline" size={22} color={colors.primarySoftText} />}
       />
-      
-      <ScrollView style={styles.scrollView}>
-        <View style={[styles.sectionContent, isDark && styles.sectionContentDark]}>
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingLabel, isDark && styles.settingLabelDark]}>Desbloquear com biometria</Text>
-            <Switch value={enabled} onValueChange={value => { void changeEnabled(value).catch(error => Alert.alert('Biometria', error.message || 'Não foi possível alterar a opção.')); }} />
-          </View>
-          <Text style={{ padding: 16, color: isDark ? '#9ca3af' : '#6b7280' }}>Bloqueia este aplicativo ao abrir ou voltar para ele. Você também pode desbloquear com a senha da conta.</Text>
-        </View>
-        {settingsSections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.section}>
-            <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>
-              {section.title}
-            </Text>
-            
-            <View style={[styles.sectionContent, isDark && styles.sectionContentDark]}>
-              {section.items.map((item, itemIndex) => renderSettingItem(item, itemIndex, section.items))}
+
+      <ScrollView contentContainerStyle={{ padding: spacing.screen, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+        <Card style={{ marginBottom: spacing.lg }}>
+          <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>
+            Perfil
+          </Text>
+
+          <View style={{ alignItems: 'center', marginBottom: spacing.lg }}>
+            <View style={{ position: 'relative' }}>
+              {profilePicture ? (
+                <Image source={{ uri: profilePicture }} style={{ width: 96, height: 96, borderRadius: radii['2xl'] }} />
+              ) : (
+                <View
+                  style={{
+                    width: 96,
+                    height: 96,
+                    borderRadius: radii['2xl'],
+                    backgroundColor: colors.primarySoft,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 32, fontWeight: typography.weights.bold, color: colors.primarySoftText }}>
+                    {(name || user?.email || 'U').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Trocar foto"
+                style={{
+                  position: 'absolute',
+                  right: -6,
+                  bottom: -6,
+                  width: touch.minimum,
+                  height: touch.minimum,
+                  borderRadius: 22,
+                  backgroundColor: colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 2,
+                  borderColor: colors.surface,
+                  opacity: isUploadingImage ? 0.6 : 1,
+                }}
+                onPress={handlePickImage}
+                disabled={isUploadingImage}
+              >
+                <Ionicons name={isUploadingImage ? 'hourglass-outline' : 'camera-outline'} size={18} color={colors.onPrimary} />
+              </TouchableOpacity>
             </View>
+            <Text style={{ marginTop: spacing.sm, fontSize: typography.label, color: colors.inkMuted }}>
+              {isUploadingImage ? 'Processando imagem...' : 'Toque para trocar a foto'}
+            </Text>
+            {profilePicture ? (
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Remover foto"
+                style={{ marginTop: spacing.sm, minHeight: 44, justifyContent: 'center' }}
+                onPress={() => setProfilePicture('')}
+                disabled={isUploadingImage}
+              >
+                <Text style={{ fontSize: typography.label, fontWeight: typography.weights.semibold, color: colors.dangerText }}>Remover foto</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
-        ))}
+
+          <Input
+            label="Nome"
+            placeholder="Digite seu nome"
+            value={name}
+            onChangeText={setName}
+            disabled={isLoading}
+          />
+          <Input
+            label="Telefone"
+            placeholder="Digite seu telefone"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            keyboardType="phone-pad"
+            disabled={isLoading}
+          />
+
+          <Button
+            title="Salvar"
+            onPress={handleSaveProfile}
+            loading={isLoading}
+            disabled={isLoading || !name.trim()}
+            icon={!isLoading ? <Ionicons name="checkmark" size={18} color={colors.onPrimary} /> : undefined}
+          />
+        </Card>
+
+        <Card style={{ marginBottom: spacing.lg }}>
+          <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.sm }}>
+            Segurança
+          </Text>
+          {settingRow(
+            'Desbloquear com biometria',
+            'Bloqueia este aplicativo ao abrir ou voltar para ele.',
+            <Switch
+              value={enabled}
+              onValueChange={(value) => { void handleBiometricChange(value); }}
+              trackColor={{ false: colors.lineStrong, true: colors.primary }}
+              thumbColor={colors.onPrimary}
+              disabled={isChangingBiometric}
+            />,
+            'finger-print-outline',
+          )}
+          <Text style={{ fontSize: typography.label, lineHeight: 17, color: colors.inkMuted }}>
+            Você também pode desbloquear com a senha da conta.
+          </Text>
+        </Card>
+
+        <Card style={{ marginBottom: spacing.lg }}>
+          <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.sm }}>
+            Aparência
+          </Text>
+          {settingRow(
+            'Modo Escuro',
+            'Alterna entre o tema claro e o escuro.',
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: colors.lineStrong, true: colors.primary }}
+              thumbColor={colors.onPrimary}
+            />,
+            isDark ? 'moon-outline' : 'sunny-outline',
+          )}
+        </Card>
+
+        <Card>
+          <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.sm }}>
+            Sobre
+          </Text>
+          {settingRow(
+            'Versão do App',
+            'Atacte mobile',
+            <Text style={{ fontSize: typography.body, color: colors.inkMuted }}>
+              {Constants.expoConfig?.version || (typeof Constants.expoConfig?.runtimeVersion === 'string' ? Constants.expoConfig.runtimeVersion : 'N/A')}
+            </Text>,
+            'information-circle-outline',
+          )}
+        </Card>
       </ScrollView>
 
       <Modal
         visible={showImagePickerModal}
         onClose={() => setShowImagePickerModal(false)}
-        type="default"
         title="Selecionar Foto"
+        subtitle="Escolha a origem da imagem"
+        icon={<Ionicons name="camera-outline" size={22} color={colors.primarySoftText} />}
         size="sm"
       >
-        <View style={styles.imagePickerModalContent}>
-          <TouchableOpacity 
-            style={[styles.imagePickerOption, isDark && styles.imagePickerOptionDark]}
-            onPress={handleCameraPick}
-          >
-            <Ionicons name="camera-outline" size={24} color={isDark ? '#22c55e' : '#22c55e'} />
-            <Text style={[styles.imagePickerOptionText, isDark && styles.imagePickerOptionTextDark]}>
-              Câmera
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.imagePickerOption, isDark && styles.imagePickerOptionDark]}
-            onPress={handleGalleryPick}
-          >
-            <Ionicons name="images-outline" size={24} color={isDark ? '#22c55e' : '#22c55e'} />
-            <Text style={[styles.imagePickerOptionText, isDark && styles.imagePickerOptionTextDark]}>
-              Galeria
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          style={{
+            minHeight: 56,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            paddingHorizontal: spacing.lg,
+            marginBottom: spacing.sm,
+            borderRadius: radii.lg,
+            backgroundColor: colors.surfaceMuted,
+          }}
+          onPress={handleCameraPick}
+        >
+          <Ionicons name="camera-outline" size={22} color={colors.primaryText} />
+          <Text style={{ fontSize: typography.body, fontWeight: typography.weights.medium, color: colors.ink }}>Câmera</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          style={{
+            minHeight: 56,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            paddingHorizontal: spacing.lg,
+            borderRadius: radii.lg,
+            backgroundColor: colors.surfaceMuted,
+          }}
+          onPress={handleGalleryPick}
+        >
+          <Ionicons name="images-outline" size={22} color={colors.primaryText} />
+          <Text style={{ fontSize: typography.body, fontWeight: typography.weights.medium, color: colors.ink }}>Galeria</Text>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  containerDark: {
-    backgroundColor: '#111827',
-  },
-  scrollView: {
-    flex: 1,
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  sectionTitleDark: {
-    color: '#f9fafb',
-  },
-  sectionContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  sectionContentDark: {
-    backgroundColor: '#1f2937',
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  settingItemDark: {
-    borderBottomColor: '#374151',
-  },
-  settingItemLast: {
-    borderBottomWidth: 0,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: '#111827',
-    flex: 1,
-    marginRight: 12,
-  },
-  settingLabelDark: {
-    color: '#f9fafb',
-  },
-  settingValue: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  settingValueDark: {
-    color: '#9ca3af',
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    color: '#111827',
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  inputDark: {
-    color: '#f9fafb',
-    backgroundColor: '#374151',
-    borderColor: '#4b5563',
-  },
-  button: {
-    backgroundColor: '#22c55e',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  buttonDestructive: {
-    backgroundColor: '#ef4444',
-  },
-  buttonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  buttonTextDark: {
-    color: '#fff',
-  },
-  buttonTextDestructive: {
-    color: '#fff',
-  },
-  buttonTextDisabled: {
-    color: '#fff',
-  },
-  settingItemImage: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  imageRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  imageContainer: {
-    alignItems: 'flex-end',
-  },
-  imagePreviewContainer: {
-    position: 'relative',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-  },
-  imagePreview: {
-    width: '100%',
-    height: '100%',
-  },
-  imageOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingVertical: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  imageOverlayText: {
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    zIndex: 10,
-  },
-  imagePickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#d1d5db',
-    backgroundColor: '#f9fafb',
-    gap: 8,
-  },
-  imagePickerButtonDark: {
-    backgroundColor: '#1f2937',
-    borderColor: '#374151',
-  },
-  imagePickerButtonDisabled: {
-    opacity: 0.5,
-  },
-  imagePickerButtonText: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  imagePickerButtonTextDark: {
-    color: '#9ca3af',
-  },
-  imagePickerModalContent: {
-    gap: 12,
-  },
-  imagePickerOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: '#f9fafb',
-    gap: 12,
-  },
-  imagePickerOptionDark: {
-    backgroundColor: '#374151',
-  },
-  imagePickerOptionText: {
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: '500',
-  },
-  imagePickerOptionTextDark: {
-    color: '#f9fafb',
-  },
-});
 
 export default SettingsScreen;

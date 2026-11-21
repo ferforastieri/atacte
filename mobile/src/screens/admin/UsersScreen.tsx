@@ -1,14 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Switch, BackHandler } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { BackHandler, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Header, Card, SkeletonLoader, Modal, Input, Button, BaseSelect } from '../../components/shared';
+import {
+  BaseSelect,
+  Button,
+  Card,
+  EmptyState,
+  Header,
+  Input,
+  Modal,
+  Pagination,
+  SkeletonTable,
+} from '../../components/shared';
+import { IconTile } from '../../components/shared/IconTile';
+import { Pill } from '../../components/shared/Pill';
 import { userService } from '../../services/users/userService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
+import { useToast } from '../../contexts/ToastContext';
 import { MainTabParamList } from '../../navigation/AppNavigator';
+import { radii, spacing, touch, typography } from '../../theme/tokens';
 
 interface AdminUser {
   id: string;
@@ -25,24 +39,9 @@ type UsersScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'User
 export default function UsersScreen() {
   const navigation = useNavigation<UsersScreenNavigationProp>();
   const { isAdmin } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { colors, toggleTheme } = useTheme();
+  const { showSuccess, showError } = useToast();
   const insets = useSafeAreaInsets();
-
-  const handleBack = () => {
-    navigation.jumpTo('Profile');
-  };
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const onBackPress = () => {
-        handleBack();
-        return true;
-      };
-
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }, [navigation])
-  );
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -63,17 +62,24 @@ export default function UsersScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    total: 0,
-    limit: 10
-  });
+  const [formError, setFormError] = useState('');
+  const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, total: 0, limit: 10 });
+
+  const handleBack = () => navigation.jumpTo('Profile');
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        handleBack();
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [navigation]),
+  );
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchUsers(1);
-    }
+    if (isAdmin) void fetchUsers(1);
   }, []);
 
   const fetchUsers = async (page = 1) => {
@@ -82,31 +88,25 @@ export default function UsersScreen() {
       const offset = (page - 1) * pagination.limit;
       const response = await userService.getAllUsers(pagination.limit, offset);
       if (response.success && response.data) {
-        setUsers(response.data);
+        setUsers(response.data as AdminUser[]);
         const responsePagination = response.pagination;
         if (responsePagination) {
-          setPagination(prev => ({
-            ...prev,
+          setPagination((previous) => ({
+            ...previous,
             currentPage: page,
             total: responsePagination.total,
-            totalPages: Math.ceil(responsePagination.total / prev.limit)
+            totalPages: Math.max(1, Math.ceil(responsePagination.total / previous.limit)),
           }));
         }
       } else {
         setUsers([]);
-        setPagination(prev => ({ ...prev, totalPages: 1 }));
+        setPagination((previous) => ({ ...previous, totalPages: 1 }));
       }
-    } catch (error) {
+    } catch {
       setUsers([]);
-      setPagination(prev => ({ ...prev, totalPages: 1 }));
+      setPagination((previous) => ({ ...previous, totalPages: 1 }));
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= pagination.totalPages) {
-      fetchUsers(page);
     }
   };
 
@@ -121,27 +121,27 @@ export default function UsersScreen() {
       isActive: user.isActive,
     });
     setEditingUserPassword('');
+    setFormError('');
     setShowEditModal(true);
   };
 
   const closeEditModal = () => {
     setShowEditModal(false);
     setSelectedUser(null);
-    setEditingUser({
-      id: '',
-      email: '',
-      name: '',
-      phoneNumber: '',
-      role: 'USER',
-      isActive: true,
-    });
+    setEditingUser({ id: '', email: '', name: '', phoneNumber: '', role: 'USER', isActive: true });
     setEditingUserPassword('');
   };
 
   const saveUser = async () => {
-    if (!editingUser.id) return;
+    if (!editingUser.id || isSaving) return;
+    setFormError('');
 
+    if (!editingUser.email?.trim()) {
+      setFormError('Email é obrigatório.');
+      return;
+    }
     if (editingUserPassword && editingUserPassword.length < 8) {
+      setFormError('A senha deve ter pelo menos 8 caracteres.');
       return;
     }
 
@@ -154,17 +154,14 @@ export default function UsersScreen() {
         role: editingUser.role,
         isActive: editingUser.isActive,
       });
-
       if (editingUserPassword) {
         await userService.changeUserPassword(editingUser.id, editingUserPassword);
       }
-
       closeEditModal();
-      await fetchUsers();
-    } catch (error: unknown) {
-      const errorMessage = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
+      await fetchUsers(pagination.currentPage);
+      showSuccess('Usuário atualizado.');
+    } catch {
+      setFormError('Não foi possível salvar o usuário.');
     } finally {
       setIsSaving(false);
     }
@@ -173,6 +170,7 @@ export default function UsersScreen() {
   const openPasswordModal = (user: AdminUser) => {
     setSelectedUser(user);
     setNewPassword('');
+    setFormError('');
     setShowPasswordModal(true);
   };
 
@@ -183,11 +181,10 @@ export default function UsersScreen() {
   };
 
   const changePassword = async () => {
-    if (!selectedUser || !newPassword) {
-      return;
-    }
-
+    if (!selectedUser || !newPassword || isChangingPassword) return;
+    setFormError('');
     if (newPassword.length < 8) {
+      setFormError('A senha deve ter pelo menos 8 caracteres.');
       return;
     }
 
@@ -196,12 +193,12 @@ export default function UsersScreen() {
       const response = await userService.changeUserPassword(selectedUser.id, newPassword);
       if (response.success) {
         closePasswordModal();
+        showSuccess('Senha do usuário alterada.');
       } else {
+        setFormError('Não foi possível alterar a senha.');
       }
-    } catch (error: unknown) {
-      const errorMessage = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
+    } catch {
+      setFormError('Não foi possível alterar a senha.');
     } finally {
       setIsChangingPassword(false);
     }
@@ -220,20 +217,19 @@ export default function UsersScreen() {
   };
 
   const confirmDeleteUser = async () => {
-    if (!deletingUserId) return;
-
+    if (!deletingUserId || isDeleting) return;
     setIsDeleting(true);
     try {
       const response = await userService.deleteUser(deletingUserId);
       if (response.success) {
         closeDeleteModal();
         await fetchUsers(pagination.currentPage);
+        showSuccess('Usuário deletado.');
       } else {
+        showError('Não foi possível deletar o usuário.');
       }
-    } catch (error: unknown) {
-      const errorMessage = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
+    } catch {
+      showError('Não foi possível deletar o usuário.');
     } finally {
       setIsDeleting(false);
     }
@@ -246,7 +242,7 @@ export default function UsersScreen() {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -255,439 +251,168 @@ export default function UsersScreen() {
     { value: 'ADMIN', label: 'Admin' },
   ];
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark ? '#111827' : '#f9fafb',
-    },
-    scrollView: {
-      flex: 1,
-    },
-    content: {
-      padding: 20,
-      paddingBottom: Math.max(100, insets.bottom + 100),
-    },
-    titleCard: {
-      marginBottom: 20,
-      padding: 16,
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    userCard: {
-      marginBottom: 12,
-    },
-    userHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    userEmail: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      flex: 1,
-    },
-    badgeRow: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    badge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    badgeText: {
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    userDetails: {
-      marginTop: 12,
-    },
-    detailRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 4,
-    },
-    detailLabel: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
-    detailValue: {
-      fontSize: 12,
-      color: isDark ? '#d1d5db' : '#374151',
-      flex: 1,
-      textAlign: 'right',
-    },
-    actions: {
-      flexDirection: 'row',
-      gap: 8,
-      marginTop: 16,
-      paddingTop: 16,
-      borderTopWidth: 1,
-      borderTopColor: isDark ? '#374151' : '#e5e7eb',
-    },
-    actionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: isDark ? '#4b5563' : '#d1d5db',
-      backgroundColor: 'transparent',
-    },
-    actionButtonText: {
-      fontSize: 12,
-      fontWeight: '500',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginLeft: 4,
-    },
-    emptyContainer: {
-      alignItems: 'center',
-      paddingVertical: 40,
-    },
-    emptyIcon: {
-      marginBottom: 16,
-    },
-    emptyTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 4,
-    },
-    emptyText: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      textAlign: 'center',
-    },
-    paginationContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      borderTopWidth: 1,
-      borderTopColor: isDark ? '#374151' : '#e5e7eb',
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-    },
-    paginationButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-    },
-    paginationButtonDisabled: {
-      opacity: 0.5,
-    },
-    paginationButtonText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: isDark ? '#d1d5db' : '#374151',
-      marginHorizontal: 4,
-    },
-    paginationButtonTextDisabled: {
-      color: isDark ? '#4b5563' : '#9ca3af',
-    },
-    paginationInfo: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: isDark ? '#d1d5db' : '#374151',
-    },
-    modalContent: {
-      padding: 0,
-    },
-    formRow: {
-      marginBottom: 16,
-    },
-    switchRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginTop: 8,
-    },
-    switchLabel: {
-      fontSize: 14,
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    modalActions: {
-      flexDirection: 'row',
-      gap: 12,
-      marginTop: 24,
-      paddingTop: 16,
-      borderTopWidth: 1,
-      borderTopColor: isDark ? '#374151' : '#e5e7eb',
-    },
-  });
-
   if (!isAdmin) {
     return (
-      <View style={styles.container}>
+      <View style={{ flex: 1, backgroundColor: colors.canvas }}>
         <Header title="Usuários" showBackButton onBack={handleBack} onThemeToggle={toggleTheme} />
-        <View style={styles.content}>
-          <Text style={styles.emptyText}>Acesso negado</Text>
+        <View style={{ padding: spacing.screen }}>
+          <EmptyState icon="lock-closed-outline" title="Acesso negado" description="Esta área é exclusiva de administradores." />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Header title="Usuários" showBackButton onBack={handleBack} onThemeToggle={toggleTheme} />
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Card style={styles.titleCard}>
-          <Text style={styles.title}>Gerenciar Usuários</Text>
-        </Card>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <Header
+        title="Usuários"
+        subtitle="Gerenciar Usuários"
+        showBackButton
+        onBack={handleBack}
+        onThemeToggle={toggleTheme}
+        icon={<Ionicons name="people-outline" size={22} color={colors.primarySoftText} />}
+      />
 
+      <ScrollView contentContainerStyle={{ padding: spacing.screen, paddingBottom: Math.max(48, insets.bottom + 48) }} showsVerticalScrollIndicator={false}>
         {isLoading ? (
-          <SkeletonLoader variant="default" />
+          <SkeletonTable rows={5} />
         ) : users.length === 0 ? (
-          <Card style={styles.emptyContainer}>
-            <Ionicons 
-              name="people-outline" 
-              size={48} 
-              color={isDark ? '#6b7280' : '#9ca3af'}
-              style={styles.emptyIcon}
-            />
-            <Text style={styles.emptyTitle}>Nenhum usuário encontrado</Text>
-          </Card>
+          <EmptyState icon="people-outline" title="Nenhum usuário encontrado" description="Ainda não há contas cadastradas." />
         ) : (
-          users.map((user) => (
-            <Card key={user.id} style={styles.userCard}>
-              <View style={styles.userHeader}>
-                <Text style={styles.userEmail}>{user.email}</Text>
-                <View style={styles.badgeRow}>
-                  <View style={[
-                    styles.badge,
-                    { backgroundColor: user.role === 'ADMIN' ? '#8b5cf6' : '#6b7280' }
-                  ]}>
-                    <Text style={[styles.badgeText, { color: '#ffffff' }]}>
-                      {user.role === 'ADMIN' ? 'Admin' : 'Usuário'}
+          <View style={{ gap: spacing.md }}>
+            {users.map((user) => (
+              <Card key={user.id}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
+                  <IconTile variant="muted">
+                    <Ionicons name="person-outline" size={20} color={colors.inkMuted} />
+                  </IconTile>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text numberOfLines={1} style={{ fontSize: typography.bodyLarge, fontWeight: typography.weights.semibold, color: colors.ink }}>
+                      {user.email}
                     </Text>
-                  </View>
-                  <View style={[
-                    styles.badge,
-                    { backgroundColor: user.isActive ? '#10b981' : '#dc2626' }
-                  ]}>
-                    <Text style={[styles.badgeText, { color: '#ffffff' }]}>
-                      {user.isActive ? 'Ativo' : 'Inativo'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.sm }}>
+                      <Pill label={user.role === 'ADMIN' ? 'Admin' : 'Usuário'} tone={user.role === 'ADMIN' ? 'accent' : 'neutral'} />
+                      <Pill label={user.isActive ? 'Ativo' : 'Inativo'} tone={user.isActive ? 'success' : 'danger'} />
+                    </View>
+                    <View style={{ marginTop: spacing.sm, gap: 4 }}>
+                      {user.name ? <Text style={{ fontSize: typography.label, color: colors.inkMuted }}>Nome: {user.name}</Text> : null}
+                      <Text style={{ fontSize: typography.label, color: colors.inkMuted }}>Último login: {formatDate(user.lastLogin)}</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
 
-              <View style={styles.userDetails}>
-                {user.name && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Nome:</Text>
-                    <Text style={styles.detailValue}>{user.name}</Text>
-                  </View>
-                )}
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Último Login:</Text>
-                  <Text style={styles.detailValue}>{formatDate(user.lastLogin)}</Text>
+                <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.line }}>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Editar usuário"
+                    style={{ flex: 1, minHeight: touch.minimum, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}
+                    onPress={() => openEditModal(user)}
+                  >
+                    <Ionicons name="create-outline" size={16} color={colors.inkMuted} />
+                    <Text style={{ fontSize: typography.label, fontWeight: typography.weights.medium, color: colors.inkMuted }}>Editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Alterar senha"
+                    style={{ flex: 1, minHeight: touch.minimum, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}
+                    onPress={() => openPasswordModal(user)}
+                  >
+                    <Ionicons name="key-outline" size={16} color={colors.inkMuted} />
+                    <Text style={{ fontSize: typography.label, fontWeight: typography.weights.medium, color: colors.inkMuted }}>Senha</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Deletar usuário"
+                    style={{ flex: 1, minHeight: touch.minimum, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: radii.md, backgroundColor: colors.dangerSoft }}
+                    onPress={() => openDeleteModal(user)}
+                  >
+                    <Ionicons name="trash-outline" size={16} color={colors.dangerText} />
+                    <Text style={{ fontSize: typography.label, fontWeight: typography.weights.medium, color: colors.dangerText }}>Deletar</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  style={[styles.actionButton, { flex: 1 }]}
-                  onPress={() => openEditModal(user)}
-                >
-                  <Ionicons name="create-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-                  <Text style={styles.actionButtonText}>Editar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.actionButton, { flex: 1 }]}
-                  onPress={() => openPasswordModal(user)}
-                >
-                  <Ionicons name="key-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-                  <Text style={styles.actionButtonText}>Senha</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.actionButton, { flex: 1 }]}
-                  onPress={() => openDeleteModal(user)}
-                >
-                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                  <Text style={[styles.actionButtonText, { color: '#ef4444' }]}>Deletar</Text>
-                </TouchableOpacity>
-              </View>
-            </Card>
-          ))
-        )}
-
-        {!isLoading && users.length > 0 && pagination.totalPages > 1 && (
-          <View style={styles.paginationContainer}>
-            <TouchableOpacity
-              style={[styles.paginationButton, pagination.currentPage === 1 && styles.paginationButtonDisabled]}
-              onPress={() => goToPage(pagination.currentPage - 1)}
-              disabled={pagination.currentPage === 1}
-            >
-              <Ionicons name="chevron-back" size={20} color={pagination.currentPage === 1 ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
-              <Text style={[styles.paginationButtonText, pagination.currentPage === 1 && styles.paginationButtonTextDisabled]}>
-                Anterior
-              </Text>
-            </TouchableOpacity>
-
-            <Text style={styles.paginationInfo}>
-              Página {pagination.currentPage} de {pagination.totalPages}
-            </Text>
-
-            <TouchableOpacity
-              style={[styles.paginationButton, pagination.currentPage === pagination.totalPages && styles.paginationButtonDisabled]}
-              onPress={() => goToPage(pagination.currentPage + 1)}
-              disabled={pagination.currentPage === pagination.totalPages}
-            >
-              <Text style={[styles.paginationButtonText, pagination.currentPage === pagination.totalPages && styles.paginationButtonTextDisabled]}>
-                Próxima
-              </Text>
-              <Ionicons name="chevron-forward" size={20} color={pagination.currentPage === pagination.totalPages ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
-            </TouchableOpacity>
+              </Card>
+            ))}
           </View>
         )}
+
+        {!isLoading && users.length > 0 ? (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPrevious={() => void fetchUsers(pagination.currentPage - 1)}
+            onNext={() => void fetchUsers(pagination.currentPage + 1)}
+            busy={isLoading}
+          />
+        ) : null}
       </ScrollView>
 
       <Modal
         visible={showEditModal}
-        onClose={closeEditModal}
-        type="default"
+        onClose={() => {
+          if (isSaving) return;
+          closeEditModal();
+        }}
         title="Editar Usuário"
+        subtitle="Atualize os dados e o acesso desta conta"
+        icon={<Ionicons name="create-outline" size={22} color={colors.primarySoftText} />}
         size="lg"
+        footer={(
+          <>
+            <Button title="Cancelar" onPress={closeEditModal} variant="ghost" style={{ flex: 1 }} disabled={isSaving} />
+            <Button title="Salvar" onPress={saveUser} loading={isSaving} disabled={isSaving} style={{ flex: 1 }} />
+          </>
+        )}
       >
-        <View style={styles.modalContent}>
-          <View style={styles.formRow}>
-            <Input
-              label="Email"
-              value={editingUser.email || ''}
-              onChangeText={(text) => setEditingUser({ ...editingUser, email: text })}
-              keyboardType="email-address"
-              leftIcon={<Ionicons name="mail-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-            />
+        {formError ? (
+          <View style={{ marginBottom: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.dangerSoft }}>
+            <Text style={{ fontSize: typography.body, color: colors.dangerText }}>{formError}</Text>
           </View>
-
-          <View style={styles.formRow}>
-            <Input
-              label="Nome"
-              value={editingUser.name || ''}
-              onChangeText={(text) => setEditingUser({ ...editingUser, name: text })}
-              leftIcon={<Ionicons name="person-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-            />
-          </View>
-
-          <View style={styles.formRow}>
-            <Input
-              label="Telefone"
-              value={editingUser.phoneNumber || ''}
-              onChangeText={(text) => setEditingUser({ ...editingUser, phoneNumber: text })}
-              keyboardType="phone-pad"
-              leftIcon={<Ionicons name="call-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-            />
-          </View>
-
-          <View style={styles.formRow}>
-            <BaseSelect
-              label="Role"
-              value={editingUser.role}
-              options={roleOptions}
-              onChange={(value) => setEditingUser({ ...editingUser, role: value as 'USER' | 'ADMIN' })}
-            />
-          </View>
-
-          <View style={styles.formRow}>
-            <Input
-              label="Nova Senha (opcional)"
-              value={editingUserPassword}
-              onChangeText={setEditingUserPassword}
-              secureTextEntry
-              placeholder="Deixe em branco para não alterar a senha"
-              leftIcon={<Ionicons name="lock-closed-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-            />
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Usuário Ativo</Text>
-            <Switch
-              value={editingUser.isActive}
-              onValueChange={(value) => setEditingUser({ ...editingUser, isActive: value })}
-              trackColor={{ false: '#767577', true: '#16a34a' }}
-              thumbColor={editingUser.isActive ? '#ffffff' : '#f4f3f4'}
-            />
-          </View>
-
-          <View style={styles.modalActions}>
-            <Button
-              title="Cancelar"
-              onPress={closeEditModal}
-              variant="ghost"
-              style={{ flex: 1 }}
-            />
-            <Button
-              title="Salvar"
-              onPress={saveUser}
-              variant="primary"
-              loading={isSaving}
-              style={{ flex: 1 }}
-            />
-          </View>
+        ) : null}
+        <Input label="Email" value={editingUser.email || ''} onChangeText={(text) => setEditingUser({ ...editingUser, email: text })} keyboardType="email-address" autoCapitalize="none" disabled={isSaving} leftIcon={<Ionicons name="mail-outline" size={19} color={colors.inkSubtle} />} />
+        <Input label="Nome" value={editingUser.name || ''} onChangeText={(text) => setEditingUser({ ...editingUser, name: text })} disabled={isSaving} leftIcon={<Ionicons name="person-outline" size={19} color={colors.inkSubtle} />} />
+        <Input label="Telefone" value={editingUser.phoneNumber || ''} onChangeText={(text) => setEditingUser({ ...editingUser, phoneNumber: text })} keyboardType="phone-pad" disabled={isSaving} leftIcon={<Ionicons name="call-outline" size={19} color={colors.inkSubtle} />} />
+        <BaseSelect label="Role" value={editingUser.role} options={roleOptions} onChange={(value) => setEditingUser({ ...editingUser, role: value as 'USER' | 'ADMIN' })} disabled={isSaving} />
+        <Input label="Nova Senha (opcional)" value={editingUserPassword} onChangeText={setEditingUserPassword} secureTextEntry placeholder="Deixe em branco para não alterar" helperText="A senha deve ter pelo menos 8 caracteres" disabled={isSaving} leftIcon={<Ionicons name="lock-closed-outline" size={19} color={colors.inkSubtle} />} />
+        <View style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={{ fontSize: typography.body, color: colors.ink }}>Usuário Ativo</Text>
+          <Switch value={editingUser.isActive} onValueChange={(value) => setEditingUser({ ...editingUser, isActive: value })} trackColor={{ false: colors.lineStrong, true: colors.primary }} thumbColor={colors.onPrimary} disabled={isSaving} />
         </View>
       </Modal>
 
       <Modal
         visible={showPasswordModal}
-        onClose={closePasswordModal}
-        type="default"
+        onClose={() => {
+          if (isChangingPassword) return;
+          closePasswordModal();
+        }}
         title="Alterar Senha"
+        subtitle={selectedUser?.email ? `Conta: ${selectedUser.email}` : undefined}
+        icon={<Ionicons name="key-outline" size={22} color={colors.primarySoftText} />}
+        size="sm"
+        footer={(
+          <>
+            <Button title="Cancelar" onPress={closePasswordModal} variant="ghost" style={{ flex: 1 }} disabled={isChangingPassword} />
+            <Button title="Alterar Senha" onPress={changePassword} loading={isChangingPassword} disabled={isChangingPassword || !newPassword} style={{ flex: 1 }} />
+          </>
+        )}
       >
-        <View style={styles.modalContent}>
-          <View style={styles.formRow}>
-            <Text style={[styles.detailLabel, { marginBottom: 8 }]}>
-              Usuário: {selectedUser?.email}
-            </Text>
-            <Input
-              label="Nova Senha"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry
-              placeholder="A senha deve ter pelo menos 8 caracteres"
-              leftIcon={<Ionicons name="lock-closed-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-            />
+        {formError ? (
+          <View style={{ marginBottom: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.dangerSoft }}>
+            <Text style={{ fontSize: typography.body, color: colors.dangerText }}>{formError}</Text>
           </View>
-
-          <View style={styles.modalActions}>
-            <Button
-              title="Cancelar"
-              onPress={closePasswordModal}
-              variant="ghost"
-              style={{ flex: 1 }}
-            />
-            <Button
-              title="Alterar Senha"
-              onPress={changePassword}
-              variant="primary"
-              loading={isChangingPassword}
-              style={{ flex: 1 }}
-            />
-          </View>
-        </View>
+        ) : null}
+        <Input label="Nova Senha" value={newPassword} onChangeText={setNewPassword} secureTextEntry placeholder="Mínimo 8 caracteres" helperText="A senha deve ter pelo menos 8 caracteres" disabled={isChangingPassword} leftIcon={<Ionicons name="lock-closed-outline" size={19} color={colors.inkSubtle} />} />
       </Modal>
 
       <Modal
         visible={showDeleteModal}
-        onClose={closeDeleteModal}
-        type="confirm"
+        onClose={() => {
+          if (isDeleting) return;
+          closeDeleteModal();
+        }}
         title="Deletar Usuário"
-        message={`Tem certeza que deseja deletar o usuário ${selectedUser?.email}? Esta ação não pode ser desfeita.`}
+        type="confirm"
+        message={`Tem certeza que deseja deletar o usuário ${selectedUser?.email || ''}? Esta ação não pode ser desfeita.`}
         confirmText="Deletar"
         cancelText="Cancelar"
         confirmVariant="danger"

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import { radii, spacing, touch, typography } from '../../theme/tokens';
 
 interface SearchInputProps {
   value?: string;
@@ -34,218 +35,137 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   onBlur,
   onEnter,
 }) => {
-  const { isDark } = useTheme();
-  const [inputValue, setInputValue] = useState<string>(value);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const { colors } = useTheme();
+  const [inputValue, setInputValue] = useState(value);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  
-  const debounce = useCallback((func: Function, delay: number) => {
-    return (...args: unknown[]) => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-      debounceTimer.current = setTimeout(() => func.apply(null, args), delay);
-    };
-  }, []);
-
-  
   const debouncedSearch = useCallback(
-    debounce((searchValue: string) => {
-      if (searchValue.length >= minLength) {
-        setIsSearching(true);
-        onSearch?.(searchValue);
-        
-        
-        searchTimeout.current = setTimeout(() => {
+    (text: string) => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        if (text.length >= minLength) {
+          setIsSearching(true);
+          onSearch?.(text);
+          if (searchTimeout.current) clearTimeout(searchTimeout.current);
+          searchTimeout.current = setTimeout(() => setIsSearching(false), 250);
+        } else if (text.length === 0) {
           setIsSearching(false);
-        }, 200);
-      } else if (searchValue.length === 0) {
-        
-        setIsSearching(false);
-        onSearch?.('');
-      }
-    }, debounceMs),
-    [debounceMs, minLength, onSearch]
+          onSearch?.('');
+        }
+      }, debounceMs);
+    },
+    [debounceMs, minLength, onSearch],
   );
 
-  
-  const handleInputChange = useCallback((text: string) => {
+  const handleChange = (text: string) => {
     setInputValue(text);
     onChangeText?.(text);
     debouncedSearch(text);
-  }, [onChangeText, debouncedSearch]);
+  };
 
-  
-  const handleClear = useCallback(() => {
+  const handleClear = () => {
     setInputValue('');
     onChangeText?.('');
     onClear?.();
     onSearch?.('');
     setIsSearching(false);
-    
-    
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
       debounceTimer.current = null;
     }
-    
-    
     inputRef.current?.focus();
-  }, [onChangeText, onClear, onSearch]);
+  };
 
-  
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = () => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
       debounceTimer.current = null;
     }
     onEnter?.(inputValue);
     onSearch?.(inputValue);
-  }, [inputValue, onEnter, onSearch]);
+  };
 
-  
-  const handleFocus = useCallback(() => {
-    onFocus?.();
-  }, [onFocus]);
-
-  
-  const handleBlur = useCallback(() => {
-    onBlur?.();
-  }, [onBlur]);
-
-  
   useEffect(() => {
-    if (value !== inputValue) {
-      setInputValue(value);
-    }
+    if (value !== inputValue) setInputValue(value);
   }, [value]);
 
-  
   useEffect(() => {
-    if (autoFocus) {
-      inputRef.current?.focus();
-    }
+    if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
 
-  
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-      if (searchTimeout.current) {
-        clearTimeout(searchTimeout.current);
-      }
-    };
+  useEffect(() => () => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
   }, []);
 
-  const styles = StyleSheet.create({
-    container: {
-      width: '100%',
-    },
-    inputWrapper: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      position: 'relative',
-    },
-    input: {
-      flex: 1,
-      paddingLeft: 40,
-      paddingRight: showClearButton ? 40 : 12,
-      paddingVertical: 10,
-      fontSize: 14,
-      borderRadius: 12,
-      borderWidth: 1,
-      backgroundColor: isDark ? '#374151' : '#ffffff',
-      borderColor: isDark ? '#4b5563' : '#d1d5db',
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    inputFocused: {
-      borderColor: '#3b82f6',
-      borderWidth: 2,
-    },
-    inputDisabled: {
-      backgroundColor: isDark ? '#1f2937' : '#f9fafb',
-      color: isDark ? '#6b7280' : '#9ca3af',
-    },
-    searchIcon: {
-      position: 'absolute',
-      left: 12,
-      zIndex: 1,
-    },
-    clearButton: {
-      position: 'absolute',
-      right: 12,
-      padding: 4,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#4b5563' : '#e5e7eb',
-    },
-    loadingContainer: {
-      position: 'absolute',
-      right: showClearButton ? 44 : 12,
-      top: '50%',
-      transform: [{ translateY: -10 }],
-    },
-    placeholderText: {
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
-  });
-
   return (
-    <View style={styles.container}>
-      <View style={styles.inputWrapper}>
-        <Ionicons
-          name="search"
-          size={20}
-          color={isDark ? '#9ca3af' : '#6b7280'}
-          style={styles.searchIcon}
-        />
-        
+    <View style={{ width: '100%' }}>
+      <View
+        style={{
+          minHeight: 48,
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: isFocused ? colors.primary : colors.line,
+          borderRadius: radii.lg,
+          backgroundColor: disabled ? colors.surfaceMuted : colors.surface,
+        }}
+      >
+        <Ionicons name="search" size={19} color={colors.inkSubtle} style={{ marginLeft: spacing.md }} />
         <TextInput
           ref={inputRef}
-          style={[
-            styles.input,
-            disabled && styles.inputDisabled,
-          ]}
+          accessibilityLabel={placeholder}
+          style={{
+            flex: 1,
+            minHeight: 46,
+            paddingHorizontal: spacing.sm,
+            paddingRight: showClearButton && inputValue ? touch.minimum : spacing.md,
+            fontSize: typography.body,
+            color: colors.ink,
+          }}
           value={inputValue}
-          onChangeText={handleInputChange}
+          onChangeText={handleChange}
           onSubmitEditing={handleSubmit}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          onFocus={() => {
+            setIsFocused(true);
+            onFocus?.();
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+            onBlur?.();
+          }}
           placeholder={placeholder}
-          placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
+          placeholderTextColor={colors.inkSubtle}
           editable={!disabled}
           returnKeyType="search"
           autoCapitalize="none"
           autoCorrect={false}
-          clearButtonMode="never" 
         />
-        
-        {showClearButton && inputValue.length > 0 && (
+
+        {isSearching ? (
+          <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: spacing.sm }} />
+        ) : null}
+
+        {showClearButton && inputValue.length > 0 ? (
           <TouchableOpacity
-            style={styles.clearButton}
+            accessibilityRole="button"
+            accessibilityLabel="Limpar busca"
+            style={{
+              width: touch.minimum,
+              height: touch.minimum,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
             onPress={handleClear}
             disabled={disabled}
           >
-            <Ionicons
-              name="close"
-              size={16}
-              color={isDark ? '#9ca3af' : '#6b7280'}
-            />
+            <Ionicons name="close" size={18} color={colors.inkSubtle} />
           </TouchableOpacity>
-        )}
-        
-        {isSearching && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator
-              size="small"
-              color={isDark ? '#3b82f6' : '#3b82f6'}
-            />
-          </View>
-        )}
+        ) : null}
       </View>
     </View>
   );

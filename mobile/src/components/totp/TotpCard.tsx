@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, TotpCode } from '../shared';
+import { Card } from '../shared/Card';
+import { IconTile } from '../shared/IconTile';
+import { Pill } from '../shared/Pill';
+import { Skeleton } from '../shared/Skeleton';
+import { TotpCode } from './TotpCode';
 import { useTheme } from '../../contexts/ThemeContext';
+import { radii, spacing, touch, typography } from '../../theme/tokens';
 import { totpService } from '../../services/totp/totpService';
+
 interface PasswordEntry {
   id: string;
   name: string;
@@ -24,6 +30,10 @@ interface TotpCardProps {
   onToggleFavorite: () => void;
   onCopyPassword: () => void;
   onCopyUsername: () => void;
+  isCopyingPassword?: boolean;
+  isCopyingUsername?: boolean;
+  isTogglingFavorite?: boolean;
+  isDeleting?: boolean;
 }
 
 export const TotpCard: React.FC<TotpCardProps> = ({
@@ -35,223 +45,169 @@ export const TotpCard: React.FC<TotpCardProps> = ({
   onToggleFavorite,
   onCopyPassword,
   onCopyUsername,
+  isCopyingPassword = false,
+  isCopyingUsername = false,
+  isTogglingFavorite = false,
+  isDeleting = false,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [isLoadingTotp, setIsLoadingTotp] = useState(false);
 
   useEffect(() => {
-    if (password.totpEnabled) {
-      loadTotpSecret();
+    let active = true;
+    if (!password.totpEnabled) {
+      setTotpSecret(null);
+      return undefined;
     }
-  }, [password.totpEnabled, password.id]);
-
-  const loadTotpSecret = async () => {
-    if (!password.totpEnabled) return;
-    
     setIsLoadingTotp(true);
-    try {
-      const response = await totpService.getTotpSecret(password.id);
-      if (response.success && response.data?.secret) {
-        setTotpSecret(response.data.secret);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar secret TOTP:', error);
-    } finally {
-      setIsLoadingTotp(false);
-    }
-  };
+    totpService.getTotpSecret(password.id)
+      .then((response) => {
+        if (active && response.success && response.data?.secret) {
+          setTotpSecret(response.data.secret);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setIsLoadingTotp(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [password.id, password.totpEnabled]);
 
-  const refreshTotpCode = async () => {
-    await loadTotpSecret();
-  };
-
-  const handleTotpCopy = () => {
-  };
-
-  const styles = StyleSheet.create({
-    card: {
-      marginBottom: 16,
-    },
-    newCard: {
-      borderWidth: 2,
-      borderColor: '#16a34a',
-    },
-    newBadge: {
-      borderRadius: 999,
-      backgroundColor: isDark ? 'rgba(22, 163, 74, 0.25)' : '#dcfce7',
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      marginRight: 4,
-    },
-    newBadgeText: {
-      fontSize: 10,
-      fontWeight: '700',
-      letterSpacing: 0.5,
-      color: isDark ? '#86efac' : '#15803d',
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: 12,
-    },
-    info: {
-      flex: 1,
-    },
-    name: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 4,
-    },
-    website: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginBottom: 2,
-    },
-    username: {
-      fontSize: 12,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginBottom: 2,
-    },
-    folder: {
-      fontSize: 12,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginTop: 4,
-    },
-    icons: {
-      flexDirection: 'row',
-      gap: 4,
-    },
-    actions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 12,
-    },
-    deleteButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    copyButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    favoriteButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    editButton: {
-      flex: 1,
-    },
-    totpContainer: {
-      marginTop: 12,
-    },
-  });
+  const actionButton = (
+    label: string,
+    ionicon: keyof typeof Ionicons.glyphMap,
+    onAction: () => void,
+    options?: { color?: string; background?: string; busy?: boolean },
+  ) => (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{
+        width: touch.minimum,
+        height: touch.minimum,
+        borderRadius: radii.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: options?.background || colors.surfaceMuted,
+        opacity: options?.busy ? 0.55 : 1,
+      }}
+      onPress={onAction}
+      disabled={options?.busy}
+      activeOpacity={0.75}
+    >
+      {options?.busy ? (
+        <ActivityIndicator size="small" color={options?.color || colors.inkMuted} />
+      ) : (
+        <Ionicons name={ionicon} size={18} color={options?.color || colors.inkMuted} />
+      )}
+    </TouchableOpacity>
+  );
 
   return (
-    <Card style={isNew ? { ...styles.card, ...styles.newCard } : styles.card}>
-      <TouchableOpacity onPress={onPress}>
-        <View style={styles.header}>
-          <View style={styles.info}>
-            <Text style={styles.name}>{password.name}</Text>
-            {password.website && (
-              <Text style={styles.website}>{password.website}</Text>
-            )}
-            {password.username && (
-              <Text style={styles.username}>@{password.username}</Text>
-            )}
-            {password.folder && (
-              <Text style={styles.folder}>📁 {password.folder}</Text>
-            )}
-          </View>
-          <View style={styles.icons}>
-            {isNew && (
-              <View style={styles.newBadge}>
-                <Text style={styles.newBadgeText}>NOVA</Text>
-              </View>
-            )}
-            {password.isFavorite && (
-              <Ionicons name="heart" size={16} color="#dc2626" />
-            )}
-            {password.totpEnabled && (
-              <Ionicons name="shield-checkmark" size={16} color="#2563eb" />
-            )}
+    <Card
+      style={{
+        marginBottom: spacing.md,
+        borderColor: isNew ? colors.primary : colors.line,
+        borderWidth: isNew ? 2 : 1,
+      }}
+    >
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Abrir ${password.name}`} onPress={onPress} activeOpacity={0.8}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
+          <IconTile>
+            <Ionicons name="lock-closed-outline" size={20} color={colors.primarySoftText} />
+          </IconTile>
+
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}>
+              <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.ink, fontSize: typography.bodyLarge, fontWeight: typography.weights.semibold }}>
+                {password.name}
+              </Text>
+              {isNew ? <Pill label="NOVA" tone="accent" /> : null}
+              {password.isFavorite ? (
+                <Ionicons name="heart" size={15} color={colors.danger} />
+              ) : null}
+            </View>
+            {password.website ? (
+              <Text numberOfLines={1} style={{ marginTop: 3, color: colors.inkMuted, fontSize: typography.body }}>
+                {password.website}
+              </Text>
+            ) : null}
+            {password.username ? (
+              <Text numberOfLines={1} style={{ marginTop: 1, color: colors.inkSubtle, fontSize: typography.label }}>
+                {password.username}
+              </Text>
+            ) : null}
+            <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.sm }}>
+              {password.folder ? <Pill label={password.folder} icon={<Ionicons name="folder-outline" size={12} color={colors.inkMuted} />} /> : null}
+              {password.totpEnabled ? <Pill label="TOTP" tone="info" icon={<Ionicons name="shield-checkmark-outline" size={12} color={colors.infoText} />} /> : null}
+            </View>
           </View>
         </View>
       </TouchableOpacity>
-      
-      {}
-      {password.totpEnabled && totpSecret && (
-        <View style={styles.totpContainer}>
-          <TotpCode
-            secret={totpSecret}
-            onRefresh={refreshTotpCode}
-            onCopy={handleTotpCopy}
-          />
+
+      {password.totpEnabled ? (
+        <View style={{ marginTop: spacing.md }}>
+          {isLoadingTotp ? (
+            <View style={{ backgroundColor: colors.hero, borderRadius: radii['2xl'], padding: spacing.xl, gap: spacing.sm }}>
+              <Skeleton width="34%" height={10} />
+              <Skeleton width="66%" height={32} />
+              <Skeleton width="100%" height={6} />
+            </View>
+          ) : (
+            <TotpCode secret={totpSecret || undefined} />
+          )}
         </View>
-      )}
-      
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={onDelete}
-        >
-          <Ionicons name="trash-outline" size={16} color="#dc2626" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.copyButton}
-          onPress={onEdit}
-        >
-          <Ionicons name="create-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-        </TouchableOpacity>
-        {password.username && (
-          <TouchableOpacity
-            style={styles.copyButton}
-            onPress={onCopyUsername}
-          >
-            <Ionicons name="person-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-          </TouchableOpacity>
+      ) : null}
+
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          marginTop: spacing.md,
+          paddingTop: spacing.md,
+          borderTopWidth: 1,
+          borderTopColor: colors.line,
+        }}
+      >
+        {actionButton('Excluir senha', 'trash-outline', onDelete, { color: colors.dangerText, busy: isDeleting })}
+        {actionButton('Editar senha', 'create-outline', onEdit)}
+        {password.username ? actionButton('Copiar usuário', 'person-outline', onCopyUsername, { busy: isCopyingUsername }) : null}
+        {actionButton(
+          password.isFavorite ? 'Remover das favoritas' : 'Marcar como favorita',
+          password.isFavorite ? 'heart' : 'heart-outline',
+          onToggleFavorite,
+          { color: password.isFavorite ? colors.danger : colors.inkMuted, busy: isTogglingFavorite },
         )}
         <TouchableOpacity
-          style={styles.favoriteButton}
-          onPress={onToggleFavorite}
-        >
-          <Ionicons 
-            name={password.isFavorite ? "heart" : "heart-outline"} 
-            size={16} 
-            color={password.isFavorite ? "#dc2626" : (isDark ? '#9ca3af' : '#6b7280')} 
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.editButton}
+          accessibilityRole="button"
+          accessibilityLabel="Copiar senha"
           onPress={onCopyPassword}
-        >
-          <View style={{
-            backgroundColor: '#16a34a',
-            paddingVertical: 8,
-            paddingHorizontal: 14,
-            borderRadius: 10,
+          disabled={isCopyingPassword}
+          activeOpacity={0.8}
+          style={{
+            flex: 1,
+            minHeight: touch.minimum,
+            borderRadius: radii.md,
+            backgroundColor: colors.primary,
             alignItems: 'center',
-          }}>
-            <Text style={{
-              color: '#ffffff',
-              fontSize: 13,
-              fontWeight: '500',
-            }}>
-              Copiar Senha
-            </Text>
-          </View>
+            justifyContent: 'center',
+            flexDirection: 'row',
+            gap: 6,
+            opacity: isCopyingPassword ? 0.6 : 1,
+          }}
+        >
+          {isCopyingPassword ? (
+            <ActivityIndicator size="small" color={colors.onPrimary} />
+          ) : (
+            <Ionicons name="copy-outline" size={16} color={colors.onPrimary} />
+          )}
+          <Text style={{ color: colors.onPrimary, fontSize: typography.label, fontWeight: typography.weights.semibold }}>
+            Copiar senha
+          </Text>
         </TouchableOpacity>
       </View>
     </Card>

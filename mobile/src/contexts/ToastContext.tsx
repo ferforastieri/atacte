@@ -3,7 +3,6 @@ import { DeviceEventEmitter, View } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomToast from '../components/shared/CustomToast';
-import { useTheme } from './ThemeContext';
 
 interface ToastContextType {
   showSuccess: (message: string) => void;
@@ -27,7 +26,6 @@ interface ToastData {
 }
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
-  const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const [toasts, setToasts] = useState<ToastData[]>([]);
 

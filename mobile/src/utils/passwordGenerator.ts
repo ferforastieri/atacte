@@ -1,4 +1,5 @@
 import { secureRandomInt } from './secureRandom';
+import { lightColors } from '../theme/tokens';
 export interface PasswordGeneratorOptions {
   length: number;
   includeUppercase: boolean;
@@ -170,16 +171,16 @@ export class PasswordGenerator {
 
     if (score >= 6) {
       label = 'Muito Forte';
-      color = '#16a34a';
+      color = lightColors.successText;
     } else if (score >= 4) {
       label = 'Forte';
-      color = '#22c55e';
+      color = lightColors.accent;
     } else if (score >= 2) {
       label = 'Média';
-      color = '#eab308';
+      color = lightColors.warning;
     } else {
       label = 'Fraca';
-      color = '#ef4444';
+      color = lightColors.danger;
     }
 
     return {
