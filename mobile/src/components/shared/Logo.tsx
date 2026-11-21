@@ -25,7 +25,7 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <View style={[{ flexDirection: 'row', alignItems: 'center' }, style]}>
       <Image
-        source={require('../../../assets/logo.png')}
+        source={require('../../../assets/symbol.png')}
         style={{ width: size, height: size, resizeMode: 'contain' }}
       />
       {showText ? (
