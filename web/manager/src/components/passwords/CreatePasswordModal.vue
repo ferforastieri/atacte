@@ -1,190 +1,160 @@
 <template>
-  <BaseModal :show="show" @close="$emit('close')" size="lg">
+  <BaseModal :show="show" size="lg" @close="$emit('close')">
     <template #header>
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Nova Senha</h3>
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="icon-tile h-11 w-11">
+          <LockClosedIcon class="h-5 w-5" />
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-lg font-semibold text-ink">Nova Senha</h3>
+          <p class="mt-0.5 text-xs text-ink-muted">Guarde uma credencial nova no cofre</p>
+        </div>
+      </div>
     </template>
 
-    <form @submit.prevent="handleSubmit" class="space-y-6">
-      <!-- Nome/Title -->
-      <div>
-        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Nome *
-        </label>
+    <form class="space-y-6" @submit.prevent="handleSubmit">
+      <div
+        v-if="formError"
+        class="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-sm text-danger-700 dark:border-danger-900 dark:bg-danger-900/20 dark:text-danger-300"
+        role="alert"
+      >
+        {{ formError }}
+      </div>
+
+      <section class="space-y-4">
+        <h4 class="section-title">Informações</h4>
+
         <BaseInput
-          id="name"
+          id="password-name"
           v-model="form.name"
-          type="text"
+          label="Nome"
           placeholder="Ex: Gmail, Facebook, Netflix"
           required
           :error="errors.name"
           :left-icon="TagIcon"
         />
-      </div>
 
-      <!-- Website -->
-      <div>
-        <label for="website" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Website
-        </label>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <BaseInput
+            id="password-website"
+            v-model="form.website"
+            type="url"
+            label="Website"
+            placeholder="https://exemplo.com"
+            :error="errors.website"
+            :left-icon="GlobeAltIcon"
+          />
+          <BaseInput
+            id="password-username"
+            v-model="form.username"
+            label="Username/Email"
+            placeholder="usuario@exemplo.com"
+            autocomplete="username"
+            :error="errors.username"
+            :left-icon="UserIcon"
+          />
+        </div>
+
         <BaseInput
-          id="website"
-          v-model="form.website"
-          type="url"
-          placeholder="https://exemplo.com"
-          :error="errors.website"
-          :left-icon="GlobeAltIcon"
+          id="password-folder"
+          v-model="form.folder"
+          label="Pasta"
+          placeholder="Ex: Trabalho, Pessoal, Bancos"
+          :error="errors.folder"
+          :left-icon="FolderIcon"
         />
-      </div>
+      </section>
 
-      <!-- Username/Email -->
-      <div>
-        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Username/Email
-        </label>
-        <BaseInput
-          id="username"
-          v-model="form.username"
-          type="text"
-          placeholder="usuario@exemplo.com"
-          :error="errors.username"
-          :left-icon="UserIcon"
-        />
-      </div>
-
-      <!-- Senha -->
-      <div>
-        <div class="flex justify-between items-center mb-1">
-          <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Senha *
-          </label>
+      <section class="space-y-3 border-t border-line pt-6">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h4 class="section-title">Credencial</h4>
           <button
             type="button"
+            class="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 transition-colors hover:bg-primary-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:bg-primary-900/40 dark:text-primary-300 dark:hover:bg-primary-900/60"
             @click="showPasswordGenerator = true"
-            class="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 transition-colors hover:bg-primary-100 dark:bg-primary-900/40 dark:text-primary-300 dark:hover:bg-primary-900/60"
           >
             <SparklesIcon class="h-3.5 w-3.5" />
             Gerar senha
           </button>
         </div>
+
         <BaseInput
-          id="password"
+          id="password-value"
           v-model="form.password"
-          :type="showPassword ? 'text' : 'password'"
+          type="password"
+          label="Senha"
           placeholder="Digite ou gere uma senha"
+          autocomplete="new-password"
           required
           :error="errors.password"
           :left-icon="LockClosedIcon"
-        >
-          <template #right-icon>
-            <button
-              type="button"
-              @click="showPassword = !showPassword"
-              class="text-gray-400 hover:text-gray-600"
-            >
-              <EyeIcon v-if="showPassword" class="h-5 w-5" />
-              <EyeSlashIcon v-else class="h-5 w-5" />
-            </button>
-          </template>
-        </BaseInput>
-        
-        <!-- Password Strength Indicator -->
-        <PasswordStrength v-if="passwordStrength" :score="passwordStrength.score" :feedback="passwordStrength.feedback" class="mt-2" />
-      </div>
-
-      <!-- Pasta -->
-      <div>
-        <label for="folder" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Pasta
-        </label>
-        <BaseInput
-          id="folder"
-          v-model="form.folder"
-          type="text"
-          placeholder="Ex: Trabalho, Pessoal, Bancos"
-          :error="errors.folder"
-          :left-icon="FolderIcon"
+          show-password-toggle
         />
-      </div>
 
-      <!-- Notas -->
-      <div>
-        <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Notas
-        </label>
-        <textarea
-          id="notes"
+        <PasswordStrength
+          v-if="passwordStrength"
+          :score="passwordStrength.score"
+          :feedback="passwordStrength.feedback"
+        />
+      </section>
+
+      <section class="space-y-4 border-t border-line pt-6">
+        <h4 class="section-title">Organização</h4>
+
+        <BaseTextarea
+          id="password-notes"
           v-model="form.notes"
-          rows="3"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500"
+          label="Notas"
           placeholder="Informações adicionais sobre esta senha..."
-          :class="{ 'border-red-300 dark:border-red-600': errors.notes }"
-        ></textarea>
-        <p v-if="errors.notes" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.notes }}</p>
-      </div>
-
-      <!-- TOTP Section -->
-      <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-        <div class="flex items-center justify-between mb-4">
-          <h4 class="text-md font-medium text-gray-900 dark:text-gray-100">Autenticação de Dois Fatores (TOTP)</h4>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              v-model="form.totpEnabled"
-              class="sr-only peer"
-            />
-            <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-          </label>
-        </div>
-
-        <div v-if="form.totpEnabled" class="space-y-4">
-          <!-- TOTP Secret -->
-          <div>
-            <label for="totpSecret" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Chave Secreta TOTP
-            </label>
-            <BaseInput
-              id="totpSecret"
-              v-model="form.totpSecret"
-              type="text"
-              placeholder="Digite a chave secreta do app autenticador"
-              :error="errors.totpSecret"
-              :left-icon="KeyIcon"
-            />
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Favorita -->
-      <div class="flex items-center">
-        <input
-          id="isFavorite"
-          v-model="form.isFavorite"
-          type="checkbox"
-          class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+          :rows="3"
+          :error="errors.notes"
         />
-        <label for="isFavorite" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-          Marcar como favorita
-        </label>
-      </div>
+
+        <BaseSwitch
+          v-model="form.isFavorite"
+          label="Marcar como favorita"
+          description="Aparece primeiro quando você filtra por favoritas."
+        />
+      </section>
+
+      <section class="space-y-4 border-t border-line pt-6">
+        <div>
+          <h4 class="section-title">Autenticação de Dois Fatores (TOTP)</h4>
+          <p class="mt-1 text-xs text-ink-muted">Gere códigos de 6 dígitos junto com esta credencial.</p>
+        </div>
+
+        <BaseSwitch
+          v-model="form.totpEnabled"
+          label="Ativar TOTP"
+          description="Você pode adicionar a chave secreta agora."
+        />
+
+        <div v-if="form.totpEnabled">
+          <BaseInput
+            id="password-totp"
+            v-model="form.totpSecret"
+            type="text"
+            label="Chave Secreta TOTP"
+            placeholder="Digite a chave secreta do app autenticador"
+            :error="errors.totpSecret"
+            :left-icon="KeyIcon"
+          />
+          <p class="mt-1.5 field-hint">
+            Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
+          </p>
+        </div>
+      </section>
     </form>
 
     <template #footer>
-      <div class="flex justify-end space-x-3">
-        <BaseButton
-          variant="ghost"
-          @click="$emit('close')"
-          :disabled="isSubmitting"
-        >
+      <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <BaseButton variant="ghost" :disabled="isSubmitting" @click="$emit('close')">
           Cancelar
         </BaseButton>
         <BaseButton
-          variant="primary"
-          @click="handleSubmit"
           :loading="isSubmitting"
-          :disabled="!isFormValid"
+          :disabled="!isFormValid || isSubmitting"
+          @click="handleSubmit"
         >
           Salvar
         </BaseButton>
@@ -201,10 +171,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { EyeIcon, EyeSlashIcon, TagIcon, GlobeAltIcon, UserIcon, LockClosedIcon, FolderIcon, KeyIcon, SparklesIcon } from '@heroicons/vue/24/outline'
+import { computed, ref, watch } from 'vue'
+import {
+  FolderIcon,
+  GlobeAltIcon,
+  KeyIcon,
+  LockClosedIcon,
+  SparklesIcon,
+  TagIcon,
+  UserIcon
+} from '@heroicons/vue/24/outline'
 import zxcvbn from 'zxcvbn'
-import { BaseModal, BaseInput, BaseButton, PasswordStrength, PasswordGeneratorModal } from '@/components/ui'
+import {
+  BaseButton,
+  BaseInput,
+  BaseModal,
+  BaseSwitch,
+  BaseTextarea,
+  PasswordGeneratorModal,
+  PasswordStrength
+} from '@/components/ui'
 import { usePasswordsStore } from '@/stores/passwords'
 import type { CreatePasswordRequest, PasswordEntry } from '@/api/passwords'
 
@@ -212,15 +198,13 @@ interface Props {
   show: boolean
 }
 
-interface Emits {
-  (e: 'close'): void
-  (e: 'created', password: PasswordEntry): void
-}
-
 const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
-const passwordsStore = usePasswordsStore()
+const emit = defineEmits<{
+  close: []
+  created: [password: PasswordEntry]
+}>()
 
+const passwordsStore = usePasswordsStore()
 
 const form = ref({
   name: '',
@@ -234,17 +218,13 @@ const form = ref({
   isFavorite: false
 })
 
-
-const showPassword = ref(false)
 const showPasswordGenerator = ref(false)
 const isSubmitting = ref(false)
-
-
+const formError = ref('')
 const errors = ref<Record<string, string>>({})
 
-
 const isFormValid = computed(() => {
-  return form.value.name.trim() && form.value.password.trim()
+  return Boolean(form.value.name.trim() && form.value.password.trim())
 })
 
 const passwordStrength = computed(() => {
@@ -262,29 +242,27 @@ const passwordStrength = computed(() => {
 
 const handlePasswordGenerated = (generatedPassword: string) => {
   form.value.password = generatedPassword
-  showPassword.value = true
 }
-
 
 const validateForm = () => {
   errors.value = {}
-  
+
   if (!form.value.name.trim()) {
     errors.value.name = 'Nome é obrigatório'
   }
-  
+
   if (!form.value.password.trim()) {
     errors.value.password = 'Senha é obrigatória'
   }
-  
+
   if (form.value.website && !isValidUrl(form.value.website)) {
     errors.value.website = 'URL inválida'
   }
-  
+
   if (form.value.totpEnabled && !form.value.totpSecret.trim()) {
     errors.value.totpSecret = 'Chave secreta é obrigatória quando TOTP está habilitado'
   }
-  
+
   return Object.keys(errors.value).length === 0
 }
 
@@ -292,18 +270,17 @@ const isValidUrl = (string: string) => {
   try {
     new URL(string)
     return true
-  } catch (_) {
+  } catch {
     return false
   }
 }
 
 const handleSubmit = async () => {
-  if (!validateForm()) {
-    return
-  }
-  
+  if (isSubmitting.value || !validateForm()) return
+
+  formError.value = ''
   isSubmitting.value = true
-  
+
   try {
     const passwordData: CreatePasswordRequest = {
       name: form.value.name.trim(),
@@ -311,36 +288,35 @@ const handleSubmit = async () => {
       totpEnabled: form.value.totpEnabled,
       isFavorite: form.value.isFavorite
     }
-    
+
     if (form.value.website.trim()) {
       passwordData.website = form.value.website.trim()
     }
-    
+
     if (form.value.username.trim()) {
       passwordData.username = form.value.username.trim()
     }
-    
+
     if (form.value.folder.trim()) {
       passwordData.folder = form.value.folder.trim()
     }
-    
+
     if (form.value.notes.trim()) {
       passwordData.notes = form.value.notes.trim()
     }
-    
+
     if (form.value.totpEnabled && form.value.totpSecret.trim()) {
       passwordData.totpSecret = form.value.totpSecret.trim()
     }
-    
+
     const createdPassword = await passwordsStore.createPassword(passwordData)
-    
+
     emit('created', createdPassword)
-    
     resetForm()
   } catch (error: unknown) {
-    const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
+    formError.value = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Não foi possível criar a senha'
+      : 'Não foi possível criar a senha'
   } finally {
     isSubmitting.value = false
   }
@@ -358,10 +334,9 @@ const resetForm = () => {
     totpSecret: '',
     isFavorite: false
   }
-  showPassword.value = false
   errors.value = {}
+  formError.value = ''
 }
-
 
 watch(() => props.show, (newShow) => {
   if (!newShow) {
@@ -369,4 +344,3 @@ watch(() => props.show, (newShow) => {
   }
 })
 </script>
-

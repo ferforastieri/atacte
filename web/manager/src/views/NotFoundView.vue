@@ -1,31 +1,24 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50">
-    <div class="text-center">
-      <div class="mx-auto h-24 w-24 flex items-center justify-center rounded-full bg-gray-100">
-        <ExclamationTriangleIcon class="h-12 w-12 text-gray-400" />
+  <div class="flex min-h-screen items-center justify-center bg-canvas px-4 py-12">
+    <div class="w-full max-w-lg text-center">
+      <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-surface-muted text-ink-subtle shadow-card ring-1 ring-line">
+        <ExclamationTriangleIcon class="h-10 w-10" />
       </div>
-      
-      <h1 class="mt-6 text-6xl font-bold text-gray-900">404</h1>
-      <h2 class="mt-2 text-2xl font-semibold text-gray-700">Página não encontrada</h2>
-      
-      <p class="mt-4 text-gray-500">
+
+      <p class="mt-8 font-mono text-6xl font-bold tracking-tight text-primary-700 dark:text-primary-400">404</p>
+      <h1 class="mt-2 text-2xl font-semibold tracking-tight text-ink">Página não encontrada</h1>
+      <p class="mt-2 text-sm leading-relaxed text-ink-muted">
         A página que você está procurando não existe ou foi movida.
       </p>
-      
-      <div class="mt-8 flex justify-center space-x-4">
-        <BaseButton
-          variant="primary"
-          @click="$router.go(-1)"
-        >
-          <ArrowLeftIcon class="w-4 h-4 mr-2" />
+
+      <div class="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
+        <BaseButton variant="secondary" @click="$router.go(-1)">
+          <ArrowLeftIcon class="mr-2 h-4 w-4" />
           Voltar
         </BaseButton>
-        
-        <BaseButton
-          variant="secondary"
-          @click="$router.push('/dashboard')"
-        >
-          <HomeIcon class="w-4 h-4 mr-2" />
+
+        <BaseButton @click="$router.push('/dashboard')">
+          <HomeIcon class="mr-2 h-4 w-4" />
           Dashboard
         </BaseButton>
       </div>
@@ -34,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-import { ExclamationTriangleIcon, ArrowLeftIcon, HomeIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ExclamationTriangleIcon, HomeIcon } from '@heroicons/vue/24/outline'
 import { BaseButton } from '@/components/ui'
 </script>
-

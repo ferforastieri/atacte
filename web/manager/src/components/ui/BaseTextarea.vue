@@ -1,41 +1,46 @@
 <template>
-  <div class="space-y-1">
-    <label 
-      v-if="label" 
-      :for="textareaId"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+  <div class="space-y-1.5">
+    <label
+      v-if="label"
+      :for="fieldId"
+      class="field-label"
     >
       {{ label }}
-      <span v-if="required" class="text-red-500 ml-1">*</span>
+      <span v-if="required" class="ml-0.5 text-danger-500" aria-hidden="true">*</span>
     </label>
-    
+
     <textarea
-      :id="textareaId"
+      :id="fieldId"
       :value="modelValue"
       :placeholder="placeholder"
       :disabled="disabled"
       :readonly="readonly"
+      :required="required"
       :rows="rows"
+      :maxlength="maxlength"
+      :aria-invalid="error ? 'true' : undefined"
+      :aria-describedby="error || help ? descriptionId : undefined"
       :class="textareaClasses"
       @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
       @blur="$emit('blur', $event)"
       @focus="$emit('focus', $event)"
     />
-    
-    <p v-if="error" class="text-sm text-red-600 dark:text-red-400">
+
+    <p v-if="error" :id="descriptionId" class="field-error" role="alert">
       {{ error }}
     </p>
-    
-    <p v-else-if="help" class="text-sm text-gray-500 dark:text-gray-400">
+
+    <p v-else-if="help" :id="descriptionId" class="field-hint">
       {{ help }}
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 
 interface Props {
+  id?: string
   modelValue: string
   label?: string
   placeholder?: string
@@ -45,6 +50,7 @@ interface Props {
   disabled?: boolean
   readonly?: boolean
   rows?: number
+  maxlength?: number | string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -54,30 +60,27 @@ const props = withDefaults(defineProps<Props>(), {
   rows: 3
 })
 
-const emit = defineEmits<{
+defineEmits<{
   'update:modelValue': [value: string]
   blur: [event: FocusEvent]
   focus: [event: FocusEvent]
 }>()
 
-const textareaId = computed(() => `textarea-${Math.random().toString(36).substr(2, 9)}`)
+const uid = useId()
+const fieldId = computed(() => props.id || `textarea-${uid}`)
+const descriptionId = computed(() => `${fieldId.value}-description`)
 
 const textareaClasses = computed(() => {
-  const baseClasses = 'block w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-800 px-3 py-1.5'
-  
-  const errorClasses = props.error 
-    ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' 
+  const baseClasses = 'block w-full resize-y rounded-xl border bg-surface px-3.5 py-2.5 text-base text-ink shadow-sm transition-colors placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle sm:text-sm'
+
+  const stateClasses = props.error
+    ? 'border-danger-400 focus:border-danger-500 focus:ring-danger-500'
+    : 'border-line hover:border-line-strong focus:border-primary-500'
+
+  const readonlyClasses = props.readonly
+    ? 'cursor-not-allowed bg-surface-muted'
     : ''
-  
-  const readonlyClasses = props.readonly 
-    ? 'bg-gray-50 dark:bg-gray-700 cursor-not-allowed' 
-    : ''
-  
-  return [
-    baseClasses,
-    errorClasses,
-    readonlyClasses
-  ].join(' ')
+
+  return [baseClasses, stateClasses, readonlyClasses].join(' ')
 })
 </script>
-

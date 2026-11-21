@@ -3,21 +3,21 @@
     <Transition name="update-toast">
       <aside
         v-if="visible"
-        class="update-toast fixed bottom-4 right-4 z-[10000] w-[380px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 sm:bottom-6 sm:right-6"
+        class="update-toast fixed bottom-4 right-4 z-[10000] w-[380px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-line bg-surface shadow-pop transition-colors duration-200 sm:bottom-6 sm:right-6"
         role="status"
         aria-live="polite"
       >
         <div
           class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b to-transparent"
-          :class="failed ? 'from-red-500/10' : succeeded ? 'from-green-500/10' : 'from-primary-500/10'"
+          :class="failed ? 'from-danger-500/10' : succeeded ? 'from-success-500/10' : 'from-primary-500/10'"
           aria-hidden="true"
         ></div>
 
         <div class="relative flex gap-3 p-4 pr-10">
-          <div class="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40">
+          <div class="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-line bg-surface-muted">
             <Logo :size="28" :show-text="false" />
             <span
-              class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-sm ring-2 ring-white dark:ring-gray-800"
+              class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-sm ring-2 ring-surface"
               :class="badgeClass"
             >
               <component :is="badgeIcon" class="h-3 w-3" :class="{ 'animate-spin-slow': updating }" />
@@ -26,20 +26,20 @@
 
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <strong class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ title }}</strong>
+              <strong class="text-sm font-semibold text-ink">{{ title }}</strong>
               <span
                 v-if="latestVersion"
-                class="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                class="rounded-full bg-surface-muted px-2 py-0.5 font-mono text-[10px] font-medium text-ink-muted"
               >
                 v{{ latestVersion }}
               </span>
             </div>
 
             <div v-if="currentVersion && latestVersion" class="mt-1.5 flex flex-wrap items-center gap-1.5">
-              <span class="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+              <span class="rounded-md bg-surface-muted px-1.5 py-0.5 font-mono text-[11px] text-ink-muted">
                 v{{ currentVersion }}
               </span>
-              <ArrowRightIcon class="h-3 w-3 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+              <ArrowRightIcon class="h-3 w-3 text-ink-subtle" aria-hidden="true" />
               <span class="rounded-md bg-primary-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
                 v{{ latestVersion }}
               </span>
@@ -47,12 +47,12 @@
 
             <p
               class="mt-1.5 text-xs leading-relaxed"
-              :class="failed ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'"
+              :class="failed ? 'text-danger-600 dark:text-danger-400' : 'text-ink-muted'"
             >
               {{ description }}
             </p>
 
-            <div v-if="updating" class="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div v-if="updating" class="mt-3 h-1.5 overflow-hidden rounded-full bg-line">
               <span class="update-progress block h-full w-1/3 rounded-full bg-primary-500 dark:bg-primary-400"></span>
             </div>
           </div>
@@ -60,7 +60,7 @@
           <button
             v-if="dismissible"
             type="button"
-            class="absolute right-3 top-3 rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            class="absolute right-3 top-3 rounded-lg p-1 text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             aria-label="Dispensar aviso de atualização"
             @click="dismiss"
           >
@@ -68,8 +68,8 @@
           </button>
         </div>
 
-        <div class="relative flex items-center justify-between gap-3 border-t border-gray-100 bg-gray-50/70 px-4 py-2.5 dark:border-gray-700 dark:bg-gray-800/80">
-          <span class="flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+        <div class="relative flex items-center justify-between gap-3 border-t border-line bg-surface-muted/70 px-4 py-2.5">
+          <span class="flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-ink-muted">
             <span class="h-1.5 w-1.5 flex-shrink-0 rounded-full" :class="statusDotClass"></span>
             <span class="truncate">{{ statusLabel }}</span>
           </span>
@@ -87,7 +87,7 @@
             <button
               v-if="failed"
               type="button"
-              class="rounded-lg bg-primary-600 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              class="rounded-lg bg-primary-700 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               @click="retry"
             >
               Tentar novamente
@@ -95,7 +95,7 @@
             <button
               v-if="dismissible"
               type="button"
-              class="rounded-lg px-2 py-1 text-[11px] font-semibold text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="rounded-lg px-2 py-1 text-[11px] font-semibold text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               @click="dismiss"
             >
               Depois
@@ -185,19 +185,19 @@ const statusLabel = computed(() => {
 })
 
 const statusDotClass = computed(() => {
-  if (succeeded.value) return 'bg-green-500'
-  if (failed.value) return 'bg-red-500'
+  if (succeeded.value) return 'bg-success-500'
+  if (failed.value) return 'bg-danger-500'
   if (updating.value) return 'bg-primary-500 animate-pulse'
-  if (manualUpdate.value) return 'bg-amber-500'
+  if (manualUpdate.value) return 'bg-warning-500'
   return 'bg-primary-500'
 })
 
 const badgeClass = computed(() => {
-  if (succeeded.value) return 'bg-green-500'
-  if (failed.value) return 'bg-red-500'
-  if (updating.value) return 'bg-primary-600'
-  if (manualUpdate.value) return 'bg-amber-500'
-  return 'bg-primary-600'
+  if (succeeded.value) return 'bg-success-500'
+  if (failed.value) return 'bg-danger-500'
+  if (updating.value) return 'bg-primary-700'
+  if (manualUpdate.value) return 'bg-warning-500'
+  return 'bg-primary-700'
 })
 
 const badgeIcon = computed(() => {

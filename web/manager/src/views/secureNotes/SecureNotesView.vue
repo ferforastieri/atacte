@@ -1,92 +1,85 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <!-- Header -->
-    <AppHeader
-      :show-logo="true"
-      :show-navigation="true"
-    />
+  <div class="min-h-screen bg-canvas">
+    <AppHeader :show-logo="true" :show-navigation="true" />
 
-    <!-- Main Content -->
-    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8 pb-24 md:pb-8">
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-        <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <DocumentTextIcon class="h-6 w-6 sm:h-8 sm:w-8" />
-            </div>
-            <div class="ml-3 sm:ml-4">
-              <p class="text-blue-100 text-xs sm:text-sm">Nesta página</p>
-              <p class="text-lg sm:text-2xl font-bold">{{ notes.length }}</p>
-            </div>
-          </div>
-        </BaseCard>
+    <main class="mx-auto w-full max-w-[1600px] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-10 lg:px-10">
+      <section class="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-primary-400">Cofre</p>
+          <h1 class="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Notas Seguras</h1>
+          <p class="mt-1.5 max-w-xl text-sm leading-relaxed text-ink-muted">
+            Guarde textos privados e encontre tudo por título, conteúdo ou pasta.
+          </p>
+        </div>
 
-        <BaseCard class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <StarIcon class="h-6 w-6 sm:h-8 sm:w-8" fill="currentColor" />
-            </div>
-            <div class="ml-3 sm:ml-4">
-              <p class="text-yellow-100 text-xs sm:text-sm">Favoritas</p>
-              <p class="text-lg sm:text-2xl font-bold">{{ favoriteCount }}</p>
-            </div>
-          </div>
-        </BaseCard>
-
-        <BaseCard class="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <FolderIcon class="h-6 w-6 sm:h-8 sm:w-8" />
-            </div>
-            <div class="ml-3 sm:ml-4">
-              <p class="text-purple-100 text-xs sm:text-sm">Pastas</p>
-              <p class="text-lg sm:text-2xl font-bold">{{ folders.length }}</p>
-            </div>
-          </div>
-        </BaseCard>
-
-        <BaseCard class="bg-gradient-to-r from-green-500 to-green-600 text-white">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <DocumentTextIcon class="h-6 w-6 sm:h-8 sm:w-8" />
-            </div>
-            <div class="ml-3 sm:ml-4">
-              <p class="text-green-100 text-xs sm:text-sm">Resultados</p>
-              <p class="text-lg sm:text-2xl font-bold">{{ secureNotesStore.pagination.total }}</p>
-            </div>
-          </div>
-        </BaseCard>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <BaseButton
-          variant="primary"
-          @click="showCreateModal = true"
-          class="w-full sm:w-auto"
-        >
-          <PlusIcon class="w-4 h-4 mr-2" />
+        <BaseButton class="sm:w-auto" @click="showCreateModal = true">
+          <PlusIcon class="mr-2 h-4 w-4" />
           Nova Nota
         </BaseButton>
-      </div>
+      </section>
 
-      <!-- Search and Filters -->
-      <BaseCard class="mb-6 dark:bg-gray-800 dark:border-gray-700" overflow-visible>
-        <div class="flex flex-col gap-4" style="position: relative; overflow: visible;">
-          <div class="flex-1">
+      <section class="mb-5 grid grid-cols-2 gap-3 sm:mb-6 lg:grid-cols-4">
+        <div class="surface-card p-4">
+          <div class="flex items-center gap-3">
+            <div class="icon-tile"><DocumentTextIcon class="h-5 w-5" /></div>
+            <div class="min-w-0">
+              <p class="text-[11px] leading-tight text-ink-muted">Nesta página</p>
+              <div v-if="isInitialLoading" class="skeleton mt-1 h-6 w-12"></div>
+              <p v-else class="text-xl font-semibold text-ink">{{ notes.length }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card p-4">
+          <div class="flex items-center gap-3">
+            <div class="icon-tile"><StarIcon class="h-5 w-5" /></div>
+            <div class="min-w-0">
+              <p class="text-[11px] leading-tight text-ink-muted">Favoritas</p>
+              <div v-if="isInitialLoading" class="skeleton mt-1 h-6 w-12"></div>
+              <p v-else class="text-xl font-semibold text-ink">{{ favoriteCount }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card p-4">
+          <div class="flex items-center gap-3">
+            <div class="icon-tile"><FolderIcon class="h-5 w-5" /></div>
+            <div class="min-w-0">
+              <p class="text-[11px] leading-tight text-ink-muted">Pastas</p>
+              <div v-if="isInitialLoading" class="skeleton mt-1 h-6 w-12"></div>
+              <p v-else class="text-xl font-semibold text-ink">{{ folders.length }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card p-4">
+          <div class="flex items-center gap-3">
+            <div class="icon-tile"><ClipboardDocumentListIcon class="h-5 w-5" /></div>
+            <div class="min-w-0">
+              <p class="text-[11px] leading-tight text-ink-muted">Resultados</p>
+              <div v-if="isInitialLoading" class="skeleton mt-1 h-6 w-12"></div>
+              <p v-else class="text-xl font-semibold text-ink">{{ secureNotesStore.pagination.total }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="surface-card mb-5 p-4 sm:mb-6">
+        <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
+          <div class="min-w-0 flex-1">
             <SearchInput
               v-model="searchQuery"
               placeholder="Buscar notas..."
               @search="handleSearch"
             />
           </div>
-          
-          <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
             <BaseSelect
               v-model="selectedFolder"
-              @update:modelValue="handleFolderFilter"
               class="w-full sm:w-48"
+              :disabled="isFetching"
+              @update:modelValue="handleFolderFilter"
             >
               <option value="">Todas as pastas</option>
               <option v-for="folder in folders" :key="folder" :value="folder">
@@ -96,61 +89,93 @@
 
             <BaseButton
               variant="ghost"
+              :disabled="isFetching"
+              :class="{ 'bg-primary-50 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300': showOnlyFavorites }"
               @click="toggleFavorites"
-              :class="{ 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300': showOnlyFavorites }"
-              class="w-full sm:w-auto"
             >
-              <StarIcon class="w-4 h-4 mr-1" :class="{ 'fill-current': showOnlyFavorites }" />
+              <StarIcon class="mr-1.5 h-4 w-4" :class="{ 'fill-current': showOnlyFavorites }" />
               {{ showOnlyFavorites ? 'Todas' : 'Favoritas' }}
             </BaseButton>
           </div>
         </div>
-      </BaseCard>
+      </section>
 
-      <!-- Notes List -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div v-if="isInitialLoading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div v-for="index in 8" :key="index" class="surface-card space-y-3 p-5">
+          <div class="flex items-center gap-3">
+            <div class="skeleton h-10 w-10 rounded-xl"></div>
+            <div class="skeleton h-4 w-2/3"></div>
+          </div>
+          <div class="skeleton h-3 w-full"></div>
+          <div class="skeleton h-3 w-5/6"></div>
+          <div class="skeleton h-3 w-2/3"></div>
+          <div class="skeleton mt-4 h-6 w-20 rounded-full"></div>
+        </div>
+      </div>
+
+      <div
+        v-else-if="notes.length > 0"
+        class="grid grid-cols-1 gap-4 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        :class="{ 'pointer-events-none opacity-60': isFetching }"
+      >
         <BaseCard
           v-for="note in notes"
           :key="note.id"
-          class="hover:shadow-lg transition-shadow cursor-pointer"
+          hover
+          padding="none"
+          class="cursor-pointer"
           @click="viewNote(note)"
         >
-          <div class="flex items-start justify-between">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center space-x-2">
-                <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ note.title }}</h3>
-                <div class="flex space-x-1">
+          <div class="flex h-full min-h-[190px] flex-col p-5">
+            <div class="flex items-start gap-3">
+              <div class="icon-tile">
+                <DocumentTextIcon class="h-5 w-5" />
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="truncate font-semibold text-ink">{{ note.title }}</h3>
                   <StarIcon
                     v-if="note.isFavorite"
-                    class="h-4 w-4 text-yellow-500 flex-shrink-0"
-                    fill="currentColor"
+                    class="h-4 w-4 flex-shrink-0 fill-current text-warning-500"
                   />
                 </div>
+                <p class="mt-1 line-clamp-3 text-sm leading-relaxed text-ink-muted">
+                  {{ note.content }}
+                </p>
               </div>
-              
-              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                {{ note.content }}
-              </p>
-              
-              <p v-if="note.folder" class="text-xs text-gray-400 dark:text-gray-500 mt-2 truncate">
-                📁 {{ note.folder }}
-              </p>
             </div>
-            
-            <div class="flex flex-col space-y-1 ml-2">
+
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <span v-if="note.folder" class="pill-neutral">
+                <FolderIcon class="h-3.5 w-3.5" /> {{ note.folder }}
+              </span>
+              <span class="pill-neutral">{{ formatDate(note.updatedAt) }}</span>
+            </div>
+
+            <div class="mt-auto flex items-center justify-end gap-1.5 border-t border-line pt-3">
               <button
+                type="button"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-warning-50 hover:text-warning-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-warning-900/20 dark:hover:text-warning-400"
+                :class="{ 'text-warning-500': note.isFavorite }"
+                :disabled="favoritePendingId === note.id"
+                :title="note.isFavorite ? 'Remover das favoritas' : 'Marcar como favorita'"
+                :aria-label="note.isFavorite ? 'Remover das favoritas' : 'Marcar como favorita'"
                 @click.stop="toggleFavorite(note)"
-                class="text-gray-400 dark:text-gray-500 hover:text-yellow-500 p-1"
-                :class="{ 'text-yellow-500': note.isFavorite }"
-                title="Marcar como favorita"
               >
-                <StarIcon class="h-4 w-4" :class="{ 'fill-current': note.isFavorite }" />
+                <span
+                  v-if="favoritePendingId === note.id"
+                  class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                ></span>
+                <StarIcon v-else class="h-4 w-4" :class="{ 'fill-current': note.isFavorite }" />
               </button>
-              
+
               <button
-                @click.stop="editNote(note)"
-                class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+                type="button"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 title="Editar nota"
+                aria-label="Editar nota"
+                @click.stop="editNote(note)"
               >
                 <PencilIcon class="h-4 w-4" />
               </button>
@@ -159,51 +184,32 @@
         </BaseCard>
       </div>
 
-      <!-- Paginação -->
-      <div v-if="secureNotesStore.pagination.total > secureNotesStore.pagination.limit" class="mt-6 sm:mt-8">
-        <div class="flex flex-col sm:flex-row items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 gap-4">
-          <div class="text-sm text-gray-700 dark:text-gray-300 text-center sm:text-left">
-            Mostrando {{ secureNotesStore.pagination.offset + 1 }} a {{ Math.min(secureNotesStore.pagination.offset + secureNotesStore.pagination.limit, secureNotesStore.pagination.total) }} de {{ secureNotesStore.pagination.total }} notas
-          </div>
-          <div class="flex space-x-2">
-            <BaseButton
-              variant="ghost"
-              @click="secureNotesStore.fetchNotes({ offset: secureNotesStore.pagination.offset - secureNotesStore.pagination.limit })"
-              :disabled="secureNotesStore.pagination.offset === 0"
-            >
-              ← Anterior
-            </BaseButton>
-            <BaseButton
-              variant="ghost"
-              @click="secureNotesStore.fetchNotes({ offset: secureNotesStore.pagination.offset + secureNotesStore.pagination.limit })"
-              :disabled="secureNotesStore.pagination.offset + secureNotesStore.pagination.limit >= secureNotesStore.pagination.total"
-            >
-              Próximo →
-            </BaseButton>
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        v-else
+        :icon="DocumentTextIcon"
+        :title="hasActiveFilters ? 'Nenhuma nota encontrada' : 'Nenhuma nota ainda'"
+        :description="hasActiveFilters ? 'Tente ajustar os filtros de busca.' : 'Comece criando sua primeira nota.'"
+      >
+        <BaseButton v-if="!hasActiveFilters" @click="showCreateModal = true">
+          <PlusIcon class="mr-2 h-4 w-4" />
+          Nova Nota
+        </BaseButton>
+      </EmptyState>
 
-      <!-- Empty State -->
-      <div v-if="notes.length === 0" class="text-center py-12">
-        <DocumentTextIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhuma nota encontrada</h3>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {{ hasActiveFilters ? 'Tente ajustar os filtros de busca.' : 'Comece criando sua primeira nota.' }}
-        </p>
-        <div v-if="!hasActiveFilters" class="mt-6">
-          <BaseButton
-            variant="primary"
-            @click="showCreateModal = true"
-          >
-            <PlusIcon class="w-4 h-4 mr-2" />
-            Nova Nota
-          </BaseButton>
-        </div>
-      </div>
-    </div>
+      <Pagination
+        v-if="secureNotesStore.pagination.total > secureNotesStore.pagination.limit"
+        class="mt-6"
+        :current-page="secureNotesStore.pagination.currentPage"
+        :total-pages="totalPages"
+        :total="secureNotesStore.pagination.total"
+        :limit="secureNotesStore.pagination.limit"
+        :busy="isFetching"
+        @previous="previousPage"
+        @next="nextPage"
+        @go-to-page="goToPage"
+      />
+    </main>
 
-    <!-- Create Modal -->
     <CreateSecureNoteModal
       :show="showCreateModal"
       :folders="folders"
@@ -211,7 +217,6 @@
       @created="handleNoteCreated"
     />
 
-    <!-- View Note Modal -->
     <SecureNoteDetailModal
       :show="showViewModal"
       :note="selectedNote"
@@ -221,7 +226,6 @@
       @deleted="handleNoteDeleted"
     />
 
-    <!-- Edit Modal -->
     <EditSecureNoteModal
       :show="showEditModal"
       :note="selectedNote"
@@ -233,32 +237,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import {
+  ClipboardDocumentListIcon,
+  DocumentTextIcon,
+  FolderIcon,
+  PencilIcon,
+  PlusIcon,
+  StarIcon
+} from '@heroicons/vue/24/outline'
 import { useSecureNotesStore } from '@/stores/secureNotes'
 import type { SecureNote } from '@/api/secureNotes'
-
-import { AppHeader, BaseButton, BaseCard, SearchInput, BaseSelect } from '@/components/ui'
+import {
+  AppHeader,
+  BaseButton,
+  BaseCard,
+  BaseSelect,
+  EmptyState,
+  Pagination,
+  SearchInput
+} from '@/components/ui'
+import { useToast } from '@/hooks/useToast'
 import CreateSecureNoteModal from '@/components/secureNotes/CreateSecureNoteModal.vue'
 import EditSecureNoteModal from '@/components/secureNotes/EditSecureNoteModal.vue'
 import SecureNoteDetailModal from '@/components/secureNotes/SecureNoteDetailModal.vue'
 
-import {
-  DocumentTextIcon,
-  StarIcon,
-  FolderIcon,
-  PencilIcon,
-  PlusIcon
-} from '@heroicons/vue/24/outline'
-
-const router = useRouter()
 const secureNotesStore = useSecureNotesStore()
+const toast = useToast()
 
 const showCreateModal = ref(false)
 const showViewModal = ref(false)
 const showEditModal = ref(false)
 const selectedNote = ref<SecureNote | null>(null)
-const isRefreshing = ref(false)
+const isInitialLoading = ref(true)
+const favoritePendingId = ref<string | null>(null)
 const searchQuery = ref(secureNotesStore.searchFilters.query || '')
 const selectedFolder = ref(secureNotesStore.searchFilters.folder || '')
 const showOnlyFavorites = ref(secureNotesStore.searchFilters.isFavorite === true)
@@ -267,6 +279,8 @@ const folders = computed(() => secureNotesStore.folders)
 const notes = computed(() => secureNotesStore.notes)
 const favoriteCount = computed(() => notes.value.filter(n => n.isFavorite).length)
 const hasActiveFilters = computed(() => Boolean(searchQuery.value || selectedFolder.value || showOnlyFavorites.value))
+const isFetching = computed(() => secureNotesStore.isLoading)
+const totalPages = computed(() => Math.max(1, Math.ceil(secureNotesStore.pagination.total / secureNotesStore.pagination.limit)))
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -278,32 +292,42 @@ const formatDate = (dateString: string) => {
 }
 
 const refreshNotes = async () => {
-  isRefreshing.value = true
   try {
     await Promise.all([
       secureNotesStore.fetchNotes(),
       secureNotesStore.fetchFolders()
     ])
-  } catch (error) {
-  } finally {
-    isRefreshing.value = false
+  } catch {
+    toast.error('Não foi possível atualizar as notas.')
   }
 }
 
 const handleSearch = async (query: string) => {
   secureNotesStore.setFilter({ query, offset: 0 })
-  await secureNotesStore.fetchNotes()
+  try {
+    await secureNotesStore.fetchNotes()
+  } catch {
+    toast.error('Não foi possível buscar as notas.')
+  }
 }
 
 const handleFolderFilter = async () => {
   secureNotesStore.setFilter({ folder: selectedFolder.value || undefined, offset: 0 })
-  await secureNotesStore.fetchNotes()
+  try {
+    await secureNotesStore.fetchNotes()
+  } catch {
+    toast.error('Não foi possível filtrar por pasta.')
+  }
 }
 
 const toggleFavorites = async () => {
   showOnlyFavorites.value = !showOnlyFavorites.value
   secureNotesStore.setFilter({ isFavorite: showOnlyFavorites.value || undefined, offset: 0 })
-  await secureNotesStore.fetchNotes()
+  try {
+    await secureNotesStore.fetchNotes()
+  } catch {
+    toast.error('Não foi possível filtrar as favoritas.')
+  }
 }
 
 const handleNoteCreated = async () => {
@@ -343,10 +367,32 @@ const handleNoteDeleted = async () => {
 }
 
 const toggleFavorite = async (note: SecureNote) => {
+  if (favoritePendingId.value) return
+
+  favoritePendingId.value = note.id
   try {
     await secureNotesStore.toggleFavorite(note.id)
     if (showOnlyFavorites.value) await secureNotesStore.fetchNotes()
-  } catch (error) {
+  } catch {
+    toast.error('Não foi possível atualizar a favorita.')
+  } finally {
+    favoritePendingId.value = null
+  }
+}
+
+const goToPage = (page: number) => {
+  secureNotesStore.fetchNotes({ offset: (page - 1) * secureNotesStore.pagination.limit })
+}
+
+const nextPage = () => {
+  if (secureNotesStore.pagination.currentPage < totalPages.value) {
+    goToPage(secureNotesStore.pagination.currentPage + 1)
+  }
+}
+
+const previousPage = () => {
+  if (secureNotesStore.pagination.currentPage > 1) {
+    goToPage(secureNotesStore.pagination.currentPage - 1)
   }
 }
 
@@ -356,7 +402,10 @@ onMounted(async () => {
       secureNotesStore.fetchNotes(),
       secureNotesStore.fetchFolders()
     ])
-  } catch (error) {
+  } catch {
+    toast.error('Não foi possível carregar as notas.')
+  } finally {
+    isInitialLoading.value = false
   }
 })
 </script>

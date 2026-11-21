@@ -1,160 +1,178 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <AppHeader
-      :show-logo="true"
-      :show-navigation="true"
-    />
+  <div class="min-h-screen bg-canvas">
+    <AppHeader :show-logo="true" :show-navigation="true" />
 
-    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8 pb-24 md:pb-8">
-      <div class="space-y-6">
-        <BaseCard>
-          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+    <main class="mx-auto w-full max-w-5xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-10 lg:px-10">
+      <section class="mb-6">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-primary-400">Conta</p>
+        <h1 class="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Perfil</h1>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink-muted">Seus dados de acesso e o resumo do cofre.</p>
+      </section>
+
+      <div v-if="isLoading" class="space-y-6">
+        <div class="surface-card p-6">
+          <div class="flex items-center gap-5">
+            <div class="skeleton h-20 w-20 rounded-2xl"></div>
+            <div class="flex-1 space-y-3">
+              <div class="skeleton h-5 w-48"></div>
+              <div class="skeleton h-3.5 w-64"></div>
+              <div class="skeleton h-6 w-32 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div v-for="index in 2" :key="index" class="surface-card space-y-3 p-6">
+            <div class="skeleton h-4 w-40"></div>
+            <div class="skeleton h-3 w-full"></div>
+            <div class="skeleton h-3 w-4/5"></div>
+            <div class="skeleton h-3 w-2/3"></div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="space-y-6">
+        <section class="hero-card p-6 sm:p-8">
+          <div class="hero-glow h-44 w-44"></div>
+          <div class="relative flex flex-col gap-5 sm:flex-row sm:items-center">
             <div class="flex-shrink-0">
-              <div v-if="authStore.user?.profilePicture" class="w-24 h-24 rounded-full overflow-hidden border-4 border-primary-500 dark:border-primary-400 shadow-lg">
-                <img 
-                  :src="authStore.user.profilePicture" 
-                  :alt="authStore.user?.name || authStore.userEmail" 
-                  class="w-full h-full object-cover"
+              <div v-if="authStore.user?.profilePicture" class="h-20 w-20 overflow-hidden rounded-2xl ring-2 ring-primary-500/50">
+                <img
+                  :src="authStore.user.profilePicture"
+                  :alt="authStore.user?.name || authStore.userEmail"
+                  class="h-full w-full object-cover"
                 />
               </div>
-              <div v-else class="w-24 h-24 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center border-4 border-primary-500 dark:border-primary-400 shadow-lg">
-                <span class="text-3xl font-bold text-primary-600 dark:text-primary-400">
-                  {{ userInitials }}
-                </span>
+              <div v-else class="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-500/15 text-2xl font-bold text-primary-300 ring-2 ring-primary-500/40">
+                {{ userInitials }}
               </div>
             </div>
-            
-            <div class="flex-1 min-w-0">
-              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+
+            <div class="min-w-0 flex-1">
+              <h2 class="truncate text-2xl font-semibold text-white">
                 {{ authStore.user?.name || authStore.userEmail.split('@')[0] }}
-              </h1>
-              <p class="text-gray-600 dark:text-gray-400 mb-3">{{ authStore.userEmail }}</p>
-              
-              <div class="flex flex-wrap gap-2">
-                <span
-                  :class="[
-                    'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium',
-                    authStore.userRole === 'ADMIN'
-                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                  ]"
-                >
+              </h2>
+              <p class="mt-1 truncate text-sm text-gray-400">{{ authStore.userEmail }}</p>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span class="pill bg-white/10 text-gray-200">
                   {{ authStore.userRole === 'ADMIN' ? 'Administrador' : 'Usuário' }}
                 </span>
-                
                 <span
-                  :class="[
-                    'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium',
-                    authStore.user?.isActive !== false
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                  ]"
+                  class="pill"
+                  :class="authStore.user?.isActive !== false ? 'bg-primary-500/20 text-primary-300' : 'bg-danger-500/20 text-danger-300'"
                 >
+                  <span class="h-1.5 w-1.5 rounded-full" :class="authStore.user?.isActive !== false ? 'bg-primary-400' : 'bg-danger-400'"></span>
                   {{ authStore.user?.isActive !== false ? 'Ativo' : 'Inativo' }}
                 </span>
               </div>
             </div>
-          </div>
-        </BaseCard>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <BaseButton variant="dark" class="sm:self-start" @click="$router.push('/settings')">
+              <Cog6ToothIcon class="mr-2 h-4 w-4" />
+              Configurações
+            </BaseButton>
+          </div>
+        </section>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <BaseCard>
-            <div class="space-y-4">
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Informações Pessoais</h2>
-              
-              <div class="space-y-4">
-                <div v-if="authStore.user?.name">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
-                  <p class="text-gray-900 dark:text-white">{{ authStore.user.name }}</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                  <p class="text-gray-900 dark:text-white break-all">{{ authStore.userEmail }}</p>
-                </div>
-                
-                <div v-if="authStore.user?.phoneNumber">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefone</label>
-                  <p class="text-gray-900 dark:text-white">{{ authStore.user.phoneNumber }}</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID do Usuário</label>
-                  <p class="text-gray-900 dark:text-white font-mono text-sm break-all">{{ authStore.userId }}</p>
-                </div>
+            <div class="mb-4 flex items-center gap-3">
+              <div class="icon-tile"><UserIcon class="h-5 w-5" /></div>
+              <h2 class="section-title">Informações Pessoais</h2>
+            </div>
+
+            <div class="space-y-2.5">
+              <div v-if="authStore.user?.name" class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Nome</p>
+                <p class="mt-1 text-sm text-ink">{{ authStore.user.name }}</p>
+              </div>
+              <div class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Email</p>
+                <p class="mt-1 break-all text-sm text-ink">{{ authStore.userEmail }}</p>
+              </div>
+              <div v-if="authStore.user?.phoneNumber" class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Telefone</p>
+                <p class="mt-1 text-sm text-ink">{{ authStore.user.phoneNumber }}</p>
+              </div>
+              <div class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">ID do Usuário</p>
+                <p class="mt-1 break-all font-mono text-xs text-ink-muted">{{ authStore.userId }}</p>
               </div>
             </div>
           </BaseCard>
 
           <BaseCard>
-            <div class="space-y-4">
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Informações da Conta</h2>
-              
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data de Criação</label>
-                  <p class="text-gray-900 dark:text-white">{{ formatDate(authStore.user?.createdAt) }}</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Última Atualização</label>
-                  <p class="text-gray-900 dark:text-white">{{ formatDate(authStore.user?.updatedAt) }}</p>
-                </div>
-                
-                <div v-if="authStore.user?.lastLogin">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Último Login</label>
-                  <p class="text-gray-900 dark:text-white">{{ formatDate(authStore.user.lastLogin) }}</p>
-                </div>
+            <div class="mb-4 flex items-center gap-3">
+              <div class="icon-tile"><ClockIcon class="h-5 w-5" /></div>
+              <h2 class="section-title">Informações da Conta</h2>
+            </div>
+
+            <div class="space-y-2.5">
+              <div class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Data de Criação</p>
+                <p class="mt-1 text-sm text-ink">{{ formatDate(authStore.user?.createdAt) }}</p>
+              </div>
+              <div class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Última Atualização</p>
+                <p class="mt-1 text-sm text-ink">{{ formatDate(authStore.user?.updatedAt) }}</p>
+              </div>
+              <div v-if="authStore.user?.lastLogin" class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Último Login</p>
+                <p class="mt-1 text-sm text-ink">{{ formatDate(authStore.user.lastLogin) }}</p>
               </div>
             </div>
           </BaseCard>
         </div>
 
         <BaseCard>
-          <div class="space-y-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Estatísticas</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="text-center p-6 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <p class="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">{{ passwordsStore.totalCount }}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Total de Senhas</p>
-              </div>
-              
-              <div class="text-center p-6 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <p class="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">{{ passwordsStore.favoriteCount }}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Favoritas</p>
-              </div>
-              
-              <div class="text-center p-6 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{{ totpEnabledCount }}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Com TOTP</p>
-              </div>
+          <div class="mb-4 flex items-center gap-3">
+            <div class="icon-tile"><ChartBarIcon class="h-5 w-5" /></div>
+            <h2 class="section-title">Estatísticas</h2>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="rounded-xl border border-line bg-surface-muted p-5 text-center">
+              <p class="text-3xl font-semibold text-primary-700 dark:text-primary-400">{{ passwordsStore.totalCount }}</p>
+              <p class="mt-1 text-xs text-ink-muted">Total de Senhas</p>
+            </div>
+            <div class="rounded-xl border border-line bg-surface-muted p-5 text-center">
+              <p class="text-3xl font-semibold text-danger-500">{{ passwordsStore.favoriteCount }}</p>
+              <p class="mt-1 text-xs text-ink-muted">Favoritas</p>
+            </div>
+            <div class="rounded-xl border border-line bg-surface-muted p-5 text-center">
+              <p class="text-3xl font-semibold text-info-500">{{ totpEnabledCount }}</p>
+              <p class="mt-1 text-xs text-ink-muted">Com TOTP</p>
             </div>
           </div>
         </BaseCard>
       </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import {
+  ChartBarIcon,
+  ClockIcon,
+  Cog6ToothIcon,
+  UserIcon
+} from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
-import { AppHeader, BaseCard } from '@/components/ui'
+import { AppHeader, BaseButton, BaseCard } from '@/components/ui'
 
 const authStore = useAuthStore()
 const passwordsStore = usePasswordsStore()
+const isLoading = ref(true)
 
-const totpEnabledCount = computed(() => {
-  return passwordsStore.totpCount
-})
+const totpEnabledCount = computed(() => passwordsStore.totpCount)
 
 const userInitials = computed(() => {
   if (authStore.user?.name) {
     const names = authStore.user.name.split(' ')
     if (names.length >= 2) {
-      return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+      return (names[0]![0]! + names[names.length - 1]![0]!).toUpperCase()
     }
     return authStore.user.name.substring(0, 2).toUpperCase()
   }
@@ -174,10 +192,15 @@ const formatDate = (dateString?: string) => {
 }
 
 onMounted(async () => {
-  await authStore.refreshUser()
-  await passwordsStore.fetchPasswords()
-  if (!passwordsStore.statsLoaded) {
-    await passwordsStore.loadCompleteStats()
+  try {
+    await authStore.refreshUser()
+    passwordsStore.setSearchFilters({ totpEnabled: undefined })
+    await passwordsStore.fetchPasswords()
+    if (!passwordsStore.statsLoaded) {
+      await passwordsStore.loadCompleteStats()
+    }
+  } finally {
+    isLoading.value = false
   }
 })
 </script>

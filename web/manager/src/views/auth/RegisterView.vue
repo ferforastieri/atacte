@@ -1,128 +1,143 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
-    <div class="max-w-md w-full space-y-8">
-      <div class="text-center">
-        <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900">
-          <UserPlusIcon class="h-8 w-8 text-primary-600 dark:text-primary-400" />
+  <AuthShell
+    title="Crie sua conta"
+    subtitle="O primeiro acesso cria o dono do cofre neste servidor."
+    :icon="UserPlusIcon"
+  >
+    <div v-if="isCheckingSetup" class="space-y-5" aria-label="Carregando formulário">
+      <div class="skeleton h-3.5 w-40"></div>
+      <div class="skeleton h-11 w-full rounded-xl"></div>
+      <div class="skeleton h-11 w-full rounded-xl"></div>
+      <div class="skeleton h-11 w-full rounded-xl"></div>
+      <div class="skeleton h-11 w-full rounded-xl"></div>
+    </div>
+
+    <template v-else>
+      <form class="space-y-5" @submit.prevent="handleRegister">
+        <div
+          v-if="formError"
+          class="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-sm text-danger-700 dark:border-danger-900 dark:bg-danger-900/20 dark:text-danger-300"
+          role="alert"
+        >
+          {{ formError }}
         </div>
-        <h2 class="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
-          Crie sua conta
-        </h2>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Ou
-          <router-link to="/login" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
-            faça login na sua conta
-          </router-link>
+
+        <p class="rounded-xl border border-line bg-surface-muted px-3.5 py-2.5 text-sm leading-relaxed text-ink-muted">
+          O responsável pelo servidor deve autorizar previamente seu email para o cadastro inicial.
         </p>
-      </div>
 
-      <BaseCard>
-        <form @submit.prevent="handleRegister" class="space-y-6">
-          <p class="text-sm">O responsável pelo servidor deve autorizar previamente seu email para o cadastro inicial.</p>
-          <BaseInput
-            v-model="form.email"
-            type="email"
-            label="Email"
-            placeholder="seu@email.com"
-            required
-            :error="errors.email"
-            :left-icon="EnvelopeIcon"
-          />
+        <BaseInput
+          v-model="form.email"
+          type="email"
+          label="Email"
+          placeholder="seu@email.com"
+          autocomplete="email"
+          required
+          :error="errors.email"
+          :left-icon="EnvelopeIcon"
+        />
 
+        <div class="space-y-2.5">
           <BaseInput
             v-model="form.masterPassword"
             type="password"
             label="Senha Master"
             placeholder="Crie uma senha master forte"
+            autocomplete="new-password"
             required
             :error="errors.masterPassword"
             :left-icon="LockClosedIcon"
             show-password-toggle
-            @input="validatePassword"
           />
-
           <PasswordStrength
             :score="passwordStrength.score"
             :feedback="passwordStrength.feedback"
           />
+        </div>
 
-          <BaseInput
-            v-model="form.confirmPassword"
-            type="password"
-            label="Confirmar Senha Master"
-            placeholder="Digite a senha novamente"
+        <BaseInput
+          v-model="form.confirmPassword"
+          type="password"
+          label="Confirmar Senha Master"
+          placeholder="Digite a senha novamente"
+          autocomplete="new-password"
+          required
+          :error="errors.confirmPassword"
+          :left-icon="LockClosedIcon"
+          show-password-toggle
+        />
+
+        <label for="terms" class="flex items-start gap-2.5 rounded-xl border border-line px-3.5 py-3 text-sm text-ink-muted">
+          <input
+            id="terms"
+            v-model="form.acceptTerms"
+            type="checkbox"
+            class="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-line bg-surface accent-primary-600 focus:ring-primary-500"
             required
-            :error="errors.confirmPassword"
-            :left-icon="LockClosedIcon"
-            show-password-toggle
           />
+          <span>
+            Eu aceito os
+            <a href="#" class="font-medium text-primary-700 hover:text-primary-800 dark:text-primary-400">termos de uso</a>
+            e a
+            <a href="#" class="font-medium text-primary-700 hover:text-primary-800 dark:text-primary-400">política de privacidade</a>
+          </span>
+        </label>
 
-          <div class="flex items-start">
-            <input
-              id="terms"
-              v-model="form.acceptTerms"
-              type="checkbox"
-              class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-              required
-            />
-            <label for="terms" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-              Eu aceito os
-              <a href="#" class="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">termos de uso</a>
-              e
-              <a href="#" class="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">política de privacidade</a>
-            </label>
-          </div>
+        <BaseButton
+          type="submit"
+          size="lg"
+          block
+          :loading="isLoading"
+          :disabled="!isFormValid || isLoading"
+        >
+          Criar Conta
+        </BaseButton>
+      </form>
 
-          <BaseButton
-            type="submit"
-            variant="primary"
-            size="lg"
-            :loading="isLoading"
-            :disabled="!isFormValid"
-            class="w-full"
-          >
-            Criar Conta
-          </BaseButton>
-        </form>
-      </BaseCard>
+      <p class="mt-6 text-center text-sm text-ink-muted">
+        Ou
+        <router-link
+          to="/login"
+          class="font-medium text-primary-700 transition-colors hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300"
+        >
+          faça login na sua conta
+        </router-link>
+      </p>
 
-      <BaseCard variant="outlined" class="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-        <div class="text-center">
-          <ShieldCheckIcon class="mx-auto h-8 w-8 text-green-600 dark:text-green-400" />
-          <h3 class="mt-2 text-sm font-medium text-green-800 dark:text-green-200">Segurança</h3>
-          <p class="mt-1 text-sm text-green-600 dark:text-green-300">
+      <div class="mt-6 flex items-start gap-3 rounded-xl border border-primary-200 bg-primary-50/70 p-3.5 dark:border-primary-900 dark:bg-primary-900/20">
+        <ShieldCheckIcon class="mt-0.5 h-5 w-5 flex-shrink-0 text-primary-700 dark:text-primary-400" />
+        <div>
+          <h3 class="text-sm font-semibold text-primary-800 dark:text-primary-200">Segurança</h3>
+          <p class="mt-0.5 text-xs leading-relaxed text-primary-700 dark:text-primary-300">
             Seus dados são criptografados no armazenamento. A segurança do servidor também protege o seu cofre.
           </p>
         </div>
-      </BaseCard>
-    </div>
-  </div>
+      </div>
+    </template>
+  </AuthShell>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { UserPlusIcon, EnvelopeIcon, LockClosedIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
+import { EnvelopeIcon, LockClosedIcon, ShieldCheckIcon, UserPlusIcon } from '@heroicons/vue/24/outline'
+import zxcvbn from 'zxcvbn'
 import { useAuthStore } from '@/stores/auth'
 import authApi from '@/api/auth'
-import { BaseButton, BaseInput, BaseCard, PasswordStrength } from '@/components/ui'
-import zxcvbn from 'zxcvbn'
+import { BaseButton, BaseInput, PasswordStrength } from '@/components/ui'
+import AuthShell from '@/components/layout/AuthShell.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-onMounted(async () => {
-  try {
-    const setup = await authApi.setupStatus()
-    if (!setup.needsSetup) router.replace('/login')
-  } catch {
-    // The registration form remains available if the status check is unavailable.
-  }
-})
-
 const isLoading = ref(false)
+const isCheckingSetup = ref(true)
+const formError = ref('')
 const errors = ref<Record<string, string>>({})
-const passwordStrength = ref<{ score: number; feedback: { warning: string; suggestions: string[] } }>({ score: 0, feedback: { warning: '', suggestions: [] } })
+const passwordStrength = ref<{ score: number; feedback: { warning: string; suggestions: string[] } }>({
+  score: 0,
+  feedback: { warning: '', suggestions: [] }
+})
 
 const form = reactive({
   email: '',
@@ -132,7 +147,7 @@ const form = reactive({
 })
 
 const isFormValid = computed(() => {
-  return (
+  return Boolean(
     form.email &&
     form.masterPassword &&
     form.confirmPassword &&
@@ -140,6 +155,17 @@ const isFormValid = computed(() => {
     passwordStrength.value.score >= 2 &&
     form.masterPassword === form.confirmPassword
   )
+})
+
+onMounted(async () => {
+  try {
+    const setup = await authApi.setupStatus()
+    if (!setup.needsSetup) router.replace('/login')
+  } catch {
+    // The registration form remains available if the status check is unavailable.
+  } finally {
+    isCheckingSetup.value = false
+  }
 })
 
 const validatePassword = () => {
@@ -157,10 +183,14 @@ const validatePassword = () => {
   }
 }
 
+watch(() => form.masterPassword, validatePassword)
+
 const handleRegister = async () => {
+  if (isLoading.value) return
+
   errors.value = {}
-  
-  
+  formError.value = ''
+
   if (form.masterPassword !== form.confirmPassword) {
     errors.value.confirmPassword = 'As senhas não coincidem'
     return
@@ -182,21 +212,19 @@ const handleRegister = async () => {
     router.push('/login')
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { data?: { errors?: Array<{ field?: string; message?: string }> } } };
+      const axiosError = error as { response?: { data?: { errors?: Array<{ field?: string; message?: string }>; message?: string } } }
       if (axiosError.response?.data?.errors) {
         errors.value = axiosError.response.data.errors.reduce((acc: Record<string, string>, err) => {
           if (err.field && err.message) {
-            acc[err.field] = err.message;
+            acc[err.field] = err.message
           }
-          return acc;
-        }, {});
+          return acc
+        }, {})
       } else {
-        const errorMessage = axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data
-          ? String(axiosError.response.data.message)
-          : error instanceof Error ? error.message : 'Erro ao criar conta';
+        formError.value = axiosError.response?.data?.message || (error instanceof Error ? error.message : 'Erro ao criar conta')
       }
     } else {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar conta';
+      formError.value = error instanceof Error ? error.message : 'Erro ao criar conta'
     }
   } finally {
     isLoading.value = false

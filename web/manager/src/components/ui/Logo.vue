@@ -15,8 +15,8 @@
           cx="16" 
           cy="16" 
           r="14" 
-          :fill="isDark ? '#22c55e' : '#22c55e'" 
-          :stroke="isDark ? '#15803d' : '#15803d'" 
+          fill="rgb(var(--at-primary-500))"
+          stroke="rgb(var(--at-primary-700))"
           stroke-width="2"
         />
         
@@ -45,7 +45,7 @@
           font-size="8" 
           font-weight="bold" 
           text-anchor="middle" 
-          :fill="isDark ? '#15803d' : '#15803d'"
+          fill="rgb(var(--at-primary-700))"
         >
           A
         </text>
@@ -57,7 +57,7 @@
       v-if="showText" 
       :class="[
         'font-bold transition-colors duration-200',
-        textColor || (isDark ? 'text-white' : 'text-gray-900'),
+        textColor || (isDark ? 'text-white' : 'text-ink'),
         textSize || 'text-xl'
       ]"
     >
