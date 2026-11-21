@@ -1,7 +1,7 @@
 import React from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './src/contexts/AuthContext';
@@ -29,8 +29,11 @@ function AppContent() {
 }
 
 export default function App() {
+  const colorScheme = useColorScheme();
+  const rootColors = getColors(colorScheme === 'dark');
+
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: getColors(true).canvas }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: rootColors.canvas }}>
       <SafeAreaProvider>
         <ThemeProvider>
           <ToastProvider>

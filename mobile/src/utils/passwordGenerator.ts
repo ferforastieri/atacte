@@ -1,5 +1,4 @@
 import { secureRandomInt } from './secureRandom';
-import { lightColors } from '../theme/tokens';
 export interface PasswordGeneratorOptions {
   length: number;
   includeUppercase: boolean;
@@ -11,10 +10,12 @@ export interface PasswordGeneratorOptions {
   customSymbols?: string;
 }
 
+export type PasswordStrengthColorToken = 'successText' | 'accent' | 'warning' | 'danger';
+
 export interface PasswordStrength {
   score: number;
   label: string;
-  color: string;
+  colorToken: PasswordStrengthColorToken;
 }
 
 const DEFAULT_OPTIONS: PasswordGeneratorOptions = {
@@ -167,26 +168,26 @@ export class PasswordGenerator {
 
     
     let label: string;
-    let color: string;
+    let colorToken: PasswordStrengthColorToken;
 
     if (score >= 6) {
       label = 'Muito Forte';
-      color = lightColors.successText;
+      colorToken = 'successText';
     } else if (score >= 4) {
       label = 'Forte';
-      color = lightColors.accent;
+      colorToken = 'accent';
     } else if (score >= 2) {
       label = 'Média';
-      color = lightColors.warning;
+      colorToken = 'warning';
     } else {
       label = 'Fraca';
-      color = lightColors.danger;
+      colorToken = 'danger';
     }
 
     return {
       score: Math.max(0, Math.min(6, score)),
       label,
-      color,
+      colorToken,
     };
   }
 

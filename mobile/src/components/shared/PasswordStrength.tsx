@@ -2,10 +2,12 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { radii, typography } from '../../theme/tokens';
+import type { PasswordStrengthColorToken } from '../../utils/passwordGenerator';
 
 interface PasswordStrengthProps {
   score?: number;
   label?: string;
+  colorToken?: PasswordStrengthColorToken;
   onHero?: boolean;
 }
 
@@ -21,10 +23,11 @@ export const passwordScore = (password: string): number | undefined => {
   return Math.min(4, score);
 };
 
-export const PasswordStrength: React.FC<PasswordStrengthProps> = ({ score, label, onHero = false }) => {
+export const PasswordStrength: React.FC<PasswordStrengthProps> = ({ score, label, colorToken, onHero = false }) => {
   const { colors } = useTheme();
   const bars = score === undefined ? 0 : Math.max(0, Math.min(5, score + 1));
   const barColors = [colors.danger, colors.warning, colors.warning, colors.info, colors.primary];
+  const resolvedTokenColor = colorToken ? colors[colorToken] : undefined;
 
   return (
     <View style={{ gap: 6 }}>
@@ -33,7 +36,7 @@ export const PasswordStrength: React.FC<PasswordStrengthProps> = ({ score, label
           style={{
             fontSize: typography.label,
             fontWeight: typography.weights.medium,
-            color: score === undefined ? (onHero ? colors.heroMuted : colors.inkMuted) : (onHero ? colors.heroText : barColors[Math.max(0, Math.min(4, score))]),
+            color: score === undefined ? (onHero ? colors.heroMuted : colors.inkMuted) : (onHero ? colors.heroText : resolvedTokenColor || barColors[Math.max(0, Math.min(4, score))]),
           }}
         >
           {label || (score === undefined ? 'Digite uma senha' : labels[score] || 'Desconhecida')}
