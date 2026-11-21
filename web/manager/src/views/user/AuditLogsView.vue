@@ -1,37 +1,39 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <AppHeader
-      :show-logo="true"
-      :show-navigation="true"
-    />
+  <div class="min-h-screen bg-canvas">
+    <AppHeader :show-logo="true" :show-navigation="true" />
 
-    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8">
-      <BaseCard class="mb-6 dark:bg-gray-800 dark:border-gray-700" overflow-visible>
-        <div class="flex flex-col md:flex-row gap-4" style="position: relative; overflow: visible;">
+    <main class="mx-auto w-full max-w-7xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-10 lg:px-10">
+      <section class="mb-6">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-primary-400">Segurança</p>
+        <h1 class="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Auditoria</h1>
+        <p class="mt-1.5 max-w-xl text-sm leading-relaxed text-ink-muted">
+          Acessos, alterações e eventos do cofre em ordem cronológica.
+        </p>
+      </section>
+
+      <BaseCard class="mb-5" padding="sm">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr]">
           <BaseInput
             v-model="filters.query"
-            type="text"
+            type="search"
             placeholder="Buscar logs..."
             :left-icon="MagnifyingGlassIcon"
-            class="w-full md:w-40"
           />
-          
+
           <BaseSelect
             v-if="authStore.isAdmin"
             v-model="filters.userId"
             placeholder="Todos os usuários"
-            class="w-full md:w-48"
           >
             <option value="">Todos os usuários</option>
             <option v-for="user in users" :key="user.id" :value="user.id">
               {{ user.email }}
             </option>
           </BaseSelect>
-          
+
           <BaseSelect
             v-model="filters.action"
             placeholder="Todas as ações"
-            class="w-full md:w-48"
           >
             <option value="">Todas as ações</option>
             <option value="LOGIN_SUCCESS">Login</option>
@@ -54,116 +56,109 @@
           <DatePicker
             v-model="filters.startDate"
             placeholder="Data inicial"
-            class="w-full md:flex-1"
           />
 
           <DatePicker
             v-model="filters.endDate"
             placeholder="Data final"
-            class="w-full md:flex-1"
           />
         </div>
       </BaseCard>
 
-      <BaseCard class="dark:bg-gray-800 dark:border-gray-700">
-        <div v-if="isLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Carregando logs...</p>
+      <BaseCard>
+        <div v-if="isInitialLoading" class="p-1">
+          <SkeletonTable :rows="6" :columns="5" />
         </div>
 
-        <div v-else-if="filteredLogs.length > 0" class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Data/Hora
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Ação
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Detalhes
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  IP
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  User Agent
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              <tr
-                v-for="log in filteredLogs"
-                :key="log.id"
-                class="hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                  {{ formatDateTime(log.createdAt) }}
-                </td>
-                
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    :class="getActionClass(log.action)"
-                  >
-                    {{ getActionLabel(log.action) }}
-                  </span>
-                </td>
-                
-                <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                  {{ formatDetails(log.details) }}
-                </td>
-                
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {{ log.ipAddress || '-' }}
-                </td>
-                
-                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">
-                  {{ log.userAgent || '-' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else-if="logs.length > 0" :class="{ 'pointer-events-none opacity-60': isFetching }">
+          <div class="table-shell">
+            <table class="min-w-full divide-y divide-line">
+              <thead class="table-head">
+                <tr>
+                  <th class="px-4 py-3">Data/Hora</th>
+                  <th class="px-4 py-3">Ação</th>
+                  <th class="px-4 py-3">Detalhes</th>
+                  <th class="px-4 py-3">IP</th>
+                  <th class="px-4 py-3">User Agent</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-line bg-surface">
+                <tr v-for="log in logs" :key="log.id" class="table-row">
+                  <td class="whitespace-nowrap px-4 py-3.5 text-sm text-ink">
+                    {{ formatDateTime(log.createdAt) }}
+                  </td>
+
+                  <td class="whitespace-nowrap px-4 py-3.5">
+                    <span :class="getActionClass(log.action)">
+                      {{ getActionLabel(log.action) }}
+                    </span>
+                  </td>
+
+                  <td class="max-w-xs px-4 py-3.5 text-sm text-ink-muted">
+                    <span class="line-clamp-2 break-all font-mono text-xs">{{ formatDetails(log.details) }}</span>
+                  </td>
+
+                  <td class="whitespace-nowrap px-4 py-3.5 text-sm text-ink-muted">
+                    {{ log.ipAddress || '-' }}
+                  </td>
+
+                  <td class="max-w-xs truncate px-4 py-3.5 text-sm text-ink-muted">
+                    {{ log.userAgent || '-' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            class="mt-4"
+            :current-page="pagination.currentPage"
+            :total-pages="pagination.totalPages"
+            :total="pagination.total"
+            :limit="pagination.limit"
+            :busy="isFetching"
+            @previous="previousPage"
+            @next="nextPage"
+            @go-to-page="goToPage"
+          />
         </div>
 
-        <div v-else class="text-center py-12">
-          <DocumentTextIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhum log encontrado</h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ logs.length === 0 ? 'Você ainda não possui logs de auditoria.' : 'Tente ajustar os filtros de busca.' }}
-          </p>
-        </div>
-
-        <Pagination
-          v-if="!isLoading && logs.length > 0"
-          :current-page="pagination.currentPage"
-          :total-pages="pagination.totalPages"
-          :total="pagination.total"
-          :limit="pagination.limit"
-          @previous="previousPage"
-          @next="nextPage"
-          @go-to-page="goToPage"
+        <EmptyState
+          v-else
+          :icon="DocumentTextIcon"
+          title="Nenhum log encontrado"
+          :description="hasActiveFilters ? 'Tente ajustar os filtros de busca.' : 'Você ainda não possui logs de auditoria.'"
         />
       </BaseCard>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { computed, onMounted, ref, watch } from 'vue'
 import { DocumentTextIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseInput, BaseCard, BaseSelect, DatePicker, Pagination } from '@/components/ui'
-import usersApi, { type AuditLog, type AdminUser } from '@/api/users'
+import {
+  AppHeader,
+  BaseCard,
+  BaseInput,
+  BaseSelect,
+  DatePicker,
+  EmptyState,
+  Pagination,
+  SkeletonTable
+} from '@/components/ui'
+import { useAuthStore } from '@/stores/auth'
+import usersApi, { type AdminUser, type AuditLog } from '@/api/users'
+import { useToast } from '@/hooks/useToast'
 
-const router = useRouter()
 const authStore = useAuthStore()
+const toast = useToast()
 
 const logs = ref<AuditLog[]>([])
-const isLoading = ref(false)
+const isLoading = ref(true)
+const isInitialLoading = ref(true)
 const users = ref<AdminUser[]>([])
+const requestId = ref(0)
 const pagination = ref({
   currentPage: 1,
   totalPages: 1,
@@ -196,29 +191,28 @@ const filters = ref({
   endDate: getDefaultEndDate()
 })
 
-const filteredLogs = computed(() => {
-  return logs.value
-})
+const isFetching = computed(() => isLoading.value && !isInitialLoading.value)
+const hasActiveFilters = computed(() => Boolean(filters.value.query || filters.value.userId || filters.value.action))
 
 const getActionClass = (action: string) => {
   const classes: Record<string, string> = {
-    LOGIN_SUCCESS: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    LOGIN_FAILED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    LOGOUT: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-    PASSWORD_CREATED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-    PASSWORD_UPDATED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-    PASSWORD_DELETED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    EXPORT_DATA: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
-    IMPORT_DATA: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
-    NOTE_CREATED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-    NOTE_UPDATED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-    NOTE_DELETED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    PROFILE_UPDATED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-    ACCOUNT_DELETED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    SESSION_REVOKED: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-    LOCATION_UPDATED: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300'
+    LOGIN_SUCCESS: 'pill-success',
+    LOGIN_FAILED: 'pill-danger',
+    LOGOUT: 'pill-neutral',
+    PASSWORD_CREATED: 'pill-info',
+    PASSWORD_UPDATED: 'pill-warning',
+    PASSWORD_DELETED: 'pill-danger',
+    EXPORT_DATA: 'pill-accent',
+    IMPORT_DATA: 'pill-info',
+    NOTE_CREATED: 'pill-info',
+    NOTE_UPDATED: 'pill-warning',
+    NOTE_DELETED: 'pill-danger',
+    PROFILE_UPDATED: 'pill-accent',
+    ACCOUNT_DELETED: 'pill-danger',
+    SESSION_REVOKED: 'pill-warning',
+    LOCATION_UPDATED: 'pill-neutral'
   }
-  return classes[action] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+  return classes[action] || 'pill-neutral'
 }
 
 const getActionLabel = (action: string) => {
@@ -266,7 +260,9 @@ const formatDetails = (details: unknown) => {
 }
 
 const fetchLogs = async () => {
+  const currentRequest = ++requestId.value
   isLoading.value = true
+
   try {
     const filterParams: {
       query?: string;
@@ -275,30 +271,41 @@ const fetchLogs = async () => {
       startDate?: string;
       endDate?: string;
     } = {}
-    
+
     if (filters.value.query) filterParams.query = filters.value.query
     if (filters.value.userId) filterParams.userId = filters.value.userId
     if (filters.value.action) filterParams.action = filters.value.action
     if (filters.value.startDate) filterParams.startDate = filters.value.startDate
     if (filters.value.endDate) filterParams.endDate = filters.value.endDate
-    
+
     const offset = (pagination.value.currentPage - 1) * pagination.value.limit
     const response = await usersApi.getAuditLogs(pagination.value.limit, offset, filterParams)
+
+    if (currentRequest !== requestId.value) return
+
     if (response.success && response.data) {
       logs.value = response.data
       if (response.pagination) {
         pagination.value.total = response.pagination.total
-        pagination.value.totalPages = Math.ceil(response.pagination.total / pagination.value.limit)
+        pagination.value.totalPages = Math.max(1, Math.ceil(response.pagination.total / pagination.value.limit))
       }
     } else {
       logs.value = []
       pagination.value.total = 0
       pagination.value.totalPages = 1
     }
-  } catch (error: unknown) {
-    logs.value = []
+  } catch {
+    if (currentRequest === requestId.value) {
+      logs.value = []
+      pagination.value.total = 0
+      pagination.value.totalPages = 1
+      toast.error('Não foi possível carregar os logs.')
+    }
   } finally {
-    isLoading.value = false
+    if (currentRequest === requestId.value) {
+      isLoading.value = false
+      isInitialLoading.value = false
+    }
   }
 }
 
@@ -309,8 +316,8 @@ const fetchUsers = async () => {
     if (response.success && response.data) {
       users.value = response.data
     }
-  } catch (error: unknown) {
-    console.error('Erro ao carregar usuários:', error)
+  } catch {
+    // The user filter is optional.
   }
 }
 

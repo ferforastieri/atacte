@@ -3,10 +3,10 @@
     <label 
       v-if="label" 
       :for="datePickerId"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="field-label"
     >
       {{ label }}
-      <span v-if="required" class="text-red-500 ml-1">*</span>
+      <span v-if="required" class="ml-0.5 text-danger-500">*</span>
     </label>
     
     <div style="position: relative;">
@@ -18,18 +18,18 @@
         @click="toggleDropdown"
         @blur="handleBlur"
       >
-        <CalendarIcon class="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
+        <CalendarIcon class="mr-2 h-4 w-4 text-ink-subtle" />
         <span :class="displayValueClasses">
           {{ displayValue }}
         </span>
-        <ChevronDownIcon class="h-4 w-4 text-gray-400 dark:text-gray-500 ml-auto" />
+        <ChevronDownIcon class="ml-auto h-4 w-4 text-ink-subtle" />
       </button>
       
       <Transition name="dropdown">
         <div
           v-if="isOpen"
           ref="dropdownRef"
-          class="absolute mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl overflow-hidden"
+          class="absolute mt-1 w-full overflow-hidden rounded-xl border border-line bg-surface shadow-pop"
           style="z-index: 10001; position: absolute; top: 100%; left: 0; right: 0;"
         >
           <div class="px-4 pt-4 pb-3">
@@ -37,7 +37,7 @@
               <button
                 type="button"
                 @click="previousMonth"
-                class="flex-shrink-0 p-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+                class="flex-shrink-0 rounded-lg border border-line p-1.5 text-ink-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               >
                 <ChevronLeftIcon class="h-4 w-4" />
               </button>
@@ -47,13 +47,13 @@
                   <select
                     data-datepicker-month
                     v-model="selectedMonth"
-                    class="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer transition-all hover:border-gray-400 dark:hover:border-gray-500"
+                    class="w-full cursor-pointer rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-ink transition-all hover:border-line-strong focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                     :style="{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none', paddingRight: '0.75rem' }"
                     @change="updateCalendar"
                     @mousedown.stop
                     @click.stop
                   >
-                    <option v-for="(month, index) in months" :key="index" :value="index + 1" class="bg-white dark:bg-gray-800">
+                    <option v-for="(month, index) in months" :key="index" :value="index + 1">
                       {{ month }}
                     </option>
                   </select>
@@ -63,13 +63,13 @@
                   <select
                     data-datepicker-year
                     v-model="selectedYear"
-                    class="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer transition-all hover:border-gray-400 dark:hover:border-gray-500"
+                    class="w-full cursor-pointer rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-ink transition-all hover:border-line-strong focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                     :style="{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none', paddingRight: '0.75rem' }"
                     @change="updateCalendar"
                     @mousedown.stop
                     @click.stop
                   >
-                    <option v-for="year in years" :key="year" :value="year" class="bg-white dark:bg-gray-800">
+                    <option v-for="year in years" :key="year" :value="year">
                       {{ year }}
                     </option>
                   </select>
@@ -79,7 +79,7 @@
               <button
                 type="button"
                 @click="nextMonth"
-                class="flex-shrink-0 p-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+                class="flex-shrink-0 rounded-lg border border-line p-1.5 text-ink-muted transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               >
                 <ChevronRightIcon class="h-4 w-4" />
               </button>
@@ -89,7 +89,7 @@
               <div
                 v-for="day in weekDays"
                 :key="day"
-                class="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 py-2"
+                class="py-2 text-center text-xs font-semibold text-ink-muted"
               >
                 {{ day }}
               </div>
@@ -105,11 +105,11 @@
                   'text-center py-2 rounded-lg transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500',
                   day.isCurrentMonth 
                     ? day.isToday
-                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-semibold ring-2 ring-primary-500'
+                      ? 'bg-primary-100 font-semibold text-primary-700 ring-2 ring-primary-500 dark:bg-primary-900/40 dark:text-primary-300'
                       : day.isSelected
-                        ? 'bg-primary-600 text-white hover:bg-primary-700'
-                        : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    : 'text-gray-400 dark:text-gray-500 cursor-not-allowed',
+                        ? 'bg-primary-700 text-white hover:bg-primary-800'
+                        : 'text-ink hover:bg-surface-muted'
+                    : 'cursor-not-allowed text-ink-subtle',
                   day.isDisabled ? 'opacity-50 cursor-not-allowed' : '',
                   !day.isCurrentMonth || day.isDisabled ? '' : 'cursor-pointer'
                 ]"
@@ -120,11 +120,11 @@
             </div>
           </div>
           
-          <div class="px-4 py-2.5 flex justify-end border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+          <div class="flex justify-end border-t border-line bg-surface-muted/60 px-4 py-2.5">
             <button
               type="button"
               @click="clearDate"
-              class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+              class="rounded-lg border border-line px-3 py-1.5 text-sm text-ink-muted transition-colors hover:bg-surface hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             >
               Limpar
             </button>
@@ -133,11 +133,11 @@
       </Transition>
     </div>
     
-    <p v-if="error" class="text-sm text-red-600 dark:text-red-400">
+    <p v-if="error" class="field-error">
       {{ error }}
     </p>
     
-    <p v-else-if="help" class="text-sm text-gray-500 dark:text-gray-400">
+    <p v-else-if="help" class="field-hint">
       {{ help }}
     </p>
   </div>
@@ -322,15 +322,15 @@ const displayValue = computed(() => {
 
 const displayValueClasses = computed(() => {
   return props.modelValue
-    ? 'text-gray-900 dark:text-gray-100'
-    : 'text-gray-500 dark:text-gray-400'
+    ? 'text-ink'
+    : 'text-ink-subtle'
 })
 
 const buttonClasses = computed(() => {
-  const baseClasses = 'w-full flex items-center px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 bg-white dark:bg-gray-800 transition-colors'
+  const baseClasses = 'flex w-full items-center rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle hover:border-line-strong'
   
   const errorClasses = props.error 
-    ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' 
+    ? 'border-danger-400 focus:border-danger-500 focus-visible:ring-danger-500' 
     : ''
   
   return [

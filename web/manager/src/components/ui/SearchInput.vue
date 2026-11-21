@@ -1,35 +1,38 @@
 <template>
-  <div class="search-input-container">
-    <div class="search-input-wrapper">
-      <MagnifyingGlassIcon class="search-icon" />
-      <input
-        ref="inputRef"
-        v-model="inputValue"
-        type="text"
-        :placeholder="placeholder"
-        :disabled="disabled"
-        class="search-input"
-        @input="handleInput"
-        @focus="handleFocus"
-        @blur="handleBlur"
-        @keydown.enter="handleEnter"
-        @keydown.escape="handleEscape"
-      />
-      <button
-        v-if="showClearButton && inputValue"
-        type="button"
-        class="clear-button"
-        @click="handleClear"
-        :disabled="disabled"
-      >
-        <XMarkIcon class="clear-icon" />
-      </button>
-    </div>
-    
-    <!-- Loading indicator -->
-    <div v-if="isSearching" class="search-loading">
-      <div class="loading-spinner"></div>
-    </div>
+  <div class="relative w-full">
+    <MagnifyingGlassIcon
+      class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-subtle"
+      aria-hidden="true"
+    />
+    <input
+      ref="inputRef"
+      v-model="inputValue"
+      type="text"
+      :placeholder="placeholder"
+      :disabled="disabled"
+      class="w-full rounded-xl border border-line bg-surface py-2.5 pl-10 pr-10 text-base text-ink shadow-sm transition-colors placeholder:text-ink-subtle focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 disabled:cursor-not-allowed disabled:bg-surface-muted sm:text-sm"
+      :aria-label="placeholder"
+      @input="handleInput"
+      @focus="handleFocus"
+      @blur="handleBlur"
+      @keydown.enter="handleEnter"
+      @keydown.escape="handleEscape"
+    />
+    <span
+      v-if="isSearching"
+      class="absolute right-11 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin rounded-full border-2 border-line border-t-primary-500"
+      aria-hidden="true"
+    ></span>
+    <button
+      v-if="showClearButton && inputValue"
+      type="button"
+      class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:opacity-50"
+      aria-label="Limpar busca"
+      :disabled="disabled"
+      @click="handleClear"
+    >
+      <XMarkIcon class="h-4 w-4" />
+    </button>
   </div>
 </template>
 
@@ -47,15 +50,6 @@ interface Props {
   minLength?: number
 }
 
-interface Emits {
-  (e: 'update:modelValue', value: string): void
-  (e: 'search', value: string): void
-  (e: 'clear'): void
-  (e: 'focus'): void
-  (e: 'blur'): void
-  (e: 'enter', value: string): void
-}
-
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Pesquisar...',
   debounceMs: 500,
@@ -65,7 +59,14 @@ const props = withDefaults(defineProps<Props>(), {
   minLength: 2
 })
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+  search: [value: string]
+  clear: []
+  focus: []
+  blur: []
+  enter: [value: string]
+}>()
 
 const inputRef = ref<HTMLInputElement>()
 const inputValue = ref<string>(props.modelValue || '')
@@ -73,8 +74,7 @@ const isSearching = ref<boolean>(false)
 let debounceTimer: number | null = null
 let searchTimeout: number | null = null
 
-
-const debounce = <T>(func: (value: T) => void, delay: number) => {
+const debounce = <T,>(func: (value: T) => void, delay: number) => {
   return (value: T) => {
     if (debounceTimer) {
       clearTimeout(debounceTimer)
@@ -83,29 +83,23 @@ const debounce = <T>(func: (value: T) => void, delay: number) => {
   }
 }
 
-
 const debouncedSearch = debounce((value: string) => {
   if (value.length >= props.minLength) {
     isSearching.value = true
     emit('search', value)
-    
-    
     searchTimeout = window.setTimeout(() => {
       isSearching.value = false
     }, 200)
   } else if (value.length === 0) {
-    
     isSearching.value = false
     emit('search', '')
   }
 }, props.debounceMs)
 
-
 const handleInput = () => {
   emit('update:modelValue', inputValue.value)
   debouncedSearch(inputValue.value)
 }
-
 
 const handleClear = () => {
   inputValue.value = ''
@@ -113,17 +107,14 @@ const handleClear = () => {
   emit('clear')
   emit('search', '')
   isSearching.value = false
-  
-  
+
   if (debounceTimer) {
     clearTimeout(debounceTimer)
     debounceTimer = null
   }
-  
-  
+
   inputRef.value?.focus()
 }
-
 
 const handleEnter = () => {
   if (debounceTimer) {
@@ -134,21 +125,17 @@ const handleEnter = () => {
   emit('search', inputValue.value)
 }
 
-
 const handleEscape = () => {
   handleClear()
 }
-
 
 const handleFocus = () => {
   emit('focus')
 }
 
-
 const handleBlur = () => {
   emit('blur')
 }
-
 
 watch(() => props.modelValue, (newValue) => {
   if (newValue !== inputValue.value) {
@@ -156,13 +143,11 @@ watch(() => props.modelValue, (newValue) => {
   }
 })
 
-
 onMounted(() => {
   if (props.autoFocus) {
     inputRef.value?.focus()
   }
 })
-
 
 onUnmounted(() => {
   if (debounceTimer) {
@@ -173,7 +158,6 @@ onUnmounted(() => {
   }
 })
 
-
 defineExpose({
   focus: () => inputRef.value?.focus(),
   blur: () => inputRef.value?.blur(),
@@ -181,44 +165,3 @@ defineExpose({
   getValue: () => inputValue.value
 })
 </script>
-
-<style scoped>
-.search-input-container {
-  @apply relative w-full;
-}
-
-.search-input-wrapper {
-  @apply relative flex items-center;
-}
-
-.search-input {
-  @apply w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-         placeholder-gray-500 dark:placeholder-gray-400
-         focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400
-         disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed;
-}
-
-.search-icon {
-  @apply absolute left-3 h-5 w-5 text-gray-400 dark:text-gray-500 pointer-events-none;
-}
-
-.clear-button {
-  @apply absolute right-3 p-1 rounded-full 
-         hover:bg-gray-100 dark:hover:bg-gray-700
-         focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
-         disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.clear-icon {
-  @apply h-4 w-4 text-gray-400 dark:text-gray-500;
-}
-
-.search-loading {
-  @apply absolute right-12 top-1/2 transform -translate-y-1/2;
-}
-
-.loading-spinner {
-  @apply h-4 w-4 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin;
-}
-</style>

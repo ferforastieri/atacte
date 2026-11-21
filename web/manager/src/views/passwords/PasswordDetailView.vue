@@ -1,238 +1,332 @@
 <template>
-  <div v-if="password" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+  <div class="min-h-screen bg-canvas">
     <AppHeader
       :show-logo="true"
       :show-back-button="true"
       :show-navigation="true"
-      :title="password.name"
+      :title="password?.name || 'Detalhes da senha'"
     />
 
-    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8">
-      <div class="mb-6 flex justify-end gap-3">
-        <BaseButton
-          variant="secondary"
-          @click="editPassword"
-        >
-          <PencilIcon class="w-4 h-4 mr-2" />
-          Editar
-        </BaseButton>
-        
-        <BaseButton
-          variant="danger"
-          @click="deletePassword"
-        >
-          <TrashIcon class="w-4 h-4 mr-2" />
-          Deletar
-        </BaseButton>
+    <main v-if="isLoading" class="mx-auto w-full max-w-[1400px] px-4 py-8 sm:px-6 lg:px-10">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <div class="space-y-2">
+          <div class="skeleton h-3 w-24"></div>
+          <div class="skeleton h-7 w-56"></div>
+        </div>
+        <div class="flex gap-2">
+          <div class="skeleton h-10 w-24 rounded-xl"></div>
+          <div class="skeleton h-10 w-24 rounded-xl"></div>
+        </div>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 space-y-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="space-y-6 lg:col-span-2">
+          <div v-for="index in 3" :key="index" class="surface-card space-y-4 p-5 sm:p-6">
+            <div class="skeleton h-4 w-40"></div>
+            <div class="skeleton h-3 w-full"></div>
+            <div class="skeleton h-3 w-4/5"></div>
+            <div v-if="index === 2" class="skeleton h-16 w-full rounded-xl"></div>
+          </div>
+        </div>
+        <div class="space-y-6">
+          <div v-for="index in 2" :key="index" class="surface-card space-y-3 p-5 sm:p-6">
+            <div class="skeleton h-4 w-28"></div>
+            <div class="skeleton h-10 w-full rounded-xl"></div>
+            <div class="skeleton h-10 w-full rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <main v-else-if="password" class="mx-auto w-full max-w-[1400px] px-4 py-6 pb-24 sm:px-6 sm:py-8 md:pb-10 lg:px-10">
+      <section class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-primary-400">Credencial</p>
+          <h1 class="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{{ password.name }}</h1>
+          <p class="mt-1.5 text-sm text-ink-muted">
+            Atualizada em {{ formatDate(password.updatedAt) }}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <BaseButton variant="secondary" :disabled="isRemovingTotp" @click="editPassword">
+            <PencilIcon class="mr-2 h-4 w-4" />
+            Editar
+          </BaseButton>
+          <BaseButton variant="danger" :disabled="isDeleting" @click="deletePassword">
+            <TrashIcon class="mr-2 h-4 w-4" />
+            Deletar
+          </BaseButton>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="space-y-6 lg:col-span-2">
           <BaseCard>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-gray-900">Informações Básicas</h2>
-                <div class="flex items-center space-x-2">
+            <div class="mb-5 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="icon-tile">
+                  <InformationCircleIcon class="h-5 w-5" />
+                </div>
+                <h2 class="section-title">Informações Básicas</h2>
+              </div>
+              <button
+                type="button"
+                class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-muted transition-colors hover:bg-danger-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-danger-900/20"
+                :class="password.isFavorite ? 'text-danger-500' : 'text-ink-muted'"
+                :disabled="isTogglingFavorite"
+                :title="password.isFavorite ? 'Remover das favoritas' : 'Marcar como favorita'"
+                :aria-label="password.isFavorite ? 'Remover das favoritas' : 'Marcar como favorita'"
+                @click="toggleFavorite"
+              >
+                <span
+                  v-if="isTogglingFavorite"
+                  class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                ></span>
+                <HeartIcon v-else class="h-5 w-5" :class="{ 'fill-current': password.isFavorite }" />
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Nome</p>
+                <p class="mt-1 break-words text-sm font-medium text-ink">{{ password.name }}</p>
+              </div>
+
+              <div v-if="password.website" class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Website</p>
+                <a
+                  :href="password.website"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="mt-1 block break-all text-sm font-medium text-primary-700 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300"
+                >
+                  {{ password.website }}
+                </a>
+              </div>
+
+              <div v-if="password.username" class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Usuário</p>
+                <div class="mt-1 flex items-center gap-2">
+                  <p class="min-w-0 flex-1 break-all text-sm font-medium text-ink">{{ password.username }}</p>
                   <button
-                    @click="toggleFavorite"
-                    class="p-2 rounded-full hover:bg-gray-100"
-                    :class="{ 'text-red-500': password.isFavorite }"
+                    type="button"
+                    class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-surface hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50"
+                    :disabled="copyingField === 'username'"
+                    aria-label="Copiar usuário"
+                    @click="handleCopyToClipboard(password.username, 'username')"
                   >
-                    <HeartIcon class="h-5 w-5" />
+                    <span
+                      v-if="copyingField === 'username'"
+                      class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                    ></span>
+                    <ClipboardIcon v-else class="h-4 w-4" />
                   </button>
                 </div>
               </div>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                  <p class="text-gray-900">{{ password.name }}</p>
-                </div>
-                
-                <div v-if="password.website">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                  <a :href="password.website" target="_blank" class="text-primary-600 hover:text-primary-500">
-                    {{ password.website }}
-                  </a>
-                </div>
-                
-                <div v-if="password.username">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
-                  <div class="flex items-center space-x-2">
-                    <p class="text-gray-900">{{ password.username }}</p>
-                    <button
-                      @click="handleCopyToClipboard(password.username)"
-                      class="text-gray-400 hover:text-gray-600"
-                    >
-                      <ClipboardIcon class="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-                
-                <div v-if="password.folder">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Pasta</label>
-                  <p class="text-gray-900">📁 {{ password.folder }}</p>
-                </div>
-              </div>
-            </div>
-          </BaseCard>
 
-          <BaseCard>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Senha</h3>
-                <div class="flex items-center space-x-2">
-                  <BaseButton
-                    variant="ghost"
-                    size="sm"
-                    @click="togglePasswordVisibility"
-                  >
-                    <component :is="showPassword ? EyeSlashIcon : EyeIcon" class="w-4 h-4 mr-1" />
-                    {{ showPassword ? 'Ocultar' : 'Mostrar' }}
-                  </BaseButton>
-                  
-                  <BaseButton
-                    variant="ghost"
-                    size="sm"
-                    @click="handleCopyToClipboard(password.password)"
-                  >
-                    <ClipboardIcon class="w-4 h-4 mr-1" />
-                    Copiar
-                  </BaseButton>
-                </div>
-              </div>
-              
-              <div class="bg-gray-50 rounded-lg p-4">
-                <p class="font-mono text-lg" :class="{ 'blur-sm': !showPassword }">
-                  {{ showPassword ? password.password : '••••••••••••••••' }}
+              <div v-if="password.folder" class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Pasta</p>
+                <p class="mt-1 flex items-center gap-1.5 text-sm font-medium text-ink">
+                  <FolderIcon class="h-4 w-4 text-ink-subtle" />
+                  {{ password.folder }}
                 </p>
               </div>
             </div>
           </BaseCard>
 
-          <BaseCard v-if="password.totpEnabled">
-            <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Código 2FA</h3>
-                <div class="flex items-center space-x-2">
-                  <KeyIcon class="w-5 h-5 text-blue-500" />
-                  <span class="text-sm text-blue-600">TOTP Ativo</span>
+          <BaseCard>
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-3">
+                <div class="icon-tile">
+                  <LockClosedIcon class="h-5 w-5" />
                 </div>
+                <h2 class="section-title">Senha</h2>
               </div>
-              
-              <TotpCode
-                v-if="password.totpCode"
-                :code="password.totpCode.code"
-                :time-remaining="password.totpCode.timeRemaining"
-                :period="password.totpCode.period"
-                @refresh="refreshTotpCode"
-              />
-              
-              <div class="flex space-x-2">
+
+              <div class="flex items-center gap-1.5">
+                <BaseButton variant="ghost" size="sm" @click="showPassword = !showPassword">
+                  <component :is="showPassword ? EyeSlashIcon : EyeIcon" class="mr-1 h-4 w-4" />
+                  {{ showPassword ? 'Ocultar' : 'Mostrar' }}
+                </BaseButton>
                 <BaseButton
-                  variant="ghost"
+                  variant="subtle"
                   size="sm"
-                  @click="removeTotp"
+                  :loading="copyingField === 'password'"
+                  :disabled="copyingField === 'password'"
+                  @click="handleCopyToClipboard(password.password, 'password')"
                 >
-                  <TrashIcon class="w-4 h-4 mr-1" />
-                  Remover TOTP
+                  <ClipboardIcon v-if="copyingField !== 'password'" class="mr-1 h-4 w-4" />
+                  Copiar
                 </BaseButton>
               </div>
             </div>
+
+            <div class="hero-card p-4 sm:p-5">
+              <div class="hero-glow"></div>
+              <p class="mono-secret relative min-h-[2rem] text-lg leading-relaxed text-white">
+                {{ showPassword ? password.password : '••••••••••••••••' }}
+              </p>
+            </div>
+          </BaseCard>
+
+          <BaseCard v-if="password.totpEnabled">
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="icon-tile">
+                  <KeyIcon class="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 class="section-title">Código 2FA</h2>
+                  <p class="text-xs text-ink-muted">TOTP ativo nesta credencial</p>
+                </div>
+              </div>
+              <BaseButton
+                variant="ghost"
+                size="sm"
+                :loading="isRemovingTotp"
+                :disabled="isRemovingTotp"
+                @click="removeTotp"
+              >
+                <TrashIcon v-if="!isRemovingTotp" class="mr-1 h-4 w-4" />
+                Remover TOTP
+              </BaseButton>
+            </div>
+
+            <div v-if="isLoadingTotp" class="hero-card space-y-3 p-5">
+              <div class="skeleton h-3 w-24 bg-white/10"></div>
+              <div class="skeleton h-9 w-2/3 bg-white/10"></div>
+              <div class="skeleton h-1.5 w-full bg-white/10"></div>
+            </div>
+            <TotpCode
+              v-else
+              :secret="totpSecret"
+              :code="fallbackTotpCode"
+              @refresh="loadTotpSecret"
+            />
           </BaseCard>
 
           <BaseCard v-if="password.customFields && password.customFields.length > 0">
-            <div class="space-y-4">
-              <h3 class="text-lg font-semibold text-gray-900">Campos Personalizados</h3>
-              
-              <div class="space-y-3">
-                <div
-                  v-for="field in password.customFields"
-                  :key="field.id"
-                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700">{{ field.fieldName }}</label>
-                    <p class="text-gray-900 font-mono" :class="{ 'blur-sm': !showPassword && field.fieldType === 'password' }">
-                      {{ showPassword || field.fieldType !== 'password' ? field.value : '••••••••••••••••' }}
-                    </p>
-                  </div>
-                  
-                  <button
-                    @click="handleCopyToClipboard(field.value)"
-                    class="text-gray-400 hover:text-gray-600 ml-2"
-                  >
-                    <ClipboardIcon class="h-4 w-4" />
-                  </button>
+            <div class="mb-4 flex items-center gap-3">
+              <div class="icon-tile">
+                <SquaresPlusIcon class="h-5 w-5" />
+              </div>
+              <h2 class="section-title">Campos Personalizados</h2>
+            </div>
+
+            <div class="space-y-2.5">
+              <div
+                v-for="field in password.customFields"
+                :key="field.id"
+                class="flex items-center justify-between gap-3 rounded-xl bg-surface-muted p-3.5"
+              >
+                <div class="min-w-0 flex-1">
+                  <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">{{ field.fieldName }}</p>
+                  <p class="mono-secret mt-1 text-sm text-ink">
+                    {{ showPassword || field.fieldType !== 'password' ? field.value : '••••••••••••••••' }}
+                  </p>
                 </div>
+
+                <button
+                  type="button"
+                  class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-surface hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50"
+                  :disabled="copyingField === field.id"
+                  :aria-label="`Copiar ${field.fieldName}`"
+                  @click="handleCopyToClipboard(field.value, field.id)"
+                >
+                  <span
+                    v-if="copyingField === field.id"
+                    class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                  ></span>
+                  <ClipboardIcon v-else class="h-4 w-4" />
+                </button>
               </div>
             </div>
           </BaseCard>
 
           <BaseCard v-if="password.notes">
-            <div class="space-y-4">
-              <h3 class="text-lg font-semibold text-gray-900">Notas</h3>
-              <p class="text-gray-700 whitespace-pre-wrap">{{ password.notes }}</p>
+            <div class="mb-3 flex items-center gap-3">
+              <div class="icon-tile">
+                <DocumentTextIcon class="h-5 w-5" />
+              </div>
+              <h2 class="section-title">Notas</h2>
             </div>
+            <p class="whitespace-pre-wrap rounded-xl bg-surface-muted p-4 text-sm leading-relaxed text-ink-muted">{{ password.notes }}</p>
           </BaseCard>
         </div>
 
         <div class="space-y-6">
           <BaseCard>
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h3>
+            <h2 class="section-title mb-4">Ações Rápidas</h2>
             <div class="space-y-2">
               <BaseButton
-                variant="primary"
-                class="w-full justify-start"
-                @click="handleCopyToClipboard(password.password)"
+                block
+                class="justify-start"
+                :loading="copyingField === 'password'"
+                :disabled="copyingField === 'password'"
+                @click="handleCopyToClipboard(password.password, 'password')"
               >
-                <ClipboardIcon class="w-4 h-4 mr-2" />
+                <ClipboardIcon v-if="copyingField !== 'password'" class="mr-2 h-4 w-4" />
                 Copiar Senha
               </BaseButton>
-              
+
               <BaseButton
                 v-if="password.username"
                 variant="secondary"
-                class="w-full justify-start"
-                @click="handleCopyToClipboard(password.username)"
+                block
+                class="justify-start"
+                :loading="copyingField === 'username'"
+                :disabled="copyingField === 'username'"
+                @click="handleCopyToClipboard(password.username, 'username')"
               >
-                <UserIcon class="w-4 h-4 mr-2" />
+                <UserIcon v-if="copyingField !== 'username'" class="mr-2 h-4 w-4" />
                 Copiar Usuário
               </BaseButton>
-              
+
               <BaseButton
                 v-if="password.website"
                 variant="secondary"
-                class="w-full justify-start"
+                block
+                class="justify-start"
                 @click="openWebsite"
               >
-                <GlobeAltIcon class="w-4 h-4 mr-2" />
+                <GlobeAltIcon class="mr-2 h-4 w-4" />
                 Abrir Site
               </BaseButton>
             </div>
           </BaseCard>
 
           <BaseCard>
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Informações</h3>
-            <div class="space-y-3 text-sm">
-              <div>
-                <span class="text-gray-500">Criado:</span>
-                <p class="text-gray-900">{{ formatDate(password.createdAt) }}</p>
+            <h2 class="section-title mb-4">Informações</h2>
+            <div class="space-y-3">
+              <div class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Criado</p>
+                <p class="mt-1 text-sm text-ink">{{ formatDate(password.createdAt) }}</p>
               </div>
-              
-              <div>
-                <span class="text-gray-500">Atualizado:</span>
-                <p class="text-gray-900">{{ formatDate(password.updatedAt) }}</p>
+              <div class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Atualizado</p>
+                <p class="mt-1 text-sm text-ink">{{ formatDate(password.updatedAt) }}</p>
               </div>
-              
-              <div v-if="password.lastUsed">
-                <span class="text-gray-500">Último uso:</span>
-                <p class="text-gray-900">{{ formatDate(password.lastUsed) }}</p>
+              <div v-if="password.lastUsed" class="rounded-xl bg-surface-muted p-3.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Último uso</p>
+                <p class="mt-1 text-sm text-ink">{{ formatDate(password.lastUsed) }}</p>
               </div>
             </div>
           </BaseCard>
         </div>
       </div>
-    </div>
+    </main>
+
+    <main v-else class="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 lg:px-10">
+      <EmptyState
+        :icon="LockClosedIcon"
+        title="Senha não encontrada"
+        description="Ela pode ter sido excluída ou o endereço está incorreto."
+      >
+        <BaseButton variant="secondary" @click="$router.push('/dashboard')">
+          Voltar ao Dashboard
+        </BaseButton>
+      </EmptyState>
+    </main>
 
     <EditPasswordModal
       :show="showEditModal"
@@ -241,79 +335,98 @@
       @updated="handlePasswordUpdated"
     />
 
-    <DeletePasswordModal
+    <ConfirmModal
       :show="showDeleteModal"
-      :password="password"
-      @close="showDeleteModal = false"
-      @deleted="handlePasswordDeleted"
+      title="Excluir Senha"
+      :message="`Tem certeza que deseja excluir a senha '${password?.name || ''}'? Esta ação não pode ser desfeita.`"
+      confirm-text="Excluir"
+      :loading="isDeleting"
+      @confirm="confirmDelete"
+      @cancel="showDeleteModal = false"
     />
-  </div>
-
-  <div v-else class="min-h-screen flex items-center justify-center">
-    <div class="text-center">
-      <div class="spinner w-12 h-12 mx-auto mb-4"></div>
-      <p class="text-gray-600">Carregando senha...</p>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ArrowLeftIcon,
-  PencilIcon,
-  TrashIcon,
-  HeartIcon,
   ClipboardIcon,
+  DocumentTextIcon,
   EyeIcon,
   EyeSlashIcon,
+  FolderIcon,
+  GlobeAltIcon,
+  HeartIcon,
+  InformationCircleIcon,
   KeyIcon,
-  UserIcon,
-  GlobeAltIcon
+  LockClosedIcon,
+  PencilIcon,
+  SquaresPlusIcon,
+  TrashIcon,
+  UserIcon
 } from '@heroicons/vue/24/outline'
 import { usePasswordsStore } from '@/stores/passwords'
-import { AppHeader, BaseButton, BaseCard, TotpCode } from '@/components/ui'
-import { type PasswordEntry } from '@/api/passwords'
+import {
+  AppHeader,
+  BaseButton,
+  BaseCard,
+  ConfirmModal,
+  EmptyState,
+  TotpCode
+} from '@/components/ui'
 import { copyToClipboard } from '@/utils/clipboard'
-
-
-
-
+import { useToast } from '@/hooks/useToast'
+import EditPasswordModal from '@/components/passwords/EditPasswordModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const passwordsStore = usePasswordsStore()
+const toast = useToast()
 
-
+const isLoading = ref(true)
+const isDeleting = ref(false)
+const isTogglingFavorite = ref(false)
+const isRemovingTotp = ref(false)
+const isLoadingTotp = ref(false)
 const showPassword = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
-
+const copyingField = ref<string | null>(null)
+const totpSecret = ref<string | null>(null)
+const fallbackTotpCode = ref<string | null>(null)
 
 const password = computed(() => passwordsStore.currentPassword)
 
+const handleCopyToClipboard = async (text: string, field: string) => {
+  if (copyingField.value) return
 
-const togglePasswordVisibility = () => {
-  showPassword.value = !showPassword.value
-}
-
-const handleCopyToClipboard = async (text: string) => {
-  const result = await copyToClipboard(text)
-  if (result.success) {
-  } else {
+  copyingField.value = field
+  try {
+    const result = await copyToClipboard(text)
+    if (result.success) {
+      toast.success('Copiado para a área de transferência.')
+    } else {
+      toast.error('Não foi possível copiar.')
+    }
+  } finally {
+    copyingField.value = null
   }
 }
 
 const toggleFavorite = async () => {
-  if (!password.value) return
-  
+  if (!password.value || isTogglingFavorite.value) return
+
+  isTogglingFavorite.value = true
   try {
     await passwordsStore.updatePassword(password.value.id, {
       id: password.value.id,
       isFavorite: !password.value.isFavorite
     })
-  } catch (error) {
+  } catch {
+    toast.error('Não foi possível atualizar a favorita.')
+  } finally {
+    isTogglingFavorite.value = false
   }
 }
 
@@ -323,21 +436,41 @@ const openWebsite = () => {
   }
 }
 
-const refreshTotpCode = async () => {
-  if (!password.value) return
-  
+const loadTotpSecret = async () => {
+  if (!password.value?.id || !password.value.totpEnabled) return
+
+  isLoadingTotp.value = true
   try {
-    await passwordsStore.getTotpCode(password.value.id)
-  } catch (error) {
+    const response = await passwordsStore.getTotpSecret(password.value.id)
+    if (response?.secret) {
+      totpSecret.value = response.secret
+    } else {
+      fallbackTotpCode.value = null
+    }
+  } catch {
+    try {
+      const code = await passwordsStore.getTotpCode(password.value.id)
+      fallbackTotpCode.value = code?.code || null
+    } catch {
+      // The code area stays in the empty state.
+    }
+  } finally {
+    isLoadingTotp.value = false
   }
 }
 
 const removeTotp = async () => {
-  if (!password.value) return
-  
+  if (!password.value || isRemovingTotp.value) return
+
+  isRemovingTotp.value = true
   try {
     await passwordsStore.removeTotp(password.value.id)
-  } catch (error) {
+    totpSecret.value = null
+    fallbackTotpCode.value = null
+  } catch {
+    toast.error('Não foi possível remover o TOTP.')
+  } finally {
+    isRemovingTotp.value = false
   }
 }
 
@@ -349,25 +482,50 @@ const deletePassword = () => {
   showDeleteModal.value = true
 }
 
-const handlePasswordUpdated = () => {
-  showEditModal.value = false
-  passwordsStore.fetchPasswordById(route.params.id as string)
+const confirmDelete = async () => {
+  if (!password.value || isDeleting.value) return
+
+  isDeleting.value = true
+  try {
+    await passwordsStore.deletePassword(password.value.id)
+    showDeleteModal.value = false
+    router.push('/dashboard')
+  } catch {
+    toast.error('Não foi possível excluir a senha.')
+  } finally {
+    isDeleting.value = false
+  }
 }
 
-const handlePasswordDeleted = () => {
-  showDeleteModal.value = false
-  router.push('/dashboard')
+const handlePasswordUpdated = async () => {
+  showEditModal.value = false
+  await loadPassword()
 }
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('pt-BR')
 }
 
-
-onMounted(async () => {
+const loadPassword = async () => {
   const passwordId = route.params.id as string
-  if (passwordId) {
-    await passwordsStore.fetchPasswordById(passwordId)
+  if (!passwordId) {
+    isLoading.value = false
+    return
   }
-})
+
+  isLoading.value = true
+  passwordsStore.clearCurrentPassword()
+  try {
+    await passwordsStore.fetchPasswordById(passwordId)
+    await loadTotpSecret()
+  } catch {
+    toast.error('Não foi possível carregar a senha.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+watch(() => route.params.id, loadPassword)
+
+onMounted(loadPassword)
 </script>

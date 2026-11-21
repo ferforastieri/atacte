@@ -1,76 +1,105 @@
 <template>
-  <BaseModal :show="show" @close="$emit('close')" size="lg">
+  <BaseModal :show="show" size="lg" @close="$emit('close')">
     <template #header>
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Importar Senhas</h3>
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="icon-tile h-11 w-11">
+          <ArrowUpTrayIcon class="h-5 w-5" />
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-lg font-semibold text-ink">Importar Senhas</h3>
+          <p class="mt-0.5 text-xs text-ink-muted">Traga um cofre do Bitwarden em JSON</p>
+        </div>
+      </div>
     </template>
 
-    <div class="space-y-6">
-      <!-- Upload de arquivo -->
+    <div class="space-y-5">
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Selecione o arquivo JSON do Bitwarden
-        </label>
-        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
-          <div class="space-y-1 text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            <div class="flex text-sm text-gray-600 dark:text-gray-400">
-              <label for="file-upload" class="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                <span>Carregar arquivo</span>
-                <input 
-                  id="file-upload" 
-                  name="file-upload" 
-                  type="file" 
-                  class="sr-only" 
-                  accept=".json"
-                  @change="handleFileSelect"
-                  :disabled="isImporting"
-                />
-              </label>
-              <p class="pl-1">ou arraste e solte</p>
-            </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              JSON do Bitwarden (até 10MB)
-            </p>
+        <p class="field-label mb-2">Selecione o arquivo JSON do Bitwarden</p>
+        <div
+          class="rounded-2xl border-2 border-dashed border-line bg-surface-muted/50 px-6 py-8 text-center transition-colors hover:border-primary-400"
+          @dragover.prevent
+          @drop.prevent="handleDrop"
+        >
+          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-surface text-ink-subtle shadow-sm ring-1 ring-line">
+            <ArrowUpTrayIcon class="h-6 w-6" />
           </div>
+          <div class="mt-4 flex flex-wrap items-center justify-center gap-1 text-sm text-ink-muted">
+            <label
+              for="file-upload"
+              class="cursor-pointer rounded-lg font-semibold text-primary-700 transition-colors hover:text-primary-800 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary-500 dark:text-primary-400"
+            >
+              Carregar arquivo
+              <input
+                id="file-upload"
+                ref="fileInput"
+                name="file-upload"
+                type="file"
+                class="sr-only"
+                accept=".json,application/json"
+                :disabled="isImporting"
+                @change="handleFileSelect"
+              />
+            </label>
+            <span>ou arraste e solte</span>
+          </div>
+          <p class="mt-1 text-xs text-ink-subtle">JSON do Bitwarden (até 10 MB)</p>
         </div>
       </div>
 
-      <!-- Arquivo selecionado -->
-      <div v-if="selectedFile" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <div class="flex items-center">
-          <svg class="h-5 w-5 text-green-500 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ selectedFile.name }}</span>
-          <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">({{ formatFileSize(selectedFile.size) }})</span>
+      <div v-if="selectedFile" class="flex items-center gap-3 rounded-xl border border-line bg-surface-muted p-3.5">
+        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-success-50 text-success-700 dark:bg-success-900/40 dark:text-success-300">
+          <DocumentCheckIcon class="h-5 w-5" />
+        </span>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-medium text-ink">{{ selectedFile.name }}</p>
+          <p class="text-xs text-ink-muted">{{ formatFileSize(selectedFile.size) }}</p>
         </div>
       </div>
 
-      <!-- Resultado da importação -->
-      <div v-if="importResult" class="rounded-lg p-4" :class="importResult.success ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg v-if="importResult.success" class="h-5 w-5 text-green-400 dark:text-green-300" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-            </svg>
-            <svg v-else class="h-5 w-5 text-red-400 dark:text-red-300" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <h3 class="text-sm font-medium" :class="importResult.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'">
+      <div
+        v-if="isImporting"
+        class="space-y-2 rounded-xl border border-line bg-surface-muted p-4"
+        aria-live="polite"
+      >
+        <div class="skeleton h-3.5 w-40"></div>
+        <div class="skeleton h-3 w-2/3"></div>
+      </div>
+
+      <div
+        v-if="importResult"
+        class="rounded-xl border p-4"
+        :class="importResult.success
+          ? 'border-success-200 bg-success-50 dark:border-success-900 dark:bg-success-900/20'
+          : 'border-danger-200 bg-danger-50 dark:border-danger-900 dark:bg-danger-900/20'"
+        role="status"
+      >
+        <div class="flex gap-3">
+          <CheckCircleIcon
+            v-if="importResult.success"
+            class="h-5 w-5 flex-shrink-0 text-success-700 dark:text-success-300"
+          />
+          <XCircleIcon
+            v-else
+            class="h-5 w-5 flex-shrink-0 text-danger-600 dark:text-danger-300"
+          />
+          <div class="min-w-0">
+            <h3
+              class="text-sm font-semibold"
+              :class="importResult.success ? 'text-success-800 dark:text-success-200' : 'text-danger-800 dark:text-danger-200'"
+            >
               {{ importResult.success ? 'Importação concluída!' : 'Erro na importação' }}
             </h3>
-            <div class="mt-2 text-sm" :class="importResult.success ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'">
+            <div
+              class="mt-1.5 text-sm"
+              :class="importResult.success ? 'text-success-700 dark:text-success-300' : 'text-danger-700 dark:text-danger-300'"
+            >
               <p v-if="importResult.success">
                 {{ importResult.imported }} senhas importadas com sucesso
                 <span v-if="importResult.duplicates > 0">, {{ importResult.duplicates }} duplicatas ignoradas</span>
               </p>
               <div v-else>
                 <p>Erros encontrados:</p>
-                <ul class="list-disc list-inside mt-1">
+                <ul class="mt-1 list-inside list-disc space-y-0.5">
                   <li v-for="error in importResult.errors" :key="error">{{ error }}</li>
                 </ul>
               </div>
@@ -81,27 +110,18 @@
     </div>
 
     <template #footer>
-      <div class="flex justify-between">
-        <BaseButton 
-          variant="ghost" 
-          @click="clearImport"
-          :disabled="isImporting"
-        >
+      <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <BaseButton variant="ghost" :disabled="isImporting" @click="clearImport">
           Limpar
         </BaseButton>
-        <div class="flex space-x-3">
-          <BaseButton 
-            variant="ghost" 
-            @click="$emit('close')"
-            :disabled="isImporting"
-          >
+        <div class="flex flex-col-reverse gap-2 sm:flex-row">
+          <BaseButton variant="ghost" :disabled="isImporting" @click="$emit('close')">
             Fechar
           </BaseButton>
-          <BaseButton 
-            variant="primary" 
-            @click="importPasswords"
-            :disabled="!selectedFile || isImporting"
+          <BaseButton
             :loading="isImporting"
+            :disabled="!selectedFile || isImporting"
+            @click="importPasswords"
           >
             {{ isImporting ? 'Importando...' : 'Importar' }}
           </BaseButton>
@@ -113,6 +133,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import {
+  ArrowUpTrayIcon,
+  CheckCircleIcon,
+  DocumentCheckIcon,
+  XCircleIcon
+} from '@heroicons/vue/24/outline'
 import { BaseModal, BaseButton } from '@/components/ui'
 import { usePasswordsStore } from '@/stores/passwords'
 
@@ -120,17 +146,15 @@ interface Props {
   show: boolean
 }
 
-interface Emits {
-  (e: 'close'): void
-  (e: 'imported'): void
-}
-
 defineProps<Props>()
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  close: []
+  imported: []
+}>()
 
 const passwordsStore = usePasswordsStore()
 
-
+const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const isImporting = ref(false)
 const importResult = ref<{
@@ -140,66 +164,67 @@ const importResult = ref<{
   duplicates: number
 } | null>(null)
 
+const validateFile = (file: File) => {
+  if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+    return false
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return false
+  }
+  return true
+}
 
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
-  if (file) {
-    
-    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-      return
-    }
-    
-    
-    if (file.size > 10 * 1024 * 1024) {
-      return
-    }
-    
+
+  if (file && validateFile(file)) {
     selectedFile.value = file
     importResult.value = null
   }
 }
 
+const handleDrop = (event: DragEvent) => {
+  if (isImporting.value) return
+  const file = event.dataTransfer?.files?.[0]
+  if (file && validateFile(file)) {
+    selectedFile.value = file
+    importResult.value = null
+  }
+}
 
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes'
-  
+
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 }
 
-
 const importPasswords = async () => {
-  if (!selectedFile.value) return
-  
+  if (!selectedFile.value || isImporting.value) return
+
   isImporting.value = true
   importResult.value = null
-  
+
   try {
-    
     const fileContent = await selectedFile.value.text()
     const jsonData = JSON.parse(fileContent)
-    
-    
     const result = await passwordsStore.importPasswords(jsonData)
-    
-    
+
     const importResultData = {
       ...result,
       success: result.errors.length === 0 || result.imported > 0
     }
-    
+
     importResult.value = importResultData
-    
+
     if (importResultData.success && result.imported > 0) {
       emit('imported')
     }
-    
-  } catch (error) {
+  } catch {
     importResult.value = {
       success: false,
       imported: 0,
@@ -211,16 +236,12 @@ const importPasswords = async () => {
   }
 }
 
-
 const clearImport = () => {
   selectedFile.value = null
   importResult.value = null
-  
-  
-  const fileInput = document.getElementById('file-upload') as HTMLInputElement
-  if (fileInput) {
-    fileInput.value = ''
+
+  if (fileInput.value) {
+    fileInput.value.value = ''
   }
 }
 </script>
-

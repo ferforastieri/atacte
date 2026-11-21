@@ -9,48 +9,39 @@
   >
     <div
       v-if="show"
-      class="relative max-w-sm w-full bg-white dark:bg-gray-800 rounded-[20px] shadow-sm border-l-[3px] py-2.5 px-4 flex items-center space-x-2.5"
-      :class="borderColorClass"
-      style="box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);"
+      class="relative flex w-full max-w-sm items-start gap-3 overflow-hidden rounded-2xl border border-line bg-surface p-4 shadow-pop"
+      role="status"
+      aria-live="polite"
     >
-      <!-- Icon -->
-      <div class="flex-shrink-0">
-        <component
-          :is="iconComponent"
-          :class="iconColorClass"
-          class="h-5 w-5"
-        />
+      <span class="absolute inset-y-0 left-0 w-1" :class="accentClass" aria-hidden="true"></span>
+
+      <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl" :class="tileClass">
+        <component :is="iconComponent" class="h-5 w-5" aria-hidden="true" />
       </div>
-      
-      <!-- Content -->
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-          {{ title }}
-        </p>
-        <p class="text-xs text-gray-600 dark:text-gray-400 leading-4">
-          {{ message }}
-        </p>
+
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-semibold text-ink">{{ title }}</p>
+        <p class="mt-0.5 text-xs leading-relaxed text-ink-muted">{{ message }}</p>
       </div>
-      
-      <!-- Close Button -->
-      <div class="flex-shrink-0">
-        <button
-          @click="$emit('close')"
-          class="inline-flex text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 dark:text-gray-400 focus:outline-none p-1"
-        >
-          <XMarkIcon class="h-5 w-5" />
-        </button>
-      </div>
+
+      <button
+        type="button"
+        class="rounded-lg p-1 text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        aria-label="Fechar aviso"
+        @click="$emit('close')"
+      >
+        <XMarkIcon class="h-4 w-4" />
+      </button>
     </div>
   </Transition>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { 
-  CheckCircleIcon, 
-  XCircleIcon, 
-  InformationCircleIcon, 
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  InformationCircleIcon,
   ExclamationTriangleIcon,
   XMarkIcon
 } from '@heroicons/vue/24/outline'
@@ -64,7 +55,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
+defineEmits<{
   close: []
 }>()
 
@@ -74,8 +65,6 @@ const iconComponent = computed(() => {
       return CheckCircleIcon
     case 'error':
       return XCircleIcon
-    case 'info':
-      return InformationCircleIcon
     case 'warning':
       return ExclamationTriangleIcon
     default:
@@ -83,33 +72,23 @@ const iconComponent = computed(() => {
   }
 })
 
-const borderColorClass = computed(() => {
-  switch (props.type) {
-    case 'success':
-      return 'border-l-[#10b981]'
-    case 'error':
-      return 'border-l-[#ef4444]'
-    case 'info':
-      return 'border-l-[#3b82f6]'
-    case 'warning':
-      return 'border-l-[#f59e0b]'
-    default:
-      return 'border-l-[#3b82f6]'
+const accentClass = computed(() => {
+  const classes = {
+    success: 'bg-success-500',
+    error: 'bg-danger-500',
+    info: 'bg-info-500',
+    warning: 'bg-warning-500'
   }
+  return classes[props.type]
 })
 
-const iconColorClass = computed(() => {
-  switch (props.type) {
-    case 'success':
-      return 'text-[#10b981]'
-    case 'error':
-      return 'text-[#ef4444]'
-    case 'info':
-      return 'text-[#3b82f6]'
-    case 'warning':
-      return 'text-[#f59e0b]'
-    default:
-      return 'text-[#3b82f6]'
+const tileClass = computed(() => {
+  const classes = {
+    success: 'bg-success-50 text-success-700 dark:bg-success-900/40 dark:text-success-300',
+    error: 'bg-danger-50 text-danger-600 dark:bg-danger-900/40 dark:text-danger-300',
+    info: 'bg-info-50 text-info-600 dark:bg-info-900/40 dark:text-info-300',
+    warning: 'bg-warning-50 text-warning-700 dark:bg-warning-900/40 dark:text-warning-300'
   }
+  return classes[props.type]
 })
 </script>

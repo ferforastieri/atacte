@@ -1,244 +1,225 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <AppHeader
-      :show-logo="true"
-      :show-navigation="true"
-    />
+  <div class="min-h-screen bg-canvas">
+    <AppHeader :show-logo="true" :show-navigation="true" />
 
-    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8">
-      <BaseCard class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-          Gerenciar Usuários
-        </h1>
+    <main class="mx-auto w-full max-w-7xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-10 lg:px-10">
+      <section class="mb-6">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-primary-400">Administração</p>
+        <h1 class="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Gerenciar Usuários</h1>
+        <p class="mt-1.5 max-w-xl text-sm leading-relaxed text-ink-muted">
+          Contas com acesso a este servidor, papéis e status.
+        </p>
+      </section>
 
-        <div v-if="isLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Carregando usuários...</p>
+      <BaseCard>
+        <div v-if="isLoading" class="p-1">
+          <SkeletonTable :rows="5" :columns="6" />
         </div>
 
-        <div v-else-if="users.length > 0" class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Email
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Nome
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Role
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Status
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Último Login
-                </th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              <tr v-for="user in users" :key="user.id">
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                  {{ user.email }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                  {{ user.name || '-' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    :class="[
-                      'px-2 py-1 text-xs font-semibold rounded-full',
-                      user.role === 'ADMIN'
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    ]"
-                  >
-                    {{ user.role === 'ADMIN' ? 'Admin' : 'Usuário' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    :class="[
-                      'px-2 py-1 text-xs font-semibold rounded-full',
-                      user.isActive
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                    ]"
-                  >
-                    {{ user.isActive ? 'Ativo' : 'Inativo' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {{ user.lastLogin ? formatDate(user.lastLogin) : 'Nunca' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div class="flex justify-end gap-2">
-                    <BaseButton
-                      variant="ghost"
-                      size="sm"
-                      @click="openEditModal(user)"
-                      class="flex items-center gap-1"
-                    >
-                      <PencilIcon class="h-4 w-4" />
-                      Editar
-                    </BaseButton>
-                    <BaseButton
-                      variant="ghost"
-                      size="sm"
-                      @click="openPasswordModal(user)"
-                      class="flex items-center gap-1"
-                    >
-                      <KeyIcon class="h-4 w-4" />
-                      Senha
-                    </BaseButton>
-                    <BaseButton
-                      variant="ghost"
-                      size="sm"
-                      @click="openDeleteModal(user)"
-                      class="flex items-center gap-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                    >
-                      <TrashIcon class="h-4 w-4" />
-                      Deletar
-                    </BaseButton>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else-if="users.length > 0">
+          <div class="table-shell">
+            <table class="min-w-full divide-y divide-line">
+              <thead class="table-head">
+                <tr>
+                  <th class="px-4 py-3">Email</th>
+                  <th class="px-4 py-3">Nome</th>
+                  <th class="px-4 py-3">Role</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3">Último Login</th>
+                  <th class="px-4 py-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-line bg-surface">
+                <tr v-for="user in users" :key="user.id" class="table-row">
+                  <td class="whitespace-nowrap px-4 py-3.5 text-sm font-medium text-ink">
+                    {{ user.email }}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3.5 text-sm text-ink-muted">
+                    {{ user.name || '-' }}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3.5">
+                    <span :class="user.role === 'ADMIN' ? 'pill-accent' : 'pill-neutral'">
+                      {{ user.role === 'ADMIN' ? 'Admin' : 'Usuário' }}
+                    </span>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3.5">
+                    <span :class="user.isActive ? 'pill-success' : 'pill-danger'">
+                      {{ user.isActive ? 'Ativo' : 'Inativo' }}
+                    </span>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3.5 text-sm text-ink-muted">
+                    {{ user.lastLogin ? formatDate(user.lastLogin) : 'Nunca' }}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                    <div class="flex justify-end gap-1.5">
+                      <BaseButton variant="ghost" size="sm" @click="openEditModal(user)">
+                        <PencilIcon class="h-4 w-4" />
+                        <span class="hidden sm:inline">Editar</span>
+                      </BaseButton>
+                      <BaseButton variant="ghost" size="sm" @click="openPasswordModal(user)">
+                        <KeyIcon class="h-4 w-4" />
+                        <span class="hidden sm:inline">Senha</span>
+                      </BaseButton>
+                      <BaseButton
+                        variant="ghost"
+                        size="sm"
+                        class="text-danger-600 hover:bg-danger-50 hover:text-danger-700 dark:text-danger-400 dark:hover:bg-danger-900/20"
+                        @click="openDeleteModal(user)"
+                      >
+                        <TrashIcon class="h-4 w-4" />
+                        <span class="hidden sm:inline">Deletar</span>
+                      </BaseButton>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           <Pagination
-            v-if="!isLoading && users.length > 0"
+            class="mt-4"
             :current-page="pagination.currentPage"
             :total-pages="pagination.totalPages"
             :total="pagination.total"
             :limit="pagination.limit"
+            :busy="isLoading"
             @previous="previousPage"
             @next="nextPage"
             @go-to-page="goToPage"
           />
         </div>
 
-        <div v-else class="text-center py-12">
-          <UserGroupIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhum usuário encontrado</h3>
-        </div>
+        <EmptyState
+          v-else
+          :icon="UserGroupIcon"
+          title="Nenhum usuário encontrado"
+          description="Ainda não há contas cadastradas neste servidor."
+        />
       </BaseCard>
-    </div>
+    </main>
 
     <BaseModal
       :show="showEditModal"
       title="Editar Usuário"
+      subtitle="Atualize os dados e o acesso desta conta."
+      :icon="PencilSquareIcon"
+      size="md"
+      :close-on-overlay="!isSaving"
+      :close-on-escape="!isSaving"
+      :closable="!isSaving"
       @close="closeEditModal"
     >
-      <form @submit.prevent="saveUser" class="space-y-4">
+      <form class="space-y-4" @submit.prevent="saveUser">
+        <div
+          v-if="editFormError"
+          class="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-sm text-danger-700 dark:border-danger-900 dark:bg-danger-900/20 dark:text-danger-300"
+          role="alert"
+        >
+          {{ editFormError }}
+        </div>
+
         <BaseInput
           v-model="editingUser.email"
-          label="Email"
           type="email"
+          label="Email"
+          autocomplete="email"
           required
+          :error="editErrors.email"
           :left-icon="EnvelopeIcon"
         />
 
         <BaseInput
           v-model="editingUser.name"
           label="Nome"
-          type="text"
+          :error="editErrors.name"
           :left-icon="UserIcon"
         />
 
         <BaseInput
           v-model="editingUser.phoneNumber"
-          label="Telefone"
           type="tel"
+          label="Telefone"
           :left-icon="PhoneIcon"
         />
 
-        <BaseSelect
-          v-model="editingUser.role"
-          label="Role"
-          required
-        >
+        <BaseSelect v-model="editingUser.role" label="Role" required>
           <option value="USER">Usuário</option>
           <option value="ADMIN">Admin</option>
         </BaseSelect>
 
         <BaseInput
           v-model="editingUserPassword"
-          label="Nova Senha (opcional)"
           type="password"
+          label="Nova Senha (opcional)"
           help="Deixe em branco para não alterar a senha"
-          :minlength="8"
+          autocomplete="new-password"
+          :error="editErrors.password"
           :left-icon="LockClosedIcon"
           show-password-toggle
         />
 
-        <div class="flex items-center">
-          <input
-            id="isActive"
-            v-model="editingUser.isActive"
-            type="checkbox"
-            class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-          />
-          <label for="isActive" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-            Usuário Ativo
-          </label>
-        </div>
+        <BaseSwitch
+          v-model="editingUser.isActive"
+          label="Usuário Ativo"
+          description="Contas inativas não conseguem entrar."
+        />
+      </form>
 
-        <div class="flex justify-end gap-2 pt-4">
-          <BaseButton
-            variant="ghost"
-            @click="closeEditModal"
-          >
+      <template #footer>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <BaseButton variant="ghost" :disabled="isSaving" @click="closeEditModal">
             Cancelar
           </BaseButton>
-          <BaseButton
-            variant="primary"
-            type="submit"
-            :loading="isSaving"
-          >
+          <BaseButton type="submit" :loading="isSaving" :disabled="isSaving" @click="saveUser">
             Salvar
           </BaseButton>
         </div>
-      </form>
+      </template>
     </BaseModal>
 
     <BaseModal
       :show="showPasswordModal"
       title="Alterar Senha"
+      subtitle="Defina uma nova senha para esta conta."
+      :icon="KeyIcon"
+      size="sm"
+      :close-on-overlay="!isChangingPassword"
+      :close-on-escape="!isChangingPassword"
+      :closable="!isChangingPassword"
       @close="closePasswordModal"
     >
-      <form @submit.prevent="changePassword" class="space-y-4">
+      <form class="space-y-4" @submit.prevent="changePassword">
+        <div
+          v-if="passwordFormError"
+          class="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-sm text-danger-700 dark:border-danger-900 dark:bg-danger-900/20 dark:text-danger-300"
+          role="alert"
+        >
+          {{ passwordFormError }}
+        </div>
+
         <BaseInput
           v-model="newPassword"
-          label="Nova Senha"
           type="password"
+          label="Nova Senha"
           required
-          :minlength="8"
           help="A senha deve ter pelo menos 8 caracteres"
+          autocomplete="new-password"
+          :error="passwordErrors.newPassword"
           :left-icon="LockClosedIcon"
           show-password-toggle
         />
+      </form>
 
-        <div class="flex justify-end gap-2 pt-4">
-          <BaseButton
-            variant="ghost"
-            @click="closePasswordModal"
-          >
+      <template #footer>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <BaseButton variant="ghost" :disabled="isChangingPassword" @click="closePasswordModal">
             Cancelar
           </BaseButton>
-          <BaseButton
-            variant="primary"
-            type="submit"
-            :loading="isChangingPassword"
-          >
+          <BaseButton type="submit" :loading="isChangingPassword" :disabled="isChangingPassword" @click="changePassword">
             Alterar Senha
           </BaseButton>
         </div>
-      </form>
+      </template>
     </BaseModal>
 
     <ConfirmModal
@@ -247,6 +228,7 @@
       :message="`Tem certeza que deseja deletar o usuário ${deletingUserEmail}? Esta ação não pode ser desfeita.`"
       confirm-text="Deletar"
       cancel-text="Cancelar"
+      variant="danger"
       :loading="isDeleting"
       @confirm="confirmDeleteUser"
       @cancel="closeDeleteModal"
@@ -255,16 +237,41 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { UserGroupIcon, PencilIcon, KeyIcon, EnvelopeIcon, UserIcon, PhoneIcon, LockClosedIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import { AppHeader, BaseCard, BaseButton, BaseModal, BaseInput, BaseSelect, ConfirmModal, Pagination } from '@/components/ui'
+import { onMounted, ref } from 'vue'
+import {
+  EnvelopeIcon,
+  KeyIcon,
+  LockClosedIcon,
+  PencilIcon,
+  PencilSquareIcon,
+  PhoneIcon,
+  TrashIcon,
+  UserGroupIcon,
+  UserIcon
+} from '@heroicons/vue/24/outline'
+import {
+  AppHeader,
+  BaseButton,
+  BaseCard,
+  BaseInput,
+  BaseModal,
+  BaseSelect,
+  BaseSwitch,
+  ConfirmModal,
+  EmptyState,
+  Pagination,
+  SkeletonTable
+} from '@/components/ui'
 import usersApi, { type AdminUser } from '@/api/users'
+import { useToast } from '@/hooks/useToast'
 
+const toast = useToast()
 
 const users = ref<AdminUser[]>([])
-const isLoading = ref(false)
+const isLoading = ref(true)
 const isSaving = ref(false)
 const isChangingPassword = ref(false)
+const isDeleting = ref(false)
 const pagination = ref({
   currentPage: 1,
   totalPages: 1,
@@ -275,6 +282,11 @@ const pagination = ref({
 const showEditModal = ref(false)
 const showPasswordModal = ref(false)
 const showDeleteModal = ref(false)
+const editFormError = ref('')
+const passwordFormError = ref('')
+const editErrors = ref<Record<string, string>>({})
+const passwordErrors = ref<Record<string, string>>({})
+
 type EditableUser = {
   id: string
   email: string
@@ -292,10 +304,9 @@ const editingUser = ref<EditableUser>({
   role: 'USER',
   isActive: true
 })
-const selectedUserId = ref<string>('')
-const deletingUserId = ref<string>('')
-const deletingUserEmail = ref<string>('')
-const isDeleting = ref(false)
+const selectedUserId = ref('')
+const deletingUserId = ref('')
+const deletingUserEmail = ref('')
 const newPassword = ref('')
 const editingUserPassword = ref('')
 
@@ -308,10 +319,11 @@ const fetchUsers = async () => {
       users.value = response.data
       if (response.pagination) {
         pagination.value.total = response.pagination.total
-        pagination.value.totalPages = Math.ceil(response.pagination.total / pagination.value.limit)
+        pagination.value.totalPages = Math.max(1, Math.ceil(response.pagination.total / pagination.value.limit))
       }
     }
-  } catch (error: unknown) {
+  } catch {
+    toast.error('Não foi possível carregar os usuários.')
   } finally {
     isLoading.value = false
   }
@@ -346,6 +358,8 @@ const openEditModal = (user: AdminUser) => {
     isActive: user.isActive
   }
   editingUserPassword.value = ''
+  editErrors.value = {}
+  editFormError.value = ''
   showEditModal.value = true
 }
 
@@ -360,11 +374,15 @@ const closeEditModal = () => {
     isActive: true
   }
   editingUserPassword.value = ''
+  editErrors.value = {}
+  editFormError.value = ''
 }
 
 const openPasswordModal = (user: AdminUser) => {
   selectedUserId.value = user.id
   newPassword.value = ''
+  passwordErrors.value = {}
+  passwordFormError.value = ''
   showPasswordModal.value = true
 }
 
@@ -372,12 +390,23 @@ const closePasswordModal = () => {
   showPasswordModal.value = false
   selectedUserId.value = ''
   newPassword.value = ''
+  passwordErrors.value = {}
+  passwordFormError.value = ''
 }
 
 const saveUser = async () => {
-  if (!editingUser.value.id) return
+  if (!editingUser.value.id || isSaving.value) return
+
+  editErrors.value = {}
+  editFormError.value = ''
+
+  if (!editingUser.value.email.trim()) {
+    editErrors.value.email = 'Email é obrigatório'
+    return
+  }
 
   if (editingUserPassword.value && editingUserPassword.value.length < 8) {
+    editErrors.value.password = 'A senha deve ter pelo menos 8 caracteres'
     return
   }
 
@@ -390,26 +419,30 @@ const saveUser = async () => {
       role: editingUser.value.role,
       isActive: editingUser.value.isActive
     })
-    
+
     if (editingUserPassword.value) {
       await usersApi.changeUserPassword(editingUser.value.id, editingUserPassword.value)
     }
-    
+
     closeEditModal()
     await fetchUsers()
   } catch (error: unknown) {
-    const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
+    editFormError.value = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Não foi possível salvar o usuário'
+      : 'Não foi possível salvar o usuário'
   } finally {
     isSaving.value = false
   }
 }
 
 const changePassword = async () => {
-  if (!selectedUserId.value || !newPassword.value) return
+  if (!selectedUserId.value || !newPassword.value || isChangingPassword.value) return
+
+  passwordErrors.value = {}
+  passwordFormError.value = ''
 
   if (newPassword.value.length < 8) {
+    passwordErrors.value.newPassword = 'A senha deve ter pelo menos 8 caracteres'
     return
   }
 
@@ -417,10 +450,11 @@ const changePassword = async () => {
   try {
     await usersApi.changeUserPassword(selectedUserId.value, newPassword.value)
     closePasswordModal()
+    toast.success('Senha do usuário alterada.')
   } catch (error: unknown) {
-    const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
+    passwordFormError.value = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Não foi possível alterar a senha'
+      : 'Não foi possível alterar a senha'
   } finally {
     isChangingPassword.value = false
   }
@@ -433,23 +467,23 @@ const openDeleteModal = (user: AdminUser) => {
 }
 
 const closeDeleteModal = () => {
+  if (isDeleting.value) return
   showDeleteModal.value = false
   deletingUserId.value = ''
   deletingUserEmail.value = ''
 }
 
 const confirmDeleteUser = async () => {
-  if (!deletingUserId.value) return
+  if (!deletingUserId.value || isDeleting.value) return
 
   isDeleting.value = true
   try {
     await usersApi.deleteUser(deletingUserId.value)
     closeDeleteModal()
     await fetchUsers()
-  } catch (error: unknown) {
-    const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
+    toast.success('Usuário deletado.')
+  } catch {
+    toast.error('Não foi possível deletar o usuário.')
   } finally {
     isDeleting.value = false
   }

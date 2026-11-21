@@ -1,79 +1,65 @@
 <template>
-  <div class="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 sm:px-6">
-    <div class="flex justify-between flex-1 sm:hidden">
+  <div class="flex flex-col gap-3 border-t border-line px-1 pt-4 sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-center text-sm text-ink-muted sm:text-left">
+      Mostrando
+      <span class="font-semibold text-ink">{{ startItem }}</span>
+      a
+      <span class="font-semibold text-ink">{{ endItem }}</span>
+      de
+      <span class="font-semibold text-ink">{{ total }}</span>
+      resultados
+    </p>
+
+    <nav class="flex items-center justify-center gap-1.5" aria-label="Paginação">
       <button
+        type="button"
+        class="flex h-9 items-center gap-1 rounded-xl border border-line bg-surface px-2.5 text-xs font-medium text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-40 sm:text-sm"
+        :disabled="busy || currentPage <= 1"
+        aria-label="Página anterior"
         @click="$emit('previous')"
-        :disabled="currentPage === 1"
-        class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Anterior
+        <ChevronLeftIcon class="h-4 w-4" />
+        <span class="hidden sm:inline">Anterior</span>
       </button>
+
+      <div class="hidden items-center gap-1 sm:flex">
+        <template v-for="page in visiblePages" :key="page">
+          <button
+            v-if="page !== '...'"
+            type="button"
+            :aria-current="page === currentPage ? 'page' : undefined"
+            :class="[
+              'flex h-9 min-w-9 items-center justify-center rounded-xl px-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-40',
+              page === currentPage
+                ? 'bg-primary-700 text-white shadow-sm'
+                : 'border border-line bg-surface text-ink-muted hover:bg-surface-muted hover:text-ink'
+            ]"
+            :disabled="busy"
+            @click="$emit('goToPage', Number(page))"
+          >
+            {{ page }}
+          </button>
+          <span v-else class="flex h-9 min-w-9 items-center justify-center text-sm text-ink-subtle" aria-hidden="true">
+            …
+          </span>
+        </template>
+      </div>
+
+      <span class="px-1 text-sm font-medium text-ink-muted sm:hidden">
+        {{ currentPage }} / {{ totalPages }}
+      </span>
+
       <button
+        type="button"
+        class="flex h-9 items-center gap-1 rounded-xl border border-line bg-surface px-2.5 text-xs font-medium text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-40 sm:text-sm"
+        :disabled="busy || currentPage >= totalPages"
+        aria-label="Próxima página"
         @click="$emit('next')"
-        :disabled="currentPage === totalPages"
-        class="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Próximo
+        <span class="hidden sm:inline">Próxima</span>
+        <ChevronRightIcon class="h-4 w-4" />
       </button>
-    </div>
-    
-    <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-      <div>
-        <p class="text-sm text-gray-700 dark:text-gray-300">
-          Mostrando
-          <span class="font-medium">{{ startItem }}</span>
-          até
-          <span class="font-medium">{{ endItem }}</span>
-          de
-          <span class="font-medium">{{ total }}</span>
-          resultados
-        </p>
-      </div>
-      
-      <div>
-        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-          <!-- Botão Anterior -->
-          <button
-            @click="$emit('previous')"
-            :disabled="currentPage === 1"
-            class="relative inline-flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-l-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeftIcon class="w-5 h-5" />
-          </button>
-          
-          <!-- Páginas -->
-          <template v-for="page in visiblePages" :key="page">
-            <button
-              v-if="page !== '...'"
-              @click="$emit('goToPage', Number(page))"
-              :class="[
-                page === currentPage
-                  ? 'z-10 bg-primary-50 dark:bg-primary-900/30 border-primary-500 dark:border-primary-500 text-primary-600 dark:text-primary-400'
-                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
-                'relative inline-flex items-center justify-center min-w-[40px] h-10 px-3 text-sm font-medium border'
-              ]"
-            >
-              {{ page }}
-            </button>
-            <span
-              v-else
-              class="relative inline-flex items-center justify-center min-w-[40px] h-10 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
-            >
-              ...
-            </span>
-          </template>
-          
-          <!-- Botão Próximo -->
-          <button
-            @click="$emit('next')"
-            :disabled="currentPage === totalPages"
-            class="relative inline-flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-r-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronRightIcon class="w-5 h-5" />
-          </button>
-        </nav>
-      </div>
-    </div>
+    </nav>
   </div>
 </template>
 
@@ -86,17 +72,21 @@ interface Props {
   totalPages: number
   total: number
   limit: number
+  busy?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  busy: false
+})
 
-const emit = defineEmits<{
+defineEmits<{
   previous: []
   next: []
   goToPage: [page: number]
 }>()
 
 const startItem = computed(() => {
+  if (props.total === 0) return 0
   return (props.currentPage - 1) * props.limit + 1
 })
 
@@ -107,40 +97,33 @@ const endItem = computed(() => {
 const visiblePages = computed(() => {
   const pages: (number | string)[] = []
   const { currentPage, totalPages } = props
-  
+
   if (totalPages <= 7) {
-    
     for (let i = 1; i <= totalPages; i++) {
       pages.push(i)
     }
-  } else {
-    
-    if (currentPage <= 4) {
-      
-      for (let i = 1; i <= 5; i++) {
-        pages.push(i)
-      }
-      pages.push('...')
-      pages.push(totalPages)
-    } else if (currentPage >= totalPages - 3) {
-      
-      pages.push(1)
-      pages.push('...')
-      for (let i = totalPages - 4; i <= totalPages; i++) {
-        pages.push(i)
-      }
-    } else {
-      
-      pages.push(1)
-      pages.push('...')
-      pages.push(currentPage - 1)
-      pages.push(currentPage)
-      pages.push(currentPage + 1)
-      pages.push('...')
-      pages.push(totalPages)
+  } else if (currentPage <= 4) {
+    for (let i = 1; i <= 5; i++) {
+      pages.push(i)
     }
+    pages.push('...')
+    pages.push(totalPages)
+  } else if (currentPage >= totalPages - 3) {
+    pages.push(1)
+    pages.push('...')
+    for (let i = totalPages - 4; i <= totalPages; i++) {
+      pages.push(i)
+    }
+  } else {
+    pages.push(1)
+    pages.push('...')
+    pages.push(currentPage - 1)
+    pages.push(currentPage)
+    pages.push(currentPage + 1)
+    pages.push('...')
+    pages.push(totalPages)
   }
-  
+
   return pages
 })
 </script>

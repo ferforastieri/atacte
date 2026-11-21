@@ -1,110 +1,78 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Header -->
-    <AppHeader
-      :show-logo="true"
-      :show-back-button="true"
-      :show-navigation="true"
-    />
+  <div class="min-h-screen bg-canvas">
+    <AppHeader :show-logo="true" :show-back-button="true" :show-navigation="true" />
 
-    <!-- Main Content -->
-    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-8">
-      <!-- Stats -->
-      <div class="mb-6">
-        <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <KeyIcon class="h-6 w-6 sm:h-8 sm:w-8" />
-            </div>
-            <div class="ml-3 sm:ml-4">
-              <p class="text-blue-100 text-xs sm:text-sm">Total TOTP</p>
-              <p class="text-lg sm:text-2xl font-bold">{{ totpPasswords.length }}</p>
-            </div>
-          </div>
-        </BaseCard>
-      </div>
-
-      <!-- TOTP List -->
-      <div v-if="totpPasswords.length === 0" class="text-center py-12">
-        <KeyIcon class="mx-auto h-12 w-12 text-gray-400" />
-        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          Nenhum TOTP encontrado
-        </h3>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Adicione TOTP às suas senhas para ver os códigos aqui.
-        </p>
-        <div class="mt-6">
-          <BaseButton @click="$router.push('/dashboard')" variant="primary">
-            Voltar ao Dashboard
-          </BaseButton>
+    <main class="mx-auto w-full max-w-[1600px] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-10 lg:px-10">
+      <section class="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-primary-400">Cofre</p>
+          <h1 class="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Códigos TOTP</h1>
+          <p class="mt-1.5 max-w-xl text-sm leading-relaxed text-ink-muted">
+            Códigos de 6 dígitos renovados a cada 30 segundos.
+          </p>
         </div>
+
+        <BaseButton variant="secondary" @click="$router.push('/dashboard')">
+          <LockClosedIcon class="mr-2 h-4 w-4" />
+          Voltar ao Dashboard
+        </BaseButton>
+      </section>
+
+      <section class="mb-5 sm:mb-6">
+        <div class="surface-card inline-flex items-center gap-3 p-4">
+          <div class="icon-tile"><KeyIcon class="h-5 w-5" /></div>
+          <div>
+            <p class="text-xs text-ink-muted">Total TOTP</p>
+            <div v-if="isInitialLoading" class="skeleton mt-1 h-6 w-10"></div>
+            <p v-else class="text-xl font-semibold text-ink">{{ totpPasswords.length }}</p>
+          </div>
+        </div>
+      </section>
+
+      <div v-if="isInitialLoading" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <SkeletonCard v-for="index in 6" :key="index" show-secret />
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
+      <div v-else-if="totpPasswords.length > 0" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <BaseCard
           v-for="password in totpPasswords"
           :key="password.id"
+          hover
           padding="none"
-          class="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+          class="cursor-pointer"
           @click="viewPassword(password)"
         >
-          <div class="p-5 sm:p-6">
-            <!-- Header -->
-            <div class="flex items-start gap-4 mb-5">
-              <div class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0">
-                <KeyIcon class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          <div class="flex h-full flex-col p-5 sm:p-6">
+            <div class="mb-4 flex items-start gap-4">
+              <div class="icon-tile h-11 w-11">
+                <KeyIcon class="h-5 w-5" />
               </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-                  {{ password.name }}
-                </h3>
-                <p v-if="password.website" class="text-sm text-gray-600 dark:text-gray-400 truncate">
-                  {{ password.website }}
-                </p>
-                <p v-if="password.username" class="text-sm text-gray-500 dark:text-gray-500 truncate">
-                  @{{ password.username }}
-                </p>
+              <div class="min-w-0 flex-1">
+                <h2 class="truncate text-lg font-semibold text-ink">{{ password.name }}</h2>
+                <p v-if="password.website" class="truncate text-sm text-ink-muted">{{ password.website }}</p>
+                <p v-if="password.username" class="truncate text-sm text-ink-subtle">{{ password.username }}</p>
               </div>
             </div>
 
-            <!-- TOTP Code -->
-            <div class="relative text-center rounded-xl bg-gray-50 dark:bg-gray-900/70 border-2 border-dashed border-gray-300 dark:border-gray-600 px-4 py-5 mb-5">
-              <div class="text-4xl font-mono font-bold tracking-[0.18em] text-gray-900 dark:text-gray-100 mb-4">
-                {{ formatTotpCode(getTotpCode(password.id)?.code) }}
-              </div>
-              
-              <!-- Progress Bar -->
-              <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-                <div 
-                  class="bg-blue-500 h-2.5 rounded-full transition-all duration-1000"
-                  :style="{ width: `${getTotpProgress(password.id)}%` }"
-                ></div>
-              </div>
-              
-              <!-- Time Remaining -->
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2">
-                {{ getTotpCode(password.id)?.timeRemaining || 0 }}s restantes
-              </p>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex gap-3">
-              <BaseButton
-                @click.stop="copyTotpCode(password.id)"
-                variant="primary"
-                size="md"
-                class="w-full"
-              >
-                <ClipboardIcon class="h-5 w-5 mr-2" />
-                Copiar
-              </BaseButton>
+            <div @click.stop>
+              <TotpCode :secret="totpSecrets.get(password.id)" />
             </div>
           </div>
         </BaseCard>
       </div>
-    </div>
 
-    <!-- Password Detail Modal -->
+      <EmptyState
+        v-else
+        :icon="KeyIcon"
+        title="Nenhum TOTP encontrado"
+        description="Adicione TOTP às suas senhas para ver os códigos aqui."
+      >
+        <BaseButton @click="$router.push('/dashboard')">
+          Voltar ao Dashboard
+        </BaseButton>
+      </EmptyState>
+    </main>
+
     <PasswordDetailModal
       v-if="selectedPassword"
       :show="!!selectedPassword"
@@ -117,103 +85,53 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { KeyIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { usePasswordsStore } from '@/stores/passwords'
-import { copyToClipboard } from '@/utils/clipboard'
-import { TOTPClient } from '@/utils/totpClient'
 import type { PasswordEntry } from '@/api/passwords'
-
-
-import { AppHeader, BaseCard, BaseButton } from '@/components/ui'
+import {
+  AppHeader,
+  BaseButton,
+  BaseCard,
+  EmptyState,
+  SkeletonCard,
+  TotpCode
+} from '@/components/ui'
+import { useToast } from '@/hooks/useToast'
 import PasswordDetailModal from '@/components/passwords/PasswordDetailModal.vue'
 
-
-import {
-  ArrowPathIcon,
-  KeyIcon,
-  ClipboardIcon
-} from '@heroicons/vue/24/outline'
-
-const router = useRouter()
 const passwordsStore = usePasswordsStore()
-
+const toast = useToast()
 
 const selectedPassword = ref<PasswordEntry | null>(null)
-const isRefreshing = ref(false)
-const totpSecrets = ref<Map<string, string>>(new Map()) 
-const totpCodes = ref<Map<string, any>>(new Map()) 
+const isInitialLoading = ref(true)
+const totpSecrets = ref<Map<string, string>>(new Map())
 const refreshInterval = ref<number | null>(null)
-const updateTrigger = ref(0) 
-
+const updateTrigger = ref(0)
 
 const totpPasswords = computed(() => {
   return passwordsStore.passwords.filter(p => p.totpEnabled)
 })
 
-
-const getTotpCode = (passwordId: string) => {
-  
-  updateTrigger.value
-  
-  const secret = totpSecrets.value.get(passwordId)
-  if (!secret) return null
-  
-  try {
-    
-    const codeData = TOTPClient.generateCurrentCode(secret)
-    return codeData
-  } catch (error) {
-    return null
-  }
-}
-
-const formatTotpCode = (code?: string) => {
-  const cleanCode = code?.replace(/\D/g, '').slice(0, 6)
-  return cleanCode?.length === 6 ? `${cleanCode.slice(0, 3)} ${cleanCode.slice(3)}` : '--- ---'
-}
-
-const getTotpProgress = (passwordId: string) => {
-  const code = getTotpCode(passwordId)
-  if (!code) return 0
-  return Math.max(0, Math.min(100, (code.timeRemaining / code.period) * 100))
-}
-
-const refreshTotpCodes = async () => {
-  isRefreshing.value = true
-  try {
-    await passwordsStore.fetchPasswords({ totpEnabled: true })
-    await loadTotpCodes()
-  } catch (error) {
-  } finally {
-    isRefreshing.value = false
-  }
-}
-
 const loadTotpCodes = async () => {
-  
-  for (const password of totpPasswords.value) {
+  await Promise.all(totpPasswords.value.map(async (password) => {
     try {
-      
       const response = await passwordsStore.getTotpSecret(password.id)
       if (response?.secret) {
         totpSecrets.value.set(password.id, response.secret)
       }
-    } catch (error) {
+    } catch {
+      // The card shows the empty code state.
     }
-  }
+  }))
 }
 
-const copyTotpCode = async (passwordId: string) => {
-  const totpCode = getTotpCode(passwordId)
-  const cleanCode = totpCode?.code?.replace(/\D/g, '').slice(0, 6)
-
-  if (cleanCode?.length === 6) {
-    const result = await copyToClipboard(cleanCode)
-    if (result.success) {
-    } else {
-    }
-  } else {
+const refreshTotpCodes = async () => {
+  try {
+    await passwordsStore.fetchPasswords({ totpEnabled: true })
+    await loadTotpCodes()
+  } catch {
+    toast.error('Não foi possível atualizar os códigos TOTP.')
   }
 }
 
@@ -231,11 +149,8 @@ const handlePasswordDeleted = () => {
   refreshTotpCodes()
 }
 
-
 const startAutoRefresh = () => {
-  
   refreshInterval.value = window.setInterval(() => {
-    
     updateTrigger.value++
   }, 1000)
 }
@@ -247,13 +162,15 @@ const stopAutoRefresh = () => {
   }
 }
 
-
 onMounted(async () => {
   try {
     await passwordsStore.fetchPasswords({ totpEnabled: true })
     await loadTotpCodes()
     startAutoRefresh()
-  } catch (error) {
+  } catch {
+    toast.error('Não foi possível carregar os códigos TOTP.')
+  } finally {
+    isInitialLoading.value = false
   }
 })
 

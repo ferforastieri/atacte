@@ -36,12 +36,92 @@ export default {
           800: '#1f2937',
           900: '#111827',
           950: '#030712',
-        }
+        },
+        // Semantic surface/text tokens. Values live as CSS variables in shared/style.css.
+        canvas: 'rgb(var(--at-canvas) / <alpha-value>)',
+        surface: {
+          DEFAULT: 'rgb(var(--at-surface) / <alpha-value>)',
+          muted: 'rgb(var(--at-surface-muted) / <alpha-value>)',
+          raised: 'rgb(var(--at-surface-raised) / <alpha-value>)',
+          inverse: 'rgb(var(--at-surface-inverse) / <alpha-value>)',
+        },
+        ink: {
+          DEFAULT: 'rgb(var(--at-ink) / <alpha-value>)',
+          muted: 'rgb(var(--at-ink-muted) / <alpha-value>)',
+          subtle: 'rgb(var(--at-ink-subtle) / <alpha-value>)',
+          inverse: 'rgb(var(--at-ink-inverse) / <alpha-value>)',
+        },
+        line: {
+          DEFAULT: 'rgb(var(--at-line) / <alpha-value>)',
+          strong: 'rgb(var(--at-line-strong) / <alpha-value>)',
+        },
+        success: {
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          900: '#064e3b',
+        },
+        warning: {
+          50: '#fffbeb',
+          100: '#fef3c7',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+          900: '#78350f',
+        },
+        danger: {
+          50: '#fef2f2',
+          100: '#fee2e2',
+          300: '#fca5a5',
+          400: '#f87171',
+          500: '#ef4444',
+          600: '#dc2626',
+          700: '#b91c1c',
+          900: '#7f1d1d',
+        },
+        info: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          900: '#1e3a8a',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
+      },
+      borderRadius: {
+        xl: '0.875rem',
+        '2xl': '1.125rem',
+        '3xl': '1.5rem',
+      },
+      spacing: {
+        '4.5': '1.125rem',
+        '18': '4.5rem',
+      },
+      fontSize: {
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }],
+      },
+      boxShadow: {
+        card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 10px 28px -20px rgb(15 23 42 / 0.22)',
+        pop: '0 24px 64px -24px rgb(15 23 42 / 0.4)',
+        hero: '0 28px 60px -28px rgb(2 6 23 / 0.6)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
+        'fade-in': 'fadeIn 0.4s ease-out',
+        'slide-up': 'slideUp 0.28s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        shimmer: 'shimmer 1.6s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -51,8 +131,12 @@ export default {
         slideUp: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
-        }
-      }
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
     },
   },
   plugins: [],

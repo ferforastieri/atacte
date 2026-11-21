@@ -3,7 +3,7 @@
     <template #header>
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-900/40">
-          <SparklesIcon class="h-5 w-5 text-primary-600 dark:text-primary-400" />
+          <SparklesIcon class="h-5 w-5 text-primary-700 dark:text-primary-400" />
         </div>
         <div>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Gerador de Senha</h3>
@@ -29,11 +29,17 @@
             <div class="flex flex-shrink-0 items-center gap-1">
               <button
                 type="button"
-                class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50"
                 :title="copied ? 'Copiado!' : 'Copiar senha'"
+                :disabled="isCopying || !password"
                 @click="copyPassword"
               >
-                <CheckIcon v-if="copied" class="h-5 w-5 text-primary-400" />
+                <span
+                  v-if="isCopying"
+                  class="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"
+                  aria-hidden="true"
+                ></span>
+                <CheckIcon v-else-if="copied" class="h-5 w-5 text-primary-400" />
                 <ClipboardIcon v-else class="h-5 w-5" />
               </button>
 
@@ -109,7 +115,7 @@
               <span
                 class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold"
                 :class="settings[option.key]
-                  ? 'bg-primary-600 text-white'
+                  ? 'bg-primary-700 text-white'
                   : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
               >
                 {{ option.sample }}
@@ -122,7 +128,7 @@
 
             <span
               class="relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors"
-              :class="settings[option.key] ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'"
+              :class="settings[option.key] ? 'bg-primary-700' : 'bg-gray-300 dark:bg-gray-600'"
             >
               <span
                 class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
@@ -192,6 +198,7 @@ const MAX_LENGTH = 64
 const password = ref(props.initialPassword)
 const showPassword = ref(false)
 const copied = ref(false)
+const isCopying = ref(false)
 let copiedTimeout: ReturnType<typeof setTimeout> | null = null
 
 const settings = reactive({
@@ -300,9 +307,11 @@ const generatePassword = () => {
 }
 
 const copyPassword = async () => {
-  if (!password.value) return
+  if (!password.value || isCopying.value) return
 
+  isCopying.value = true
   const result = await copyToClipboard(password.value)
+  isCopying.value = false
   if (!result.success) return
 
   copied.value = true
@@ -364,22 +373,12 @@ onBeforeUnmount(() => {
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    #16a34a 0%,
-    #16a34a var(--slider-progress, 0%),
-    #e5e7eb var(--slider-progress, 0%),
-    #e5e7eb 100%
+    rgb(var(--at-primary-600)) 0%,
+    rgb(var(--at-primary-600)) var(--slider-progress, 0%),
+    rgb(var(--at-line)) var(--slider-progress, 0%),
+    rgb(var(--at-line)) 100%
   );
   outline: none;
-}
-
-:global(.dark) .password-length-slider {
-  background: linear-gradient(
-    to right,
-    #16a34a 0%,
-    #16a34a var(--slider-progress, 0%),
-    #374151 var(--slider-progress, 0%),
-    #374151 100%
-  );
 }
 
 .password-length-slider::-webkit-slider-thumb {
@@ -388,8 +387,8 @@ onBeforeUnmount(() => {
   width: 1.25rem;
   height: 1.25rem;
   border-radius: 9999px;
-  background: #ffffff;
-  border: 2px solid #16a34a;
+  background: white;
+  border: 2px solid rgb(var(--at-primary-600));
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
   cursor: pointer;
 }
@@ -398,8 +397,8 @@ onBeforeUnmount(() => {
   width: 1.25rem;
   height: 1.25rem;
   border-radius: 9999px;
-  background: #ffffff;
-  border: 2px solid #16a34a;
+  background: white;
+  border: 2px solid rgb(var(--at-primary-600));
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
   cursor: pointer;
 }
@@ -409,7 +408,7 @@ onBeforeUnmount(() => {
 }
 
 .password-length-slider:focus-visible {
-  outline: 2px solid #22c55e;
+  outline: 2px solid rgb(var(--at-primary-500));
   outline-offset: 2px;
 }
 </style>

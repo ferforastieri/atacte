@@ -1,14 +1,14 @@
 <template>
   <div :class="cardClasses">
-    <div v-if="$slots.header" class="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+    <div v-if="$slots.header" class="border-b border-line px-4 py-4 sm:px-6">
       <slot name="header" />
     </div>
-    
+
     <div :class="bodyClasses">
       <slot />
     </div>
-    
-    <div v-if="$slots.footer" class="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+
+    <div v-if="$slots.footer" class="rounded-b-2xl border-t border-line bg-surface-muted/50 px-4 py-4 sm:px-6">
       <slot name="footer" />
     </div>
   </div>
@@ -18,7 +18,7 @@
 import { computed } from 'vue'
 
 interface Props {
-  variant?: 'default' | 'elevated' | 'outlined'
+  variant?: 'default' | 'elevated' | 'outlined' | 'muted' | 'hero'
   padding?: 'none' | 'sm' | 'md' | 'lg'
   hover?: boolean
   overflowVisible?: boolean
@@ -33,23 +33,21 @@ const props = withDefaults(defineProps<Props>(), {
 
 const cardClasses = computed(() => {
   const overflowClass = props.overflowVisible ? 'overflow-visible' : 'overflow-hidden'
-  const baseClasses = `bg-white dark:bg-gray-800 rounded-lg ${overflowClass} transition-colors duration-200`
-  
+  const baseClasses = `rounded-2xl transition-all duration-200 ${overflowClass}`
+
   const variantClasses = {
-    default: 'shadow-sm border border-gray-200 dark:border-gray-700',
-    elevated: 'shadow-lg border border-gray-100 dark:border-gray-600',
-    outlined: 'border-2 border-gray-200 dark:border-gray-700'
+    default: 'border border-line bg-surface shadow-card',
+    elevated: 'border border-line bg-surface shadow-pop',
+    outlined: 'border border-line bg-surface',
+    muted: 'border border-line bg-surface-muted',
+    hero: 'hero-card text-white'
   }
-  
-  const hoverClasses = props.hover 
-    ? 'transition-all duration-200 hover:shadow-md dark:hover:shadow-lg' 
+
+  const hoverClasses = props.hover
+    ? 'hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop'
     : ''
-  
-  return [
-    baseClasses,
-    variantClasses[props.variant],
-    hoverClasses
-  ].join(' ')
+
+  return [baseClasses, variantClasses[props.variant], hoverClasses].join(' ')
 })
 
 const bodyClasses = computed(() => {
@@ -59,8 +57,7 @@ const bodyClasses = computed(() => {
     md: 'p-4 sm:p-6',
     lg: 'p-6 sm:p-8'
   }
-  
+
   return paddingClasses[props.padding]
 })
 </script>
-
