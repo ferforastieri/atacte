@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../contexts/ThemeContext';
-import { Button } from '../shared/Button';
 import * as Clipboard from 'expo-clipboard';
-import { TOTPClient, type TOTPCode } from '../../utils/totpClient';
+import { HeroCard } from '../shared/HeroCard';
+import { useTheme } from '../../contexts/ThemeContext';
+import { radii, spacing, typography } from '../../theme/tokens';
+import { TOTPClient } from '../../utils/totpClient';
 
 interface TotpCodeProps {
-  secret?: string; 
-  code?: string; 
-  timeRemaining?: number; 
-  period?: number; 
+  secret?: string;
+  code?: string;
+  timeRemaining?: number;
+  period?: number;
   onRefresh?: () => void;
   onCopy?: () => void;
 }
@@ -23,202 +24,153 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
   onRefresh,
   onCopy,
 }) => {
-  const { isDark } = useTheme();
-  const [currentCode, setCurrentCode] = useState<string>('');
-  const [currentTimeRemaining, setCurrentTimeRemaining] = useState<number>(30);
-  const [currentPeriod, setCurrentPeriod] = useState<number>(30);
+  const { colors } = useTheme();
+  const [currentCode, setCurrentCode] = useState('');
+  const [currentTimeRemaining, setCurrentTimeRemaining] = useState(timeRemaining || 30);
+  const [currentPeriod, setCurrentPeriod] = useState(period || 30);
+  const [isCopying, setIsCopying] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  
   const generateTotpCode = () => {
     if (!secret) return;
-    
     try {
       const totpData = TOTPClient.generateCurrentCode(secret);
       setCurrentCode(totpData.code);
       setCurrentTimeRemaining(totpData.timeRemaining);
       setCurrentPeriod(totpData.period);
-    } catch (error) {
-      console.error('Erro ao gerar código TOTP:', error);
+    } catch {
       setCurrentCode('------');
     }
   };
 
-  
   const displayCode = currentCode || code || '------';
-  const displayTimeRemaining = currentTimeRemaining || timeRemaining || 30;
+  const displayTimeRemaining = currentTimeRemaining || timeRemaining || 0;
   const displayPeriod = currentPeriod || period || 30;
+  const formattedCode = displayCode ? displayCode.replace(/(.{3})/g, '$1 ').trim() : '------';
+  const progress = Math.max(0, Math.min(100, (displayTimeRemaining / displayPeriod) * 100));
 
   useEffect(() => {
     if (secret) {
       generateTotpCode();
-    } else {
-      setCurrentTimeRemaining(timeRemaining);
-    }
-  }, [secret, timeRemaining]);
-
-  useEffect(() => {
-    if (secret) {
-      
-      const timer = setInterval(() => {
-        generateTotpCode();
-      }, 1000);
-
-      return () => clearInterval(timer);
-    } else {
-      
-      if (displayTimeRemaining <= 0) return;
-
-      const timer = setInterval(() => {
-        setCurrentTimeRemaining(prev => {
-          if (prev <= 1) {
-            onRefresh?.();
-            return displayPeriod;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
+      const timer = setInterval(generateTotpCode, 1000);
       return () => clearInterval(timer);
     }
-  }, [secret, displayTimeRemaining, displayPeriod, onRefresh]);
 
-  const formattedCode = displayCode ? displayCode.replace(/(.{3})/g, '$1 ').trim() : '------';
-  const progress = (displayTimeRemaining / displayPeriod) * 100;
+    setCurrentTimeRemaining(timeRemaining);
+    if (!timeRemaining) return undefined;
+
+    const timer = setInterval(() => {
+      setCurrentTimeRemaining((previous) => {
+        if (previous <= 1) {
+          onRefresh?.();
+          return period || 30;
+        }
+        return previous - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [secret, timeRemaining, period]);
 
   const handleCopy = async () => {
-    if (displayCode && displayCode !== '------') {
-      const cleanCode = displayCode.replace(/\D/g, '').slice(0, 6);
+    if (!displayCode || displayCode === '------' || isCopying) return;
+    const cleanCode = displayCode.replace(/\D/g, '').slice(0, 6);
+    if (cleanCode.length !== 6) return;
 
-      if (cleanCode.length !== 6) {
-        console.error('Código TOTP indisponível para cópia');
-        return;
-      }
-
-      try {
-        await Clipboard.setStringAsync(cleanCode);
-        onCopy?.();
-      } catch (error) {
-        console.error('Erro ao copiar código:', error);
-      }
+    setIsCopying(true);
+    try {
+      await Clipboard.setStringAsync(cleanCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+      onCopy?.();
+    } catch {
+      // Keep the code visible even if the clipboard is unavailable.
+    } finally {
+      setIsCopying(false);
     }
   };
 
   const handleRefresh = () => {
-    if (secret) {
-      
-      generateTotpCode();
-    } else {
-      
-      onRefresh?.();
-    }
+    if (secret) generateTotpCode();
+    onRefresh?.();
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: isDark ? '#374151' : '#e5e7eb',
-      padding: 24,
-      gap: 16,
-    },
-    codeWrapper: {
-      position: 'relative',
-      alignItems: 'center',
-    },
-    code: {
-      fontFamily: 'monospace',
-      fontSize: 32,
-      fontWeight: 'bold',
-      textAlign: 'center',
-      backgroundColor: isDark ? '#374151' : '#f9fafb',
-      borderRadius: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
-      borderWidth: 2,
-      borderStyle: 'dashed',
-      borderColor: isDark ? '#4b5563' : '#d1d5db',
-      letterSpacing: 4,
-      color: isDark ? '#f9fafb' : '#111827',
-      opacity: currentTimeRemaining < 5 ? 0.7 : 1,
-    },
-    timerContainer: {
-      position: 'absolute',
-      top: -8,
-      right: -8,
-    },
-    timer: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      borderWidth: 2,
-      borderColor: isDark ? '#4b5563' : '#d1d5db',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-    },
-    timerInner: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    timerText: {
-      fontSize: 10,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    progressRing: {
-      position: 'absolute',
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-    },
-    actions: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    actionButton: {
-      flex: 1,
-    },
-  });
-
   return (
-    <View style={styles.container}>
-      <View style={styles.codeWrapper}>
-        <Text style={styles.code}>{formattedCode}</Text>
-        
-        <View style={styles.timerContainer}>
-          <View style={styles.timer}>
-            <View style={styles.timerInner}>
-              <Text style={styles.timerText}>{displayTimeRemaining}s</Text>
-            </View>
-            {}
-          </View>
+    <HeroCard padding="md">
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+        <Text style={{ color: colors.heroMuted, fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.8 }}>
+          CÓDIGO ATUAL
+        </Text>
+        <View style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: radii.pill, backgroundColor: colors.heroBar }}>
+          <Text style={{ color: colors.heroText, fontSize: typography.caption, fontWeight: typography.weights.semibold }}>
+            {displayTimeRemaining}s
+          </Text>
         </View>
       </View>
-      
-      <View style={styles.actions}>
-        <Button
-          title="Copiar"
-          onPress={handleCopy}
-          variant="secondary"
-          size="sm"
-          style={styles.actionButton}
-          disabled={!displayCode || displayCode === '------'}
-        />
-        <Button
-          title="Atualizar"
-          onPress={handleRefresh}
-          variant="secondary"
-          size="sm"
-          style={styles.actionButton}
-        />
+
+      <Text
+        style={{
+          marginTop: spacing.sm,
+          color: colors.heroText,
+          fontSize: 34,
+          lineHeight: 44,
+          textAlign: 'center',
+          letterSpacing: 4,
+          fontFamily: typography.mono,
+          fontWeight: typography.weights.bold,
+        }}
+      >
+        {formattedCode}
+      </Text>
+
+      <View style={{ height: 6, borderRadius: radii.pill, backgroundColor: colors.heroBar, overflow: 'hidden', marginTop: spacing.md }}>
+        <View style={{ width: `${progress}%`, height: '100%', borderRadius: radii.pill, backgroundColor: colors.accent }} />
       </View>
-    </View>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, marginTop: spacing.md }}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Atualizar código TOTP"
+          style={{
+            minHeight: 44,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            paddingHorizontal: spacing.md,
+            borderRadius: radii.md,
+          }}
+          onPress={handleRefresh}
+        >
+          <Ionicons name="refresh" size={16} color={colors.heroMuted} />
+          <Text style={{ color: colors.heroMuted, fontSize: typography.label, fontWeight: typography.weights.medium }}>Atualizar</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Copiar código TOTP"
+          accessibilityState={{ disabled: displayCode === '------' || isCopying, busy: isCopying }}
+          style={{
+            minHeight: 44,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            paddingHorizontal: spacing.md,
+            borderRadius: radii.md,
+            backgroundColor: colors.heroBar,
+            opacity: displayCode === '------' ? 0.45 : 1,
+          }}
+          onPress={handleCopy}
+          disabled={displayCode === '------' || isCopying}
+        >
+          {isCopying ? (
+            <ActivityIndicator size="small" color={colors.heroText} />
+          ) : (
+            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={copied ? colors.accent : colors.heroText} />
+          )}
+          <Text style={{ color: colors.heroText, fontSize: typography.label, fontWeight: typography.weights.semibold }}>
+            {copied ? 'Copiado' : 'Copiar'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </HeroCard>
   );
 };

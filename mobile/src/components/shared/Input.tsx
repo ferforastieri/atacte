@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity, ViewStyle, TextStyle, TextInputProps } from 'react-native';
+import {
+  TextInput,
+  Text,
+  TouchableOpacity,
+  View,
+  type TextInputProps,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import { radii, spacing, touch, typography } from '../../theme/tokens';
 
 interface InputProps {
   label?: string;
@@ -11,6 +20,7 @@ interface InputProps {
   secureTextEntry?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'url';
   error?: string;
+  helperText?: string;
   disabled?: boolean;
   multiline?: boolean;
   numberOfLines?: number;
@@ -19,6 +29,8 @@ interface InputProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoComplete?: TextInputProps['autoComplete'];
+  accessibilityLabel?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -29,6 +41,7 @@ export const Input: React.FC<InputProps> = ({
   secureTextEntry = false,
   keyboardType = 'default',
   error,
+  helperText,
   disabled = false,
   multiline = false,
   numberOfLines = 1,
@@ -37,106 +50,108 @@ export const Input: React.FC<InputProps> = ({
   leftIcon,
   rightIcon,
   autoCapitalize = 'sentences',
+  autoComplete,
+  accessibilityLabel,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
-  const togglePasswordVisibility = () => {
-    setIsPasswordVisible(!isPasswordVisible);
-  };
+  const hasRight = (secureTextEntry && !rightIcon) || Boolean(rightIcon);
 
   return (
-    <View style={[{ marginBottom: 16 }, style]}>
-      {label && (
-        <Text style={{
-          fontSize: 14,
-          fontWeight: '500',
-          color: isDark ? '#d1d5db' : '#374151',
-          marginBottom: 8,
-        }}>
+    <View style={[{ marginBottom: spacing.lg }, style]}>
+      {label ? (
+        <Text
+          style={{
+            fontSize: typography.label,
+            fontWeight: typography.weights.medium,
+            color: colors.ink,
+            marginBottom: spacing.sm,
+          }}
+        >
           {label}
         </Text>
-      )}
-      
-      <View style={{
-        position: 'relative',
-        flexDirection: 'row',
-        alignItems: 'center',
-      }}>
-        {leftIcon && (
-          <View style={{
-            position: 'absolute',
-            left: 12,
-            zIndex: 1,
-            padding: 4,
-          }}>
+      ) : null}
+
+      <View style={{ position: 'relative', flexDirection: 'row', alignItems: 'center' }}>
+        {leftIcon ? (
+          <View style={{ position: 'absolute', left: spacing.md, zIndex: 1, alignItems: 'center', justifyContent: 'center' }}>
             {leftIcon}
           </View>
-        )}
+        ) : null}
+
         <TextInput
-          style={[{
-            flex: 1,
-            borderWidth: 1,
-            borderColor: error ? '#dc2626' : (isDark ? '#4b5563' : '#d1d5db'),
-            borderRadius: 12,
-            paddingHorizontal: leftIcon ? 40 : 12,
-            paddingRight: (secureTextEntry && !rightIcon) || rightIcon ? 40 : 12,
-            paddingVertical: 10,
-            fontSize: 14,
-            color: isDark ? '#f9fafb' : '#111827',
-            backgroundColor: disabled ? (isDark ? '#374151' : '#f9fafb') : (isDark ? '#1f2937' : '#ffffff'),
-            minHeight: multiline ? 80 : 40,
-            textAlignVertical: multiline ? 'top' : 'center',
-          }, inputStyle]}
+          accessibilityLabel={accessibilityLabel || label || placeholder}
+          style={[
+            {
+              flex: 1,
+              minHeight: multiline ? 96 : 48,
+              borderWidth: 1,
+              borderColor: error ? colors.danger : isFocused ? colors.primary : colors.line,
+              borderRadius: radii.lg,
+              paddingHorizontal: leftIcon ? 44 : spacing.md,
+              paddingRight: hasRight ? 48 : spacing.md,
+              paddingVertical: multiline ? spacing.md : 0,
+              fontSize: typography.body,
+              color: colors.ink,
+              backgroundColor: disabled ? colors.surfaceMuted : colors.surface,
+              textAlignVertical: multiline ? 'top' : 'center',
+            },
+            inputStyle,
+          ]}
           placeholder={placeholder}
-          placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+          placeholderTextColor={colors.inkSubtle}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
           editable={!disabled}
           multiline={multiline}
           numberOfLines={numberOfLines}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
-        
-        {rightIcon && (
-          <View style={{
-            position: 'absolute',
-            right: 12,
-            padding: 4,
-          }}>
+
+        {rightIcon ? (
+          <View style={{ position: 'absolute', right: spacing.xs, alignItems: 'center', justifyContent: 'center' }}>
             {rightIcon}
           </View>
-        )}
-        
-        {secureTextEntry && !rightIcon && (
+        ) : null}
+
+        {secureTextEntry && !rightIcon ? (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha'}
             style={{
               position: 'absolute',
-              right: 12,
-              padding: 4,
+              right: spacing.xs,
+              width: touch.minimum,
+              height: touch.minimum,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: radii.md,
             }}
-            onPress={togglePasswordVisibility}
+            onPress={() => setIsPasswordVisible((current) => !current)}
           >
             <Ionicons
-              name={isPasswordVisible ? 'eye-off' : 'eye'}
+              name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
               size={20}
-              color={isDark ? '#9ca3af' : '#6b7280'}
+              color={colors.inkSubtle}
             />
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
-      
-      {error && (
-        <Text style={{
-          fontSize: 12,
-          color: '#dc2626',
-          marginTop: 4,
-        }}>
+
+      {error ? (
+        <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.medium, color: colors.dangerText, marginTop: 5 }}>
           {error}
         </Text>
-      )}
+      ) : helperText ? (
+        <Text style={{ fontSize: typography.caption, color: colors.inkMuted, marginTop: 5 }}>{helperText}</Text>
+      ) : null}
     </View>
   );
 };

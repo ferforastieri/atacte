@@ -1,18 +1,32 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal as RNModal, StyleSheet, ScrollView, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Modal as RNModal,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from './Button';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { IconTile } from './IconTile';
+import { radii, shadows, spacing, touch, typography } from '../../theme/tokens';
 
 interface ModalProps {
   visible: boolean;
   onClose: () => void;
   title?: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
   children?: React.ReactNode;
+  footer?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg';
   showCloseButton?: boolean;
-  
   type?: 'default' | 'confirm';
   message?: string;
   confirmText?: string;
@@ -26,7 +40,10 @@ export const Modal: React.FC<ModalProps> = ({
   visible,
   onClose,
   title,
+  subtitle,
+  icon,
   children,
+  footer,
   size = 'md',
   showCloseButton = true,
   type = 'default',
@@ -37,102 +54,19 @@ export const Modal: React.FC<ModalProps> = ({
   confirmVariant = 'primary',
   loading = false,
 }) => {
-  const { isDark } = useTheme();
-  const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
 
-  const getModalStyle = () => {
-    const baseStyle = {
-      ...styles.modal,
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-    };
-    
-    
-    const availableHeight = screenHeight - insets.top - insets.bottom - 40; 
-    const maxHeight = Math.min(availableHeight, screenHeight * 0.9);
-    
-    switch (size) {
-      case 'sm':
-        return [baseStyle, { 
-          ...styles.modalSm, 
-          maxHeight: Math.min(maxHeight, screenHeight * 0.6),
-          maxWidth: Math.min(screenWidth - 32, 400)
-        }];
-      case 'lg':
-        return [baseStyle, { 
-          ...styles.modalLg, 
-          maxHeight: Math.min(maxHeight, screenHeight * 0.9),
-          maxWidth: Math.min(screenWidth - 32, 600)
-        }];
-      default:
-        return [baseStyle, { 
-          ...styles.modalMd, 
-          maxHeight: Math.min(maxHeight, screenHeight * 0.8),
-          maxWidth: Math.min(screenWidth - 32, 500)
-        }];
-    }
+  const maxHeight = size === 'sm' ? height * 0.6 : size === 'lg' ? height * 0.92 : height * 0.82;
+  const isConfirm = type === 'confirm';
+
+  const handleClose = () => {
+    if (!loading) onClose();
   };
-
-  const getHeaderStyle = () => ({
-    ...styles.header,
-    borderBottomColor: isDark ? '#374151' : '#e5e7eb',
-  });
-
-  const getTitleStyle = () => ({
-    ...styles.title,
-    color: isDark ? '#f9fafb' : '#111827',
-  });
-
-  const getMessageStyle = () => ({
-    ...styles.message,
-    color: isDark ? '#f9fafb' : '#111827',
-  });
 
   const handleConfirm = () => {
-    if (!loading) {
-      onConfirm?.();
-    }
-  };
-
-  const renderContent = () => {
-    if (type === 'confirm') {
-      return (
-        <View style={styles.confirmContent}>
-          {message && <Text style={getMessageStyle()}>{message}</Text>}
-          <View style={styles.confirmActions}>
-            <Button
-              title={cancelText}
-              onPress={onClose}
-              variant="ghost"
-              style={styles.confirmButton}
-            />
-            <Button
-              title={confirmText}
-              onPress={handleConfirm}
-              variant={confirmVariant}
-              style={styles.confirmButton}
-              loading={loading}
-              disabled={loading}
-            />
-          </View>
-        </View>
-      );
-    }
-
-    return (
-      <ScrollView 
-        style={styles.content} 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ 
-          paddingBottom: 20
-        }}
-        keyboardShouldPersistTaps="handled"
-        bounces={false}
-        nestedScrollEnabled={true}
-      >
-        {children}
-      </ScrollView>
-    );
+    if (!loading) onConfirm?.();
   };
 
   return (
@@ -140,108 +74,139 @@ export const Modal: React.FC<ModalProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       statusBarTranslucent
     >
-      <SafeAreaView style={styles.overlay}>
-        <KeyboardAvoidingView 
-          style={styles.keyboardAvoidingView} 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim }}>
+        <TouchableWithoutFeedback onPress={handleClose}>
+          <View style={{ flex: 1 }} />
+        </TouchableWithoutFeedback>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <View style={styles.overlayContent}>
-            <View style={getModalStyle()}>
-              {(title || showCloseButton) && type === 'default' && (
-                <View style={getHeaderStyle()}>
-                  {title && <Text style={getTitleStyle()}>{title}</Text>}
-                  {showCloseButton && (
-                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                      <Ionicons name="close" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
-              
-              {type === 'confirm' && title && (
-                <View style={getHeaderStyle()}>
-                  <Text style={getTitleStyle()}>{title}</Text>
-                </View>
-              )}
-              
-              {renderContent()}
+          <View
+            style={{
+              maxHeight,
+              backgroundColor: colors.surfaceRaised,
+              borderTopLeftRadius: radii['3xl'],
+              borderTopRightRadius: radii['3xl'],
+              borderWidth: 1,
+              borderBottomWidth: 0,
+              borderColor: colors.line,
+              paddingBottom: Math.max(insets.bottom, spacing.md),
+              overflow: 'hidden',
+              ...shadows.pop,
+            }}
+          >
+            <View style={{ alignItems: 'center', paddingTop: spacing.md }}>
+              <View style={{ width: 44, height: 5, borderRadius: radii.pill, backgroundColor: colors.lineStrong }} />
             </View>
+
+            {(title || showCloseButton) ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  paddingHorizontal: spacing.xl,
+                  paddingTop: spacing.md,
+                  paddingBottom: spacing.lg,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.line,
+                }}
+              >
+                {isConfirm ? (
+                  <IconTile variant="danger" size={44}>
+                    <Ionicons name="alert-circle-outline" size={22} color={colors.dangerText} />
+                  </IconTile>
+                ) : icon ? (
+                  <IconTile size={44}>{icon}</IconTile>
+                ) : null}
+
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  {title ? (
+                    <Text numberOfLines={1} style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink }}>
+                      {title}
+                    </Text>
+                  ) : null}
+                  {subtitle ? (
+                    <Text style={{ marginTop: 2, fontSize: typography.label, color: colors.inkMuted }}>{subtitle}</Text>
+                  ) : null}
+                </View>
+
+                {showCloseButton ? (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Fechar"
+                    style={{
+                      width: touch.minimum,
+                      height: touch.minimum,
+                      borderRadius: radii.md,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: colors.surfaceMuted,
+                      opacity: loading ? 0.5 : 1,
+                    }}
+                    onPress={handleClose}
+                    disabled={loading}
+                  >
+                    <Ionicons name="close" size={20} color={colors.inkMuted} />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            ) : null}
+
+            {isConfirm ? (
+              <View style={{ padding: spacing.xl, paddingBottom: spacing.lg }}>
+                {message ? (
+                  <Text style={{ fontSize: typography.body, lineHeight: 22, color: colors.inkMuted }}>{message}</Text>
+                ) : null}
+                <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing['2xl'] }}>
+                  <Button title={cancelText} onPress={handleClose} variant="ghost" style={{ flex: 1 }} disabled={loading} />
+                  <Button
+                    title={confirmText}
+                    onPress={handleConfirm}
+                    variant={confirmVariant}
+                    style={{ flex: 1 }}
+                    loading={loading}
+                    disabled={loading}
+                  />
+                </View>
+              </View>
+            ) : (
+              <>
+                <ScrollView
+                  style={{ flexShrink: 1 }}
+                  contentContainerStyle={{ padding: spacing.xl, paddingBottom: spacing['2xl'] }}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled
+                >
+                  {children}
+                </ScrollView>
+                {footer ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      gap: spacing.md,
+                      paddingHorizontal: spacing.xl,
+                      paddingVertical: spacing.lg,
+                      borderTopWidth: 1,
+                      borderTopColor: colors.line,
+                      backgroundColor: colors.surfaceMuted,
+                    }}
+                  >
+                    {footer}
+                  </View>
+                ) : null}
+              </>
+            )}
           </View>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </RNModal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  overlayContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-  },
-  modal: {
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  modalSm: {
-    width: '100%',
-  },
-  modalMd: {
-    width: '100%',
-  },
-  modalLg: {
-    width: '100%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 24,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  content: {
-    padding: 24,
-    flexGrow: 1,
-  },
-  confirmContent: {
-    padding: 24,
-    paddingBottom: 30,
-  },
-  message: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 24,
-    textAlign: 'left',
-  },
-  confirmActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  confirmButton: {
-    flex: 1,
-  },
-});

@@ -33,7 +33,7 @@ const DEFAULT_OPTIONS: PasswordGeneratorOptions = {
 export const usePasswordGenerator = (initialOptions?: Partial<PasswordGeneratorOptions>): UsePasswordGeneratorReturn => {
   const [generator] = useState(() => new PasswordGenerator(initialOptions));
   const [password, setPassword] = useState('');
-  const [strength, setStrength] = useState<PasswordStrength>({ score: 0, label: 'Fraca', color: '#ef4444' });
+  const [strength, setStrength] = useState<PasswordStrength>({ score: 0, label: 'Fraca', colorToken: 'danger' });
   const [options, setOptions] = useState<PasswordGeneratorOptions>(() => ({
     ...DEFAULT_OPTIONS,
     ...initialOptions,
@@ -100,7 +100,7 @@ export const usePasswordGenerator = (initialOptions?: Partial<PasswordGeneratorO
     setOptions(defaultOptions);
     generator.updateOptions(defaultOptions);
     setPassword('');
-    setStrength({ score: 0, label: 'Fraca', color: '#ef4444' });
+    setStrength({ score: 0, label: 'Fraca', colorToken: 'danger' });
   }, [generator]);
 
   return {

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../lib/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { radii, shadows, spacing, touch, typography } from '../../theme/tokens';
 
 interface UpdateInfo {
   currentVersion: string;
@@ -22,7 +23,7 @@ const BUSY_POLL = 5 * 1000;
 
 export default function UpdateNotice() {
   const { isAuthenticated } = useAuth();
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [release, setRelease] = useState<UpdateInfo | null>(null);
   const attempted = useRef<string | null>(null);
@@ -59,13 +60,7 @@ export default function UpdateNotice() {
           fastUntil.current = Date.now() + 5 * 60 * 1000;
         } else if (stateIsRelevant && info.state?.status === 'error' && attempted.current === info.latestVersion) {
           fastUntil.current = 0;
-        } else if (
-          info.updateAvailable
-          && info.supported
-          && info.autoUpdate
-          && info.latestVersion
-          && attempted.current !== info.latestVersion
-        ) {
+        } else if (info.updateAvailable && info.supported && info.autoUpdate && info.latestVersion && attempted.current !== info.latestVersion) {
           attempted.current = info.latestVersion;
           fastUntil.current = Date.now() + 5 * 60 * 1000;
           try {
@@ -108,92 +103,86 @@ export default function UpdateNotice() {
     : auto
       ? 'O servidor está sendo atualizado automaticamente.'
       : 'Este servidor não atualiza sozinho. Baixe a release e atualize manualmente.';
-  const borderColor = failed ? '#ef4444' : auto ? '#16a34a' : '#f59e0b';
-  const iconColor = failed ? '#ef4444' : auto ? '#16a34a' : '#d97706';
+  const accent = failed ? colors.danger : auto ? colors.primary : colors.warning;
+  const accentSoft = failed ? colors.dangerSoft : auto ? colors.primarySoft : colors.warningSoft;
 
   return (
-    <View style={[styles.wrapper, { bottom: insets.bottom + 70 }]} pointerEvents="box-none">
-      <View
-        style={[
-          styles.card,
-          {
-            backgroundColor: isDark ? '#1f2937' : '#ffffff',
-            borderColor: isDark ? '#374151' : '#e5e7eb',
-          },
-        ]}
-      >
-        <View style={[styles.accent, { backgroundColor: borderColor }]} />
+    <View style={[styles.wrapper, { bottom: insets.bottom + 72 }]} pointerEvents="box-none">
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+        <View style={[styles.accent, { backgroundColor: accent }]} />
 
         <View style={styles.body}>
-          <View style={[styles.icon, { backgroundColor: `${iconColor}18` }]}>
+          <View style={[styles.icon, { backgroundColor: accentSoft }]}>
             {auto && !failed ? (
-              <ActivityIndicator size="small" color={iconColor} />
+              <ActivityIndicator size="small" color={accent} />
             ) : (
-              <Ionicons name={failed ? 'alert-circle-outline' : 'cloud-download-outline'} size={22} color={iconColor} />
+              <Ionicons name={failed ? 'alert-circle-outline' : 'cloud-download-outline'} size={22} color={accent} />
             )}
           </View>
 
           <View style={styles.copy}>
             <View style={styles.titleRow}>
-              <Text style={[styles.title, { color: isDark ? '#f9fafb' : '#111827' }]}>
+              <Text style={[styles.title, { color: colors.ink }]}>
                 {failed ? 'Falha na atualização' : auto ? 'Atualizando o servidor' : 'Nova versão disponível'}
               </Text>
               {release.latestVersion ? (
-                <View style={[styles.badge, { backgroundColor: isDark ? '#374151' : '#f3f4f6' }]}>
-                  <Text style={[styles.badgeText, { color: isDark ? '#d1d5db' : '#4b5563' }]}>v{release.latestVersion}</Text>
+                <View style={[styles.badge, { backgroundColor: colors.surfaceMuted }]}>
+                  <Text style={[styles.badgeText, { color: colors.inkMuted }]}>v{release.latestVersion}</Text>
                 </View>
               ) : null}
             </View>
 
-            <Text style={[styles.versions, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+            <Text style={[styles.versions, { color: colors.inkMuted }]}>
               v{release.currentVersion} → v{release.latestVersion}
             </Text>
-            <Text style={[styles.description, { color: failed ? (isDark ? '#fca5a5' : '#dc2626') : (isDark ? '#9ca3af' : '#6b7280') }]}>
+            <Text style={[styles.description, { color: failed ? colors.dangerText : colors.inkMuted }]}>
               {description}
             </Text>
 
             {auto && !failed ? (
-              <View style={[styles.progressTrack, { backgroundColor: isDark ? '#374151' : '#e5e7eb' }]}>
-                <View style={styles.progressFill} />
+              <View style={[styles.progressTrack, { backgroundColor: colors.line }]}>
+                <View style={[styles.progressFill, { backgroundColor: colors.accent }]} />
               </View>
             ) : null}
           </View>
 
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Dispensar aviso de atualização"
             style={styles.close}
             onPress={() => {
               dismissed.current = release.latestVersion;
               setRelease(null);
             }}
-            accessibilityLabel="Dispensar aviso de atualização"
           >
-            <Ionicons name="close" size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
+            <Ionicons name="close" size={18} color={colors.inkSubtle} />
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.footer, { borderTopColor: isDark ? '#374151' : '#f3f4f6' }]}>
+        <View style={[styles.footer, { borderTopColor: colors.line }]}>
           <View style={styles.statusRow}>
-            <View style={[styles.statusDot, { backgroundColor: failed ? '#ef4444' : auto ? '#16a34a' : '#f59e0b' }]} />
-            <Text style={[styles.statusText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+            <View style={[styles.statusDot, { backgroundColor: accent }]} />
+            <Text style={[styles.statusText, { color: colors.inkMuted }]}>
               {failed ? 'Atualização interrompida' : auto ? 'Atualização automática' : 'Ação manual necessária'}
             </Text>
           </View>
 
           <View style={styles.actions}>
             {release.releaseUrl && release.releaseUrl.startsWith('https://github.com/ferforastieri/atacte/releases/tag/') ? (
-              <TouchableOpacity onPress={() => { void Linking.openURL(release.releaseUrl!); }}>
-                <Text style={[styles.actionText, { color: iconColor }]}>Ver release</Text>
+              <TouchableOpacity style={{ minHeight: touch.minimum, justifyContent: 'center' }} onPress={() => { void Linking.openURL(release.releaseUrl!); }}>
+                <Text style={[styles.actionText, { color: colors.primaryText }]}>Ver release</Text>
               </TouchableOpacity>
             ) : null}
             {failed ? (
               <TouchableOpacity
+                style={{ minHeight: touch.minimum, justifyContent: 'center' }}
                 onPress={() => {
                   attempted.current = null;
                   fastUntil.current = Date.now() + 60 * 1000;
                   setRelease((current) => current ? { ...current, state: null } : current);
                 }}
               >
-                <Text style={[styles.actionText, { color: iconColor }]}>Tentar novamente</Text>
+                <Text style={[styles.actionText, { color: colors.primaryText }]}>Tentar novamente</Text>
               </TouchableOpacity>
             ) : null}
           </View>
@@ -204,116 +193,37 @@ export default function UpdateNotice() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-  },
+  wrapper: { position: 'absolute', left: spacing.md, right: spacing.md },
   card: {
     overflow: 'hidden',
-    borderRadius: 18,
+    borderRadius: radii.xl,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
-    elevation: 10,
+    ...shadows.pop,
   },
-  accent: {
-    height: 3,
-  },
-  body: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 14,
-    paddingBottom: 10,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  copy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  badge: {
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    fontFamily: 'monospace',
-  },
-  versions: {
-    marginTop: 3,
-    fontSize: 11,
-    fontFamily: 'monospace',
-  },
-  description: {
-    marginTop: 4,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  progressTrack: {
-    marginTop: 9,
-    height: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    width: '38%',
-    height: '100%',
-    borderRadius: 999,
-    backgroundColor: '#16a34a',
-  },
-  close: {
-    padding: 2,
-  },
+  accent: { height: 3 },
+  body: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg, paddingBottom: 10 },
+  icon: { width: 40, height: 40, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  copy: { flex: 1, minWidth: 0 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  title: { fontSize: typography.body, fontWeight: typography.weights.bold },
+  badge: { borderRadius: radii.pill, paddingHorizontal: 7, paddingVertical: 2 },
+  badgeText: { fontSize: 10, fontWeight: typography.weights.semibold, fontFamily: typography.mono },
+  versions: { marginTop: 3, fontSize: typography.caption, fontFamily: typography.mono },
+  description: { marginTop: 4, fontSize: typography.label, lineHeight: 17 },
+  progressTrack: { marginTop: 9, height: 4, borderRadius: radii.pill, overflow: 'hidden' },
+  progressFill: { width: '38%', height: '100%', borderRadius: radii.pill },
+  close: { width: touch.minimum, height: touch.minimum, alignItems: 'center', justifyContent: 'center' },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    paddingHorizontal: 14,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 9,
   },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  actionText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontSize: typography.caption, fontWeight: typography.weights.medium },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  actionText: { fontSize: typography.caption, fontWeight: typography.weights.bold },
 });

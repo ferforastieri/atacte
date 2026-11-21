@@ -1,76 +1,53 @@
 <template>
-  <BaseModal :show="show" @close="$emit('close')" size="xl">
+  <BaseModal :show="show" size="xl" @close="$emit('close')">
     <template #header>
-      <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-3">
-          <DocumentTextIcon class="h-6 w-6 text-primary-600 dark:text-primary-400" />
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ note?.title || 'Detalhes da Nota' }}</h3>
-          <StarIcon
-            v-if="note?.isFavorite"
-            class="h-5 w-5 text-yellow-500 fill-current"
-          />
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="icon-tile h-11 w-11">
+          <DocumentTextIcon class="h-5 w-5" />
+        </div>
+        <div class="min-w-0">
+          <h3 class="truncate text-lg font-semibold text-ink">{{ note?.title || 'Detalhes da Nota' }}</h3>
+          <div class="mt-1 flex flex-wrap items-center gap-1.5">
+            <span v-if="note?.isFavorite" class="pill-warning">
+              <StarIcon class="h-3 w-3 fill-current" /> Favorita
+            </span>
+            <span v-if="note?.folder" class="pill-neutral">{{ note.folder }}</span>
+            <span class="pill-neutral">Atualizada em {{ formatDateTime(note?.updatedAt || '') }}</span>
+          </div>
         </div>
       </div>
     </template>
 
-    <div v-if="note" class="space-y-6">
-      <!-- Book-like Reading View -->
-      <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-8 shadow-inner border-2 border-amber-200 dark:border-amber-800">
-        <div class="max-w-3xl mx-auto">
-          <!-- Book Header -->
-          <div class="text-left mb-8 pb-6 border-b-2 border-amber-300 dark:border-amber-700">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{{ note.title }}</h1>
-            <div class="flex items-center justify-start gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <span v-if="note.folder" class="flex items-center gap-1">
-                <FolderIcon class="h-4 w-4" />
-                {{ note.folder }}
-              </span>
-              <span class="flex items-center gap-1">
-                <ClockIcon class="h-4 w-4" />
-                {{ formatDate(note.updatedAt) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Book Content -->
-          <div class="prose prose-lg dark:prose-invert max-w-none">
-            <div class="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap font-serif text-base">
-              {{ note.content }}
-            </div>
-          </div>
-        </div>
+    <div v-if="note" class="space-y-4">
+      <div class="flex flex-wrap items-center gap-3 text-xs text-ink-muted">
+        <span class="inline-flex items-center gap-1.5">
+          <FolderIcon class="h-4 w-4 text-ink-subtle" />
+          {{ note.folder || 'Sem pasta' }}
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <ClockIcon class="h-4 w-4 text-ink-subtle" />
+          {{ formatDate(note.updatedAt) }}
+        </span>
       </div>
 
-      <!-- Metadata -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pasta</label>
-          <p class="text-sm text-gray-900 dark:text-gray-100">{{ note.folder || 'Sem pasta' }}</p>
+      <article class="rounded-2xl border border-line bg-surface-muted p-5 sm:p-8">
+        <h2 class="text-xl font-semibold tracking-tight text-ink sm:text-2xl">{{ note.title }}</h2>
+        <div class="mt-4 whitespace-pre-wrap text-base leading-relaxed text-ink">
+          {{ note.content }}
         </div>
-        
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Última atualização</label>
-          <p class="text-sm text-gray-900 dark:text-gray-100">{{ formatDateTime(note.updatedAt) }}</p>
-        </div>
-      </div>
+      </article>
     </div>
 
     <template #footer>
-      <div class="flex items-center justify-between w-full">
-        <div>
-          <BaseButton
-            variant="danger"
-            @click="handleDelete"
-            :loading="isDeleting"
-          >
-            Excluir
-          </BaseButton>
-        </div>
-        <div class="flex space-x-3">
-          <BaseButton variant="ghost" @click="$emit('close')">
+      <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <BaseButton variant="danger" :loading="isDeleting" :disabled="isDeleting" @click="handleDelete">
+          Excluir
+        </BaseButton>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row">
+          <BaseButton variant="ghost" :disabled="isDeleting" @click="$emit('close')">
             Fechar
           </BaseButton>
-          <BaseButton variant="primary" @click="handleEdit">
+          <BaseButton :disabled="isDeleting" @click="handleEdit">
             Editar
           </BaseButton>
         </div>
@@ -78,7 +55,6 @@
     </template>
   </BaseModal>
 
-  <!-- Modal de Edição -->
   <EditSecureNoteModal
     :show="showEditModal"
     :note="note"
@@ -87,7 +63,6 @@
     @updated="handleEditUpdated"
   />
 
-  <!-- Modal de Confirmação de Exclusão -->
   <ConfirmModal
     :show="showDeleteConfirm"
     title="Excluir Nota"
@@ -101,10 +76,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { DocumentTextIcon, StarIcon, FolderIcon, ClockIcon } from '@heroicons/vue/24/outline'
+import {
+  ClockIcon,
+  DocumentTextIcon,
+  FolderIcon,
+  StarIcon
+} from '@heroicons/vue/24/outline'
 import { BaseModal, BaseButton, ConfirmModal } from '@/components/ui'
 import { type SecureNote } from '@/api/secureNotes'
 import { useSecureNotesStore } from '@/stores/secureNotes'
+import { useToast } from '@/hooks/useToast'
 import EditSecureNoteModal from './EditSecureNoteModal.vue'
 
 interface Props {
@@ -113,26 +94,26 @@ interface Props {
   folders?: string[]
 }
 
-interface Emits {
-  (e: 'close'): void
-  (e: 'updated'): void
-  (e: 'deleted'): void
-}
-
 const props = withDefaults(defineProps<Props>(), {
   folders: () => []
 })
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  close: []
+  updated: []
+  deleted: []
+}>()
+
 const secureNotesStore = useSecureNotesStore()
+const toast = useToast()
 
 const isDeleting = ref(false)
 const showEditModal = ref(false)
 const showDeleteConfirm = ref(false)
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('pt-BR', {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'long',
     year: 'numeric'
@@ -140,8 +121,8 @@ const formatDate = (dateString: string) => {
 }
 
 const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleString('pt-BR', {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -167,18 +148,16 @@ const handleDelete = () => {
 }
 
 const confirmDelete = async () => {
-  if (!props.note) return
-  
+  if (!props.note || isDeleting.value) return
+
   isDeleting.value = true
-  
+
   try {
     await secureNotesStore.deleteNote(props.note.id)
     emit('deleted')
     emit('close')
-  } catch (error: unknown) {
-    const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
+  } catch {
+    toast.error('Não foi possível excluir a nota.')
   } finally {
     isDeleting.value = false
     showDeleteConfirm.value = false
@@ -189,18 +168,3 @@ const cancelDelete = () => {
   showDeleteConfirm.value = false
 }
 </script>
-
-<style scoped>
-.prose {
-  @apply text-gray-800 dark:text-gray-200;
-}
-
-.prose p {
-  @apply mb-4;
-}
-
-.prose h1, .prose h2, .prose h3 {
-  @apply text-gray-900 dark:text-gray-100;
-}
-</style>
-

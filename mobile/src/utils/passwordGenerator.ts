@@ -10,10 +10,12 @@ export interface PasswordGeneratorOptions {
   customSymbols?: string;
 }
 
+export type PasswordStrengthColorToken = 'successText' | 'accent' | 'warning' | 'danger';
+
 export interface PasswordStrength {
   score: number;
   label: string;
-  color: string;
+  colorToken: PasswordStrengthColorToken;
 }
 
 const DEFAULT_OPTIONS: PasswordGeneratorOptions = {
@@ -166,26 +168,26 @@ export class PasswordGenerator {
 
     
     let label: string;
-    let color: string;
+    let colorToken: PasswordStrengthColorToken;
 
     if (score >= 6) {
       label = 'Muito Forte';
-      color = '#16a34a';
+      colorToken = 'successText';
     } else if (score >= 4) {
       label = 'Forte';
-      color = '#22c55e';
+      colorToken = 'accent';
     } else if (score >= 2) {
       label = 'Média';
-      color = '#eab308';
+      colorToken = 'warning';
     } else {
       label = 'Fraca';
-      color = '#ef4444';
+      colorToken = 'danger';
     }
 
     return {
       score: Math.max(0, Math.min(6, score)),
       label,
-      color,
+      colorToken,
     };
   }
 

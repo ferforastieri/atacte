@@ -32,7 +32,10 @@ export default defineConfig(({ mode }) => {
         const targetPath = resolve(outDir, targetName)
         if (existsSync(sourcePath)) {
           mkdirSync(resolve(targetPath, '..'), { recursive: true })
-          const html = readFileSync(sourcePath, 'utf8').replaceAll('../assets/', './assets/')
+          const html = readFileSync(sourcePath, 'utf8')
+            .replaceAll('../assets/', './assets/')
+            .replaceAll('../favicon', './favicon')
+            .replaceAll('../apple-touch-icon', './apple-touch-icon')
           writeFileSync(targetPath, html)
           if (sourcePath !== targetPath) unlinkSync(sourcePath)
         }

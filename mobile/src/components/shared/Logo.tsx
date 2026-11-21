@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, Image, ViewStyle, TextStyle } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
+import { typography } from '../../theme/tokens';
 
 interface LogoProps {
   size?: number;
@@ -13,30 +15,25 @@ interface LogoProps {
 export const Logo: React.FC<LogoProps> = ({
   size = 48,
   showText = true,
-  textColor = '#111827',
-  textSize = 20,
+  textColor,
+  textSize = typography.headline,
   style,
   textStyle,
 }) => {
+  const { colors } = useTheme();
+
   return (
     <View style={[{ flexDirection: 'row', alignItems: 'center' }, style]}>
-      {}
       <Image
-        source={require('../../../assets/logo.png')}
-        style={{
-          width: size,
-          height: size,
-          resizeMode: 'contain',
-        }}
+        source={require('../../../assets/symbol.png')}
+        style={{ width: size, height: size, resizeMode: 'contain' }}
       />
-      
-      {}
-      {showText && (
+      {showText ? (
         <Text
           style={[
             {
-              fontWeight: 'bold',
-              color: textColor,
+              fontWeight: typography.weights.bold,
+              color: textColor || colors.ink,
               fontSize: textSize,
               marginLeft: 8,
             },
@@ -45,7 +42,7 @@ export const Logo: React.FC<LogoProps> = ({
         >
           Atacte
         </Text>
-      )}
+      ) : null}
     </View>
   );
 };

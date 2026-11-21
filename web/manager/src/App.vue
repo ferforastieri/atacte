@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden">
+  <div id="app" class="flex min-h-screen flex-col overflow-x-hidden bg-canvas">
     <TitleBar v-if="isElectron" />
     <div class="flex-1 overflow-x-hidden">
       <router-view />

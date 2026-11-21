@@ -1,12 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getColors, type ThemeColors } from '../theme/tokens';
 
 const THEME_STORAGE_KEY = '@atacte_theme';
 
 interface ThemeContextType {
   isDark: boolean;
   isLoading: boolean;
+  colors: ThemeColors;
   toggleTheme: () => void;
 }
 
@@ -27,10 +29,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       if (savedTheme !== null) {
         setIsDark(savedTheme === 'dark');
       } else {
-        
         setIsDark(systemColorScheme === 'dark');
       }
-    } catch (error) {
+    } catch {
       setIsDark(systemColorScheme === 'dark');
     } finally {
       setIsLoading(false);
@@ -42,12 +43,15 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       const newTheme = !isDark;
       setIsDark(newTheme);
       await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme ? 'dark' : 'light');
-    } catch (error) {
+    } catch {
+      // Keep the in-memory theme even if persistence fails.
     }
   };
 
+  const colors = useMemo(() => getColors(isDark), [isDark]);
+
   return (
-    <ThemeContext.Provider value={{ isDark, isLoading, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDark, isLoading, colors, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

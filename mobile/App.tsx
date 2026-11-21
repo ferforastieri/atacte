@@ -1,7 +1,7 @@
 import React from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './src/contexts/AuthContext';
@@ -12,14 +12,15 @@ import BiometricLock from './src/components/auth/BiometricLock';
 import UpdateNotice from './src/components/layout/UpdateNotice';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ServerProvider } from './src/contexts/ServerContext';
+import { getColors } from './src/theme/tokens';
 
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 function AppContent() {
-  const { isDark, isLoading } = useTheme();
+  const { isDark, isLoading, colors } = useTheme();
   if (isLoading) return null; // Keep the native splash until the saved theme is ready.
-  return <View style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f9fafb' }}
+  return <View style={{ flex: 1, backgroundColor: colors.canvas }}
     onLayout={() => { void SplashScreen.hideAsync().catch(() => undefined); }}>
     <StatusBar style={isDark ? 'light' : 'dark'} />
     <BiometricLock><AppNavigator /><UpdateNotice /></BiometricLock>
@@ -28,8 +29,11 @@ function AppContent() {
 }
 
 export default function App() {
+  const colorScheme = useColorScheme();
+  const rootColors = getColors(colorScheme === 'dark');
+
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#111827' }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: rootColors.canvas }}>
       <SafeAreaProvider>
         <ThemeProvider>
           <ToastProvider>

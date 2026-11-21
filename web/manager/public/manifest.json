@@ -4,8 +4,8 @@
   "description": "Gerenciador de Senhas e Notas",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#22c55e",
-  "theme_color": "#22c55e",
+  "background_color": "#0c1321",
+  "theme_color": "#01b966",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [

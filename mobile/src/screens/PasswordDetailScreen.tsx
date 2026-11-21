@@ -1,18 +1,31 @@
 import { secureRandomInt } from '../utils/secureRandom';
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Header, TotpCode, Button, SkeletonLoader, PasswordGeneratorModal } from '../components/shared';
-import { Modal } from '../components/shared/Modal';
-import { Input } from '../components/shared/Input';
+import * as Clipboard from 'expo-clipboard';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import {
+  Button,
+  Card,
+  Header,
+  HeroCard,
+  Input,
+  Modal,
+  PasswordGeneratorModal,
+  PasswordStrength,
+  SkeletonDetail,
+  TotpCode,
+  passwordScore,
+} from '../components/shared';
+import { IconTile } from '../components/shared/IconTile';
+import { Pill } from '../components/shared/Pill';
 import { passwordService } from '../services/passwords/passwordService';
 import { totpService } from '../services/totp/totpService';
 import { useTheme } from '../contexts/ThemeContext';
-import * as Clipboard from 'expo-clipboard';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { useToast } from '../contexts/ToastContext';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { radii, spacing, touch, typography } from '../theme/tokens';
 
 type PasswordDetailRouteProp = RouteProp<RootStackParamList, 'PasswordDetail'>;
 type PasswordDetailNavigationProp = StackNavigationProp<RootStackParamList, 'PasswordDetail'>;
@@ -27,11 +40,7 @@ interface PasswordEntry {
   notes?: string;
   isFavorite: boolean;
   totpEnabled: boolean;
-  customFields?: Array<{
-    id: string;
-    name: string;
-    value: string;
-  }>;
+  customFields?: Array<{ id: string; name: string; value: string }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,7 +49,9 @@ export default function PasswordDetailScreen() {
   const route = useRoute<PasswordDetailRouteProp>();
   const navigation = useNavigation<PasswordDetailNavigationProp>();
   const { passwordId } = route.params;
-  
+  const { colors } = useTheme();
+  const { showSuccess, showError } = useToast();
+
   const [password, setPassword] = useState<PasswordEntry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -49,9 +60,10 @@ export default function PasswordDetailScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPasswordGeneratorModal, setShowPasswordGeneratorModal] = useState(false);
-  const [showTotpSecret, setShowTotpSecret] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [copyingField, setCopyingField] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     website: '',
@@ -63,29 +75,28 @@ export default function PasswordDetailScreen() {
     totpEnabled: false,
     totpSecret: '',
   });
-  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
-    loadPassword();
+    void loadPassword();
   }, [passwordId]);
 
   useEffect(() => {
     if (password?.totpEnabled) {
-      loadTotpCode();
+      void loadTotpCode();
     }
   }, [password?.totpEnabled]);
 
   const loadPassword = async () => {
+    setIsLoading(true);
     try {
       const response = await passwordService.getPassword(passwordId);
-      
       if (response.success && response.data) {
         setPassword(response.data);
       } else {
-        Alert.alert('Erro', 'Senha não encontrada');
+        showError('Senha não encontrada.');
       }
-    } catch (error) {
-      Alert.alert('Erro', 'Erro ao carregar senha');
+    } catch {
+      showError('Erro ao carregar senha.');
     } finally {
       setIsLoading(false);
     }
@@ -93,57 +104,51 @@ export default function PasswordDetailScreen() {
 
   const loadTotpCode = async () => {
     if (!password?.totpEnabled) return;
-    
     setIsLoadingTotp(true);
     try {
       const response = await totpService.getTotpCode(passwordId);
       if (response.success && response.data) {
         setTotpCode(response.data);
-      } else {
       }
-    } catch (error) {
+    } catch {
+      // Keep the TOTP area in its empty state.
     } finally {
       setIsLoadingTotp(false);
     }
   };
 
-  const refreshTotpCode = async () => {
-    await loadTotpCode();
-  };
-
-  const handleTotpCopy = () => {
-  };
-
-  const copyToClipboard = async (text?: string, label: string = 'Texto') => {
-    if (!text) {
-      return;
-    }
-
+  const copyToClipboard = async (text: string | undefined, fieldId: string, successMessage: string) => {
+    if (!text || copyingField) return;
+    setCopyingField(fieldId);
     try {
       await Clipboard.setStringAsync(text);
-    } catch (error) {
+      showSuccess(successMessage);
+    } catch {
+      showError('Não foi possível copiar.');
+    } finally {
+      setCopyingField(null);
     }
   };
 
   const toggleFavorite = async () => {
-    if (!password) return;
-
+    if (!password || isTogglingFavorite) return;
+    setIsTogglingFavorite(true);
     try {
-      const response = await passwordService.updatePassword(password.id, {
-        isFavorite: !password.isFavorite,
-      });
-      
+      const response = await passwordService.updatePassword(password.id, { isFavorite: !password.isFavorite });
       if (response.success) {
-        setPassword(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null);
+        setPassword((current) => current ? { ...current, isFavorite: !current.isFavorite } : null);
       } else {
+        showError('Não foi possível atualizar a favorita.');
       }
-    } catch (error) {
+    } catch {
+      showError('Não foi possível atualizar a favorita.');
+    } finally {
+      setIsTogglingFavorite(false);
     }
   };
 
   const handleEditPassword = () => {
     if (!password) return;
-    
     setFormData({
       name: password.name,
       website: password.website || '',
@@ -158,571 +163,455 @@ export default function PasswordDetailScreen() {
     setShowEditModal(true);
   };
 
-  const handleDeletePassword = () => {
-    setShowDeleteModal(true);
-  };
-
   const confirmDeletePassword = async () => {
-    if (!password) return;
-    
+    if (!password || isDeleting) return;
     setIsDeleting(true);
     try {
       const response = await passwordService.deletePassword(password.id);
       if (response.success) {
+        setShowDeleteModal(false);
+        showSuccess('Senha excluída.');
         navigation.goBack();
       } else {
+        showError('Não foi possível excluir a senha.');
       }
-    } catch (error) {
+    } catch {
+      showError('Não foi possível excluir a senha.');
     } finally {
       setIsDeleting(false);
-      setShowDeleteModal(false);
     }
-  };
-
-  const handlePasswordGenerated = (generatedPassword: string) => {
-    setFormData({ ...formData, password: generatedPassword });
-    setShowPasswordGeneratorModal(false);
   };
 
   const generateTotpSecret = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     let secret = '';
-    for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(secureRandomInt(chars.length));
-    }
-    setFormData({ ...formData, totpSecret: secret });
+    for (let index = 0; index < 32; index += 1) secret += chars.charAt(secureRandomInt(chars.length));
+    setFormData((current) => ({ ...current, totpSecret: secret }));
   };
 
   const handleSavePassword = async () => {
-    if (!password) return;
-    
-    if (!formData.name.trim()) {
-      return;
-    }
-    
-    if (!formData.password.trim()) {
-      return;
-    }
+    if (!password || isSaving) return;
+    if (!formData.name.trim() || !formData.password.trim()) return;
 
     setIsSaving(true);
     try {
-      const passwordData: any = {
+      const passwordData: Record<string, unknown> = {
         name: formData.name.trim(),
         website: formData.website.trim() || undefined,
         username: formData.username.trim() || undefined,
         password: formData.password.trim(),
         folder: formData.folder.trim() || undefined,
+        notes: formData.notes.trim() || undefined,
         isFavorite: formData.isFavorite,
         totpEnabled: formData.totpEnabled,
       };
-
-      if (formData.notes.trim()) {
-        passwordData.notes = formData.notes.trim();
-      }
-      
-      if (formData.totpEnabled && formData.totpSecret.trim()) {
-        passwordData.totpSecret = formData.totpSecret.trim();
-      }
+      if (formData.totpEnabled && formData.totpSecret.trim()) passwordData.totpSecret = formData.totpSecret.trim();
 
       const response = await passwordService.updatePassword(password.id, passwordData);
-
       if (response.success && response.data) {
         setPassword(response.data);
         setShowEditModal(false);
+        showSuccess('Senha atualizada.');
       } else {
+        showError('Não foi possível salvar as alterações.');
       }
-    } catch (error) {
+    } catch {
+      showError('Não foi possível salvar as alterações.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark ? '#111827' : '#f9fafb',
-    },
-    content: {
-      flex: 1,
-      padding: 20,
-      paddingTop: 16,
-    },
-    infoCard: {
-      marginBottom: 20,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 16,
-    },
-    infoRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? '#374151' : '#e5e7eb',
-    },
-    infoLabel: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: isDark ? '#9ca3af' : '#6b7280',
-      flex: 1,
-    },
-    infoValue: {
-      fontSize: 14,
-      color: isDark ? '#f9fafb' : '#111827',
-      flex: 2,
-      textAlign: 'right',
-    },
-    copyButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      marginLeft: 8,
-    },
-    passwordValue: {
-      fontSize: 14,
-      color: isDark ? '#f9fafb' : '#111827',
-      flex: 2,
-      textAlign: 'right',
-      fontFamily: 'monospace',
-    },
-    notesCard: {
-      marginBottom: 20,
-    },
-    notesText: {
-      fontSize: 14,
-      color: isDark ? '#f9fafb' : '#111827',
-      lineHeight: 20,
-    },
-    customFieldsCard: {
-      marginBottom: 20,
-    },
-    customFieldRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? '#374151' : '#e5e7eb',
-    },
-    customFieldName: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: isDark ? '#9ca3af' : '#6b7280',
-      flex: 1,
-    },
-    customFieldValue: {
-      fontSize: 14,
-      color: isDark ? '#f9fafb' : '#111827',
-      flex: 2,
-      textAlign: 'right',
-      fontFamily: 'monospace',
-    },
-    actionsContainer: {
-      flexDirection: 'row',
-      gap: 12,
-      marginTop: 20,
-    },
-    actionButton: {
-      flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginTop: 16,
-    },
-    form: {
-      gap: 16,
-      paddingBottom: 20,
-    },
-    passwordSection: {
-      gap: 8,
-    },
-    passwordHeaderForm: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    sectionLabel: {
-      fontSize: 14,
-      fontWeight: '500',
-    },
-    generateButton: {
-      backgroundColor: '#16a34a',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
-    },
-    generateButtonText: {
-      color: '#ffffff',
-      fontSize: 12,
-      fontWeight: '500',
-    },
-    totpSection: {
-      gap: 12,
-    },
-    totpHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    totpSecretSection: {
-      gap: 8,
-    },
-    generateSecretButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      alignSelf: 'flex-start',
-    },
-    generateSecretButtonText: {
-      fontSize: 12,
-      fontWeight: '500',
-    },
-    favoriteSection: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    actions: {
-      marginTop: 8,
-    },
-    saveActions: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    cancelButton: {
-      flex: 1,
-    },
-    saveButton: {
-      flex: 1,
-    },
-  });
-
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <SkeletonLoader />
-        </View>
+      <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+        <Header title="Detalhes da Senha" showBackButton onBack={() => navigation.goBack()} />
+        <SkeletonDetail />
       </View>
     );
   }
 
   if (!password) {
     return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
-          <Text style={styles.loadingText}>Senha não encontrada</Text>
+      <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+        <Header title="Detalhes da Senha" showBackButton onBack={() => navigation.goBack()} />
+        <View style={{ flex: 1, justifyContent: 'center', padding: spacing.screen }}>
+          <Card>
+            <View style={{ alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xl }}>
+              <IconTile variant="danger" size={52}>
+                <Ionicons name="alert-circle-outline" size={26} color={colors.dangerText} />
+              </IconTile>
+              <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink }}>Senha não encontrada</Text>
+              <Button title="Voltar" variant="secondary" onPress={() => navigation.goBack()} />
+            </View>
+          </Card>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Header 
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <Header
         title={password.name}
-        showBackButton={true}
-        showThemeToggle={true}
+        subtitle="Detalhes da credencial"
+        showBackButton
+        onBack={() => navigation.goBack()}
+        icon={<Ionicons name="lock-closed-outline" size={22} color={colors.primarySoftText} />}
       />
-      <ScrollView style={styles.content}>
-        <Card style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>Informações</Text>
-          
-          {password.website && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Website</Text>
-              <Text style={styles.infoValue}>{password.website}</Text>
-            </View>
-          )}
-          
-          {password.username && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Usuário</Text>
-              <Text style={styles.infoValue}>{password.username}</Text>
-              <TouchableOpacity 
-                style={styles.copyButton}
-                onPress={() => copyToClipboard(password.username, 'Usuário')}
+
+      <ScrollView contentContainerStyle={{ padding: spacing.screen, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+        <HeroCard padding="md" style={{ marginBottom: spacing.lg }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+            <Text style={{ color: colors.heroMuted, fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.8 }}>
+              SENHA
+            </Text>
+            <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                style={{ width: touch.minimum, height: touch.minimum, alignItems: 'center', justifyContent: 'center' }}
+                onPress={() => setShowPassword((current) => !current)}
               >
-                <Ionicons name="copy-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.heroMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Copiar senha"
+                style={{
+                  minHeight: touch.minimum,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingHorizontal: spacing.md,
+                  borderRadius: radii.md,
+                  backgroundColor: colors.heroBar,
+                  opacity: copyingField === 'password' ? 0.6 : 1,
+                }}
+                onPress={() => copyToClipboard(password.password, 'password', 'Senha copiada.')}
+                disabled={copyingField === 'password'}
+              >
+                {copyingField === 'password' ? (
+                  <ActivityIndicator size="small" color={colors.heroText} />
+                ) : (
+                  <Ionicons name="copy-outline" size={16} color={colors.heroText} />
+                )}
+                <Text style={{ color: colors.heroText, fontSize: typography.label, fontWeight: typography.weights.semibold }}>Copiar</Text>
               </TouchableOpacity>
             </View>
-          )}
-          
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Senha</Text>
-            <Text style={styles.passwordValue}>
-              {showPassword ? password.password : '••••••••'}
-            </Text>
-            <TouchableOpacity 
-              style={styles.copyButton}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons 
-                name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                size={16} 
-                color={isDark ? '#9ca3af' : '#6b7280'} 
-              />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.copyButton}
-              onPress={() => copyToClipboard(password.password, 'Senha')}
-            >
-              <Ionicons name="copy-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-            </TouchableOpacity>
           </View>
-          
-          {password.folder && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Pasta</Text>
-              <Text style={styles.infoValue}>{password.folder}</Text>
-            </View>
-          )}
-          
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>TOTP</Text>
-            <Text style={styles.infoValue}>
-              {password.totpEnabled ? 'Habilitado' : 'Desabilitado'}
-            </Text>
+
+          <Text
+            style={{
+              marginTop: spacing.md,
+              minHeight: 44,
+              color: colors.heroText,
+              fontFamily: typography.mono,
+              fontSize: 20,
+              lineHeight: 30,
+              letterSpacing: 1,
+            }}
+          >
+            {showPassword ? password.password : '••••••••••••••••'}
+          </Text>
+
+          <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.md }}>
+            {password.isFavorite ? <Pill label="Favorita" tone="danger" icon={<Ionicons name="heart" size={12} color={colors.dangerText} />} /> : null}
+            {password.totpEnabled ? <Pill label="TOTP ativo" tone="info" /> : null}
+            {password.folder ? <Pill label={password.folder} /> : null}
+          </View>
+        </HeroCard>
+
+        <Card style={{ marginBottom: spacing.lg }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
+            <IconTile>
+              <Ionicons name="information-circle-outline" size={20} color={colors.primarySoftText} />
+            </IconTile>
+            <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink }}>Informações</Text>
+          </View>
+
+          <View style={{ gap: spacing.sm }}>
+            {[
+              { label: 'Nome', value: password.name },
+              { label: 'Website', value: password.website },
+              { label: 'Usuário', value: password.username },
+              { label: 'Pasta', value: password.folder },
+              { label: 'TOTP', value: password.totpEnabled ? 'Habilitado' : 'Desabilitado' },
+            ].filter((row) => row.value).map((row) => (
+              <View key={row.label} style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
+                <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>
+                  {row.label.toUpperCase()}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 }}>
+                  <Text style={{ flex: 1, fontSize: typography.body, color: colors.ink }}>{row.value}</Text>
+                  {row.label === 'Usuário' && password.username ? (
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel="Copiar usuário"
+                      style={{ width: touch.minimum, height: touch.minimum, alignItems: 'center', justifyContent: 'center' }}
+                      onPress={() => copyToClipboard(password.username, 'username', 'Usuário copiado.')}
+                      disabled={copyingField === 'username'}
+                    >
+                      {copyingField === 'username' ? (
+                        <ActivityIndicator size="small" color={colors.inkMuted} />
+                      ) : (
+                        <Ionicons name="copy-outline" size={17} color={colors.inkMuted} />
+                      )}
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              </View>
+            ))}
           </View>
         </Card>
 
-        {password.totpEnabled && totpCode && (
-          <TotpCode
-            code={totpCode.code}
-            timeRemaining={totpCode.timeRemaining}
-            period={totpCode.period}
-            onRefresh={refreshTotpCode}
-            onCopy={handleTotpCopy}
-          />
-        )}
-
-        {password.notes && (
-          <Card style={styles.notesCard}>
-            <Text style={styles.sectionTitle}>Notas</Text>
-            <Text style={styles.notesText}>{password.notes}</Text>
+        {password.totpEnabled ? (
+          <Card style={{ marginBottom: spacing.lg }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
+              <IconTile>
+                <Ionicons name="shield-checkmark-outline" size={20} color={colors.primarySoftText} />
+              </IconTile>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink }}>Código 2FA</Text>
+                <Text style={{ fontSize: typography.label, color: colors.inkMuted }}>Renovado a cada 30 segundos</Text>
+              </View>
+            </View>
+            {isLoadingTotp ? (
+              <View style={{ backgroundColor: colors.hero, borderRadius: radii['2xl'], padding: spacing.xl, gap: spacing.sm }}>
+                <View style={{ height: 10, width: '32%', borderRadius: radii.sm, backgroundColor: colors.heroBar }} />
+                <View style={{ height: 34, width: '70%', borderRadius: radii.sm, backgroundColor: colors.heroBar }} />
+                <View style={{ height: 6, width: '100%', borderRadius: radii.pill, backgroundColor: colors.heroBar }} />
+              </View>
+            ) : totpCode ? (
+              <TotpCode
+                code={totpCode.code}
+                timeRemaining={totpCode.timeRemaining}
+                period={totpCode.period}
+                onRefresh={loadTotpCode}
+                onCopy={() => showSuccess('Código copiado.')}
+              />
+            ) : (
+              <Button title="Carregar código" variant="secondary" onPress={loadTotpCode} loading={isLoadingTotp} />
+            )}
           </Card>
-        )}
+        ) : null}
 
-        {password.customFields && password.customFields.length > 0 && (
-          <Card style={styles.customFieldsCard}>
-            <Text style={styles.sectionTitle}>Campos Personalizados</Text>
+        {password.notes ? (
+          <Card style={{ marginBottom: spacing.lg }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
+              <IconTile>
+                <Ionicons name="document-text-outline" size={20} color={colors.primarySoftText} />
+              </IconTile>
+              <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink }}>Notas</Text>
+            </View>
+            <Text style={{ fontSize: typography.body, lineHeight: 22, color: colors.inkMuted }}>{password.notes}</Text>
+          </Card>
+        ) : null}
+
+        {password.customFields && password.customFields.length > 0 ? (
+          <Card style={{ marginBottom: spacing.lg }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
+              <IconTile>
+                <Ionicons name="options-outline" size={20} color={colors.primarySoftText} />
+              </IconTile>
+              <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink }}>Campos Personalizados</Text>
+            </View>
             {password.customFields.map((field) => (
-              <View key={field.id} style={styles.customFieldRow}>
-                <Text style={styles.customFieldName}>{field.name}</Text>
-                <Text style={styles.customFieldValue}>{field.value}</Text>
-                <TouchableOpacity 
-                  style={styles.copyButton}
-                  onPress={() => copyToClipboard(field.value, field.name)}
-                >
-                  <Ionicons name="copy-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-                </TouchableOpacity>
+              <View key={field.id} style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted, marginBottom: spacing.sm }}>
+                <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, color: colors.inkSubtle }}>{field.name.toUpperCase()}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 }}>
+                  <Text style={{ flex: 1, fontFamily: typography.mono, fontSize: typography.body, color: colors.ink }}>{field.value}</Text>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`Copiar ${field.name}`}
+                    style={{ width: touch.minimum, height: touch.minimum, alignItems: 'center', justifyContent: 'center' }}
+                    onPress={() => copyToClipboard(field.value, field.id, 'Campo copiado.')}
+                    disabled={copyingField === field.id}
+                  >
+                    {copyingField === field.id ? (
+                      <ActivityIndicator size="small" color={colors.inkMuted} />
+                    ) : (
+                      <Ionicons name="copy-outline" size={17} color={colors.inkMuted} />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </Card>
-        )}
+        ) : null}
 
-        <View style={styles.actionsContainer}>
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <Button title="Editar" onPress={handleEditPassword} style={{ flex: 1 }} />
           <Button
-            title="Editar"
-            onPress={handleEditPassword}
-            size="md"
-            variant="primary"
-            style={styles.actionButton}
-          />
-          <Button
-            title={password.isFavorite ? "Favorita" : "Favoritar"}
+            title={password.isFavorite ? 'Favorita' : 'Favoritar'}
             onPress={toggleFavorite}
-            size="md"
-            variant={password.isFavorite ? "primary" : "ghost"}
-            style={styles.actionButton}
+            loading={isTogglingFavorite}
+            disabled={isTogglingFavorite}
+            variant={password.isFavorite ? 'subtle' : 'secondary'}
+            style={{ flex: 1 }}
+            icon={!isTogglingFavorite ? <Ionicons name={password.isFavorite ? 'heart' : 'heart-outline'} size={16} color={password.isFavorite ? colors.primarySoftText : colors.inkMuted} /> : undefined}
           />
-          <Button
-            title="Excluir"
-            onPress={handleDeletePassword}
-            size="md"
-            variant="danger"
-            style={styles.actionButton}
-          />
+          <Button title="Excluir" onPress={() => setShowDeleteModal(true)} variant="danger" style={{ flex: 1 }} disabled={isDeleting} />
         </View>
       </ScrollView>
 
       <Modal
         visible={showEditModal}
         onClose={() => {
+          if (isSaving) return;
           setShowEditModal(false);
         }}
         title="Editar Senha"
+        subtitle="Atualize os dados da credencial"
+        icon={<Ionicons name="create-outline" size={22} color={colors.primarySoftText} />}
         size="lg"
+        footer={(
+          <>
+            <Button title="Cancelar" onPress={() => setShowEditModal(false)} variant="ghost" style={{ flex: 1 }} disabled={isSaving} />
+            <Button
+              title="Atualizar"
+              onPress={handleSavePassword}
+              loading={isSaving}
+              disabled={isSaving || !formData.name.trim() || !formData.password.trim()}
+              style={{ flex: 1 }}
+            />
+          </>
+        )}
       >
-        <View style={styles.form}>
-          <Input
-            label="Nome *"
-            placeholder="Nome da senha"
-            value={formData.name}
-            onChangeText={(text) => setFormData({ ...formData, name: text })}
-          />
+        <Input
+          label="Nome *"
+          placeholder="Nome da senha"
+          value={formData.name}
+          onChangeText={(text) => setFormData((current) => ({ ...current, name: text }))}
+          disabled={isSaving}
+        />
 
-          <Input
-            label="Website"
-            placeholder="https://exemplo.com"
-            value={formData.website}
-            onChangeText={(text) => setFormData({ ...formData, website: text })}
-            keyboardType="url"
-            leftIcon={<Ionicons name="globe-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-          />
+        <Input
+          label="Website"
+          placeholder="https://exemplo.com"
+          value={formData.website}
+          onChangeText={(text) => setFormData((current) => ({ ...current, website: text }))}
+          keyboardType="url"
+          autoCapitalize="none"
+          disabled={isSaving}
+          leftIcon={<Ionicons name="globe-outline" size={19} color={colors.inkSubtle} />}
+        />
 
-          <Input
-            label="Username"
-            placeholder="Nome de usuário"
-            value={formData.username}
-            onChangeText={(text) => setFormData({ ...formData, username: text })}
-            leftIcon={<Ionicons name="person-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-          />
+        <Input
+          label="Username"
+          placeholder="Nome de usuário"
+          value={formData.username}
+          onChangeText={(text) => setFormData((current) => ({ ...current, username: text }))}
+          autoCapitalize="none"
+          disabled={isSaving}
+          leftIcon={<Ionicons name="person-outline" size={19} color={colors.inkSubtle} />}
+        />
 
-          <View style={styles.passwordSection}>
-            <View style={styles.passwordHeaderForm}>
-              <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
-                Senha *
-              </Text>
-              <TouchableOpacity onPress={() => setShowPasswordGeneratorModal(true)} style={styles.generateButton}>
-                <Text style={styles.generateButtonText}>Gerar</Text>
-              </TouchableOpacity>
+        <View style={{ marginTop: spacing.sm, marginBottom: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={{ fontSize: typography.bodyLarge, fontWeight: typography.weights.semibold, color: colors.ink }}>Credencial</Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Gerar senha"
+            onPress={() => setShowPasswordGeneratorModal(true)}
+            disabled={isSaving}
+            style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: spacing.md, borderRadius: radii.pill, backgroundColor: colors.primarySoft }}
+          >
+            <Ionicons name="sparkles-outline" size={15} color={colors.primarySoftText} />
+            <Text style={{ fontSize: typography.label, fontWeight: typography.weights.semibold, color: colors.primarySoftText }}>Gerar senha</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Input
+          label="Senha *"
+          placeholder="Digite ou gere uma senha"
+          value={formData.password}
+          onChangeText={(text) => setFormData((current) => ({ ...current, password: text }))}
+          secureTextEntry
+          autoCapitalize="none"
+          disabled={isSaving}
+          leftIcon={<Ionicons name="lock-closed-outline" size={19} color={colors.inkSubtle} />}
+        />
+        <PasswordStrength score={passwordScore(formData.password)} />
+
+        <Input
+          label="Pasta"
+          placeholder="Pasta (opcional)"
+          value={formData.folder}
+          onChangeText={(text) => setFormData((current) => ({ ...current, folder: text }))}
+          disabled={isSaving}
+          leftIcon={<Ionicons name="folder-outline" size={19} color={colors.inkSubtle} />}
+        />
+
+        <Input
+          label="Notas"
+          placeholder="Notas adicionais"
+          value={formData.notes}
+          onChangeText={(text) => setFormData((current) => ({ ...current, notes: text }))}
+          multiline
+          numberOfLines={3}
+          disabled={isSaving}
+        />
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56 }}>
+          <Text style={{ fontSize: typography.body, fontWeight: typography.weights.medium, color: colors.ink }}>Marcar como favorita</Text>
+          <Switch
+            value={formData.isFavorite}
+            onValueChange={(value) => setFormData((current) => ({ ...current, isFavorite: value }))}
+            trackColor={{ false: colors.lineStrong, true: colors.primary }}
+            thumbColor={colors.onPrimary}
+            disabled={isSaving}
+          />
+        </View>
+
+        <View style={{ marginTop: spacing.lg, paddingTop: spacing.lg, borderTopWidth: 1, borderTopColor: colors.line }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: typography.body, fontWeight: typography.weights.medium, color: colors.ink }}>Autenticação de Dois Fatores (TOTP)</Text>
+              <Text style={{ marginTop: 2, fontSize: typography.label, color: colors.inkMuted }}>Gere códigos de 6 dígitos</Text>
             </View>
-            <Input
-              placeholder="Digite ou gere uma senha"
-              value={formData.password}
-              onChangeText={(text) => setFormData({ ...formData, password: text })}
-              secureTextEntry={!showPassword}
-              rightIcon={
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons
-                    name={showPassword ? "eye-off-outline" : "eye-outline"}
-                    size={20}
-                    color={isDark ? '#9ca3af' : '#6b7280'}
-                  />
-                </TouchableOpacity>
-              }
-            />
-          </View>
-
-          <Input
-            label="Pasta"
-            placeholder="Pasta (opcional)"
-            value={formData.folder}
-            onChangeText={(text) => setFormData({ ...formData, folder: text })}
-            leftIcon={<Ionicons name="folder-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-          />
-
-          <Input
-            label="Notas"
-            placeholder="Notas adicionais"
-            value={formData.notes}
-            onChangeText={(text) => setFormData({ ...formData, notes: text })}
-            multiline
-            numberOfLines={3}
-            leftIcon={<Ionicons name="document-text-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
-          />
-
-          <View style={styles.totpSection}>
-            <View style={styles.totpHeader}>
-              <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
-                Autenticação de Dois Fatores (TOTP)
-              </Text>
-              <Switch
-                value={formData.totpEnabled}
-                onValueChange={(value) => setFormData({ ...formData, totpEnabled: value })}
-                trackColor={{ false: isDark ? '#374151' : '#e5e7eb', true: '#16a34a' }}
-                thumbColor={formData.totpEnabled ? '#ffffff' : '#f4f3f4'}
-              />
-            </View>
-
-            {formData.totpEnabled && (
-              <View style={styles.totpSecretSection}>
-                <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827', marginBottom: 8 }]}>
-                  Chave Secreta TOTP
-                </Text>
-                <Input
-                  placeholder="Digite a chave secreta do app autenticador"
-                  value={formData.totpSecret}
-                  onChangeText={(text) => setFormData({ ...formData, totpSecret: text })}
-                  secureTextEntry={!showTotpSecret}
-                  rightIcon={
-                    <TouchableOpacity onPress={() => setShowTotpSecret(!showTotpSecret)}>
-                      <Ionicons
-                        name={showTotpSecret ? "eye-off-outline" : "eye-outline"}
-                        size={20}
-                        color={isDark ? '#9ca3af' : '#6b7280'}
-                      />
-                    </TouchableOpacity>
-                  }
-                />
-                <TouchableOpacity onPress={generateTotpSecret} style={styles.generateSecretButton}>
-                  <Ionicons name="refresh-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-                  <Text style={[styles.generateSecretButtonText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-                    Gerar Chave Secreta
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.favoriteSection}>
-            <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
-              Marcar como favorita
-            </Text>
             <Switch
-              value={formData.isFavorite}
-              onValueChange={(value) => setFormData({ ...formData, isFavorite: value })}
-              trackColor={{ false: isDark ? '#374151' : '#e5e7eb', true: '#16a34a' }}
-              thumbColor={formData.isFavorite ? '#ffffff' : '#f4f3f4'}
+              value={formData.totpEnabled}
+              onValueChange={(value) => setFormData((current) => ({ ...current, totpEnabled: value }))}
+              trackColor={{ false: colors.lineStrong, true: colors.primary }}
+              thumbColor={colors.onPrimary}
+              disabled={isSaving}
             />
           </View>
-
-          <View style={styles.actions}>
-            <View style={styles.saveActions}>
-              <Button
-                title="Cancelar"
-                onPress={() => setShowEditModal(false)}
-                variant="ghost"
-                style={styles.cancelButton}
+          {formData.totpEnabled ? (
+            <View style={{ marginTop: spacing.sm }}>
+              <Input
+                label="Chave Secreta TOTP"
+                placeholder="Digite a chave secreta do app autenticador"
+                value={formData.totpSecret}
+                onChangeText={(text) => setFormData((current) => ({ ...current, totpSecret: text }))}
+                secureTextEntry
+                autoCapitalize="none"
+                disabled={isSaving}
               />
               <Button
-                title="Atualizar"
-                onPress={handleSavePassword}
-                loading={isSaving}
-                variant="primary"
-                style={styles.saveButton}
+                title="Gerar Chave Secreta"
+                onPress={generateTotpSecret}
+                variant="secondary"
+                size="sm"
+                disabled={isSaving}
+                icon={<Ionicons name="refresh-outline" size={16} color={colors.inkMuted} />}
               />
             </View>
-          </View>
+          ) : null}
         </View>
       </Modal>
 
       <PasswordGeneratorModal
         visible={showPasswordGeneratorModal}
         onClose={() => setShowPasswordGeneratorModal(false)}
-        onPasswordGenerated={handlePasswordGenerated}
+        onPasswordGenerated={(generatedPassword) => setFormData((current) => ({ ...current, password: generatedPassword }))}
         initialPassword={formData.password}
       />
 
       <Modal
         visible={showDeleteModal}
         onClose={() => {
+          if (isDeleting) return;
           setShowDeleteModal(false);
         }}
         title="Excluir Senha"

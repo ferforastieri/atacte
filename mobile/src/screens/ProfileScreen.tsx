@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainTabParamList } from '../navigation/AppNavigator';
-import { Card, Header, Button, SkeletonLoader, Modal } from '../components/shared';
+import { Button, Card, Header, HeroCard, Modal, SkeletonLoader } from '../components/shared';
+import { IconTile } from '../components/shared/IconTile';
+import { Pill } from '../components/shared/Pill';
 import { useAuth } from '../contexts/AuthContext';
 import { passwordService } from '../services/passwords/passwordService';
 import { userService } from '../services/users/userService';
 import { useTheme } from '../contexts/ThemeContext';
+import { MainTabParamList } from '../navigation/AppNavigator';
+import { radii, spacing, typography } from '../theme/tokens';
 
 interface User {
   id: string;
@@ -33,38 +35,31 @@ interface ProfileStats {
 type ProfileScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Profile'>;
 
 export default function ProfileScreen() {
-  const { user, logout, refreshUser, isAdmin } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const { colors, toggleTheme } = useTheme();
   const [profileData, setProfileData] = useState<User | null>(null);
-  const [stats, setStats] = useState<ProfileStats>({
-    totalPasswords: 0,
-    favoritePasswords: 0,
-    totpPasswords: 0,
-  });
+  const [stats, setStats] = useState<ProfileStats>({ totalPasswords: 0, favoritePasswords: 0, totpPasswords: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { isDark, toggleTheme } = useTheme();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
-    loadProfileData();
-    loadStats();
+    void loadProfileData();
+    void loadStats();
   }, []);
 
- 
   useFocusEffect(
     React.useCallback(() => {
-      loadProfileData();
-    }, [])
+      void loadProfileData();
+    }, []),
   );
 
   const loadProfileData = async () => {
     try {
       const response = await userService.getUserProfile();
-      if (response.success && response.data) {
-        setProfileData(response.data);
-      }
-    } catch (error) {
-     
+      if (response.success && response.data) setProfileData(response.data);
+    } catch {
       setProfileData(user);
     }
   };
@@ -72,409 +67,222 @@ export default function ProfileScreen() {
   const loadStats = async () => {
     try {
       const response = await passwordService.getPasswords({ limit: 1000 });
-      
       if (response.success && response.data) {
         const passwords = Array.isArray(response.data) ? response.data : [];
-        const favoritePasswords = passwords.filter((p: { isFavorite?: boolean }) => p.isFavorite).length;
-        const totpPasswords = passwords.filter((p: { totpEnabled?: boolean }) => p.totpEnabled).length;
-        
         setStats({
           totalPasswords: passwords.length,
-          favoritePasswords,
-          totpPasswords,
+          favoritePasswords: passwords.filter((entry: { isFavorite?: boolean }) => entry.isFavorite).length,
+          totpPasswords: passwords.filter((entry: { totpEnabled?: boolean }) => entry.totpEnabled).length,
         });
       }
-    } catch (error) {
+    } catch {
+      // Keep the empty stat values.
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    setShowLogoutModal(true);
-  };
-
   const confirmLogout = async () => {
-    await logout();
-    setShowLogoutModal(false);
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      setShowLogoutModal(false);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark ? '#111827' : '#f9fafb',
-    },
-    scrollView: {
-      flex: 1,
-    },
-    content: {
-      padding: 20,
-      paddingBottom: 24,
-    },
-    profileCard: {
-      marginBottom: 20,
-    },
-    profileHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 20,
-    },
-    profileHeaderLeft: {
-      flex: 1,
-    },
-    avatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: '#22c55e',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    avatarImage: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-    },
-    avatarText: {
-      fontSize: 32,
-      fontWeight: 'bold',
-      color: '#ffffff',
-    },
-    statusContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    statusDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      marginRight: 6,
-    },
-    userName: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 4,
-    },
-    userEmail: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 16,
-    },
-    infoRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? '#374151' : '#e5e7eb',
-    },
-    infoLabel: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
-    infoValue: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    statsCard: {
-      marginBottom: 20,
-    },
-    statsGrid: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-    },
-    statItem: {
-      alignItems: 'center',
-      flex: 1,
-    },
-    statNumber: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#22c55e',
-      marginBottom: 4,
-    },
-    statLabel: {
-      fontSize: 12,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      textAlign: 'center',
-    },
-    actionsCard: {
-      marginBottom: 20,
-    },
-    actionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      marginBottom: 12,
-      minHeight: 56,
-    },
-    actionButtonText: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginLeft: 12,
-    },
-    editButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#22c55e',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      marginTop: 20,
-      gap: 8,
-    },
-    editButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#ffffff',
-    },
-    logoutButton: {
-    },
-    logoutButtonText: {
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginTop: 16,
-    },
-  });
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <Header title="Perfil" onThemeToggle={toggleTheme} />
+      <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+        <Header title="Perfil" onThemeToggle={toggleTheme} icon={<Ionicons name="person-outline" size={22} color={colors.primarySoftText} />} />
         <SkeletonLoader variant="profile" />
       </View>
     );
   }
 
-  const getInitials = (email: string) => {
-    return email.charAt(0).toUpperCase();
+  const getInitials = (value?: string) => {
+    if (!value) return 'U';
+    const parts = value.split(' ').filter(Boolean);
+    if (parts.length >= 2) return `${parts[0]![0]!}${parts[parts.length - 1]![0]!}`.toUpperCase();
+    return value.charAt(0).toUpperCase();
   };
 
+  const actionRow = (label: string, ionicon: keyof typeof Ionicons.glyphMap, onPress: () => void, tone: 'default' | 'danger' = 'default') => (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{
+        minHeight: 56,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radii.lg,
+        backgroundColor: tone === 'danger' ? colors.dangerSoft : colors.surfaceMuted,
+      }}
+      onPress={onPress}
+      activeOpacity={0.78}
+    >
+      <IconTile variant={tone === 'danger' ? 'danger' : 'muted'} size={38}>
+        <Ionicons name={ionicon} size={19} color={tone === 'danger' ? colors.dangerText : colors.inkMuted} />
+      </IconTile>
+      <Text style={{ flex: 1, fontSize: typography.body, fontWeight: typography.weights.medium, color: tone === 'danger' ? colors.dangerText : colors.ink }}>
+        {label}
+      </Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.inkSubtle} />
+    </TouchableOpacity>
+  );
+
   return (
-    <View style={styles.container}>
-      <Header title="Perfil" onThemeToggle={toggleTheme} />
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {}
-        <Card style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <View style={styles.profileHeaderLeft}>
-              <Text style={styles.userName}>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <Header
+        title="Perfil"
+        subtitle="Sua conta e o resumo do cofre"
+        onThemeToggle={toggleTheme}
+        icon={<Ionicons name="person-outline" size={22} color={colors.primarySoftText} />}
+      />
+
+      <ScrollView contentContainerStyle={{ padding: spacing.screen, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+        <HeroCard padding="md" style={{ marginBottom: spacing.lg }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.lg }}>
+            {profileData?.profilePicture ? (
+              <Image source={{ uri: profileData.profilePicture }} style={{ width: 72, height: 72, borderRadius: radii.xl }} />
+            ) : (
+              <View
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: radii.xl,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: colors.heroBar,
+                  borderWidth: 1,
+                  borderColor: colors.heroBorder,
+                }}
+              >
+                <Text style={{ color: colors.heroText, fontSize: 24, fontWeight: typography.weights.bold }}>
+                  {getInitials(profileData?.name || profileData?.email)}
+                </Text>
+              </View>
+            )}
+
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text numberOfLines={1} style={{ color: colors.heroText, fontSize: typography.headline, fontWeight: typography.weights.semibold }}>
                 {profileData?.name || profileData?.email?.split('@')[0] || 'Usuário'}
               </Text>
-              <Text style={styles.userEmail}>
+              <Text numberOfLines={1} style={{ marginTop: 3, color: colors.heroMuted, fontSize: typography.body }}>
                 {profileData?.email || 'N/A'}
               </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
+                <Pill label={profileData?.role === 'ADMIN' ? 'Administrador' : 'Usuário'} tone="accent" />
+                <Pill label={profileData?.isActive === false ? 'Inativo' : 'Ativo'} tone={profileData?.isActive === false ? 'danger' : 'success'} />
+              </View>
             </View>
-            {profileData?.profilePicture ? (
-              <Image 
-                source={{ uri: profileData.profilePicture }} 
-                style={styles.avatarImage}
-                defaultSource={require('../../assets/logo.png')}
-              />
-            ) : (
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {profileData?.name ? getInitials(profileData.name) : (profileData?.email ? getInitials(profileData.email) : 'U')}
+          </View>
+        </HeroCard>
+
+        <Card style={{ marginBottom: spacing.lg }}>
+          <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Informações Pessoais</Text>
+          <View style={{ gap: spacing.sm }}>
+            {[
+              { label: 'ID', value: profileData?.id || 'N/A', mono: true },
+              { label: 'Email', value: profileData?.email || 'N/A' },
+              { label: 'Nome', value: profileData?.name || 'Não informado' },
+              { label: 'Telefone', value: profileData?.phoneNumber || 'Não informado' },
+              { label: 'Função', value: profileData?.role === 'ADMIN' ? 'Administrador' : 'Usuário' },
+            ].map((row) => (
+              <View key={row.label} style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
+                <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>{row.label.toUpperCase()}</Text>
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                  style={{ marginTop: 3, fontSize: typography.body, color: colors.ink, fontFamily: row.mono ? typography.mono : undefined }}
+                >
+                  {row.value}
                 </Text>
               </View>
-            )}
+            ))}
+            <View style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
+              <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>STATUS</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 5 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: profileData?.isActive ? colors.success : colors.danger }} />
+                <Text style={{ fontSize: typography.body, color: colors.ink }}>{profileData?.isActive ? 'Ativo' : 'Inativo'}</Text>
+              </View>
+            </View>
+            {profileData?.createdAt ? (
+              <View style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
+                <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>DATA DE CRIAÇÃO</Text>
+                <Text style={{ marginTop: 3, fontSize: typography.body, color: colors.ink }}>{new Date(profileData.createdAt).toLocaleString('pt-BR')}</Text>
+              </View>
+            ) : null}
+            {profileData?.lastLogin ? (
+              <View style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
+                <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>ÚLTIMO LOGIN</Text>
+                <Text style={{ marginTop: 3, fontSize: typography.body, color: colors.ink }}>{new Date(profileData.lastLogin).toLocaleString('pt-BR')}</Text>
+              </View>
+            ) : null}
           </View>
 
-          <View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>ID</Text>
-              <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="middle">{profileData?.id || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{profileData?.email || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Nome</Text>
-              <Text style={styles.infoValue}>{profileData?.name || 'Não informado'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Telefone</Text>
-              <Text style={styles.infoValue}>{profileData?.phoneNumber || 'Não informado'}</Text>
-            </View>
-            {profileData?.role && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Função</Text>
-                <Text style={styles.infoValue}>{profileData.role === 'ADMIN' ? 'Administrador' : 'Usuário'}</Text>
-              </View>
-            )}
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Status</Text>
-              <View style={styles.statusContainer}>
-                <View style={[styles.statusDot, { backgroundColor: profileData?.isActive ? '#22c55e' : '#ef4444' }]} />
-                <Text style={styles.infoValue}>{profileData?.isActive ? 'Ativo' : 'Inativo'}</Text>
-              </View>
-            </View>
-            {profileData?.createdAt && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Data de Criação</Text>
-                <Text style={styles.infoValue}>
-                  {new Date(profileData.createdAt).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </Text>
-              </View>
-            )}
-            {profileData?.lastLogin && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Último Login</Text>
-                <Text style={styles.infoValue}>
-                  {new Date(profileData.lastLogin).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </Text>
-              </View>
-            )}
-            {profileData?.updatedAt && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Última Atualização</Text>
-                <Text style={styles.infoValue}>
-                  {new Date(profileData.updatedAt).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <TouchableOpacity 
-            style={styles.editButton}
+          <Button
+            title="Editar Perfil"
             onPress={() => navigation.navigate('Settings')}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="create-outline" size={20} color="#ffffff" />
-            <Text style={styles.editButtonText}>Editar Perfil</Text>
-          </TouchableOpacity>
+            style={{ marginTop: spacing.lg }}
+            icon={<Ionicons name="create-outline" size={18} color={colors.onPrimary} />}
+          />
         </Card>
 
-        {}
-        <Card style={styles.statsCard}>
-          <Text style={styles.sectionTitle}>Estatísticas</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats.totalPasswords}</Text>
-              <Text style={styles.statLabel}>Total de Senhas</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats.favoritePasswords}</Text>
-              <Text style={styles.statLabel}>Favoritas</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats.totpPasswords}</Text>
-              <Text style={styles.statLabel}>Com TOTP</Text>
-            </View>
+        <Card style={{ marginBottom: spacing.lg }}>
+          <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Estatísticas</Text>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            {[
+              { value: stats.totalPasswords, label: 'Total de Senhas', color: colors.primaryText },
+              { value: stats.favoritePasswords, label: 'Favoritas', color: colors.danger },
+              { value: stats.totpPasswords, label: 'Com TOTP', color: colors.info },
+            ].map((stat) => (
+              <View key={stat.label} style={{ flex: 1, alignItems: 'center', padding: spacing.md, borderRadius: radii.lg, backgroundColor: colors.surfaceMuted }}>
+                <Text style={{ fontSize: 24, fontWeight: typography.weights.bold, color: stat.color }}>{stat.value}</Text>
+                <Text style={{ marginTop: 3, fontSize: typography.caption, color: colors.inkMuted, textAlign: 'center' }}>{stat.label}</Text>
+              </View>
+            ))}
           </View>
         </Card>
 
-        {isAdmin && (
-          <Card style={styles.actionsCard}>
-            <Text style={styles.sectionTitle}>Administração</Text>
-            
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('AuditLogs')}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="document-text-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
-              <Text style={styles.actionButtonText}>Logs de Auditoria</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('Sessions')}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="desktop-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
-              <Text style={styles.actionButtonText}>Sessões</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('Users')}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="people-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
-              <Text style={styles.actionButtonText}>Usuários</Text>
-            </TouchableOpacity>
+        {isAdmin ? (
+          <Card style={{ marginBottom: spacing.lg }}>
+            <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Administração</Text>
+            <View style={{ gap: spacing.sm }}>
+              {actionRow('Logs de Auditoria', 'document-text-outline', () => navigation.navigate('AuditLogs'))}
+              {actionRow('Sessões', 'desktop-outline', () => navigation.navigate('Sessions'))}
+              {actionRow('Usuários', 'people-outline', () => navigation.navigate('Users'))}
+            </View>
           </Card>
-        )}
+        ) : null}
 
-        <Card style={styles.actionsCard}>
-          <Text style={styles.sectionTitle}>Ações</Text>
-          
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('Settings')}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="settings-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
-            <Text style={styles.actionButtonText}>Configurações</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.logoutButton, { marginBottom: 0 }]}
-            onPress={handleLogout}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="exit-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
-            <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Sair</Text>
-          </TouchableOpacity>
+        <Card>
+          <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Ações</Text>
+          <View style={{ gap: spacing.sm }}>
+            {actionRow('Configurações', 'settings-outline', () => navigation.navigate('Settings'))}
+            {actionRow('Sair', 'exit-outline', () => setShowLogoutModal(true), 'danger')}
+          </View>
         </Card>
-
       </ScrollView>
 
       <Modal
         visible={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        type="confirm"
+        onClose={() => {
+          if (isLoggingOut) return;
+          setShowLogoutModal(false);
+        }}
         title="Confirmar Logout"
+        type="confirm"
         message="Tem certeza que deseja sair?"
         confirmText="Sair"
         cancelText="Cancelar"
         confirmVariant="danger"
         onConfirm={confirmLogout}
+        loading={isLoggingOut}
       />
     </View>
   );

@@ -1,123 +1,135 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
-    <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
-      <div class="text-center">
-        <Logo :size="48" text-size="text-2xl" class="justify-center mb-4" />
-        <h2 class="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
-          Recuperar Senha
-        </h2>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Digite seu email para receber um token de recuperação
-        </p>
+  <AuthShell
+    title="Recuperar Senha"
+    subtitle="Digite seu email para receber um token de recuperação."
+    :icon="KeyIcon"
+  >
+    <form v-if="step === 'request'" class="space-y-5" @submit.prevent="handleSubmit">
+      <div
+        v-if="formError"
+        class="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-sm text-danger-700 dark:border-danger-900 dark:bg-danger-900/20 dark:text-danger-300"
+        role="alert"
+      >
+        {{ formError }}
       </div>
 
-      <!-- Form -->
-      <BaseCard>
-        <form @submit.prevent="handleSubmit" class="space-y-6" v-if="step === 'request'">
-          <BaseInput
-            v-model="form.email"
-            type="email"
-            label="Email"
-            placeholder="seu@email.com"
-            required
-            :error="errors.email"
-            :left-icon="EnvelopeIcon"
-          />
+      <BaseInput
+        v-model="form.email"
+        type="email"
+        label="Email"
+        placeholder="seu@email.com"
+        autocomplete="email"
+        required
+        :error="errors.email"
+        :left-icon="EnvelopeIcon"
+      />
 
-          <div class="text-sm text-gray-600 dark:text-gray-400 text-center">
-            <p>Se o email existir, você receberá um token de recuperação por email.</p>
-            <p class="mt-2 font-medium">Verifique sua caixa de entrada e spam.</p>
-          </div>
+      <div class="space-y-1 rounded-xl border border-line bg-surface-muted px-3.5 py-3 text-sm leading-relaxed text-ink-muted">
+        <p>Se o email existir, você receberá um token de recuperação por email.</p>
+        <p class="font-medium text-ink">Verifique sua caixa de entrada e spam.</p>
+      </div>
 
-          <BaseButton
-            type="submit"
-            variant="primary"
-            size="lg"
-            :loading="isLoading"
-            class="w-full"
-          >
-            Enviar Token
-          </BaseButton>
+      <BaseButton
+        type="submit"
+        size="lg"
+        block
+        :loading="isLoading"
+        :disabled="isLoading"
+      >
+        Enviar Token
+      </BaseButton>
 
-          <BaseButton
-            type="button"
-            variant="ghost"
-            @click="$router.push('/login')"
-            class="w-full"
-          >
-            Voltar para Login
-          </BaseButton>
-        </form>
+      <BaseButton
+        type="button"
+        variant="ghost"
+        block
+        :disabled="isLoading"
+        @click="$router.push('/login')"
+      >
+        Voltar para Login
+      </BaseButton>
+    </form>
 
-        <form @submit.prevent="handleReset" class="space-y-6" v-else>
-          <BaseInput
-            v-model="form.token"
-            type="text"
-            label="Token"
-            placeholder="Token de recuperação"
-            required
-            :error="errors.token"
-            :left-icon="KeyIcon"
-          />
+    <form v-else class="space-y-5" @submit.prevent="handleReset">
+      <div
+        v-if="formError"
+        class="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-sm text-danger-700 dark:border-danger-900 dark:bg-danger-900/20 dark:text-danger-300"
+        role="alert"
+      >
+        {{ formError }}
+      </div>
 
-          <BaseInput
-            v-model="form.newPassword"
-            type="password"
-            label="Nova Senha"
-            placeholder="Mínimo 8 caracteres"
-            required
-            :error="errors.newPassword"
-            :left-icon="LockClosedIcon"
-            show-password-toggle
-          />
+      <BaseInput
+        v-model="form.token"
+        type="text"
+        label="Token"
+        placeholder="Token de recuperação"
+        autocomplete="one-time-code"
+        required
+        :error="errors.token"
+        :left-icon="KeyIcon"
+      />
 
-          <BaseInput
-            v-model="form.confirmPassword"
-            type="password"
-            label="Confirmar Senha"
-            placeholder="Digite novamente"
-            required
-            :error="errors.confirmPassword"
-            :left-icon="LockClosedIcon"
-            show-password-toggle
-          />
+      <BaseInput
+        v-model="form.newPassword"
+        type="password"
+        label="Nova Senha"
+        placeholder="Mínimo 8 caracteres"
+        autocomplete="new-password"
+        required
+        :error="errors.newPassword"
+        :left-icon="LockClosedIcon"
+        show-password-toggle
+      />
 
-          <BaseButton
-            type="submit"
-            variant="primary"
-            size="lg"
-            :loading="isLoading"
-            class="w-full"
-          >
-            Redefinir Senha
-          </BaseButton>
+      <BaseInput
+        v-model="form.confirmPassword"
+        type="password"
+        label="Confirmar Senha"
+        placeholder="Digite novamente"
+        autocomplete="new-password"
+        required
+        :error="errors.confirmPassword"
+        :left-icon="LockClosedIcon"
+        show-password-toggle
+      />
 
-          <BaseButton
-            type="button"
-            variant="ghost"
-            @click="step = 'request'"
-            class="w-full"
-          >
-            Voltar
-          </BaseButton>
-        </form>
-      </BaseCard>
-    </div>
-  </div>
+      <BaseButton
+        type="submit"
+        size="lg"
+        block
+        :loading="isLoading"
+        :disabled="isLoading"
+      >
+        Redefinir Senha
+      </BaseButton>
+
+      <BaseButton
+        type="button"
+        variant="ghost"
+        block
+        :disabled="isLoading"
+        @click="step = 'request'"
+      >
+        Voltar
+      </BaseButton>
+    </form>
+  </AuthShell>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { EnvelopeIcon, LockClosedIcon, KeyIcon } from '@heroicons/vue/24/outline'
+import { EnvelopeIcon, KeyIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import authApi from '@/api/auth'
-import { BaseButton, BaseInput, BaseCard, Logo } from '@/components/ui'
+import { BaseButton, BaseInput } from '@/components/ui'
+import AuthShell from '@/components/layout/AuthShell.vue'
 
 const router = useRouter()
 
 const isLoading = ref(false)
 const step = ref<'request' | 'reset'>('request')
+const formError = ref('')
 const errors = ref<Record<string, string>>({})
 
 const form = reactive({
@@ -128,27 +140,31 @@ const form = reactive({
 })
 
 const handleSubmit = async () => {
+  if (isLoading.value) return
+
   errors.value = {}
+  formError.value = ''
   isLoading.value = true
 
   try {
     const response = await authApi.requestPasswordReset(form.email)
-    
     if (response.success) {
       step.value = 'reset'
-    } else {
     }
   } catch (error: unknown) {
-    const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
+    formError.value = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Não foi possível enviar o token'
+      : 'Não foi possível enviar o token'
   } finally {
     isLoading.value = false
   }
 }
 
 const handleReset = async () => {
+  if (isLoading.value) return
+
   errors.value = {}
+  formError.value = ''
 
   if (!form.token) {
     errors.value.token = 'Token é obrigatório'
@@ -174,18 +190,15 @@ const handleReset = async () => {
 
   try {
     const response = await authApi.resetPassword(form.token, form.newPassword)
-    
     if (response.success) {
       router.push('/login')
-    } else {
     }
   } catch (error: unknown) {
-    const errorMessage = error && typeof error === 'object' && 'response' in error
-      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
+    formError.value = error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Não foi possível redefinir a senha'
+      : 'Não foi possível redefinir a senha'
   } finally {
     isLoading.value = false
   }
 }
 </script>
-

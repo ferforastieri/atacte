@@ -92,24 +92,24 @@ const close = async () => {
 
 <style scoped>
 .title-bar {
-  background: #1e1f22;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+  background: rgb(var(--at-titlebar));
+  border-bottom: 1px solid rgb(var(--at-primary-500) / 0.18);
   user-select: none;
 }
 
 .title-bar-button {
-  color: #b9bbbe;
+  color: rgb(var(--at-titlebar-text));
   border-radius: 4px;
 }
 
 .title-bar-button:hover {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  background-color: rgb(255 255 255 / 0.1);
 }
 
 .title-bar-button:last-child:hover {
-  background-color: #ef4444;
-  color: #ffffff;
+  background-color: rgb(var(--at-danger-500));
+  color: white;
 }
 
 .drag-region {

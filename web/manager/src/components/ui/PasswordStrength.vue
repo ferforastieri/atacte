@@ -1,31 +1,27 @@
 <template>
-  <div class="password-strength">
-    <div class="strength-bar">
-      <div 
-        class="strength-fill"
-        :class="strengthClasses"
-        :style="{ width: strengthPercentage + '%' }"
-      ></div>
+  <div class="space-y-2">
+    <div class="flex items-center justify-between gap-3 text-xs">
+      <span class="font-medium" :class="strengthTextClass">{{ strengthLabel }}</span>
+      <span v-if="crackTime" class="truncate text-ink-subtle">{{ crackTime }}</span>
     </div>
-    
-    <div class="strength-info">
-      <span class="strength-label" :class="strengthTextClasses">
-        {{ strengthLabel }}
-      </span>
-      
-      <span v-if="score !== undefined" class="strength-score">
-        {{ score }}/4
-      </span>
+
+    <div class="flex gap-1" aria-hidden="true">
+      <span
+        v-for="index in 5"
+        :key="index"
+        class="h-1.5 flex-1 rounded-full transition-colors duration-300"
+        :class="index <= strengthBars ? strengthBarClass : 'bg-line'"
+      ></span>
     </div>
-    
-    <div v-if="feedback && (feedback.warning || feedback.suggestions?.length)" class="strength-feedback">
-      <p v-if="feedback.warning" class="feedback-warning">
+
+    <div v-if="feedback && (feedback.warning || feedback.suggestions?.length)" class="space-y-1">
+      <p v-if="feedback.warning" class="text-xs font-medium text-warning-700 dark:text-warning-400">
         {{ feedback.warning }}
       </p>
-      
-      <ul v-if="feedback.suggestions?.length" class="feedback-suggestions">
-        <li v-for="suggestion in feedback.suggestions" :key="suggestion">
-          {{ suggestion }}
+      <ul v-if="feedback.suggestions?.length" class="space-y-0.5 text-xs text-ink-muted">
+        <li v-for="suggestion in feedback.suggestions" :key="suggestion" class="flex gap-1.5">
+          <span class="text-ink-subtle" aria-hidden="true">•</span>
+          <span>{{ suggestion }}</span>
         </li>
       </ul>
     </div>
@@ -36,7 +32,7 @@
 import { computed } from 'vue'
 
 interface Props {
-  score?: number 
+  score?: number
   feedback?: {
     warning?: string
     suggestions?: string[]
@@ -46,98 +42,31 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const strengthPercentage = computed(() => {
+const strengthBars = computed(() => {
   if (props.score === undefined) return 0
-  return ((props.score + 1) / 5) * 100
+  return props.score + 1
 })
 
 const strengthLabel = computed(() => {
   if (props.score === undefined) return 'Digite uma senha'
-  
-  const labels = {
-    0: 'Muito fraca',
-    1: 'Fraca',
-    2: 'Razoável',
-    3: 'Boa',
-    4: 'Excelente'
-  }
-  
-  return labels[props.score as keyof typeof labels] || 'Desconhecida'
+  const labels = ['Muito fraca', 'Fraca', 'Razoável', 'Boa', 'Excelente']
+  return labels[props.score] || 'Desconhecida'
 })
 
-const strengthClasses = computed(() => {
-  if (props.score === undefined) return 'bg-gray-300'
-  
-  const classes = {
-    0: 'bg-red-500',
-    1: 'bg-orange-500',
-    2: 'bg-yellow-500',
-    3: 'bg-blue-500',
-    4: 'bg-green-500'
-  }
-  
-  return classes[props.score as keyof typeof classes] || 'bg-gray-300'
+const strengthBarClass = computed(() => {
+  const classes = ['bg-danger-500', 'bg-orange-500', 'bg-warning-500', 'bg-info-500', 'bg-primary-500']
+  return classes[props.score ?? 0] || 'bg-line'
 })
 
-const strengthTextClasses = computed(() => {
-  if (props.score === undefined) return 'text-gray-500'
-  
-  const classes = {
-    0: 'text-red-600',
-    1: 'text-orange-600',
-    2: 'text-yellow-600',
-    3: 'text-blue-600',
-    4: 'text-green-600'
-  }
-  
-  return classes[props.score as keyof typeof classes] || 'text-gray-500'
+const strengthTextClass = computed(() => {
+  if (props.score === undefined) return 'text-ink-muted'
+  const classes = [
+    'text-danger-600 dark:text-danger-400',
+    'text-orange-700 dark:text-orange-400',
+    'text-warning-700 dark:text-warning-400',
+    'text-info-600 dark:text-info-400',
+    'text-primary-700 dark:text-primary-400'
+  ]
+  return classes[props.score] || 'text-ink-muted'
 })
 </script>
-
-<style scoped>
-.password-strength {
-  @apply space-y-2;
-}
-
-.strength-bar {
-  @apply w-full h-2 bg-gray-200 rounded-full overflow-hidden;
-}
-
-.strength-fill {
-  @apply h-full transition-all duration-300 ease-in-out;
-}
-
-.strength-info {
-  @apply flex justify-between items-center text-sm;
-}
-
-.strength-label {
-  @apply font-medium;
-}
-
-.strength-score {
-  @apply text-gray-500 text-xs;
-}
-
-.strength-feedback {
-  @apply space-y-1;
-}
-
-.feedback-warning {
-  @apply text-sm text-orange-600;
-}
-
-.feedback-suggestions {
-  @apply text-sm text-gray-600 space-y-1;
-}
-
-.feedback-suggestions li {
-  @apply flex items-start;
-}
-
-.feedback-suggestions li::before {
-  content: '•';
-  @apply text-gray-400 mr-2 mt-0.5;
-}
-</style>
-
