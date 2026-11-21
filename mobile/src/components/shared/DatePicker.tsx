@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, View, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../contexts/ThemeContext';
+import { radii, spacing, typography } from '../../theme/tokens';
 
 interface DatePickerProps {
   value?: Date;
@@ -10,7 +11,7 @@ interface DatePickerProps {
   onChange: (date: Date) => void;
   label?: string;
   disabled?: boolean;
-  style?: Record<string, unknown> | Array<Record<string, unknown>>;
+  style?: ViewStyle;
 }
 
 export const DatePicker: React.FC<DatePickerProps> = ({
@@ -21,81 +22,60 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   disabled = false,
   style,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  const styles = StyleSheet.create({
-    container: {
-      marginBottom: label ? 16 : 0,
-      ...style,
-    },
-    label: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: isDark ? '#d1d5db' : '#374151',
-      marginBottom: 8,
-    },
-    button: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: disabled ? (isDark ? '#374151' : '#f9fafb') : (isDark ? '#1f2937' : '#ffffff'),
-      borderColor: isDark ? '#4b5563' : '#d1d5db',
-      borderWidth: 1,
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      minHeight: 40,
-    },
-    buttonText: {
-      fontSize: 14,
-      color: value ? (isDark ? '#f9fafb' : '#111827') : (isDark ? '#6b7280' : '#9ca3af'),
-    },
+  const formatDate = (date: Date) => date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
   });
 
   return (
-    <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+    <View style={[{ marginBottom: label ? spacing.lg : 0 }, style]}>
+      {label ? (
+        <Text style={{ fontSize: typography.label, fontWeight: typography.weights.medium, color: colors.ink, marginBottom: spacing.sm }}>
+          {label}
+        </Text>
+      ) : null}
       <TouchableOpacity
-        style={styles.button}
+        accessibilityRole="button"
+        accessibilityLabel={label || placeholder}
+        style={{
+          minHeight: 48,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          backgroundColor: disabled ? colors.surfaceMuted : colors.surface,
+          borderColor: colors.line,
+          borderWidth: 1,
+          borderRadius: radii.lg,
+          paddingHorizontal: spacing.md,
+          opacity: disabled ? 0.6 : 1,
+        }}
         onPress={() => !disabled && setShowPicker(true)}
         disabled={disabled}
+        activeOpacity={0.78}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          <Ionicons 
-            name="calendar-outline" 
-            size={20} 
-            color={isDark ? '#9ca3af' : '#6b7280'} 
-            style={{ marginRight: 8 }}
-          />
-          <Text style={styles.buttonText}>
-            {value ? formatDate(value) : placeholder}
-          </Text>
-        </View>
+        <Ionicons name="calendar-outline" size={18} color={colors.inkSubtle} />
+        <Text style={{ fontSize: typography.body, color: value ? colors.ink : colors.inkSubtle }}>
+          {value ? formatDate(value) : placeholder}
+        </Text>
       </TouchableOpacity>
 
-      {showPicker && (
+      {showPicker ? (
         <DateTimePicker
           value={value || new Date()}
           mode="date"
           display="default"
-          onChange={(event, selectedDate) => {
+          onChange={(_event, selectedDate) => {
             setShowPicker(false);
             if (selectedDate) {
               onChange(selectedDate);
             }
           }}
         />
-      )}
+      ) : null}
     </View>
   );
 };
-

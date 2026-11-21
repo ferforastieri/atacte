@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { Header, Modal, SearchInput, Card, SkeletonLoader } from '../components/shared';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { Header, Modal, SearchInput, SkeletonLoader, EmptyState } from '../components/shared';
 import { SecureNoteCard, FolderSelector, SecureNoteFormModal } from '../components/secureNotes';
 import { secureNoteService } from '../services/secureNotes/secureNoteService';
 import { useTheme } from '../contexts/ThemeContext';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useToast } from '../contexts/ToastContext';
 import { MainTabParamList } from '../navigation/AppNavigator';
+import { shadows, spacing, touch, typography } from '../theme/tokens';
 
 interface SecureNote {
   id: string;
@@ -23,6 +25,8 @@ const NOTES_PAGE_SIZE = 50;
 
 export default function SecureNotesScreen() {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'SecureNotes'>>();
+  const { colors, toggleTheme } = useTheme();
+  const { showSuccess, showError } = useToast();
   const [notes, setNotes] = useState<SecureNote[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
@@ -36,29 +40,23 @@ export default function SecureNotesScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingNote, setEditingNote] = useState<SecureNote | null>(null);
   const [deletingNote, setDeletingNote] = useState<SecureNote | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    folder: '',
-    isFavorite: false,
-  });
+  const [formData, setFormData] = useState({ title: '', content: '', folder: '', isFavorite: false });
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [favoritePendingId, setFavoritePendingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const activeSearchQuery = useRef('');
   const activeFolder = useRef<string | null>(null);
   const requestGeneration = useRef(0);
   const isReplacingNotes = useRef(false);
   const isLoadingMoreRef = useRef(false);
-  const { isDark, toggleTheme } = useTheme();
 
   const loadFolders = async () => {
     try {
       const response = await secureNoteService.getFolders();
-      if (response.success && response.data) {
-        setFolders(response.data.sort());
-      }
-    } catch (error) {
-      console.error('Erro ao carregar pastas:', error);
+      if (response.success && response.data) setFolders(response.data.sort());
+    } catch {
+      // The folder filter is optional.
     }
   };
 
@@ -81,39 +79,26 @@ export default function SecureNotesScreen() {
     const currentRequestGeneration = requestGeneration.current;
 
     try {
-      const filters: {
-        limit?: number;
-        offset?: number;
-        folder?: string;
-        query?: string;
-      } = {
+      const filters: { limit?: number; offset?: number; folder?: string; query?: string } = {
         limit: NOTES_PAGE_SIZE,
         offset,
       };
-      
-      if (folder) {
-        filters.folder = folder;
-      }
-      
-      if (query) {
-        filters.query = query;
-      }
+      if (folder) filters.folder = folder;
+      if (query) filters.query = query;
 
       const response = await secureNoteService.getNotes(filters);
       if (currentRequestGeneration !== requestGeneration.current) return;
-      
+
       if (response.success && response.data) {
         const notesList = Array.isArray(response.data) ? response.data : [];
         if (append) {
           setNotes((currentNotes) => {
             const existingIds = new Set(currentNotes.map((note) => note.id));
-            const newNotes = notesList.filter((note) => !existingIds.has(note.id));
-            return [...currentNotes, ...newNotes];
+            return [...currentNotes, ...notesList.filter((note) => !existingIds.has(note.id))];
           });
         } else {
           setNotes(notesList);
         }
-
         const loadedCount = offset + notesList.length;
         setCurrentOffset(loadedCount);
         setHasMore(response.pagination ? loadedCount < response.pagination.total : false);
@@ -121,7 +106,7 @@ export default function SecureNotesScreen() {
         if (!append) setNotes([]);
         setHasMore(false);
       }
-    } catch (error) {
+    } catch {
       if (currentRequestGeneration !== requestGeneration.current) return;
       if (!append) setNotes([]);
       setHasMore(false);
@@ -136,8 +121,8 @@ export default function SecureNotesScreen() {
   }, []);
 
   useEffect(() => {
-    loadFolders();
-    loadNotes();
+    void loadFolders();
+    void loadNotes();
   }, [loadNotes]);
 
   const handleSearch = useCallback(async (query: string) => {
@@ -162,29 +147,19 @@ export default function SecureNotesScreen() {
 
   const handleLoadMore = useCallback(() => {
     if (!isLoadingMore && hasMore && notes.length > 0) {
-      loadNotes(currentOffset, true);
+      void loadNotes(currentOffset, true);
     }
   }, [currentOffset, hasMore, isLoadingMore, loadNotes, notes.length]);
 
   const handleCreateNote = () => {
-    setFormData({
-      title: '',
-      content: '',
-      folder: '',
-      isFavorite: false,
-    });
+    setFormData({ title: '', content: '', folder: '', isFavorite: false });
     setEditingNote(null);
     setShowCreateModal(true);
   };
 
   const handleEditNote = (note: SecureNote) => {
     setEditingNote(note);
-    setFormData({
-      title: note.title,
-      content: note.content,
-      folder: note.folder || '',
-      isFavorite: note.isFavorite,
-    });
+    setFormData({ title: note.title, content: note.content, folder: note.folder || '', isFavorite: note.isFavorite });
     setShowEditModal(true);
   };
 
@@ -194,211 +169,84 @@ export default function SecureNotesScreen() {
   };
 
   const confirmDeleteNote = async () => {
-    if (!deletingNote) return;
-    
+    if (!deletingNote || isDeleting) return;
+    setIsDeleting(true);
     try {
       const response = await secureNoteService.deleteNote(deletingNote.id);
       if (response.success) {
+        setShowDeleteModal(false);
+        setDeletingNote(null);
         await Promise.all([loadFolders(), loadNotes()]);
+        showSuccess('Nota excluída.');
       } else {
+        showError('Não foi possível excluir a nota.');
       }
-    } catch (error) {
+    } catch {
+      showError('Não foi possível excluir a nota.');
     } finally {
-      setShowDeleteModal(false);
-      setDeletingNote(null);
+      setIsDeleting(false);
     }
   };
 
   const handleSaveNote = async () => {
-    if (!formData.title.trim()) {
-      return;
-    }
-
-    if (!formData.content.trim()) {
-      return;
-    }
+    if (isSaving) return;
+    if (!formData.title.trim() || !formData.content.trim()) return;
 
     setIsSaving(true);
     try {
-      const noteData: {
-        title: string;
-        content: string;
-        isFavorite: boolean;
-        folder?: string;
-      } = {
+      const noteData: { title: string; content: string; isFavorite: boolean; folder?: string } = {
         title: formData.title.trim(),
         content: formData.content.trim(),
         isFavorite: formData.isFavorite,
       };
-      
-      if (formData.folder.trim()) {
-        noteData.folder = formData.folder.trim();
-      }
-      
-      let response;
-      if (editingNote) {
-        response = await secureNoteService.updateNote(editingNote.id, noteData);
-      } else {
-        response = await secureNoteService.createNote(noteData);
-      }
+      if (formData.folder.trim()) noteData.folder = formData.folder.trim();
+
+      const response = editingNote
+        ? await secureNoteService.updateNote(editingNote.id, noteData)
+        : await secureNoteService.createNote(noteData);
 
       if (response.success) {
         setShowCreateModal(false);
         setShowEditModal(false);
         setEditingNote(null);
         await Promise.all([loadFolders(), loadNotes()]);
+        showSuccess(editingNote ? 'Nota atualizada.' : 'Nota criada.');
       } else {
+        showError('Não foi possível salvar a nota.');
       }
-    } catch (error) {
+    } catch {
+      showError('Não foi possível salvar a nota.');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleToggleFavorite = async (note: SecureNote) => {
+    if (favoritePendingId) return;
+    setFavoritePendingId(note.id);
     try {
-      const response = await secureNoteService.updateNote(note.id, {
-        isFavorite: !note.isFavorite,
-      });
-      
+      const response = await secureNoteService.updateNote(note.id, { isFavorite: !note.isFavorite });
       if (response.success) {
         await loadNotes();
       } else {
+        showError('Não foi possível atualizar a favorita.');
       }
-    } catch (error) {
+    } catch {
+      showError('Não foi possível atualizar a favorita.');
+    } finally {
+      setFavoritePendingId(null);
     }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark ? '#111827' : '#f9fafb',
-    },
-    content: {
-      flex: 1,
-      paddingHorizontal: 20,
-    },
-    listStyle: {
-      flex: 1,
-    },
-    listContainer: {
-      flexGrow: 1,
-    },
-    searchContainer: {
-      paddingTop: 20,
-      marginBottom: 20,
-    },
-    filterContainer: {
-      marginBottom: 20,
-      flexDirection: 'row',
-      gap: 12,
-      alignItems: 'center',
-    },
-    clearFilterButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    fab: {
-      position: 'absolute',
-      bottom: 20,
-      right: 20,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: '#16a34a',
-      justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
-      zIndex: 1000,
-    },
-    emptyTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#6b7280',
-      marginTop: 16,
-    },
-    emptyText: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginTop: 8,
-      textAlign: 'center',
-    },
-    emptyCard: {
-      alignItems: 'center',
-      paddingVertical: 40,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginTop: 16,
-    },
-    loadingMore: {
-      alignItems: 'center',
-      paddingVertical: 20,
-    },
-    modalContent: {
-      padding: 20,
-    },
-    modalText: {
-      fontSize: 16,
-      fontWeight: '500',
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    modalSubtext: {
-      fontSize: 14,
-      textAlign: 'center',
-      marginBottom: 24,
-    },
-    deleteButtons: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: 12,
-    },
-    modalButton: {
-      flex: 1,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      alignItems: 'center',
-    },
-    cancelButton: {
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      borderWidth: 1,
-      borderColor: isDark ? '#4b5563' : '#d1d5db',
-    },
-    deleteButton: {
-      backgroundColor: '#dc2626',
-    },
-    cancelButtonText: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    deleteButtonText: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: '#ffffff',
-    },
-  });
-
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <Header title="Notas Seguras" onThemeToggle={toggleTheme} />
+      <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+        <Header
+          title="Notas Seguras"
+          subtitle="Textos privados do seu cofre"
+          onThemeToggle={toggleTheme}
+          icon={<Ionicons name="document-text-outline" size={22} color={colors.primarySoftText} />}
+        />
         <SkeletonLoader variant="secureNotes" />
       </View>
     );
@@ -416,54 +264,22 @@ export default function SecureNotesScreen() {
       onDelete={() => handleDeleteNote(item)}
       onToggleFavorite={() => handleToggleFavorite(item)}
       onView={() => handleViewNote(item)}
+      isTogglingFavorite={favoritePendingId === item.id}
+      isDeleting={isDeleting && deletingNote?.id === item.id}
     />
   );
 
-  const renderEmpty = () => (
-    <Card style={styles.emptyCard}>
-      <Ionicons 
-        name="document-text-outline" 
-        size={48} 
-        color="#9ca3af"
-      />
-      <Text style={styles.emptyTitle}>
-        {searchQuery || selectedFolder ? 'Nenhuma nota encontrada' : 'Nenhuma nota ainda'}
-      </Text>
-      <Text style={styles.emptyText}>
-        {searchQuery || selectedFolder
-          ? 'Tente ajustar os filtros de busca' 
-          : 'Crie sua primeira nota segura para armazenar informações importantes'}
-      </Text>
-    </Card>
-  );
-
-  const renderFooter = () => {
-    if (isLoadingMore) {
-      return (
-        <View style={styles.loadingMore}>
-          <Text style={styles.loadingText}>Carregando mais notas...</Text>
-        </View>
-      );
-    }
-
-    if (!hasMore && notes.length > 0) {
-      return (
-        <View style={styles.loadingMore}>
-          <Text style={styles.loadingText}>Todas as notas foram carregadas</Text>
-        </View>
-      );
-    }
-
-    return null;
-  };
-
   return (
-    <View style={styles.container}>
-      <Header title="Notas Seguras" onThemeToggle={toggleTheme} />
-      
-      <View style={styles.content}>
-        {}
-        <View style={styles.searchContainer}>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <Header
+        title="Notas Seguras"
+        subtitle="Textos privados do seu cofre"
+        onThemeToggle={toggleTheme}
+        icon={<Ionicons name="document-text-outline" size={22} color={colors.primarySoftText} />}
+      />
+
+      <View style={{ flex: 1, paddingHorizontal: spacing.screen }}>
+        <View style={{ paddingTop: spacing.lg, marginBottom: spacing.md }}>
           <SearchInput
             placeholder="Buscar notas..."
             value={searchQuery}
@@ -472,60 +288,84 @@ export default function SecureNotesScreen() {
           />
         </View>
 
-        {}
-        <View style={styles.filterContainer}>
-          <FolderSelector
-            folders={folders}
-            selectedFolder={selectedFolder}
-            onSelectFolder={handleFolderSelect}
-          />
-          {selectedFolder && (
+        <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center', marginBottom: spacing.lg }}>
+          <FolderSelector folders={folders} selectedFolder={selectedFolder} onSelectFolder={handleFolderSelect} />
+          {selectedFolder ? (
             <TouchableOpacity
-              style={styles.clearFilterButton}
+              accessibilityRole="button"
+              accessibilityLabel="Limpar filtro de pasta"
+              style={{
+                width: touch.minimum,
+                height: touch.minimum,
+                borderRadius: 22,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.surfaceMuted,
+              }}
               onPress={() => handleFolderSelect(null)}
             >
-              <Ionicons name="close" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
+              <Ionicons name="close" size={20} color={colors.inkMuted} />
             </TouchableOpacity>
-          )}
+          ) : null}
         </View>
 
-        {}
         <FlatList
           data={notes}
           renderItem={renderNoteItem}
           keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-          }
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={renderEmpty}
+          onEndReachedThreshold={0.15}
+          ListFooterComponent={isLoadingMore ? (
+            <Text style={{ paddingVertical: spacing.xl, textAlign: 'center', color: colors.inkMuted, fontSize: typography.body }}>Carregando mais notas...</Text>
+          ) : null}
+          ListEmptyComponent={(
+            <EmptyState
+              icon="document-text-outline"
+              title={searchQuery || selectedFolder ? 'Nenhuma nota encontrada' : 'Nenhuma nota ainda'}
+              description={searchQuery || selectedFolder
+                ? 'Tente ajustar os filtros de busca'
+                : 'Crie sua primeira nota segura para armazenar informações importantes'}
+              actionLabel={searchQuery || selectedFolder ? undefined : 'Nova Nota'}
+              onAction={searchQuery || selectedFolder ? undefined : handleCreateNote}
+            />
+          )}
           showsVerticalScrollIndicator={false}
-          style={styles.listStyle}
-          contentContainerStyle={styles.listContainer}
-          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 110 }}
         />
       </View>
 
-      {}
       <TouchableOpacity
-        style={styles.fab}
+        accessibilityRole="button"
+        accessibilityLabel="Nova nota"
+        style={{
+          position: 'absolute',
+          bottom: spacing['2xl'],
+          right: spacing.screen,
+          width: 58,
+          height: 58,
+          borderRadius: 29,
+          backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          ...shadows.pop,
+        }}
         onPress={handleCreateNote}
-        activeOpacity={0.8}
+        activeOpacity={0.82}
       >
-        <Ionicons name="add" size={28} color="#ffffff" />
+        <Ionicons name="add" size={30} color={colors.onPrimary} />
       </TouchableOpacity>
 
       <SecureNoteFormModal
         visible={showCreateModal}
         onClose={() => {
+          if (isSaving) return;
           setShowCreateModal(false);
           setEditingNote(null);
         }}
         onSave={handleSaveNote}
         formData={formData}
-        onFormDataChange={(data) => setFormData({ ...formData, ...data })}
+        onFormDataChange={(data) => setFormData((current) => ({ ...current, ...data }))}
         folders={folders}
         isEditing={false}
         isLoading={isSaving}
@@ -534,47 +374,34 @@ export default function SecureNotesScreen() {
       <SecureNoteFormModal
         visible={showEditModal}
         onClose={() => {
+          if (isSaving) return;
           setShowEditModal(false);
           setEditingNote(null);
         }}
         onSave={handleSaveNote}
         formData={formData}
-        onFormDataChange={(data) => setFormData({ ...formData, ...data })}
+        onFormDataChange={(data) => setFormData((current) => ({ ...current, ...data }))}
         folders={folders}
-        isEditing={true}
+        isEditing
         isLoading={isSaving}
       />
 
       <Modal
         visible={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Confirmar Exclusão"
-      >
-        <View style={styles.modalContent}>
-          <Text style={[styles.modalText, { color: isDark ? '#f9fafb' : '#111827' }]}>
-            Tem certeza que deseja excluir a nota "{deletingNote?.title}"?
-          </Text>
-          <Text style={[styles.modalSubtext, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-            Esta ação não pode ser desfeita.
-          </Text>
-          
-          <View style={styles.deleteButtons}>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.cancelButton]}
-              onPress={() => setShowDeleteModal(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.modalButton, styles.deleteButton]}
-              onPress={confirmDeleteNote}
-            >
-              <Text style={styles.deleteButtonText}>Excluir</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => {
+          if (isDeleting) return;
+          setShowDeleteModal(false);
+          setDeletingNote(null);
+        }}
+        title="Excluir Nota"
+        type="confirm"
+        message={`Tem certeza que deseja excluir a nota "${deletingNote?.title || ''}"? Esta ação não pode ser desfeita.`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        confirmVariant="danger"
+        onConfirm={confirmDeleteNote}
+        loading={isDeleting}
+      />
     </View>
   );
 }

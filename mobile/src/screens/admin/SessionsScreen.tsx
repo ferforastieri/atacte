@@ -1,14 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, BackHandler } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { BackHandler, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Header, Card, SkeletonLoader, Modal, Button } from '../../components/shared';
+import {
+  Button,
+  Card,
+  EmptyState,
+  Header,
+  HeroCard,
+  Modal,
+  Pagination,
+  SkeletonTable,
+} from '../../components/shared';
+import { IconTile } from '../../components/shared/IconTile';
+import { Pill } from '../../components/shared/Pill';
 import { authService } from '../../services/auth/authService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
+import { useToast } from '../../contexts/ToastContext';
 import { MainTabParamList } from '../../navigation/AppNavigator';
+import { radii, spacing, touch, typography } from '../../theme/tokens';
 
 interface Session {
   id: string;
@@ -25,12 +38,18 @@ type SessionsScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'S
 export default function SessionsScreen() {
   const navigation = useNavigation<SessionsScreenNavigationProp>();
   const { isAdmin } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { colors, toggleTheme } = useTheme();
+  const { showSuccess, showError } = useToast();
   const insets = useSafeAreaInsets();
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRevokingAll, setIsRevokingAll] = useState(false);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [showRevokeModal, setShowRevokeModal] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, total: 0, limit: 10 });
 
-  const handleBack = () => {
-    navigation.jumpTo('Profile');
-  };
+  const handleBack = () => navigation.jumpTo('Profile');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -38,29 +57,14 @@ export default function SessionsScreen() {
         handleBack();
         return true;
       };
-
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       return () => subscription.remove();
-    }, [navigation])
+    }, [navigation]),
   );
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRevokingAll, setIsRevokingAll] = useState(false);
-  const [showRevokeModal, setShowRevokeModal] = useState(false);
-  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchSessions();
-    }
+    if (isAdmin) void fetchSessions();
   }, []);
-
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    total: 0,
-    limit: 10
-  });
 
   const fetchSessions = async (page = 1) => {
     setIsLoading(true);
@@ -70,430 +74,240 @@ export default function SessionsScreen() {
       if (response.success && response.data) {
         setSessions(response.data);
         if (response.pagination) {
-          setPagination(prev => ({
-            ...prev,
+          setPagination((previous) => ({
+            ...previous,
             currentPage: page,
-            total: response.pagination.total,
-            totalPages: Math.ceil(response.pagination.total / prev.limit)
+            total: response.pagination!.total,
+            totalPages: Math.max(1, Math.ceil(response.pagination!.total / previous.limit)),
           }));
         }
       } else {
         setSessions([]);
-        setPagination(prev => ({ ...prev, totalPages: 1 }));
+        setPagination((previous) => ({ ...previous, totalPages: 1 }));
       }
-    } catch (error) {
+    } catch {
       setSessions([]);
-      setPagination(prev => ({ ...prev, totalPages: 1 }));
+      setPagination((previous) => ({ ...previous, totalPages: 1 }));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= pagination.totalPages) {
-      fetchSessions(page);
-    }
-  };
-
-  const currentSession = sessions.find(s => s.isCurrent);
-
   const revokeSession = async (sessionId: string) => {
+    if (revokingId) return;
+    setRevokingId(sessionId);
     try {
       const response = await authService.revokeSession(sessionId);
       if (response.success) {
+        setShowRevokeModal(false);
+        setSelectedSession(null);
         await fetchSessions(pagination.currentPage);
+        showSuccess('Sessão revogada.');
       } else {
+        showError('Não foi possível revogar a sessão.');
       }
-    } catch (error) {
+    } catch {
+      showError('Não foi possível revogar a sessão.');
+    } finally {
+      setRevokingId(null);
     }
   };
-
 
   const revokeAllSessions = async () => {
+    if (isRevokingAll) return;
     setIsRevokingAll(true);
     try {
-      const sessionsToRevoke = sessions.filter(s => !s.isCurrent);
-      await Promise.all(sessionsToRevoke.map(session => authService.revokeSession(session.id)));
+      const sessionsToRevoke = sessions.filter((session) => !session.isCurrent);
+      await Promise.all(sessionsToRevoke.map((session) => authService.revokeSession(session.id)));
+      setShowRevokeModal(false);
       await fetchSessions();
-    } catch (error) {
+      showSuccess('Sessões revogadas.');
+    } catch {
+      showError('Não foi possível revogar todas as sessões.');
     } finally {
       setIsRevokingAll(false);
-      setShowRevokeModal(false);
     }
   };
 
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark ? '#111827' : '#f9fafb',
-    },
-    scrollView: {
-      flex: 1,
-    },
-    content: {
-      padding: 20,
-      paddingBottom: Math.max(100, insets.bottom + 100),
-    },
-    revokeAllButton: {
-      marginBottom: 20,
-      marginTop: 20,
-    },
-    paginationContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      borderTopWidth: 1,
-      borderTopColor: isDark ? '#374151' : '#e5e7eb',
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-    },
-    paginationButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-    },
-    paginationButtonDisabled: {
-      opacity: 0.5,
-    },
-    paginationButtonText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: isDark ? '#d1d5db' : '#374151',
-      marginHorizontal: 4,
-    },
-    paginationButtonTextDisabled: {
-      color: isDark ? '#4b5563' : '#9ca3af',
-    },
-    paginationInfo: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: isDark ? '#d1d5db' : '#374151',
-    },
-    currentSessionCard: {
-      marginTop: 0,
-      marginBottom: 20,
-    },
-    currentSessionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    currentSessionIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: '#10b981',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 12,
-    },
-    currentSessionInfo: {
-      flex: 1,
-    },
-    currentSessionTitle: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 4,
-    },
-    currentSessionSubtitle: {
-      fontSize: 12,
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
-    currentSessionBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-      backgroundColor: '#10b981',
-    },
-    currentSessionBadgeText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: '#ffffff',
-    },
-    sessionCard: {
-      marginBottom: 12,
-    },
-    sessionHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    deviceName: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      flex: 1,
-    },
-    badgeRow: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    sessionDetails: {
-      marginTop: 8,
-    },
-    detailRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 4,
-    },
-    detailLabel: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
-    detailValue: {
-      fontSize: 12,
-      color: isDark ? '#d1d5db' : '#374151',
-      flex: 1,
-      textAlign: 'right',
-    },
-    statusBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    statusBadgeText: {
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    actions: {
-      flexDirection: 'row',
-      gap: 8,
-      marginTop: 16,
-      paddingTop: 16,
-      borderTopWidth: 1,
-      borderTopColor: isDark ? '#374151' : '#e5e7eb',
-    },
-    actionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-      borderWidth: 1,
-      backgroundColor: 'transparent',
-    },
-    actionButtonText: {
-      fontSize: 12,
-      fontWeight: '500',
-      marginLeft: 4,
-    },
-    emptyContainer: {
-      alignItems: 'center',
-      paddingVertical: 40,
-    },
-    emptyIcon: {
-      marginBottom: 16,
-    },
-    emptyTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 4,
-    },
-    emptyText: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      textAlign: 'center',
-    },
+  const formatDateTime = (dateString: string) => new Date(dateString).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
+
+  const currentSession = sessions.find((session) => session.isCurrent);
 
   if (!isAdmin) {
     return (
-      <View style={styles.container}>
+      <View style={{ flex: 1, backgroundColor: colors.canvas }}>
         <Header title="Sessões" showBackButton onBack={handleBack} onThemeToggle={toggleTheme} />
-        <View style={styles.content}>
-          <Text style={styles.emptyText}>Acesso negado</Text>
+        <View style={{ padding: spacing.screen }}>
+          <EmptyState icon="lock-closed-outline" title="Acesso negado" description="Esta área é exclusiva de administradores." />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Header title="Sessões" showBackButton onBack={handleBack} onThemeToggle={toggleTheme} />
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {currentSession && (
-          <Card style={styles.currentSessionCard}>
-            <View style={styles.currentSessionHeader}>
-              <View style={styles.currentSessionIcon}>
-                <Ionicons name="checkmark" size={20} color="#ffffff" />
-              </View>
-              <View style={styles.currentSessionInfo}>
-                <Text style={styles.currentSessionTitle}>Sessão Atual</Text>
-                <Text style={styles.currentSessionSubtitle}>
-                  {currentSession.deviceName || 'Esta é sua sessão atual'}
-                </Text>
-              </View>
-              <View style={styles.currentSessionBadge}>
-                <Text style={styles.currentSessionBadgeText}>Ativa</Text>
-              </View>
-            </View>
-          </Card>
-        )}
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <Header
+        title="Sessões"
+        subtitle="Dispositivos com acesso ao cofre"
+        showBackButton
+        onBack={handleBack}
+        onThemeToggle={toggleTheme}
+        icon={<Ionicons name="desktop-outline" size={22} color={colors.primarySoftText} />}
+      />
 
+      <ScrollView contentContainerStyle={{ padding: spacing.screen, paddingBottom: Math.max(48, insets.bottom + 48) }} showsVerticalScrollIndicator={false}>
         {isLoading ? (
-          <SkeletonLoader variant="default" />
-        ) : sessions.length === 0 ? (
-          <Card style={styles.emptyContainer}>
-            <Ionicons 
-              name="desktop-outline" 
-              size={48} 
-              color={isDark ? '#6b7280' : '#9ca3af'}
-              style={styles.emptyIcon}
-            />
-            <Text style={styles.emptyTitle}>Nenhuma sessão encontrada</Text>
-            <Text style={styles.emptyText}>
-              Você não tem sessões ativas.
-            </Text>
-          </Card>
+          <>
+            <View style={{ backgroundColor: colors.hero, borderRadius: radii['2xl'], padding: spacing.xl, marginBottom: spacing.lg, gap: spacing.sm }}>
+              <View style={{ height: 10, width: '28%', borderRadius: radii.sm, backgroundColor: colors.heroBar }} />
+              <View style={{ height: 16, width: '52%', borderRadius: radii.sm, backgroundColor: colors.heroBar }} />
+            </View>
+            <SkeletonTable rows={4} />
+          </>
         ) : (
-          sessions.map((session) => (
-            <Card key={session.id} style={styles.sessionCard}>
-              <View style={styles.sessionHeader}>
-                <Text style={styles.deviceName}>
-                  {session.deviceName || 'Dispositivo Desconhecido'}
-                </Text>
-                <View style={styles.badgeRow}>
-                  <View style={[
-                    styles.statusBadge,
-                    { backgroundColor: session.isCurrent ? '#10b981' : '#6b7280' }
-                  ]}>
-                    <Text style={[styles.statusBadgeText, { color: '#ffffff' }]}>
-                      {session.isCurrent ? 'Atual' : 'Ativa'}
-                    </Text>
+          <>
+            {currentSession ? (
+              <HeroCard padding="md" style={{ marginBottom: spacing.lg }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
+                    <IconTile variant="hero" size={44}>
+                      <Ionicons name="checkmark-circle-outline" size={22} color={colors.accent} />
+                    </IconTile>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ color: colors.heroMuted, fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.7 }}>SESSÃO ATUAL</Text>
+                      <Text numberOfLines={1} style={{ marginTop: 2, color: colors.heroText, fontSize: typography.body, fontWeight: typography.weights.semibold }}>
+                        {currentSession.deviceName || 'Esta é sua sessão atual'}
+                      </Text>
+                    </View>
                   </View>
+                  <Pill label="Ativa" tone="success" />
                 </View>
+              </HeroCard>
+            ) : null}
+
+            {sessions.length === 0 ? (
+              <EmptyState icon="desktop-outline" title="Nenhuma sessão encontrada" description="Você não tem sessões ativas." />
+            ) : (
+              <View style={{ gap: spacing.md }}>
+                {sessions.map((session) => (
+                  <Card key={session.id}>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
+                      <IconTile variant="muted">
+                        <Ionicons name="laptop-outline" size={20} color={colors.inkMuted} />
+                      </IconTile>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+                          <Text numberOfLines={1} style={{ flex: 1, fontSize: typography.bodyLarge, fontWeight: typography.weights.semibold, color: colors.ink }}>
+                            {session.deviceName || 'Dispositivo Desconhecido'}
+                          </Text>
+                          <Pill label={session.isCurrent ? 'Atual' : 'Ativa'} tone={session.isCurrent ? 'success' : 'neutral'} />
+                        </View>
+                        <Text numberOfLines={1} style={{ marginTop: 2, fontSize: typography.caption, color: colors.inkSubtle }}>{session.userAgent || '-'}</Text>
+
+                        <View style={{ marginTop: spacing.md, gap: 5 }}>
+                          {[
+                            { label: 'IP', value: session.ipAddress || '-' },
+                            { label: 'Criada em', value: formatDateTime(session.createdAt) },
+                            { label: 'Última atividade', value: formatDateTime(session.lastUsed) },
+                          ].map((row) => (
+                            <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}>
+                              <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, color: colors.inkMuted }}>{row.label}</Text>
+                              <Text style={{ flex: 1, textAlign: 'right', fontSize: typography.caption, color: colors.inkMuted }}>{row.value}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+
+                    {!session.isCurrent ? (
+                      <TouchableOpacity
+                        accessibilityRole="button"
+                        accessibilityLabel="Revogar sessão"
+                        accessibilityState={{ busy: revokingId === session.id, disabled: Boolean(revokingId) }}
+                        style={{
+                          marginTop: spacing.md,
+                          paddingTop: spacing.md,
+                          borderTopWidth: 1,
+                          borderTopColor: colors.line,
+                          minHeight: touch.minimum,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                          borderRadius: radii.md,
+                          backgroundColor: colors.dangerSoft,
+                          opacity: revokingId && revokingId !== session.id ? 0.5 : 1,
+                        }}
+                        onPress={() => {
+                          setSelectedSession(session);
+                          setShowRevokeModal(true);
+                        }}
+                        disabled={Boolean(revokingId)}
+                      >
+                        <Ionicons name="trash-outline" size={16} color={colors.dangerText} />
+                        <Text style={{ fontSize: typography.label, fontWeight: typography.weights.semibold, color: colors.dangerText }}>
+                          {revokingId === session.id ? 'Revogando...' : 'Revogar'}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </Card>
+                ))}
               </View>
+            )}
 
-              <View style={styles.sessionDetails}>
-                {session.ipAddress && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>IP:</Text>
-                    <Text style={styles.detailValue}>{session.ipAddress}</Text>
-                  </View>
-                )}
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Criada em:</Text>
-                  <Text style={styles.detailValue}>{formatDateTime(session.createdAt)}</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Última Atividade:</Text>
-                  <Text style={styles.detailValue}>{formatDateTime(session.lastUsed)}</Text>
-                </View>
-              </View>
-
-              <View style={styles.actions}>
-                {!session.isCurrent && (
-                  <TouchableOpacity
-                    style={[styles.actionButton, { borderColor: '#dc2626', flex: 1 }]}
-                    onPress={() => {
-                      setSelectedSession(session);
-                      setShowRevokeModal(true);
-                    }}
-                  >
-                    <Ionicons name="trash-outline" size={16} color="#dc2626" />
-                    <Text style={[styles.actionButtonText, { color: '#dc2626' }]}>
-                      Revogar
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </Card>
-          ))
-        )}
-
-        {!isLoading && sessions.length > 0 && (
-          <View style={styles.revokeAllButton}>
-            <Button
-              title="Revogar Todas"
-              onPress={() => setShowRevokeModal(true)}
-              variant="danger"
-              loading={isRevokingAll}
-            />
-          </View>
-        )}
-
-        {!isLoading && sessions.length > 0 && pagination.totalPages > 1 && (
-          <View style={styles.paginationContainer}>
-            <TouchableOpacity
-              style={[styles.paginationButton, pagination.currentPage === 1 && styles.paginationButtonDisabled]}
-              onPress={() => goToPage(pagination.currentPage - 1)}
-              disabled={pagination.currentPage === 1}
-            >
-              <Ionicons name="chevron-back" size={20} color={pagination.currentPage === 1 ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
-              <Text style={[styles.paginationButtonText, pagination.currentPage === 1 && styles.paginationButtonTextDisabled]}>
-                Anterior
-              </Text>
-            </TouchableOpacity>
-
-            <Text style={styles.paginationInfo}>
-              Página {pagination.currentPage} de {pagination.totalPages}
-            </Text>
-
-            <TouchableOpacity
-              style={[styles.paginationButton, pagination.currentPage === pagination.totalPages && styles.paginationButtonDisabled]}
-              onPress={() => goToPage(pagination.currentPage + 1)}
-              disabled={pagination.currentPage === pagination.totalPages}
-            >
-              <Text style={[styles.paginationButtonText, pagination.currentPage === pagination.totalPages && styles.paginationButtonTextDisabled]}>
-                Próxima
-              </Text>
-              <Ionicons name="chevron-forward" size={20} color={pagination.currentPage === pagination.totalPages ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
-            </TouchableOpacity>
-          </View>
+            {sessions.length > 0 ? (
+              <>
+                <Button
+                  title="Revogar Todas"
+                  onPress={() => {
+                    setSelectedSession(null);
+                    setShowRevokeModal(true);
+                  }}
+                  variant="danger"
+                  loading={isRevokingAll}
+                  disabled={isRevokingAll}
+                  style={{ marginTop: spacing.lg }}
+                />
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onPrevious={() => void fetchSessions(pagination.currentPage - 1)}
+                  onNext={() => void fetchSessions(pagination.currentPage + 1)}
+                  busy={isLoading}
+                />
+              </>
+            ) : null}
+          </>
         )}
       </ScrollView>
 
       <Modal
         visible={showRevokeModal}
         onClose={() => {
+          if (isRevokingAll || revokingId) return;
           setShowRevokeModal(false);
           setSelectedSession(null);
         }}
+        title={selectedSession ? 'Revogar Sessão' : 'Revogar Todas as Sessões'}
         type="confirm"
-        title={selectedSession ? "Revogar Sessão" : "Revogar Todas as Sessões"}
-        message={
-          selectedSession
-            ? `Tem certeza que deseja revogar a sessão "${selectedSession.deviceName || 'Desconhecido'}"?`
-            : 'Tem certeza que deseja revogar todas as sessões? Você será deslogado.'
-        }
+        message={selectedSession
+          ? `Tem certeza que deseja revogar a sessão "${selectedSession.deviceName || 'Desconhecido'}"?`
+          : 'Tem certeza que deseja revogar todas as sessões? Você será deslogado.'}
         confirmText="Revogar"
         cancelText="Cancelar"
         confirmVariant="danger"
         onConfirm={() => {
-          if (selectedSession) {
-            revokeSession(selectedSession.id);
-            setShowRevokeModal(false);
-            setSelectedSession(null);
-          } else {
-            revokeAllSessions();
-          }
+          if (selectedSession) void revokeSession(selectedSession.id);
+          else void revokeAllSessions();
         }}
+        loading={isRevokingAll || Boolean(revokingId)}
       />
-
-
     </View>
   );
 }

@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Image } from 'react-native';
+import { Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SkeletonLoader } from '../components/shared/Skeleton';
@@ -65,8 +66,9 @@ function AuthNavigator() {
 }
 
 function MainTabNavigator() {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -82,7 +84,7 @@ function MainTabNavigator() {
                     height: size, 
                     borderRadius: size / 2,
                     borderWidth: focused ? 2 : 0,
-                    borderColor: '#22c55e',
+                    borderColor: colors.primary,
                   }} 
                 />
               );
@@ -102,11 +104,18 @@ function MainTabNavigator() {
 
             return <Ionicons name={iconName} size={size} color={color} />;
           },
-          tabBarActiveTintColor: '#22c55e',
-          tabBarInactiveTintColor: isDark ? '#9ca3af' : '#6b7280',
+          tabBarActiveTintColor: colors.primaryText,
+          tabBarInactiveTintColor: colors.inkMuted,
           tabBarStyle: {
-            backgroundColor: isDark ? '#1f2937' : '#ffffff',
-            borderTopColor: isDark ? '#374151' : '#e5e7eb',
+            backgroundColor: colors.surface,
+            borderTopColor: colors.line,
+            height: 64 + insets.bottom,
+            paddingTop: 6,
+            paddingBottom: Math.max(8, insets.bottom),
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '600',
           },
           headerShown: false,
         };
@@ -183,7 +192,7 @@ function MainTabNavigator() {
 export default function AppNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
   const { serverUrl, isLoading: isServerLoading } = useServer();
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
 
   if (isLoading || isServerLoading) {
     return <SkeletonLoader variant="dashboard" />;
@@ -198,12 +207,12 @@ export default function AppNavigator() {
       theme={{
         dark: isDark,
         colors: {
-          primary: '#22c55e',
-          background: isDark ? '#111827' : '#f9fafb',
-          card: isDark ? '#1f2937' : '#ffffff',
-          text: isDark ? '#f9fafb' : '#111827',
-          border: isDark ? '#374151' : '#e5e7eb',
-          notification: '#22c55e',
+          primary: colors.primary,
+          background: colors.canvas,
+          card: colors.surface,
+          text: colors.ink,
+          border: colors.line,
+          notification: colors.accent,
         },
         fonts: {
           regular: {
@@ -236,9 +245,9 @@ export default function AppNavigator() {
                 headerShown: true,
                 title: 'Detalhes da Senha',
                 headerStyle: {
-                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                  backgroundColor: colors.surface,
                 },
-                headerTintColor: isDark ? '#f9fafb' : '#111827',
+                headerTintColor: colors.ink,
                 headerTitleStyle: {
                   fontWeight: '600',
                 },

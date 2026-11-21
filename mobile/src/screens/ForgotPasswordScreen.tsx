@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Card, Logo } from '../components/shared';
+import { IconTile } from '../components/shared/IconTile';
 import { authService } from '../services/auth/authService';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
+import { radii, spacing, typography } from '../theme/tokens';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -14,117 +16,99 @@ export default function ForgotPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [step, setStep] = useState<'request' | 'reset'>('request');
   const [isLoading, setIsLoading] = useState(false);
-  const { isDark } = useTheme();
+  const [error, setError] = useState('');
+  const { colors } = useTheme();
   const navigation = useNavigation();
 
   const handleRequestReset = async () => {
-    if (!email) {
-      return;
-    }
+    if (isLoading || !email) return;
 
+    setError('');
     setIsLoading(true);
     try {
       const response = await authService.requestPasswordReset(email);
-      
       if (response.success) {
         setStep('reset');
       } else {
+        setError('Não foi possível enviar o token.');
       }
-    } catch (error) {
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível enviar o token.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResetPassword = async () => {
-    if (!token || !newPassword || !confirmPassword) {
-      return;
-    }
+    if (isLoading || !token || !newPassword || !confirmPassword) return;
 
     if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem.');
       return;
     }
-
     if (newPassword.length < 8) {
+      setError('A senha deve ter pelo menos 8 caracteres.');
       return;
     }
 
+    setError('');
     setIsLoading(true);
     try {
       const response = await authService.resetPassword(token, newPassword);
-      
       if (response.success) {
         navigation.goBack();
       } else {
+        setError('Não foi possível redefinir a senha.');
       }
-    } catch (error) {
+    } catch (resetError) {
+      setError(resetError instanceof Error ? resetError.message : 'Não foi possível redefinir a senha.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark ? '#111827' : '#f9fafb',
-    },
-    content: {
-      flexGrow: 1,
-      justifyContent: 'center',
-      padding: 20,
-    },
-    header: {
-      alignItems: 'center',
-      marginBottom: 40,
-    },
-    subtitle: {
-      fontSize: 18,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginTop: 8,
-      textAlign: 'center',
-    },
-    formCard: {
-      marginBottom: 20,
-    },
-    formTitle: {
-      fontSize: 24,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      textAlign: 'center',
-      marginBottom: 24,
-    },
-    submitButton: {
-      marginTop: 16,
-      marginBottom: 12,
-    },
-    backButton: {
-      marginTop: 8,
-    },
-    infoText: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      textAlign: 'center',
-      marginBottom: 16,
-      lineHeight: 20,
-    },
-  });
+  const errorBanner = error ? (
+    <View
+      style={{
+        marginBottom: spacing.lg,
+        padding: spacing.md,
+        borderRadius: radii.md,
+        borderWidth: 1,
+        borderColor: colors.dangerBorder,
+        backgroundColor: colors.dangerSoft,
+      }}
+      accessibilityRole="alert"
+    >
+      <Text style={{ fontSize: typography.body, color: colors.dangerText }}>{error}</Text>
+    </View>
+  ) : null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Logo size={80} showText={true} textSize={36} textColor={isDark ? '#f9fafb' : '#111827'} />
-          <Text style={styles.subtitle}>Recuperar Senha</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: spacing.screen }} keyboardShouldPersistTaps="handled">
+        <View style={{ alignItems: 'center', marginBottom: spacing['2xl'] }}>
+          <Logo size={60} showText textSize={28} />
         </View>
 
-        <Card style={styles.formCard}>
+        <Card>
+          <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
+            <IconTile size={52}>
+              <Ionicons name="key-outline" size={24} color={colors.primarySoftText} />
+            </IconTile>
+            <Text style={{ marginTop: spacing.md, fontSize: typography.headline, fontWeight: typography.weights.semibold, color: colors.ink }}>
+              {step === 'request' ? 'Recuperar Senha' : 'Redefinir Senha'}
+            </Text>
+            <Text style={{ marginTop: spacing.xs, fontSize: typography.body, color: colors.inkMuted, textAlign: 'center', lineHeight: 20 }}>
+              {step === 'request'
+                ? 'Digite seu email e você receberá um token para redefinir sua senha.'
+                : 'Digite o token recebido e sua nova senha.'}
+            </Text>
+          </View>
+
+          {errorBanner}
+
           {step === 'request' ? (
             <>
-              <Text style={styles.formTitle}>Solicitar Recuperação</Text>
-              <Text style={styles.infoText}>
-                Digite seu email e você receberá um token para redefinir sua senha.
-              </Text>
-
               <Input
                 label="Email"
                 placeholder="seu@email.com"
@@ -132,70 +116,58 @@ export default function ForgotPasswordScreen() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                leftIcon={<Ionicons name="mail-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
+                autoComplete="email"
+                disabled={isLoading}
+                leftIcon={<Ionicons name="mail-outline" size={19} color={colors.inkSubtle} />}
               />
-
               <Button
                 title="Enviar Token"
                 onPress={handleRequestReset}
                 loading={isLoading}
-                style={styles.submitButton}
+                disabled={isLoading || !email}
+                size="lg"
               />
-
-              <Button
-                title="Voltar"
-                onPress={() => navigation.goBack()}
-                variant="ghost"
-                style={styles.backButton}
-              />
+              <Button title="Voltar" onPress={() => navigation.goBack()} variant="ghost" disabled={isLoading} style={{ marginTop: spacing.sm }} />
             </>
           ) : (
             <>
-              <Text style={styles.formTitle}>Redefinir Senha</Text>
-              <Text style={styles.infoText}>
-                Digite o token recebido e sua nova senha.
-              </Text>
-
               <Input
                 label="Token"
                 placeholder="Token de recuperação"
                 value={token}
                 onChangeText={setToken}
                 autoCapitalize="none"
-                leftIcon={<Ionicons name="key-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
+                disabled={isLoading}
+                leftIcon={<Ionicons name="key-outline" size={19} color={colors.inkSubtle} />}
               />
-
               <Input
                 label="Nova Senha"
                 placeholder="Mínimo 8 caracteres"
                 value={newPassword}
                 onChangeText={setNewPassword}
                 secureTextEntry
-                leftIcon={<Ionicons name="lock-closed-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
+                autoComplete="new-password"
+                disabled={isLoading}
+                leftIcon={<Ionicons name="lock-closed-outline" size={19} color={colors.inkSubtle} />}
               />
-
               <Input
                 label="Confirmar Senha"
                 placeholder="Digite novamente"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
-                leftIcon={<Ionicons name="lock-closed-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />}
+                autoComplete="new-password"
+                disabled={isLoading}
+                leftIcon={<Ionicons name="lock-closed-outline" size={19} color={colors.inkSubtle} />}
               />
-
               <Button
                 title="Redefinir Senha"
                 onPress={handleResetPassword}
                 loading={isLoading}
-                style={styles.submitButton}
+                disabled={isLoading || !token || !newPassword || !confirmPassword}
+                size="lg"
               />
-
-              <Button
-                title="Voltar"
-                onPress={() => setStep('request')}
-                variant="ghost"
-                style={styles.backButton}
-              />
+              <Button title="Voltar" onPress={() => setStep('request')} variant="ghost" disabled={isLoading} style={{ marginTop: spacing.sm }} />
             </>
           )}
         </Card>
@@ -203,4 +175,3 @@ export default function ForgotPasswordScreen() {
     </SafeAreaView>
   );
 }
-

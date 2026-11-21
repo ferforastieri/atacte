@@ -1,14 +1,26 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import {
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  View,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
+import { radii, touch, typography } from '../../theme/tokens';
+
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'subtle' | 'dark';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   loading?: boolean;
   disabled?: boolean;
+  icon?: React.ReactNode;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
@@ -20,106 +32,88 @@ export const Button: React.FC<ButtonProps> = ({
   size = 'md',
   loading = false,
   disabled = false,
+  icon,
   style,
   textStyle,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
 
-  const getButtonStyle = (): ViewStyle => {
-    const baseStyle: ViewStyle = {
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexDirection: 'row',
-    };
-
-    const sizeStyles: Record<string, ViewStyle> = {
-      sm: { paddingHorizontal: 12, paddingVertical: 8, minHeight: 32 },
-      md: { paddingHorizontal: 16, paddingVertical: 10, minHeight: 40 },
-      lg: { paddingHorizontal: 24, paddingVertical: 12, minHeight: 48 },
-    };
-
-    const variantStyles: Record<string, ViewStyle> = {
-      primary: {
-        backgroundColor: '#16a34a',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
-      },
-      secondary: {
-        backgroundColor: isDark ? '#374151' : '#ffffff',
-        borderWidth: 1,
-        borderColor: isDark ? '#4b5563' : '#d1d5db',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
-      },
-      danger: {
-        backgroundColor: '#dc2626',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
-      },
-      ghost: {
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: isDark ? '#4b5563' : '#d1d5db',
-      },
-    };
-
-    return {
-      ...baseStyle,
-      ...sizeStyles[size],
-      ...variantStyles[variant],
-      opacity: disabled || loading ? 0.7 : 1,
-    };
+  const sizeStyles: Record<ButtonSize, ViewStyle> = {
+    sm: { paddingHorizontal: 12, minHeight: touch.minimum, borderRadius: radii.md },
+    md: { paddingHorizontal: 16, minHeight: 48, borderRadius: radii.lg },
+    lg: { paddingHorizontal: 22, minHeight: 52, borderRadius: radii.lg },
+    icon: { width: touch.minimum, height: touch.minimum, borderRadius: radii.md },
   };
 
-  const getTextStyle = (): TextStyle => {
-    const baseStyle: TextStyle = {
-      fontWeight: '500',
-    };
+  const variantStyles: Record<ButtonVariant, ViewStyle> = {
+    primary: { backgroundColor: colors.primary },
+    secondary: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.line,
+    },
+    danger: { backgroundColor: colors.dangerSolid },
+    ghost: { backgroundColor: 'transparent' },
+    subtle: { backgroundColor: colors.primarySoft },
+    dark: { backgroundColor: colors.hero, borderWidth: 1, borderColor: colors.heroBorder },
+  };
 
-    const sizeStyles: Record<string, TextStyle> = {
-      sm: { fontSize: 14 },
-      md: { fontSize: 14 },
-      lg: { fontSize: 16 },
-    };
+  const textColors: Record<ButtonVariant, string> = {
+    primary: colors.onPrimary,
+    secondary: colors.ink,
+    danger: colors.onPrimary,
+    ghost: colors.inkMuted,
+    subtle: colors.primarySoftText,
+    dark: colors.heroText,
+  };
 
-    const variantStyles: Record<string, TextStyle> = {
-      primary: { color: '#ffffff' },
-      secondary: { color: isDark ? '#f9fafb' : '#111827' },
-      danger: { color: '#ffffff' },
-      ghost: { color: isDark ? '#d1d5db' : '#374151' },
-    };
-
-    return {
-      ...baseStyle,
-      ...sizeStyles[size],
-      ...variantStyles[variant],
-    };
+  const textSizes: Record<ButtonSize, number> = {
+    sm: typography.label,
+    md: typography.body,
+    lg: typography.bodyLarge,
+    icon: typography.body,
   };
 
   return (
     <TouchableOpacity
-      style={[getButtonStyle(), style]}
-      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
+      activeOpacity={0.78}
       disabled={disabled || loading}
-      activeOpacity={0.7}
+      onPress={onPress}
+      style={[
+        {
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'row',
+          gap: 8,
+          opacity: disabled || loading ? 0.55 : 1,
+        },
+        sizeStyles[size],
+        variantStyles[variant],
+        style,
+      ]}
     >
       {loading ? (
-        <ActivityIndicator
-          size={size === 'lg' ? 'small' : 'small'}
-          color={variant === 'ghost' ? (isDark ? '#d1d5db' : '#374151') : variant === 'secondary' ? (isDark ? '#f9fafb' : '#111827') : '#ffffff'}
-        />
+        <ActivityIndicator size="small" color={textColors[variant]} />
       ) : (
-        <Text style={[getTextStyle(), textStyle]}>{title}</Text>
+        <>
+          {icon ? <View style={{ alignItems: 'center', justifyContent: 'center' }}>{icon}</View> : null}
+          {size !== 'icon' ? (
+            <Text
+              style={[
+                {
+                  color: textColors[variant],
+                  fontSize: textSizes[size],
+                  fontWeight: typography.weights.semibold,
+                },
+                textStyle,
+              ]}
+            >
+              {title}
+            </Text>
+          ) : null}
+        </>
       )}
     </TouchableOpacity>
   );

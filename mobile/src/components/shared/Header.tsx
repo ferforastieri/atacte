@@ -1,13 +1,17 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Logo } from './Logo';
-import { useNavigation } from '@react-navigation/native';
+import { radii, spacing, touch, typography } from '../../theme/tokens';
 
 interface HeaderProps {
   title?: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  showLogo?: boolean;
   showThemeToggle?: boolean;
   onThemeToggle?: () => void;
   showBackButton?: boolean;
@@ -19,9 +23,12 @@ interface HeaderProps {
   onSettingsPress?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ 
-  title, 
-  showThemeToggle = true, 
+export const Header: React.FC<HeaderProps> = ({
+  title,
+  subtitle,
+  icon,
+  showLogo = true,
+  showThemeToggle = true,
   onThemeToggle,
   showBackButton = false,
   onBack,
@@ -29,153 +36,122 @@ export const Header: React.FC<HeaderProps> = ({
   onRefresh,
   isRefreshing = false,
   showSettingsButton = false,
-  onSettingsPress
+  onSettingsPress,
 }) => {
-  const { isDark } = useTheme();
+  const { isDark, colors, toggleTheme } = useTheme();
   const navigation = useNavigation();
 
-  const styles = StyleSheet.create({
-    container: {
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? '#374151' : '#e5e7eb',
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    content: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      minHeight: 60,
-    },
-    leftSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flex: 1,
-    },
-    logoContainer: {
-      marginRight: 12,
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-    },
-    rightSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    themeButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      marginRight: 0,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    refreshButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      marginRight: 8,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    backButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      marginRight: 12,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-  });
+  const iconButton = (label: string, ionicon: keyof typeof Ionicons.glyphMap, onPress?: () => void, disabled = false) => (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{
+        width: touch.minimum,
+        height: touch.minimum,
+        borderRadius: radii.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceMuted,
+        opacity: disabled ? 0.45 : 1,
+      }}
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.75}
+    >
+      <Ionicons name={ionicon} size={20} color={disabled ? colors.inkSubtle : colors.inkMuted} />
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.content}>
-        <View style={styles.leftSection}>
-          {showBackButton && (
+    <SafeAreaView
+      edges={['top']}
+      style={{
+        backgroundColor: colors.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.line,
+      }}
+    >
+      <View
+        style={{
+          minHeight: 64,
+          paddingHorizontal: spacing.screen,
+          paddingVertical: spacing.md,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.md,
+        }}
+      >
+        <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          {showBackButton ? (
             <TouchableOpacity
-              style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel="Voltar"
+              style={{
+                width: touch.minimum,
+                height: touch.minimum,
+                borderRadius: radii.md,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.surfaceMuted,
+              }}
               onPress={onBack || (() => navigation.goBack())}
+              activeOpacity={0.75}
             >
-              <Ionicons 
-                name="arrow-back" 
-                size={20} 
-                color={isDark ? '#f9fafb' : '#111827'} 
-              />
+              <Ionicons name="arrow-back" size={20} color={colors.ink} />
             </TouchableOpacity>
-          )}
-          <TouchableOpacity 
-            style={styles.logoContainer}
-            onPress={() => {
-              try {
-                if ('navigate' in navigation && typeof navigation.navigate === 'function') {
-                  (navigation as { navigate: (screen: string, params?: { screen: string }) => void }).navigate('Main', { screen: 'Dashboard' });
+          ) : null}
+
+          {icon ? (
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: radii.md,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.primarySoft,
+              }}
+            >
+              {icon}
+            </View>
+          ) : showLogo ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Ir para o dashboard"
+              onPress={() => {
+                try {
+                  if ('navigate' in navigation && typeof navigation.navigate === 'function') {
+                    (navigation as { navigate: (screen: string, params?: { screen: string }) => void }).navigate('Main', { screen: 'Dashboard' });
+                  }
+                } catch {
+                  // The header is also used outside the tab navigator.
                 }
-              } catch (e) {
-                if ('navigate' in navigation && typeof navigation.navigate === 'function') {
-                  (navigation as { navigate: (screen: string) => void }).navigate('Dashboard');
-                }
-              }
-            }}
-            activeOpacity={0.7}
-          >
-            <Logo size={40} showText={false} />
-          </TouchableOpacity>
-          {title && <Text style={styles.title}>{title}</Text>}
+              }}
+              activeOpacity={0.75}
+            >
+              <Logo size={38} showText={false} />
+            </TouchableOpacity>
+          ) : null}
+
+          <View style={{ flex: 1, minWidth: 0 }}>
+            {title ? (
+              <Text numberOfLines={1} style={{ color: colors.ink, fontSize: typography.title, fontWeight: typography.weights.semibold }}>
+                {title}
+              </Text>
+            ) : null}
+            {subtitle ? (
+              <Text numberOfLines={1} style={{ color: colors.inkMuted, fontSize: typography.label, marginTop: 1 }}>
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
         </View>
-        
-        <View style={styles.rightSection}>
-          {showSettingsButton && (
-            <TouchableOpacity 
-              style={styles.refreshButton}
-              onPress={onSettingsPress}
-            >
-              <Ionicons 
-                name="settings-outline" 
-                size={20} 
-                color={isDark ? '#f9fafb' : '#111827'} 
-              />
-            </TouchableOpacity>
-          )}
-          {showRefreshButton && (
-            <TouchableOpacity 
-              style={styles.refreshButton}
-              onPress={onRefresh}
-              disabled={isRefreshing}
-            >
-              <Ionicons 
-                name="refresh" 
-                size={20} 
-                color={isRefreshing ? (isDark ? '#6b7280' : '#9ca3af') : (isDark ? '#f9fafb' : '#111827')} 
-              />
-            </TouchableOpacity>
-          )}
-          {showThemeToggle && (
-            <TouchableOpacity 
-              style={styles.themeButton}
-              onPress={onThemeToggle}
-            >
-              <Ionicons 
-                name={isDark ? 'sunny' : 'moon'} 
-                size={20} 
-                color={isDark ? '#f9fafb' : '#111827'} 
-              />
-            </TouchableOpacity>
-          )}
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          {showSettingsButton ? iconButton('Configurações', 'settings-outline', onSettingsPress) : null}
+          {showRefreshButton ? iconButton('Atualizar', 'refresh', onRefresh, isRefreshing) : null}
+          {showThemeToggle ? iconButton(isDark ? 'Alternar para modo claro' : 'Alternar para modo escuro', isDark ? 'sunny' : 'moon', onThemeToggle || toggleTheme) : null}
         </View>
       </View>
     </SafeAreaView>

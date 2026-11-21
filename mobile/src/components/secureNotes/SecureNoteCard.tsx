@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '../shared';
+import { Card } from '../shared/Card';
+import { IconTile } from '../shared/IconTile';
+import { Pill } from '../shared/Pill';
 import { useTheme } from '../../contexts/ThemeContext';
+import { radii, spacing, touch, typography } from '../../theme/tokens';
 
 interface SecureNote {
   id: string;
@@ -21,6 +24,8 @@ interface SecureNoteCardProps {
   onDelete: () => void;
   onToggleFavorite: () => void;
   onView: () => void;
+  isTogglingFavorite?: boolean;
+  isDeleting?: boolean;
 }
 
 export const SecureNoteCard: React.FC<SecureNoteCardProps> = ({
@@ -30,164 +35,101 @@ export const SecureNoteCard: React.FC<SecureNoteCardProps> = ({
   onDelete,
   onToggleFavorite,
   onView,
+  isTogglingFavorite = false,
+  isDeleting = false,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
 
-  const styles = StyleSheet.create({
-    card: {
-      marginBottom: 12,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: 8,
-    },
-    info: {
-      flex: 1,
-    },
-    title: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 4,
-    },
-    content: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginBottom: 8,
-    },
-    meta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      marginTop: 8,
-    },
-    folder: {
-      fontSize: 12,
-      color: isDark ? '#6b7280' : '#9ca3af',
-    },
-    date: {
-      fontSize: 12,
-      color: isDark ? '#6b7280' : '#9ca3af',
-    },
-    actions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 12,
-    },
-    deleteButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    copyButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    favoriteButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    viewButton: {
-      flex: 1,
-    },
-    favoriteIcon: {
-      marginLeft: 8,
-    },
-  });
+  const smallAction = (label: string, ionicon: keyof typeof Ionicons.glyphMap, onPress: () => void, color?: string, busy = false) => (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ busy, disabled: busy }}
+      style={{
+        width: touch.minimum,
+        height: touch.minimum,
+        borderRadius: radii.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceMuted,
+        opacity: busy ? 0.55 : 1,
+      }}
+      onPress={onPress}
+      disabled={busy}
+      activeOpacity={0.75}
+    >
+      {busy ? <ActivityIndicator size="small" color={color || colors.inkMuted} /> : <Ionicons name={ionicon} size={18} color={color || colors.inkMuted} />}
+    </TouchableOpacity>
+  );
 
   return (
-    <Card style={styles.card}>
-      <TouchableOpacity onPress={onPress}>
-        <View style={styles.header}>
-          <View style={styles.info}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.title}>{note.title}</Text>
-              {note.isFavorite && (
-                <Ionicons 
-                  name="star" 
-                  size={16} 
-                  color="#fbbf24" 
-                  style={styles.favoriteIcon}
-                />
-              )}
+    <Card style={{ marginBottom: spacing.md }}>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Abrir nota ${note.title}`} onPress={onPress} activeOpacity={0.8}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
+          <IconTile>
+            <Ionicons name="document-text-outline" size={20} color={colors.primarySoftText} />
+          </IconTile>
+
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <Text numberOfLines={1} style={{ flex: 1, color: colors.ink, fontSize: typography.bodyLarge, fontWeight: typography.weights.semibold }}>
+                {note.title}
+              </Text>
+              {note.isFavorite ? <Ionicons name="star" size={15} color={colors.warning} /> : null}
             </View>
-            <Text 
-              style={styles.content}
-              numberOfLines={3}
-            >
+            <Text numberOfLines={3} style={{ marginTop: spacing.xs, color: colors.inkMuted, fontSize: typography.body, lineHeight: 20 }}>
               {note.content}
             </Text>
-            <View style={styles.meta}>
-              {note.folder && (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons name="folder-outline" size={14} color={isDark ? '#6b7280' : '#9ca3af'} />
-                  <Text style={styles.folder}> {note.folder}</Text>
-                </View>
-              )}
-              <Text style={styles.date}>
-                {new Date(note.updatedAt).toLocaleDateString('pt-BR')}
-              </Text>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.sm }}>
+              {note.folder ? <Pill label={note.folder} icon={<Ionicons name="folder-outline" size={12} color={colors.inkMuted} />} /> : null}
+              <Pill label={new Date(note.updatedAt).toLocaleDateString('pt-BR')} />
             </View>
           </View>
         </View>
       </TouchableOpacity>
-      
-      <View style={styles.actions}>
+
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          marginTop: spacing.md,
+          paddingTop: spacing.md,
+          borderTopWidth: 1,
+          borderTopColor: colors.line,
+        }}
+      >
+        {smallAction('Excluir nota', 'trash-outline', onDelete, colors.dangerText, isDeleting)}
+        {smallAction('Editar nota', 'create-outline', onEdit)}
+        {smallAction(
+          note.isFavorite ? 'Remover das favoritas' : 'Marcar como favorita',
+          note.isFavorite ? 'star' : 'star-outline',
+          onToggleFavorite,
+          note.isFavorite ? colors.warning : colors.inkMuted,
+          isTogglingFavorite,
+        )}
         <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={onDelete}
-        >
-          <Ionicons name="trash-outline" size={16} color="#dc2626" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.copyButton}
-          onPress={onEdit}
-        >
-          <Ionicons name="create-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.favoriteButton}
-          onPress={onToggleFavorite}
-        >
-          <Ionicons 
-            name={note.isFavorite ? "star" : "star-outline"} 
-            size={16} 
-            color={note.isFavorite ? "#fbbf24" : (isDark ? '#9ca3af' : '#6b7280')} 
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.viewButton}
-          onPress={onView}
-        >
-          <View style={{
-            backgroundColor: '#16a34a',
-            paddingVertical: 8,
-            paddingHorizontal: 14,
-            borderRadius: 10,
+          accessibilityRole="button"
+          accessibilityLabel="Ver nota"
+          style={{
+            flex: 1,
+            minHeight: touch.minimum,
+            borderRadius: radii.md,
+            backgroundColor: colors.primary,
             alignItems: 'center',
-          }}>
-            <Text style={{
-              color: '#ffffff',
-              fontSize: 13,
-              fontWeight: '500',
-            }}>
-              Ver Nota
-            </Text>
-          </View>
+            justifyContent: 'center',
+            flexDirection: 'row',
+            gap: 6,
+          }}
+          onPress={onView}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="eye-outline" size={16} color={colors.onPrimary} />
+          <Text style={{ color: colors.onPrimary, fontSize: typography.label, fontWeight: typography.weights.semibold }}>
+            Ver nota
+          </Text>
         </TouchableOpacity>
       </View>
     </Card>
   );
 };
-

@@ -1,62 +1,71 @@
 import React from 'react';
-import { View, ViewStyle } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
+import { radii, shadows, spacing } from '../../theme/tokens';
+
+export type CardVariant = 'default' | 'outlined' | 'elevated' | 'muted' | 'hero';
 
 interface CardProps {
   children: React.ReactNode;
-  variant?: 'default' | 'outlined' | 'elevated';
+  variant?: CardVariant;
+  padding?: 'none' | 'sm' | 'md' | 'lg';
   style?: ViewStyle;
 }
 
 export const Card: React.FC<CardProps> = ({
   children,
   variant = 'default',
+  padding = 'md',
   style,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
 
-  const getCardStyle = (): ViewStyle => {
-    const baseStyle: ViewStyle = {
-      borderRadius: 12,
-      padding: 24,
-    };
+  const variantStyles: Record<CardVariant, ViewStyle> = {
+    default: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.line,
+      ...shadows.card,
+    },
+    outlined: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.line,
+    },
+    elevated: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.line,
+      ...shadows.pop,
+    },
+    muted: {
+      backgroundColor: colors.surfaceMuted,
+      borderWidth: 1,
+      borderColor: colors.line,
+    },
+    hero: {
+      backgroundColor: colors.hero,
+      borderWidth: 1,
+      borderColor: colors.heroBorder,
+      ...shadows.hero,
+    },
+  };
 
-    const variantStyles: Record<string, ViewStyle> = {
-      default: {
-        backgroundColor: isDark ? '#1f2937' : '#ffffff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: isDark ? 0.3 : 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-        borderWidth: 1,
-        borderColor: isDark ? '#374151' : '#e5e7eb',
-      },
-      outlined: {
-        backgroundColor: isDark ? '#1f2937' : '#ffffff',
-        borderWidth: 1,
-        borderColor: isDark ? '#374151' : '#e5e7eb',
-      },
-      elevated: {
-        backgroundColor: isDark ? '#1f2937' : '#ffffff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDark ? 0.4 : 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-        borderWidth: 1,
-        borderColor: isDark ? '#374151' : '#f3f4f6',
-      },
-    };
-
-    return {
-      ...baseStyle,
-      ...variantStyles[variant],
-    };
+  const paddingStyles = {
+    none: 0,
+    sm: spacing.lg,
+    md: spacing.xl,
+    lg: spacing['2xl'],
   };
 
   return (
-    <View style={[getCardStyle(), style]}>
+    <View
+      style={[
+        { borderRadius: radii['2xl'], padding: paddingStyles[padding], overflow: variant === 'hero' ? 'hidden' : 'visible' },
+        variantStyles[variant],
+        style,
+      ]}
+    >
       {children}
     </View>
   );

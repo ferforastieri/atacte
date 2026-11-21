@@ -1,27 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, BackHandler, TouchableOpacity } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useEffect, useRef, useState } from 'react';
+import { BackHandler, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Header, Card, SearchInput, SkeletonLoader } from '../../components/shared';
-import { BaseSelect, DatePicker } from '../../components/shared';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  BaseSelect,
+  Card,
+  DatePicker,
+  EmptyState,
+  Header,
+  Pagination,
+  SearchInput,
+  SkeletonTable,
+} from '../../components/shared';
+import { Pill, type PillTone } from '../../components/shared/Pill';
 import { userService } from '../../services/users/userService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from '../../navigation/AppNavigator';
+import { spacing, typography } from '../../theme/tokens';
 
 interface AuditLog {
   id: string;
-  userId?: string;
   action: string;
   details: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   createdAt: string;
-  user?: {
-    email: string;
-  };
+  user?: { email: string };
 }
 
 type AuditLogsScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'AuditLogs'>;
@@ -29,11 +35,14 @@ type AuditLogsScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, '
 export default function AuditLogsScreen() {
   const navigation = useNavigation<AuditLogsScreenNavigationProp>();
   const { isAdmin } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { colors, toggleTheme } = useTheme();
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [users, setUsers] = useState<Array<{ id: string; email: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, total: 0, limit: 10 });
+  const requestId = useRef(0);
 
-  const handleBack = () => {
-    navigation.jumpTo('Profile');
-  };
+  const handleBack = () => navigation.jumpTo('Profile');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -41,22 +50,11 @@ export default function AuditLogsScreen() {
         handleBack();
         return true;
       };
-
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       return () => subscription.remove();
-    }, [navigation])
+    }, [navigation]),
   );
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [users, setUsers] = useState<Array<{ id: string; email: string }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    total: 0,
-    limit: 10,
-    hasMore: true
-  });
-  
+
   const getDefaultStartDate = () => {
     const date = new Date();
     date.setDate(date.getDate() - 1);
@@ -73,32 +71,28 @@ export default function AuditLogsScreen() {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchUsers();
-      fetchLogs();
+      void fetchUsers();
+      void fetchLogs();
     }
   }, []);
 
   useEffect(() => {
-    if (isAdmin) {
-      const timeoutId = setTimeout(() => {
-        fetchLogs();
-      }, 300);
-      return () => clearTimeout(timeoutId);
-    }
+    if (!isAdmin) return;
+    const timeoutId = setTimeout(() => { void fetchLogs(); }, 300);
+    return () => clearTimeout(timeoutId);
   }, [filters.query, filters.userId, filters.action, filters.startDate, filters.endDate]);
 
   const fetchUsers = async () => {
     try {
       const response = await userService.getAllUsers();
-      if (response.success && response.data) {
-        setUsers(response.data);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
+      if (response.success && response.data) setUsers(response.data);
+    } catch {
+      // The user filter is optional.
     }
   };
 
   const fetchLogs = async (page = 1) => {
+    const currentRequest = ++requestId.current;
     setIsLoading(true);
     try {
       const offset = (page - 1) * pagination.limit;
@@ -111,55 +105,44 @@ export default function AuditLogsScreen() {
         limit: pagination.limit,
         offset,
       });
+      if (currentRequest !== requestId.current) return;
+
       if (response.success && response.data) {
-        setLogs(response.data);
-        const responsePagination = response.pagination;
-        if (responsePagination) {
-          setPagination(prev => ({
-            ...prev,
-            currentPage: page,
-            total: responsePagination.total,
-            totalPages: Math.ceil(responsePagination.total / prev.limit),
-            hasMore: page < Math.ceil(responsePagination.total / prev.limit)
-          }));
+        setLogs(response.data as AuditLog[]);
+        if (response.pagination) {
+          const totalPages = Math.max(1, Math.ceil(response.pagination.total / pagination.limit));
+          setPagination((previous) => ({ ...previous, currentPage: page, total: response.pagination!.total, totalPages }));
         }
       } else {
         setLogs([]);
-        setPagination(prev => ({ ...prev, hasMore: false, totalPages: 1 }));
+        setPagination((previous) => ({ ...previous, totalPages: 1 }));
       }
-    } catch (error) {
-      setLogs([]);
-      setPagination(prev => ({ ...prev, hasMore: false }));
+    } catch {
+      if (currentRequest === requestId.current) {
+        setLogs([]);
+        setPagination((previous) => ({ ...previous, totalPages: 1 }));
+      }
     } finally {
-      setIsLoading(false);
+      if (currentRequest === requestId.current) setIsLoading(false);
     }
   };
 
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= pagination.totalPages) {
-      fetchLogs(page);
-    }
-  };
-
-  const getActionClass = (action: string) => {
-    const classes: Record<string, { bg: string; text: string }> = {
-      LOGIN_SUCCESS: { bg: '#10b981', text: '#ffffff' },
-      LOGIN_FAILED: { bg: '#dc2626', text: '#ffffff' },
-      LOGOUT: { bg: '#6b7280', text: '#ffffff' },
-      PASSWORD_CREATED: { bg: '#3b82f6', text: '#ffffff' },
-      PASSWORD_UPDATED: { bg: '#f59e0b', text: '#ffffff' },
-      PASSWORD_DELETED: { bg: '#dc2626', text: '#ffffff' },
-      EXPORT_DATA: { bg: '#6366f1', text: '#ffffff' },
-      IMPORT_DATA: { bg: '#06b6d4', text: '#ffffff' },
-      NOTE_CREATED: { bg: '#3b82f6', text: '#ffffff' },
-      NOTE_UPDATED: { bg: '#f59e0b', text: '#ffffff' },
-      NOTE_DELETED: { bg: '#dc2626', text: '#ffffff' },
-      PROFILE_UPDATED: { bg: '#8b5cf6', text: '#ffffff' },
-      ACCOUNT_DELETED: { bg: '#dc2626', text: '#ffffff' },
-      SESSION_REVOKED: { bg: '#f97316', text: '#ffffff' },
-      LOCATION_UPDATED: { bg: '#14b8a6', text: '#ffffff' },
-    };
-    return classes[action] || { bg: '#6b7280', text: '#ffffff' };
+  const actionTones: Record<string, PillTone> = {
+    LOGIN_SUCCESS: 'success',
+    LOGIN_FAILED: 'danger',
+    LOGOUT: 'neutral',
+    PASSWORD_CREATED: 'info',
+    PASSWORD_UPDATED: 'warning',
+    PASSWORD_DELETED: 'danger',
+    EXPORT_DATA: 'accent',
+    IMPORT_DATA: 'info',
+    NOTE_CREATED: 'info',
+    NOTE_UPDATED: 'warning',
+    NOTE_DELETED: 'danger',
+    PROFILE_UPDATED: 'accent',
+    ACCOUNT_DELETED: 'danger',
+    SESSION_REVOKED: 'warning',
+    LOCATION_UPDATED: 'neutral',
   };
 
   const getActionLabel = (action: string) => {
@@ -178,32 +161,27 @@ export default function AuditLogsScreen() {
       PROFILE_UPDATED: 'Atualizar Perfil',
       ACCOUNT_DELETED: 'Deletar Conta',
       SESSION_REVOKED: 'Revogar Sessão',
-      LOCATION_UPDATED: 'Atualizar Localização'
+      LOCATION_UPDATED: 'Atualizar Localização',
     };
-    return labels[action] || action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    return labels[action] || action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const formatDateTime = (dateString: string) => new Date(dateString).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   const formatDetails = (details: Record<string, unknown> | string | null | undefined) => {
     if (!details) return '-';
     if (typeof details === 'string') return details;
-    if (typeof details === 'object') {
-      try {
-        return JSON.stringify(details, null, 2);
-      } catch {
-        return String(details);
-      }
+    try {
+      return JSON.stringify(details);
+    } catch {
+      return String(details);
     }
-    return String(details);
   };
 
   const actionOptions = [
@@ -227,196 +205,77 @@ export default function AuditLogsScreen() {
 
   const userOptions = [
     { value: '', label: 'Todos os usuários' },
-    ...users.map(user => ({ value: user.id, label: user.email })),
+    ...users.map((user) => ({ value: user.id, label: user.email })),
   ];
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark ? '#111827' : '#f9fafb',
-    },
-    scrollView: {
-      flex: 1,
-      padding: 20,
-    },
-    content: {
-      flexGrow: 1,
-      paddingBottom: 100,
-    },
-    filterCard: {
-      marginBottom: 20,
-    },
-    filterRow: {
-      flexDirection: 'row',
-      marginTop: 12,
-      gap: 12,
-    },
-    filterItem: {
-      flex: 1,
-    },
-    selectWrapper: {
-      height: 40,
-      justifyContent: 'center',
-    },
-    logCard: {
-      marginBottom: 12,
-      padding: 16,
-    },
-    logHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    logDate: {
-      fontSize: 12,
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
-    actionBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    actionBadgeText: {
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    logDetails: {
-      marginTop: 8,
-    },
-    detailRow: {
-      flexDirection: 'row',
-      marginBottom: 4,
-    },
-    detailLabel: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginRight: 8,
-    },
-    detailValue: {
-      fontSize: 12,
-      color: isDark ? '#d1d5db' : '#374151',
-      flex: 1,
-    },
-    emptyContainer: {
-      alignItems: 'center',
-      paddingVertical: 40,
-    },
-    emptyIcon: {
-      marginBottom: 16,
-    },
-    emptyTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#f9fafb' : '#111827',
-      marginBottom: 4,
-    },
-    emptyText: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-      textAlign: 'center',
-    },
-    paginationContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      borderTopWidth: 1,
-      borderTopColor: isDark ? '#374151' : '#e5e7eb',
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-    },
-    paginationButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-    },
-    paginationButtonDisabled: {
-      opacity: 0.5,
-    },
-    paginationButtonText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: isDark ? '#d1d5db' : '#374151',
-      marginHorizontal: 4,
-    },
-    paginationButtonTextDisabled: {
-      color: isDark ? '#4b5563' : '#9ca3af',
-    },
-    paginationInfo: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: isDark ? '#d1d5db' : '#374151',
-    },
-  });
+  const hasActiveFilters = Boolean(filters.query || filters.userId || filters.action);
 
   if (!isAdmin) {
     return (
-      <View style={styles.container}>
+      <View style={{ flex: 1, backgroundColor: colors.canvas }}>
         <Header title="Logs de Auditoria" showBackButton onBack={handleBack} onThemeToggle={toggleTheme} />
-        <View style={styles.content}>
-          <Text style={styles.emptyText}>Acesso negado</Text>
+        <View style={{ padding: spacing.screen }}>
+          <EmptyState icon="lock-closed-outline" title="Acesso negado" description="Esta área é exclusiva de administradores." />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Header title="Logs de Auditoria" showBackButton onBack={handleBack} onThemeToggle={toggleTheme} />
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Card style={styles.filterCard}>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <Header
+        title="Logs de Auditoria"
+        subtitle="Acessos e alterações do cofre"
+        showBackButton
+        onBack={handleBack}
+        onThemeToggle={toggleTheme}
+        icon={<Ionicons name="shield-checkmark-outline" size={22} color={colors.primarySoftText} />}
+      />
+
+      <ScrollView contentContainerStyle={{ padding: spacing.screen, paddingBottom: 56 }} showsVerticalScrollIndicator={false}>
+        <Card style={{ marginBottom: spacing.lg }}>
           <SearchInput
             placeholder="Buscar logs..."
             value={filters.query}
-            onChangeText={(text) => setFilters({ ...filters, query: text })}
+            onChangeText={(text) => setFilters((current) => ({ ...current, query: text }))}
+            onSearch={(text) => setFilters((current) => ({ ...current, query: text }))}
           />
-          
-          <View style={styles.filterRow}>
-            <View style={[styles.filterItem, styles.selectWrapper]}>
+
+          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+            <View style={{ flex: 1 }}>
               <BaseSelect
                 value={filters.userId}
                 placeholder="Todos os usuários"
                 options={userOptions}
-                onChange={(value) => setFilters({ ...filters, userId: value })}
+                onChange={(value) => setFilters((current) => ({ ...current, userId: value }))}
                 style={{ marginBottom: 0 }}
               />
             </View>
-            
-            <View style={[styles.filterItem, styles.selectWrapper]}>
+            <View style={{ flex: 1 }}>
               <BaseSelect
                 value={filters.action}
                 placeholder="Todas as ações"
                 options={actionOptions}
-                onChange={(value) => setFilters({ ...filters, action: value })}
+                onChange={(value) => setFilters((current) => ({ ...current, action: value }))}
                 style={{ marginBottom: 0 }}
               />
             </View>
           </View>
 
-          <View style={styles.filterRow}>
-            <View style={styles.filterItem}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+            <View style={{ flex: 1 }}>
               <DatePicker
                 value={filters.startDate}
                 placeholder="Data inicial"
-                onChange={(date) => setFilters({ ...filters, startDate: date })}
+                onChange={(date) => setFilters((current) => ({ ...current, startDate: date }))}
                 style={{ marginBottom: 0 }}
               />
             </View>
-            
-            <View style={styles.filterItem}>
+            <View style={{ flex: 1 }}>
               <DatePicker
                 value={filters.endDate}
                 placeholder="Data final"
-                onChange={(date) => setFilters({ ...filters, endDate: date })}
+                onChange={(date) => setFilters((current) => ({ ...current, endDate: date }))}
                 style={{ marginBottom: 0 }}
               />
             </View>
@@ -424,96 +283,62 @@ export default function AuditLogsScreen() {
         </Card>
 
         {isLoading ? (
-          <SkeletonLoader variant="default" />
+          <SkeletonTable rows={5} />
         ) : logs.length === 0 ? (
-          <Card style={styles.emptyContainer}>
-            <Ionicons 
-              name="document-text-outline" 
-              size={48} 
-              color={isDark ? '#6b7280' : '#9ca3af'}
-              style={styles.emptyIcon}
-            />
-            <Text style={styles.emptyTitle}>Nenhum log encontrado</Text>
-            <Text style={styles.emptyText}>
-              {logs.length === 0 ? 'Você ainda não possui logs de auditoria.' : 'Tente ajustar os filtros de busca.'}
-            </Text>
-          </Card>
+          <EmptyState
+            icon="document-text-outline"
+            title="Nenhum log encontrado"
+            description={hasActiveFilters ? 'Tente ajustar os filtros de busca.' : 'Você ainda não possui logs de auditoria.'}
+          />
         ) : (
-          logs.map((log) => {
-            const actionClass = getActionClass(log.action);
-            return (
-              <Card key={log.id} style={styles.logCard}>
-                <View style={styles.logHeader}>
-                  <View style={[styles.actionBadge, { backgroundColor: actionClass.bg }]}>
-                    <Text style={[styles.actionBadgeText, { color: actionClass.text }]}>
-                      {getActionLabel(log.action)}
-                    </Text>
-                  </View>
-                  <Text style={styles.logDate}>{formatDateTime(log.createdAt)}</Text>
+          <View style={{ gap: spacing.md }}>
+            {logs.map((log) => (
+              <Card key={log.id}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, marginBottom: spacing.md }}>
+                  <Pill label={getActionLabel(log.action)} tone={actionTones[log.action] || 'neutral'} />
+                  <Text style={{ fontSize: typography.caption, color: colors.inkMuted }}>{formatDateTime(log.createdAt)}</Text>
                 </View>
-                
-                <View style={styles.logDetails}>
-                  {log.user && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Usuário:</Text>
-                      <Text style={styles.detailValue}>{log.user.email}</Text>
+
+                <View style={{ gap: 5 }}>
+                  {log.user ? (
+                    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                      <Text style={{ minWidth: 70, fontSize: typography.caption, fontWeight: typography.weights.semibold, color: colors.inkMuted }}>Usuário</Text>
+                      <Text style={{ flex: 1, fontSize: typography.caption, color: colors.ink }}>{log.user.email}</Text>
                     </View>
-                  )}
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Detalhes:</Text>
-                    <Text style={styles.detailValue} numberOfLines={3}>
+                  ) : null}
+                  <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                    <Text style={{ minWidth: 70, fontSize: typography.caption, fontWeight: typography.weights.semibold, color: colors.inkMuted }}>Detalhes</Text>
+                    <Text numberOfLines={3} style={{ flex: 1, fontFamily: typography.mono, fontSize: typography.caption, lineHeight: 17, color: colors.inkMuted }}>
                       {formatDetails(log.details)}
                     </Text>
                   </View>
-                  {log.ipAddress && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>IP:</Text>
-                      <Text style={styles.detailValue}>{log.ipAddress}</Text>
+                  {log.ipAddress ? (
+                    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                      <Text style={{ minWidth: 70, fontSize: typography.caption, fontWeight: typography.weights.semibold, color: colors.inkMuted }}>IP</Text>
+                      <Text style={{ flex: 1, fontSize: typography.caption, color: colors.inkMuted }}>{log.ipAddress}</Text>
                     </View>
-                  )}
-                  {log.userAgent && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>User Agent:</Text>
-                      <Text style={styles.detailValue} numberOfLines={1}>
-                        {log.userAgent}
-                      </Text>
+                  ) : null}
+                  {log.userAgent ? (
+                    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                      <Text style={{ minWidth: 70, fontSize: typography.caption, fontWeight: typography.weights.semibold, color: colors.inkMuted }}>User Agent</Text>
+                      <Text numberOfLines={1} style={{ flex: 1, fontSize: typography.caption, color: colors.inkMuted }}>{log.userAgent}</Text>
                     </View>
-                  )}
+                  ) : null}
                 </View>
               </Card>
-            );
-          })
-        )}
-
-        {!isLoading && logs.length > 0 && pagination.totalPages > 1 && (
-          <View style={styles.paginationContainer}>
-            <TouchableOpacity
-              style={[styles.paginationButton, pagination.currentPage === 1 && styles.paginationButtonDisabled]}
-              onPress={() => goToPage(pagination.currentPage - 1)}
-              disabled={pagination.currentPage === 1}
-            >
-              <Ionicons name="chevron-back" size={20} color={pagination.currentPage === 1 ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
-              <Text style={[styles.paginationButtonText, pagination.currentPage === 1 && styles.paginationButtonTextDisabled]}>
-                Anterior
-              </Text>
-            </TouchableOpacity>
-
-            <Text style={styles.paginationInfo}>
-              Página {pagination.currentPage} de {pagination.totalPages}
-            </Text>
-
-            <TouchableOpacity
-              style={[styles.paginationButton, pagination.currentPage === pagination.totalPages && styles.paginationButtonDisabled]}
-              onPress={() => goToPage(pagination.currentPage + 1)}
-              disabled={pagination.currentPage === pagination.totalPages}
-            >
-              <Text style={[styles.paginationButtonText, pagination.currentPage === pagination.totalPages && styles.paginationButtonTextDisabled]}>
-                Próxima
-              </Text>
-              <Ionicons name="chevron-forward" size={20} color={pagination.currentPage === pagination.totalPages ? (isDark ? '#4b5563' : '#9ca3af') : (isDark ? '#d1d5db' : '#374151')} />
-            </TouchableOpacity>
+            ))}
           </View>
         )}
+
+        {!isLoading && logs.length > 0 ? (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPrevious={() => void fetchLogs(pagination.currentPage - 1)}
+            onNext={() => void fetchLogs(pagination.currentPage + 1)}
+            busy={isLoading}
+          />
+        ) : null}
       </ScrollView>
     </View>
   );
