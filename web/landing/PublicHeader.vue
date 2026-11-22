@@ -1,17 +1,17 @@
 <template>
-  <header class="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
-    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
-      <div class="flex h-16 items-center justify-between">
-        <a :href="base" class="flex items-center" aria-label="Atacte, início">
+  <header class="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur transition-colors duration-200">
+    <div class="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10 xl:px-12">
+      <div class="flex h-16 items-center justify-between gap-3">
+        <a :href="base" class="flex flex-shrink-0 items-center" aria-label="Atacte, início">
           <PublicLogo :show-text="true" />
         </a>
-        <nav class="flex items-center space-x-1 text-sm font-medium" aria-label="Navegação principal">
-          <a :href="`${base}#recursos`" :class="linkClass('section')" class="hidden sm:block">Recursos</a>
-          <a :href="`${base}#como-funciona`" :class="linkClass('section')" class="hidden sm:block">Como funciona</a>
+        <nav class="flex items-center gap-1 text-sm font-medium" aria-label="Navegação principal">
+          <a :href="`${base}#recursos`" :class="linkClass('section')" class="hidden sm:inline-flex">Recursos</a>
+          <a :href="`${base}#como-funciona`" :class="linkClass('section')" class="hidden sm:inline-flex">Como funciona</a>
           <a :href="`${base}docs/`" :class="linkClass('docs')">Documentação</a>
-          <a :href="`${base}releases/`" :class="linkClass('releases')" class="hidden sm:block">Releases</a>
-          <a :href="`${base}#instalacao`" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">Instalar</a>
-          <button type="button" class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:hover:bg-gray-700" :aria-label="isDark ? 'Alternar para modo claro' : 'Alternar para modo escuro'" :title="isDark ? 'Alternar para modo claro' : 'Alternar para modo escuro'" @click="toggleTheme"><SunIcon v-if="isDark" class="h-5 w-5 text-yellow-500" /><MoonIcon v-else class="h-5 w-5 text-gray-600 dark:text-gray-300" /></button>
+          <a :href="`${base}releases/`" :class="linkClass('releases')" class="hidden sm:inline-flex">Releases</a>
+          <a :href="`${base}#instalacao`" class="ml-1 hidden items-center justify-center rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas sm:inline-flex">Instalar</a>
+          <button type="button" class="ml-1 flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500" :aria-label="isDark ? 'Alternar para modo claro' : 'Alternar para modo escuro'" :title="isDark ? 'Alternar para modo claro' : 'Alternar para modo escuro'" @click="toggleTheme"><SunIcon v-if="isDark" class="h-5 w-5 text-warning-400" /><MoonIcon v-else class="h-5 w-5" /></button>
         </nav>
       </div>
     </div>
@@ -28,8 +28,8 @@ const base = import.meta.env.BASE_URL
 const props = withDefaults(defineProps<{ active?: 'docs' | 'releases' | 'landing' }>(), { active: 'landing' })
 const isDark = ref(document.documentElement.classList.contains('dark'))
 const linkClass = (name: 'section' | 'docs' | 'releases') => props.active === name
-  ? 'rounded-lg bg-primary-100 px-3 py-2 text-primary-700 dark:bg-primary-900 dark:text-primary-300'
-  : 'rounded-lg px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+  ? 'nav-pill nav-pill-active'
+  : 'nav-pill nav-pill-idle'
 const toggleTheme = () => {
   isDark.value = !isDark.value
   document.documentElement.classList.toggle('dark', isDark.value)
