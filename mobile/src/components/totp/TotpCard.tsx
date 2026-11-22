@@ -140,11 +140,16 @@ export const TotpCard: React.FC<TotpCardProps> = ({
                 {password.username}
               </Text>
             ) : null}
-            <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.sm }}>
-              {password.folder ? <Pill label={password.folder} icon={<Ionicons name="folder-outline" size={12} color={colors.inkMuted} />} /> : null}
-              {password.totpEnabled ? <Pill label="TOTP" tone="info" icon={<Ionicons name="shield-checkmark-outline" size={12} color={colors.infoText} />} /> : null}
-            </View>
+            {password.folder ? (
+              <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.sm }}>
+                <Pill label={password.folder} icon={<Ionicons name="folder-outline" size={12} color={colors.inkMuted} />} />
+              </View>
+            ) : null}
           </View>
+
+          {password.totpEnabled ? (
+            <Pill label="TOTP" tone="info" style={{ flexShrink: 0 }} icon={<Ionicons name="shield-checkmark-outline" size={12} color={colors.infoText} />} />
+          ) : null}
         </View>
       </TouchableOpacity>
 
