@@ -81,22 +81,22 @@
               <h2 class="section-title">Informações Pessoais</h2>
             </div>
 
-            <div class="space-y-2.5">
-              <div v-if="authStore.user?.name" class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Nome</p>
-                <p class="mt-1 text-sm text-ink">{{ authStore.user.name }}</p>
+            <div class="data-list">
+              <div v-if="authStore.user?.name" class="data-field">
+                <p class="data-field-label">Nome</p>
+                <p class="data-field-value">{{ authStore.user.name }}</p>
               </div>
-              <div class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Email</p>
-                <p class="mt-1 break-all text-sm text-ink">{{ authStore.userEmail }}</p>
+              <div class="data-field">
+                <p class="data-field-label">Email</p>
+                <p class="data-field-value break-all">{{ authStore.userEmail }}</p>
               </div>
-              <div v-if="authStore.user?.phoneNumber" class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Telefone</p>
-                <p class="mt-1 text-sm text-ink">{{ authStore.user.phoneNumber }}</p>
+              <div v-if="authStore.user?.phoneNumber" class="data-field">
+                <p class="data-field-label">Telefone</p>
+                <p class="data-field-value">{{ authStore.user.phoneNumber }}</p>
               </div>
-              <div class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">ID do Usuário</p>
-                <p class="mt-1 break-all font-mono text-xs text-ink-muted">{{ authStore.userId }}</p>
+              <div class="data-field">
+                <p class="data-field-label">ID do Usuário</p>
+                <p class="data-field-value break-all font-mono text-xs text-ink-muted">{{ authStore.userId }}</p>
               </div>
             </div>
           </BaseCard>
@@ -107,18 +107,18 @@
               <h2 class="section-title">Informações da Conta</h2>
             </div>
 
-            <div class="space-y-2.5">
-              <div class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Data de Criação</p>
-                <p class="mt-1 text-sm text-ink">{{ formatDate(authStore.user?.createdAt) }}</p>
+            <div class="data-list">
+              <div class="data-field">
+                <p class="data-field-label">Data de Criação</p>
+                <p class="data-field-value">{{ formatDate(authStore.user?.createdAt) }}</p>
               </div>
-              <div class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Última Atualização</p>
-                <p class="mt-1 text-sm text-ink">{{ formatDate(authStore.user?.updatedAt) }}</p>
+              <div class="data-field">
+                <p class="data-field-label">Última Atualização</p>
+                <p class="data-field-value">{{ formatDate(authStore.user?.updatedAt) }}</p>
               </div>
-              <div v-if="authStore.user?.lastLogin" class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Último Login</p>
-                <p class="mt-1 text-sm text-ink">{{ formatDate(authStore.user.lastLogin) }}</p>
+              <div v-if="authStore.user?.lastLogin" class="data-field">
+                <p class="data-field-label">Último Login</p>
+                <p class="data-field-value">{{ formatDate(authStore.user.lastLogin) }}</p>
               </div>
             </div>
           </BaseCard>
@@ -130,16 +130,16 @@
             <h2 class="section-title">Estatísticas</h2>
           </div>
 
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div class="rounded-xl border border-line bg-surface-muted p-5 text-center">
+          <div class="grid grid-cols-1 divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div class="px-4 py-4 text-center first:pl-0 last:pr-0">
               <p class="text-3xl font-semibold text-primary-700 dark:text-primary-400">{{ passwordsStore.totalCount }}</p>
               <p class="mt-1 text-xs text-ink-muted">Total de Senhas</p>
             </div>
-            <div class="rounded-xl border border-line bg-surface-muted p-5 text-center">
+            <div class="px-4 py-4 text-center first:pl-0 last:pr-0">
               <p class="text-3xl font-semibold text-danger-500">{{ passwordsStore.favoriteCount }}</p>
               <p class="mt-1 text-xs text-ink-muted">Favoritas</p>
             </div>
-            <div class="rounded-xl border border-line bg-surface-muted p-5 text-center">
+            <div class="px-4 py-4 text-center first:pl-0 last:pr-0">
               <p class="text-3xl font-semibold text-info-500">{{ totpEnabledCount }}</p>
               <p class="mt-1 text-xs text-ink-muted">Com TOTP</p>
             </div>

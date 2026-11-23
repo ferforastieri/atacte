@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -44,14 +44,10 @@ export default function ProfileScreen() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  useEffect(() => {
-    void loadProfileData();
-    void loadStats();
-  }, []);
-
   useFocusEffect(
     React.useCallback(() => {
       void loadProfileData();
+      void loadStats();
     }, []),
   );
 
@@ -66,13 +62,12 @@ export default function ProfileScreen() {
 
   const loadStats = async () => {
     try {
-      const response = await passwordService.getPasswords({ limit: 1000 });
+      const response = await passwordService.getCounts();
       if (response.success && response.data) {
-        const passwords = Array.isArray(response.data) ? response.data : [];
         setStats({
-          totalPasswords: passwords.length,
-          favoritePasswords: passwords.filter((entry: { isFavorite?: boolean }) => entry.isFavorite).length,
-          totpPasswords: passwords.filter((entry: { totpEnabled?: boolean }) => entry.totpEnabled).length,
+          totalPasswords: response.data.total,
+          favoritePasswords: response.data.favorites,
+          totpPasswords: response.data.totp,
         });
       }
     } catch {
@@ -109,6 +104,17 @@ export default function ProfileScreen() {
     return value.charAt(0).toUpperCase();
   };
 
+  const infoRows: Array<{ label: string; value: string; mono?: boolean; status?: boolean }> = [
+    { label: 'ID', value: profileData?.id || 'N/A', mono: true },
+    { label: 'Email', value: profileData?.email || 'N/A' },
+    { label: 'Nome', value: profileData?.name || 'Não informado' },
+    { label: 'Telefone', value: profileData?.phoneNumber || 'Não informado' },
+    { label: 'Função', value: profileData?.role === 'ADMIN' ? 'Administrador' : 'Usuário' },
+    { label: 'Status', value: profileData?.isActive ? 'Ativo' : 'Inativo', status: true },
+    ...(profileData?.createdAt ? [{ label: 'Data de criação', value: new Date(profileData.createdAt).toLocaleString('pt-BR') }] : []),
+    ...(profileData?.lastLogin ? [{ label: 'Último login', value: new Date(profileData.lastLogin).toLocaleString('pt-BR') }] : []),
+  ];
+
   const actionRow = (label: string, ionicon: keyof typeof Ionicons.glyphMap, onPress: () => void, tone: 'default' | 'danger' = 'default') => (
     <TouchableOpacity
       accessibilityRole="button"
@@ -119,8 +125,8 @@ export default function ProfileScreen() {
         alignItems: 'center',
         gap: spacing.md,
         paddingHorizontal: spacing.lg,
-        borderRadius: radii.lg,
-        backgroundColor: tone === 'danger' ? colors.dangerSoft : colors.surfaceMuted,
+        borderTopWidth: 1,
+        borderTopColor: colors.line,
       }}
       onPress={onPress}
       activeOpacity={0.78}
@@ -185,44 +191,31 @@ export default function ProfileScreen() {
 
         <Card style={{ marginBottom: spacing.lg }}>
           <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Informações Pessoais</Text>
-          <View style={{ gap: spacing.sm }}>
-            {[
-              { label: 'ID', value: profileData?.id || 'N/A', mono: true },
-              { label: 'Email', value: profileData?.email || 'N/A' },
-              { label: 'Nome', value: profileData?.name || 'Não informado' },
-              { label: 'Telefone', value: profileData?.phoneNumber || 'Não informado' },
-              { label: 'Função', value: profileData?.role === 'ADMIN' ? 'Administrador' : 'Usuário' },
-            ].map((row) => (
-              <View key={row.label} style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
+          <View>
+            {infoRows.map((row, index) => (
+              <View
+                key={row.label}
+                style={{
+                  paddingVertical: spacing.md,
+                  borderBottomWidth: index < infoRows.length - 1 ? 1 : 0,
+                  borderBottomColor: colors.line,
+                }}
+              >
                 <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>{row.label.toUpperCase()}</Text>
-                <Text
-                  numberOfLines={1}
-                  ellipsizeMode="middle"
-                  style={{ marginTop: 3, fontSize: typography.body, color: colors.ink, fontFamily: row.mono ? typography.mono : undefined }}
-                >
-                  {row.value}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 }}>
+                  {row.status ? (
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: profileData?.isActive ? colors.success : colors.danger }} />
+                  ) : null}
+                  <Text
+                    numberOfLines={1}
+                    ellipsizeMode="middle"
+                    style={{ flex: 1, fontSize: typography.body, color: colors.ink, fontFamily: row.mono ? typography.mono : undefined }}
+                  >
+                    {row.value}
+                  </Text>
+                </View>
               </View>
             ))}
-            <View style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
-              <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>STATUS</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 5 }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: profileData?.isActive ? colors.success : colors.danger }} />
-                <Text style={{ fontSize: typography.body, color: colors.ink }}>{profileData?.isActive ? 'Ativo' : 'Inativo'}</Text>
-              </View>
-            </View>
-            {profileData?.createdAt ? (
-              <View style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
-                <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>DATA DE CRIAÇÃO</Text>
-                <Text style={{ marginTop: 3, fontSize: typography.body, color: colors.ink }}>{new Date(profileData.createdAt).toLocaleString('pt-BR')}</Text>
-              </View>
-            ) : null}
-            {profileData?.lastLogin ? (
-              <View style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
-                <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>ÚLTIMO LOGIN</Text>
-                <Text style={{ marginTop: 3, fontSize: typography.body, color: colors.ink }}>{new Date(profileData.lastLogin).toLocaleString('pt-BR')}</Text>
-              </View>
-            ) : null}
           </View>
 
           <Button
@@ -235,13 +228,22 @@ export default function ProfileScreen() {
 
         <Card style={{ marginBottom: spacing.lg }}>
           <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Estatísticas</Text>
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <View style={{ flexDirection: 'row' }}>
             {[
               { value: stats.totalPasswords, label: 'Total de Senhas', color: colors.primaryText },
               { value: stats.favoritePasswords, label: 'Favoritas', color: colors.danger },
               { value: stats.totpPasswords, label: 'Com TOTP', color: colors.info },
-            ].map((stat) => (
-              <View key={stat.label} style={{ flex: 1, alignItems: 'center', padding: spacing.md, borderRadius: radii.lg, backgroundColor: colors.surfaceMuted }}>
+            ].map((stat, index) => (
+              <View
+                key={stat.label}
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  paddingVertical: spacing.md,
+                  borderLeftWidth: index > 0 ? 1 : 0,
+                  borderLeftColor: colors.line,
+                }}
+              >
                 <Text style={{ fontSize: 24, fontWeight: typography.weights.bold, color: stat.color }}>{stat.value}</Text>
                 <Text style={{ marginTop: 3, fontSize: typography.caption, color: colors.inkMuted, textAlign: 'center' }}>{stat.label}</Text>
               </View>
@@ -252,7 +254,7 @@ export default function ProfileScreen() {
         {isAdmin ? (
           <Card style={{ marginBottom: spacing.lg }}>
             <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Administração</Text>
-            <View style={{ gap: spacing.sm }}>
+            <View>
               {actionRow('Logs de Auditoria', 'document-text-outline', () => navigation.navigate('AuditLogs'))}
               {actionRow('Sessões', 'desktop-outline', () => navigation.navigate('Sessions'))}
               {actionRow('Usuários', 'people-outline', () => navigation.navigate('Users'))}
@@ -262,7 +264,7 @@ export default function ProfileScreen() {
 
         <Card>
           <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Ações</Text>
-          <View style={{ gap: spacing.sm }}>
+          <View>
             {actionRow('Configurações', 'settings-outline', () => navigation.navigate('Settings'))}
             {actionRow('Sair', 'exit-outline', () => setShowLogoutModal(true), 'danger')}
           </View>

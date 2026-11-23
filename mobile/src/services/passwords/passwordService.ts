@@ -63,6 +63,16 @@ interface PasswordListResponse {
   message?: string;
 }
 
+interface PasswordCountsResponse {
+  success: boolean;
+  data?: {
+    total: number;
+    favorites: number;
+    totp: number;
+  };
+  message?: string;
+}
+
 class PasswordService {
   private async makeRequest<T = { success: boolean; data?: unknown; message?: string }>(
     endpoint: string, 
@@ -101,6 +111,10 @@ class PasswordService {
       method: 'GET',
       params: params,
     });
+  }
+
+  async getCounts(): Promise<PasswordCountsResponse> {
+    return this.makeRequest('/passwords/counts');
   }
 
   async createPassword(passwordData: CreatePasswordRequest): Promise<{ success: boolean; data?: PasswordEntry; message?: string }> {

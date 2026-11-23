@@ -86,14 +86,14 @@
               </button>
             </div>
 
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Nome</p>
-                <p class="mt-1 break-words text-sm font-medium text-ink">{{ password.name }}</p>
+            <div class="data-list">
+              <div class="data-field">
+                <p class="data-field-label">Nome</p>
+                <p class="data-field-value font-medium">{{ password.name }}</p>
               </div>
 
-              <div v-if="password.website" class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Website</p>
+              <div v-if="password.website" class="data-field">
+                <p class="data-field-label">Website</p>
                 <a
                   :href="password.website"
                   target="_blank"
@@ -104,13 +104,13 @@
                 </a>
               </div>
 
-              <div v-if="password.username" class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Usuário</p>
+              <div v-if="password.username" class="data-field">
+                <p class="data-field-label">Usuário</p>
                 <div class="mt-1 flex items-center gap-2">
                   <p class="min-w-0 flex-1 break-all text-sm font-medium text-ink">{{ password.username }}</p>
                   <button
                     type="button"
-                    class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-surface hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50"
+                    class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50"
                     :disabled="copyingField === 'username'"
                     aria-label="Copiar usuário"
                     @click="handleCopyToClipboard(password.username, 'username')"
@@ -124,9 +124,9 @@
                 </div>
               </div>
 
-              <div v-if="password.folder" class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Pasta</p>
-                <p class="mt-1 flex items-center gap-1.5 text-sm font-medium text-ink">
+              <div v-if="password.folder" class="data-field">
+                <p class="data-field-label">Pasta</p>
+                <p class="data-field-value flex items-center gap-1.5 font-medium">
                   <FolderIcon class="h-4 w-4 text-ink-subtle" />
                   {{ password.folder }}
                 </p>
@@ -213,11 +213,11 @@
               <h2 class="section-title">Campos Personalizados</h2>
             </div>
 
-            <div class="space-y-2.5">
+            <div class="data-list">
               <div
                 v-for="field in password.customFields"
                 :key="field.id"
-                class="flex items-center justify-between gap-3 rounded-xl bg-surface-muted p-3.5"
+                class="data-field flex items-center justify-between gap-3"
               >
                 <div class="min-w-0 flex-1">
                   <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">{{ field.fieldName }}</p>
@@ -228,7 +228,7 @@
 
                 <button
                   type="button"
-                  class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-surface hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50"
+                  class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50"
                   :disabled="copyingField === field.id"
                   :aria-label="`Copiar ${field.fieldName}`"
                   @click="handleCopyToClipboard(field.value, field.id)"
@@ -250,7 +250,7 @@
               </div>
               <h2 class="section-title">Notas</h2>
             </div>
-            <p class="whitespace-pre-wrap rounded-xl bg-surface-muted p-4 text-sm leading-relaxed text-ink-muted">{{ password.notes }}</p>
+            <p class="whitespace-pre-wrap border-t border-line pt-4 text-sm leading-relaxed text-ink-muted">{{ password.notes }}</p>
           </BaseCard>
         </div>
 
@@ -297,18 +297,18 @@
 
           <BaseCard>
             <h2 class="section-title mb-4">Informações</h2>
-            <div class="space-y-3">
-              <div class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Criado</p>
-                <p class="mt-1 text-sm text-ink">{{ formatDate(password.createdAt) }}</p>
+            <div class="data-list">
+              <div class="data-field">
+                <p class="data-field-label">Criado</p>
+                <p class="data-field-value">{{ formatDate(password.createdAt) }}</p>
               </div>
-              <div class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Atualizado</p>
-                <p class="mt-1 text-sm text-ink">{{ formatDate(password.updatedAt) }}</p>
+              <div class="data-field">
+                <p class="data-field-label">Atualizado</p>
+                <p class="data-field-value">{{ formatDate(password.updatedAt) }}</p>
               </div>
-              <div v-if="password.lastUsed" class="rounded-xl bg-surface-muted p-3.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">Último uso</p>
-                <p class="mt-1 text-sm text-ink">{{ formatDate(password.lastUsed) }}</p>
+              <div v-if="password.lastUsed" class="data-field">
+                <p class="data-field-label">Último uso</p>
+                <p class="data-field-value">{{ formatDate(password.lastUsed) }}</p>
               </div>
             </div>
           </BaseCard>
