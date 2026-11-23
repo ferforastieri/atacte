@@ -93,7 +93,7 @@
         </button>
       </section>
 
-      <section class="surface-card mb-5 p-4 sm:mb-6">
+      <section class="mb-5 border-b border-line pb-5 sm:mb-6">
         <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
           <div class="min-w-0 flex-1">
             <SearchInput

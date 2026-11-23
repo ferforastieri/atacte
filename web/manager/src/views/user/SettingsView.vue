@@ -19,7 +19,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-3 rounded-xl border border-line bg-surface-muted p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-col gap-3 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 class="text-sm font-medium text-ink">Alterar Senha Master</h3>
               <p class="mt-0.5 text-sm text-ink-muted">Atualize sua senha master.</p>
@@ -39,7 +39,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-3 rounded-xl border border-line bg-surface-muted p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-col gap-3 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 class="text-sm font-medium text-ink">Tema</h3>
               <p class="mt-0.5 text-sm text-ink-muted">Claro, escuro ou automático.</p>
@@ -70,7 +70,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-3 rounded-xl border border-danger-200 bg-surface p-4 sm:flex-row sm:items-center sm:justify-between dark:border-danger-900">
+          <div class="flex flex-col gap-3 border-t border-danger-200 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-danger-900">
             <div>
               <h3 class="text-sm font-medium text-ink">Deletar Conta</h3>
               <p class="mt-0.5 text-sm text-ink-muted">Esta ação não pode ser desfeita. Todos os dados serão perdidos permanentemente.</p>

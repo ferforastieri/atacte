@@ -233,7 +233,7 @@ export default function AuditLogsScreen() {
       />
 
       <ScrollView contentContainerStyle={{ padding: spacing.screen, paddingBottom: 56 }} showsVerticalScrollIndicator={false}>
-        <Card style={{ marginBottom: spacing.lg }}>
+        <View style={{ marginBottom: spacing.lg, paddingBottom: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.line }}>
           <SearchInput
             placeholder="Buscar logs..."
             value={filters.query}
@@ -280,7 +280,7 @@ export default function AuditLogsScreen() {
               />
             </View>
           </View>
-        </Card>
+        </View>
 
         {isLoading ? (
           <SkeletonTable rows={5} />

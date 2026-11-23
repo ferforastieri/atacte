@@ -337,8 +337,15 @@ export default function PasswordDetailScreen() {
               { label: 'Usuário', value: password.username },
               { label: 'Pasta', value: password.folder },
               { label: 'TOTP', value: password.totpEnabled ? 'Habilitado' : 'Desabilitado' },
-            ].filter((row) => row.value).map((row) => (
-              <View key={row.label} style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted }}>
+            ].filter((row) => row.value).map((row, index, rows) => (
+              <View
+                key={row.label}
+                style={{
+                  paddingVertical: spacing.md,
+                  borderBottomWidth: index < rows.length - 1 ? 1 : 0,
+                  borderBottomColor: colors.line,
+                }}
+              >
                 <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, letterSpacing: 0.6, color: colors.inkSubtle }}>
                   {row.label.toUpperCase()}
                 </Text>
@@ -416,8 +423,15 @@ export default function PasswordDetailScreen() {
               </IconTile>
               <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink }}>Campos Personalizados</Text>
             </View>
-            {password.customFields.map((field) => (
-              <View key={field.id} style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted, marginBottom: spacing.sm }}>
+            {password.customFields.map((field, index, fields) => (
+              <View
+                key={field.id}
+                style={{
+                  paddingVertical: spacing.md,
+                  borderBottomWidth: index < fields.length - 1 ? 1 : 0,
+                  borderBottomColor: colors.line,
+                }}
+              >
                 <Text style={{ fontSize: typography.caption, fontWeight: typography.weights.semibold, color: colors.inkSubtle }}>{field.name.toUpperCase()}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 }}>
                   <Text style={{ flex: 1, fontFamily: typography.mono, fontSize: typography.body, color: colors.ink }}>{field.value}</Text>

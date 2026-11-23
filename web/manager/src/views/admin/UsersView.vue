@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-canvas">
     <AppHeader :show-logo="true" :show-navigation="true" />
 
-    <main class="mx-auto w-full max-w-7xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-10 lg:px-10">
+    <main class="mx-auto w-full max-w-[1600px] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-10 lg:px-10">
       <section class="mb-6">
         <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-primary-400">Administração</p>
         <h1 class="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Gerenciar Usuários</h1>

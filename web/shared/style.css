@@ -194,7 +194,23 @@
   }
 
   .table-shell {
-    @apply overflow-x-auto rounded-xl border border-line;
+    @apply overflow-x-auto;
+  }
+
+  .data-list {
+    @apply divide-y divide-line;
+  }
+
+  .data-field {
+    @apply py-3 first:pt-0 last:pb-0;
+  }
+
+  .data-field-label {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-ink-subtle;
+  }
+
+  .data-field-value {
+    @apply mt-1 break-words text-sm text-ink;
   }
 
   .table-head {
