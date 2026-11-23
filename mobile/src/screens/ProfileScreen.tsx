@@ -125,8 +125,8 @@ export default function ProfileScreen() {
         alignItems: 'center',
         gap: spacing.md,
         paddingHorizontal: spacing.lg,
-        borderRadius: radii.lg,
-        backgroundColor: tone === 'danger' ? colors.dangerSoft : colors.surfaceMuted,
+        borderTopWidth: 1,
+        borderTopColor: colors.line,
       }}
       onPress={onPress}
       activeOpacity={0.78}
@@ -254,7 +254,7 @@ export default function ProfileScreen() {
         {isAdmin ? (
           <Card style={{ marginBottom: spacing.lg }}>
             <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Administração</Text>
-            <View style={{ gap: spacing.sm }}>
+            <View>
               {actionRow('Logs de Auditoria', 'document-text-outline', () => navigation.navigate('AuditLogs'))}
               {actionRow('Sessões', 'desktop-outline', () => navigation.navigate('Sessions'))}
               {actionRow('Usuários', 'people-outline', () => navigation.navigate('Users'))}
@@ -264,7 +264,7 @@ export default function ProfileScreen() {
 
         <Card>
           <Text style={{ fontSize: typography.title, fontWeight: typography.weights.semibold, color: colors.ink, marginBottom: spacing.md }}>Ações</Text>
-          <View style={{ gap: spacing.sm }}>
+          <View>
             {actionRow('Configurações', 'settings-outline', () => navigation.navigate('Settings'))}
             {actionRow('Sair', 'exit-outline', () => setShowLogoutModal(true), 'danger')}
           </View>
